@@ -29,11 +29,8 @@ class tTCPSocket
 
         /**
          * Connects to 'host' on 'port'.
-         *
-         * 'host' can be an ipv4 or ipv6 address in dot-notation, or
-         * it can be a domain name.
          */
-        tTCPSocket(std::string host, u16 port);
+        tTCPSocket(tAddr host, u16 port);
 
         /**
          * Reads up to 'length' bytes from the socket into 'buffer'.
@@ -87,7 +84,7 @@ class tTCPSocket
 };
 
 
-tTCPSocket::tTCPSocket(std::string host, u16 port)
+tTCPSocket::tTCPSocket(tAddr host, u16 port)
 {
     m_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (m_fd == -1)
