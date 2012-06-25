@@ -1,10 +1,10 @@
-#ifndef __tTCPSocket_h__
-#define __tTCPSocket_h__
+#ifndef __tSocket_h__
+#define __tSocket_h__
 
 
-#include "ebInet.h"
+#include "../ebIP.h"
 
-#include "rho/types.h"
+#include "../rho/types.h"
 
 #include <arpa/inet.h>     //
 #include <sys/socket.h>    // posix header files
@@ -19,18 +19,20 @@
 
 namespace rho
 {
-namespace inet
+namespace ip
+{
+namespace tcp
 {
 
 
-class tTCPSocket
+class tSocket
 {
     public:
 
         /**
          * Connects to 'host' on 'port'.
          */
-        tTCPSocket(tAddr host, u16 port);
+        tSocket(tAddr host, u16 port);
 
         /**
          * Reads up to 'length' bytes from the socket into 'buffer'.
@@ -65,11 +67,11 @@ class tTCPSocket
          * The destructor will also call shutdown(), so don't stress about
          * doing it yourself unless you need to shutdown early for some reason.
          */
-        ~tTCPSocket();
+        ~tSocket();
 
     private:
 
-        explicit tTCPSocket(int fd);
+        explicit tSocket(int fd);
 
         int m_fd;   // posix file descriptor
 
@@ -78,13 +80,13 @@ class tTCPSocket
     private:
 
         // Disable default constructor and make sockets non-copyable.
-        tTCPSocket();
-        tTCPSocket(const tTCPSocket&);
-        tTCPSocket& operator=(const tTCPSocket&);
+        tSocket();
+        tSocket(const tSocket&);
+        tSocket& operator=(const tSocket&);
 };
 
 
-tTCPSocket::tTCPSocket(tAddr host, u16 port)
+tSocket::tSocket(tAddr host, u16 port)
 {
     m_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (m_fd == -1)
@@ -114,22 +116,22 @@ tTCPSocket::tTCPSocket(tAddr host, u16 port)
     }
 }
 
-tTCPSocket::tTCPSocket(int fd)
+tSocket::tSocket(int fd)
 {
     m_fd = fd;
 }
 
-int tTCPSocket::read(u8* buffer, int length)
+int tSocket::read(u8* buffer, int length)
 {
     return ::read(m_fd, buffer, length);
 }
 
-int tTCPSocket::write(u8* buffer, int length)
+int tSocket::write(u8* buffer, int length)
 {
     return ::write(m_fd, buffer, length);
 }
 
-void tTCPSocket::shutdown()
+void tSocket::shutdown()
 {
     if (::shutdown(m_fd, SHUT_RDWR) == -1)
     {
@@ -138,7 +140,7 @@ void tTCPSocket::shutdown()
     }
 }
 
-void tTCPSocket::shutdownRead()
+void tSocket::shutdownRead()
 {
     if (::shutdown(m_fd, SHUT_RD) == -1)
     {
@@ -147,7 +149,7 @@ void tTCPSocket::shutdownRead()
     }
 }
 
-void tTCPSocket::shutdownWrite()
+void tSocket::shutdownWrite()
 {
     if (::shutdown(m_fd, SHUT_WR) == -1)
     {
@@ -156,15 +158,16 @@ void tTCPSocket::shutdownWrite()
     }
 }
 
-tTCPSocket::~tTCPSocket()
+tSocket::~tSocket()
 {
     close(m_fd);
     m_fd = -1;
 }
 
 
-} // namespace inet
+} // namespace tcp
+} // namespace ip
 } // namespace rho
 
 
-#endif    // __tTCPSocket_h__
+#endif    // __tSocket_h__
