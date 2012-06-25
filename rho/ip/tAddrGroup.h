@@ -45,8 +45,6 @@ class tAddrGroup : public bNonCopyable
 
     private:
 
-        tAddrGroup();
-
         void m_initLocalhostConnect();
         void m_initLocalhostBind();
         void m_initWildcardBind();
@@ -183,7 +181,10 @@ void tAddrGroup::m_init(std::string host, bool resolve)
     }
     if (a != 0)
     {
-        throw std::runtime_error(gai_strerror(a));
+        if (a == EAI_NONAME)
+            throw eHostNotFoundError("Cannot resolve host to address.");
+        else
+            throw std::logic_error(gai_strerror(a));
     }
 
     struct addrinfo* curr = NULL;

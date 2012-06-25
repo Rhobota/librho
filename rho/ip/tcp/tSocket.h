@@ -1,18 +1,18 @@
-#ifndef __tSocket_h__
-#define __tSocket_h__
+#ifndef __tcp_tSocket_h__
+#define __tcp_tSocket_h__
 
 
 #include "../ebIP.h"
+#include "../tAddrGroup.h"
 
-#include "../rho/types.h"
+#include "rho/bNonCopyable.h"
+#include "rho/types.h"
 
 #include <arpa/inet.h>     //
 #include <sys/socket.h>    // posix header files
 #include <sys/types.h>     //
+#include <errno.h>         //
 
-#include <cstdio>
-#include <cstdlib>
-#include <exception>
 #include <sstream>
 #include <string>
 
@@ -25,14 +25,42 @@ namespace tcp
 {
 
 
-class tSocket
+class tSocket : public bNonCopyable
 {
     public:
 
         /**
-         * Connects to 'host' on 'port'.
+         * Tries to connects to the host described by 'addr'.
+         * Tries to connect on 'port'.
          */
-        tSocket(tAddr host, u16 port);
+        tSocket(const tAddr& addr, u16 port);
+
+        /**
+         * Tries to connect to each host described in 'addrGroup' until
+         * one connects successfully. Tries each connection on 'port'.
+         */
+        tSocket(const tAddrGroup& addrGroup, u16 port);
+
+        /**
+         * Tries to connect to the host described by 'hostStr'.
+         * Tries to connect on 'port'.
+         */
+        tSocket(std::string hostStr, u16 port);
+
+        /**
+         * Closes and destroys the socket.
+         */
+        ~tSocket();
+
+        /**
+         * Returns the address of the other side of the socket.
+         */
+        const tAddr& getForeignAddress() const;
+
+        /**
+         * Returns the port of the other side of the socket.
+         */
+        u16 getForeignPort() const;
 
         /**
          * Reads up to 'length' bytes from the socket into 'buffer'.
@@ -51,74 +79,125 @@ class tSocket
         /**
          * Shuts down the socket's input and output streams.
          */
-        void shutdown();
+        void close();
 
         /**
          * Shuts down the input stream of the socket.
          */
-        void shutdownRead();
+        void closeRead();
 
         /**
          * Shuts down the output stream of the socket.
          */
-        void shutdownWrite();
-
-        /**
-         * The destructor will also call shutdown(), so don't stress about
-         * doing it yourself unless you need to shutdown early for some reason.
-         */
-        ~tSocket();
+        void closeWrite();
 
     private:
 
-        explicit tSocket(int fd);
+        tSocket(int fd, const tAddr& addr);
 
-        int m_fd;   // posix file descriptor
+        void m_init(const tAddr& addr, u16 port);
+        void m_init(const tAddrGroup& addrGroup, u16 port);
+        void m_finalize();
 
-        friend class tTCPServer;
+        friend class tServer;
 
     private:
 
-        // Disable default constructor and make sockets non-copyable.
-        tSocket();
-        tSocket(const tSocket&);
-        tSocket& operator=(const tSocket&);
+        int   m_fd;       // posix file descriptor
+        tAddr m_addr;
 };
 
 
-tSocket::tSocket(tAddr host, u16 port)
+tSocket::tSocket(const tAddr& addr, u16 port)
+    : m_fd(-1)
 {
-    m_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    m_init(addr, port);
+}
+
+tSocket::tSocket(const tAddrGroup& addrGroup, u16 port)
+    : m_fd(-1)
+{
+    m_init(addrGroup, port);
+}
+
+tSocket::tSocket(std::string hostStr, u16 port)
+    : m_fd(-1)
+{
+    tAddrGroup addrGroup(hostStr);
+    m_init(addrGroup, port);
+}
+
+tSocket::tSocket(int fd, const tAddr& addr)
+    : m_fd(fd),
+      m_addr(addr)
+{
+}
+
+void tSocket::m_init(const tAddr& addr, u16 port)
+{
+    m_finalize();
+
+    m_addr = addr;
+    m_addr.setUpperProtoPort(port);
+
+    if (addr.getVersion() == kIPv4)
+        m_fd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    else if (addr.getVersion() == kIPv6)
+        m_fd = ::socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
     if (m_fd == -1)
     {
-        throw eTCPSocketCreationError("Cannot create posix tcp socket.");
+        throw eSocketCreationError("Cannot create posix tcp socket.");
     }
 
-    struct sockaddr_in stSockAddr;
-    memset(&stSockAddr, 0, sizeof(stSockAddr));
-    stSockAddr.sin_family = AF_INET;
-    stSockAddr.sin_port = htons(port);
-    int res = inet_pton(AF_INET, host.c_str(), &stSockAddr.sin_addr);
-    if (res != 1)
+    if (::connect(m_fd, m_addr.m_sockaddr, m_addr.m_sockaddrlen) == -1)
     {
-        printf("Cannot convert host to inet address\n");
-        close(m_fd);
-        throw std::exception();
-    }
-
-    if (connect(m_fd, (struct sockaddr *)&stSockAddr, sizeof(stSockAddr)) == -1)
-    {
-        close(m_fd);
+        m_finalize();
         std::ostringstream errorStr;
-        errorStr << "Host (" << host << ") unreachable, ";
+        errorStr << "Host (" << addr.toString() << ") unreachable, ";
         errorStr << "or host rejected connection on port (" << port << ").";
-        throw eTCPSocketHostUnreachableError(errorStr.str());
+        throw eHostUnreachableError(errorStr.str());
     }
 }
 
-tSocket::tSocket(int fd)
+void tSocket::m_init(const tAddrGroup& addrGroup, u16 port)
 {
-    m_fd = fd;
+    for (int i = 0; i < addrGroup.size(); i++)
+    {
+        try
+        {
+            m_init(addrGroup[i], port);
+            break;
+        }
+        catch (ebIP& e)
+        {
+            if (i == addrGroup.size()-1)
+                throw;
+        }
+    }
+}
+
+void tSocket::m_finalize()
+{
+    if (m_fd >= 0)
+    {
+        ::close(m_fd);
+        m_fd = -1;
+    }
+}
+
+tSocket::~tSocket()
+{
+    m_finalize();
+}
+
+const tAddr& tSocket::getForeignAddress() const
+{
+    return m_addr;
+}
+
+u16 tSocket::getForeignPort() const
+{
+    return m_addr.getUpperProtoPort();
 }
 
 int tSocket::read(u8* buffer, int length)
@@ -131,37 +210,28 @@ int tSocket::write(u8* buffer, int length)
     return ::write(m_fd, buffer, length);
 }
 
-void tSocket::shutdown()
+void tSocket::close()
 {
     if (::shutdown(m_fd, SHUT_RDWR) == -1)
     {
-        // "Cannot shutdown socket"
-        throw std::exception();
+        throw std::logic_error(strerror(errno));
     }
 }
 
-void tSocket::shutdownRead()
+void tSocket::closeRead()
 {
     if (::shutdown(m_fd, SHUT_RD) == -1)
     {
-        // "Cannot shutdown socket"
-        throw std::exception();
+        throw std::logic_error(strerror(errno));
     }
 }
 
-void tSocket::shutdownWrite()
+void tSocket::closeWrite()
 {
     if (::shutdown(m_fd, SHUT_WR) == -1)
     {
-        // "Cannot shutdown socket"
-        throw std::exception();
+        throw std::logic_error(strerror(errno));
     }
-}
-
-tSocket::~tSocket()
-{
-    close(m_fd);
-    m_fd = -1;
 }
 
 
@@ -170,4 +240,4 @@ tSocket::~tSocket()
 } // namespace rho
 
 
-#endif    // __tSocket_h__
+#endif    // __tcp_tSocket_h__

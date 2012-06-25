@@ -3,6 +3,7 @@
 
 
 #include "ebIP.h"
+#include "tcp/_pre.h"
 
 #include "rho/types.h"
 
@@ -23,8 +24,8 @@ namespace ip
 
 enum nVersion
 {
-    kIPv4,
-    kIPv6,
+    kIPv4 = 4,
+    kIPv6 = 6,
 };
 
 
@@ -39,7 +40,6 @@ class tAddr
 
         nVersion        getVersion()        const;
         std::vector<u8> getAddress()        const;
-        u16             getUpperProtoPort() const;
 
         std::string     toString()          const;
 
@@ -51,12 +51,17 @@ class tAddr
         void m_init(struct sockaddr* sockAddr, int length);
         void m_finalize();
 
+        u16  getUpperProtoPort() const;
+        void setUpperProtoPort(u16 port);
+
     private:
 
         struct sockaddr* m_sockaddr;
         int m_sockaddrlen;
 
         friend class tAddrGroup;
+        friend class tcp::tSocket;
+        friend class tcp::tServer;
 };
 
 
@@ -121,12 +126,12 @@ u16 tAddr::getUpperProtoPort() const
     if (m_sockaddr->sa_family == AF_INET)
     {
         struct sockaddr_in* ip4sockAddr = (struct sockaddr_in*) m_sockaddr;
-        port = ip4sockAddr->sin_port;
+        port = ntohs(ip4sockAddr->sin_port);
     }
     else if (m_sockaddr->sa_family == AF_INET6)
     {
         struct sockaddr_in6* ip6sockAddr = (struct sockaddr_in6*) m_sockaddr;
-        port = ip6sockAddr->sin6_port;
+        port = ntohs(ip6sockAddr->sin6_port);
     }
     else
     {
@@ -135,6 +140,25 @@ u16 tAddr::getUpperProtoPort() const
     }
 
     return port;
+}
+
+void tAddr::setUpperProtoPort(u16 port)
+{
+    if (m_sockaddr->sa_family == AF_INET)
+    {
+        struct sockaddr_in* ip4sockAddr = (struct sockaddr_in*) m_sockaddr;
+        ip4sockAddr->sin_port = htons(port);
+    }
+    else if (m_sockaddr->sa_family == AF_INET6)
+    {
+        struct sockaddr_in6* ip6sockAddr = (struct sockaddr_in6*) m_sockaddr;
+        ip6sockAddr->sin6_port = htons(port);
+    }
+    else
+    {
+        throw std::logic_error(
+                "Internal IP address structure has an unknown version.");
+    }
 }
 
 std::string tAddr::toString() const
@@ -175,6 +199,12 @@ std::string tAddr::toString() const
     return rep;
 }
 
+tAddr::tAddr()
+    : m_sockaddr(NULL),
+      m_sockaddrlen(0)
+{
+}
+
 tAddr::tAddr(struct sockaddr* sockAddr, int length)
     : m_sockaddr(NULL),
       m_sockaddrlen(0)
@@ -187,7 +217,7 @@ void tAddr::m_init(struct sockaddr* sockAddr, int length)
     if (m_sockaddr)
         m_finalize();
 
-    m_sockaddr = (struct sockaddr*) new u8[length];
+    m_sockaddr = (struct sockaddr*) malloc(length);
     m_sockaddrlen = length;
     memcpy(m_sockaddr, sockAddr, length);
 }
@@ -196,7 +226,7 @@ void tAddr::m_finalize()
 {
     if (m_sockaddr)
     {
-        delete ((u8*) m_sockaddr);
+        free(m_sockaddr);
         m_sockaddr = NULL;
         m_sockaddrlen = 0;
     }

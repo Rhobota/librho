@@ -1,106 +1,70 @@
-#ifndef __TCPServer_h__
-#define __TCPServer_h__
+#ifndef __tcp_tServer_h__
+#define __tcp_tServer_h__
 
 
-#include "TCPSocket.h"
+#include "tSocket.h"
 
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <sys/types.h>
+#include "rho/bNonCopyable.h"
+#include "rho/types.h"
 
-#include <cstdio>
-#include <cstdlib>
-#include <exception>
-#include <string>
+#include <arpa/inet.h>    //
+#include <sys/socket.h>   // posix headers
+#include <sys/types.h>    //
 
 
-class TCPServer
+namespace rho
+{
+namespace ip
+{
+namespace tcp
+{
+
+
+class tServer : public bNonCopyable
 {
     public:
 
-        explicit TCPServer(int bindPort);
+        explicit tServer(u16 bindPort);
 
-        TCPSocket accept();
+        ~tServer();
+
+        tSocket* accept();
 
         void shutdown();
 
-        ~TCPServer();
-
     private:
 
-        int fd;    // posix file descriptor
+        int m_fd;    // posix file descriptor
 
         static const int kServerAcceptQueueLength = 100;
-
-    private:
-
-        TCPServer();
-        TCPServer(const TCPServer&);
-        TCPServer& operator=(const TCPServer&);
 };
 
 
-TCPServer::TCPServer(int bindPort)
+tServer::tServer(u16 bindPort)
+    : m_fd(-1)
 {
-    fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (fd == -1)
-    {
-        // "Cannot create tcp socket"
-        throw std::exception();
-    }
 
-    struct sockaddr_in stSockAddr;
-    memset(&stSockAddr, 0, sizeof(stSockAddr));
-    stSockAddr.sin_family = AF_INET;
-    stSockAddr.sin_port = htons(bindPort);
-    stSockAddr.sin_addr.s_addr = INADDR_ANY;
-
-    if (bind(fd, (struct sockaddr *)&stSockAddr, sizeof(stSockAddr)) == -1)
-    {
-        // "Cannot bind socket to port %d", bindPort
-        close(fd);
-        throw std::exception();
-    }
-
-    if (listen(fd, kServerAcceptQueueLength) == -1)
-    {
-        // "Cannot put the socket into listening mode"
-        close(fd);
-        throw std::exception();
-    }
 }
 
-TCPSocket TCPServer::accept()
+tServer::~tServer()
 {
-    if (fd == -1)
-    {
-        // "Cannot accept (the server socket is already shutdown)"
-        throw std::exception();
-    }
 
-    int socketFd = ::accept(fd, NULL, NULL);
-    return TCPSocket(socketFd);
 }
 
-void TCPServer::shutdown()
+tSocket* tServer::accept()
 {
-    if (fd == -1)
-    {
-        // "Cannot shutdown (the server socket is already shutdown)"
-        throw std::exception();
-    }
 
-    close(fd);
-    fd = -1;
 }
 
-TCPServer::~TCPServer()
+void tServer::shutdown()
 {
-    if (fd != -1)
-    {
-        shutdown();
-    }
+
 }
 
 
-#endif     // __TCPServer_h__
+}   // namespace tcp
+}   // namespace ip
+}   // namespace rho
+
+
+#endif     // __tcp_tServer_h__
