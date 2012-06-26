@@ -45,10 +45,12 @@ class tAddrGroup : public bNonCopyable
 
     private:
 
+        void m_init_helper(const char* hostStr, const char* serviceStr,
+                           struct addrinfo* hints);
+
         void m_initLocalhostConnect();
         void m_initLocalhostBind();
         void m_initWildcardBind();
-
         void m_init(std::string host, bool resolve);
         void m_finalize();
 
@@ -138,19 +140,76 @@ tAddrGroup::tAddrGroup(std::string host, bool resolve)
     m_init(host, resolve);
 }
 
+void tAddrGroup::m_init_helper(const char* hostStr, const char* serviceStr,
+                               struct addrinfo* hints)
+{
+    int a;
+    for (int i = 0; i < 10; i++)
+    {
+        a = getaddrinfo(hostStr, serviceStr, hints, &m_addrinfohead);
+        if (a != EAI_AGAIN)
+            break;
+    }
+    if (a != 0)
+    {
+        if (a == EAI_NONAME)
+            throw eHostNotFoundError("Cannot resolve host to address.");
+        else
+            throw std::logic_error(gai_strerror(a));
+    }
+
+    struct addrinfo* curr = NULL;
+    for (curr = m_addrinfohead; curr != NULL; curr = curr->ai_next)
+    {
+        if (curr->ai_family == AF_INET || curr->ai_family == AF_INET6)
+            m_valid_addrinfos.push_back(curr);
+    }
+}
+
 void tAddrGroup::m_initLocalhostConnect()
 {
-
+    m_init("::1", false);
 }
 
 void tAddrGroup::m_initLocalhostBind()
 {
+    if (m_addrinfohead)
+        m_finalize();
 
+    struct addrinfo hints;            // see `man getaddrinfo'
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family   = AF_INET6;
+    hints.ai_socktype = SOCK_STREAM;  // This code assumes that if SOCK_STREAM
+    hints.ai_protocol = IPPROTO_TCP;  // and IPPROTO_TCP work then UDP
+                                      // will work as well.
+                                      // Specifying TCP here prevents duplicate
+                                      // addresses from being returned by
+                                      // getaddrinfo().
+    hints.ai_flags   |= AI_ADDRCONFIG;
+
+    m_init_helper(NULL, "80", &hints);   // the port is bogus; we just need
+                                         // something here that is not NULL.
 }
 
 void tAddrGroup::m_initWildcardBind()
 {
+    if (m_addrinfohead)
+        m_finalize();
 
+    struct addrinfo hints;            // see `man getaddrinfo'
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family   = AF_INET6;
+    hints.ai_socktype = SOCK_STREAM;  // This code assumes that if SOCK_STREAM
+    hints.ai_protocol = IPPROTO_TCP;  // and IPPROTO_TCP work then UDP
+                                      // will work as well.
+                                      // Specifying TCP here prevents duplicate
+                                      // addresses from being returned by
+                                      // getaddrinfo().
+    hints.ai_flags   |= AI_ADDRCONFIG;
+    hints.ai_flags   |= AI_PASSIVE;
+
+    m_init_helper(NULL, "80", &hints);   // the port is bogus; we just need
+                                         // something here that is not NULL.
 }
 
 void tAddrGroup::m_init(std::string host, bool resolve)
@@ -172,27 +231,7 @@ void tAddrGroup::m_init(std::string host, bool resolve)
     if (!resolve)
         hints.ai_flags   |= AI_NUMERICHOST;
 
-    int a;
-    for (int i = 0; i < 10; i++)
-    {
-        a = getaddrinfo(host.c_str(), NULL, &hints, &m_addrinfohead);
-        if (a != EAI_AGAIN)
-            break;
-    }
-    if (a != 0)
-    {
-        if (a == EAI_NONAME)
-            throw eHostNotFoundError("Cannot resolve host to address.");
-        else
-            throw std::logic_error(gai_strerror(a));
-    }
-
-    struct addrinfo* curr = NULL;
-    for (curr = m_addrinfohead; curr != NULL; curr = curr->ai_next)
-    {
-        if (curr->ai_family == AF_INET || curr->ai_family == AF_INET6)
-            m_valid_addrinfos.push_back(curr);
-    }
+    m_init_helper(host.c_str(), NULL, &hints);
 }
 
 void tAddrGroup::m_finalize()

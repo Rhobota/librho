@@ -74,7 +74,7 @@ class tSocket : public bNonCopyable
          *
          * Returns the number of bytes written, or -1 if the stream is closed.
          */
-        int write(u8* buffer, int length);
+        int write(const u8* buffer, int length);
 
         /**
          * Shuts down the socket's input and output streams.
@@ -205,7 +205,7 @@ int tSocket::read(u8* buffer, int length)
     return ::read(m_fd, buffer, length);
 }
 
-int tSocket::write(u8* buffer, int length)
+int tSocket::write(const u8* buffer, int length)
 {
     return ::write(m_fd, buffer, length);
 }

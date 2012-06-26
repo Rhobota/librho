@@ -37,6 +37,19 @@ class eSocketCreationError : public ebIP
 };
 
 
+class eSocketBindError : public ebIP
+{
+    public:
+
+        eSocketBindError(std::string reason)
+            : ebIP(reason)
+        {
+        }
+
+        ~eSocketBindError() throw() { }
+};
+
+
 class eHostNotFoundError : public ebIP
 {
     public:
