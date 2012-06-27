@@ -1,5 +1,5 @@
-#ifndef __tcp_tServer_h__
-#define __tcp_tServer_h__
+#ifndef __rho_ip_tcp_tServer_h__
+#define __rho_ip_tcp_tServer_h__
 
 
 #include "tSocket.h"
@@ -79,11 +79,13 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
     if (::setsockopt(m_fd, IPPROTO_IPV6, IPV6_V6ONLY, (void*)&off, sizeof(off))
             == -1)
     {
+        m_finalize();
         throw std::runtime_error("Cannot set socket option which is vital.");
     }
 
     if (::bind(m_fd, m_addr.m_sockaddr, m_addr.m_sockaddrlen) == -1)
     {
+        m_finalize();
         std::ostringstream o;
         o << "Cannot bind tcp server to port (" << bindPort << ").";
         throw eSocketBindError(o.str());
@@ -91,6 +93,7 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
 
     if (::listen(m_fd, kServerAcceptQueueLength) == -1)
     {
+        m_finalize();
         throw std::runtime_error("Cannot put server in listening state.");
     }
 }
@@ -138,4 +141,4 @@ tSocket* tServer::accept()
 }   // namespace rho
 
 
-#endif     // __tcp_tServer_h__
+#endif     // __rho_ip_tcp_tServer_h__

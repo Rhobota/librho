@@ -1,5 +1,5 @@
-#ifndef __tcp_pre_h__
-#define __tcp_pre_h__
+#ifndef __rho_ip_tcp_pre_h__
+#define __rho_ip_tcp_pre_h__
 
 
 namespace rho
@@ -20,4 +20,4 @@ namespace tcp
 }   // namespace rho
 
 
-#endif    // __tcp_pre_h__
+#endif    // __rho_ip_tcp_pre_h__

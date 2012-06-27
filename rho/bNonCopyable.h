@@ -1,5 +1,5 @@
-#ifndef __bNonCopyable_h__
-#define __bNonCopyable_h__
+#ifndef __rho_bNonCopyable_h__
+#define __rho_bNonCopyable_h__
 
 
 namespace rho
@@ -29,4 +29,4 @@ class bNonCopyable
 }    // namespace rho
 
 
-#endif   // __bNonCopyable_h__
+#endif   // __rho_bNonCopyable_h__

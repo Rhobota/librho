@@ -1,5 +1,5 @@
-#ifndef __tAddr_h__
-#define __tAddr_h__
+#ifndef __rho_ip_tAddr_h__
+#define __rho_ip_tAddr_h__
 
 
 #include "ebIP.h"
@@ -242,4 +242,4 @@ tAddr::~tAddr()
 }   // namespace rho
 
 
-#endif   // __tAddr_h__
+#endif   // __rho_ip_tAddr_h__

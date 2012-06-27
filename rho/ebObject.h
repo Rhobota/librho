@@ -1,5 +1,5 @@
-#ifndef __ebObject_h__
-#define __ebObject_h__
+#ifndef __rho_ebObject_h__
+#define __rho_ebObject_h__
 
 
 #include <exception>
@@ -35,11 +35,6 @@ class ebObject : public std::exception
 
     private:
 
-        // Disable the default constructor.
-        ebObject();
-
-    private:
-
         std::string m_reason;
 };
 
@@ -47,4 +42,4 @@ class ebObject : public std::exception
 }   // namespace rho
 
 
-#endif    // __ebObject_h__
+#endif    // __rho_ebObject_h__

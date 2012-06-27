@@ -1,5 +1,5 @@
-#ifndef __tcp_tSocket_h__
-#define __tcp_tSocket_h__
+#ifndef __rho_ip_tcp_tSocket_h__
+#define __rho_ip_tcp_tSocket_h__
 
 
 #include "../ebIP.h"
@@ -65,7 +65,8 @@ class tSocket : public bNonCopyable
         /**
          * Reads up to 'length' bytes from the socket into 'buffer'.
          *
-         * Returns the number of bytes read, or -1 if the stream is closed.
+         * Returns the number of bytes read, or 0 when eof is reached,
+         * or -1 if the stream is closed.
          */
         int read(u8* buffer, int length);
 
@@ -240,4 +241,4 @@ void tSocket::closeWrite()
 } // namespace rho
 
 
-#endif    // __tcp_tSocket_h__
+#endif    // __rho_ip_tcp_tSocket_h__

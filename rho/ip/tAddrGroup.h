@@ -1,5 +1,5 @@
-#ifndef __tAddrGroup_h__
-#define __tAddrGroup_h__
+#ifndef __rho_ip_tAddrGroup_h__
+#define __rho_ip_tAddrGroup_h__
 
 
 #include "ebIP.h"
@@ -36,8 +36,10 @@ class tAddrGroup : public bNonCopyable
         };
 
         tAddrGroup(nAddrGroupSpecialType type);
+
         tAddrGroup(std::string host);
         tAddrGroup(std::string host, bool resolve);
+
         ~tAddrGroup();
 
         int   size() const;
@@ -52,6 +54,7 @@ class tAddrGroup : public bNonCopyable
         void m_initLocalhostBind();
         void m_initWildcardBind();
         void m_init(std::string host, bool resolve);
+
         void m_finalize();
 
     private:
@@ -123,7 +126,7 @@ tAddrGroup::tAddrGroup(nAddrGroupSpecialType type)
             m_initWildcardBind();
             break;
         default:
-            throw std::runtime_error("Unknown nAddrGroupSpecialType");
+            throw std::logic_error("Unknown nAddrGroupSpecialType");
             break;
     }
 }
@@ -268,4 +271,4 @@ tAddr tAddrGroup::operator[](int i) const
 }   // namespace rho
 
 
-#endif   // __tAddrGroup_h__
+#endif   // __rho_ip_tAddrGroup_h__

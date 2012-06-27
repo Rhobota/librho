@@ -1,5 +1,5 @@
-#ifndef __ebIP_h__
-#define __ebIP_h__
+#ifndef __rho_ip_ebIP_h__
+#define __rho_ip_ebIP_h__
 
 
 #include "rho/ebObject.h"
@@ -80,4 +80,4 @@ class eHostUnreachableError : public ebIP
 }    // namespace rho
 
 
-#endif    // __ebIP_h__
+#endif    // __rho_ip_ebIP_h__
