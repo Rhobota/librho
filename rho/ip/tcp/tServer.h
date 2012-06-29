@@ -5,6 +5,7 @@
 #include "tSocket.h"
 
 #include "rho/bNonCopyable.h"
+#include "rho/refc.h"
 #include "rho/types.h"
 
 #include <arpa/inet.h>    //
@@ -32,7 +33,7 @@ class tServer : public bNonCopyable
 
         ~tServer();
 
-        tSocket* accept();
+        refc<tSocket> accept();
 
     private:
 
@@ -112,7 +113,7 @@ tServer::~tServer()
     m_finalize();
 }
 
-tSocket* tServer::accept()
+refc<tSocket> tServer::accept()
 {
     struct sockaddr_in6 sockAddr;
     socklen_t sockAddrLen = sizeof(sockAddr);

@@ -16,12 +16,10 @@ int main()
     {
         ip::tcp::tServer server(8080);
 
-        ip::tcp::tSocket* sock = server.accept();
+        refc<ip::tcp::tSocket> sock = server.accept();
 
         std::string text = "Hello!\n";
         sock->write((const u8*)text.c_str(), text.length());
-
-        delete sock;
     }
     catch (std::exception& e)
     {
