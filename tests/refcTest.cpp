@@ -207,6 +207,30 @@ int main()
     }
     assert(gObjectCount == 0);
 
+    // Example:
+    {
+        try
+        {
+            refc<tCountingObject> r(NULL);
+            assert(false);
+        }
+        catch (std::logic_error& e)
+        {
+        }
+
+        try
+        {
+            refc<tCountingObject> r(new tCountingObject);
+            assert(gObjectCount == 1);
+            r = NULL;
+            assert(false);
+        }
+        catch (std::logic_error& e)
+        {
+        }
+        assert(gObjectCount == 0);
+    }
+
     // Test:
     {
         refc<tCountingObject> myref = new tCountingObject;
