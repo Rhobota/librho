@@ -31,9 +31,12 @@ class tServer : public bNonCopyable
 
         tServer(const tAddrGroup& addrGroup, u16 bindPort);
 
-        ~tServer();
+        tAddr getBindAddress() const;
+        u16   getBindPort() const;
 
         refc<tSocket> accept();
+
+        ~tServer();
 
     private:
 
@@ -106,6 +109,16 @@ void tServer::m_finalize()
         ::close(m_fd);
         m_fd = -1;
     }
+}
+
+tAddr tServer::getBindAddress() const
+{
+    return m_addr;
+}
+
+u16 tServer::getBindPort() const
+{
+    return m_addr.getUpperProtoPort();
 }
 
 tServer::~tServer()

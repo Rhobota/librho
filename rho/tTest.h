@@ -32,17 +32,20 @@ class tTest
 
         void reject(bool b) const;
 
+        void fail() const;
+
     public:
 
         class eTestFailedError : public ebObject
         {
             public:
-                eTestFailedError(std::string reason) : ebObject(reason) { }
+                eTestFailedError(std::string reason)
+                    : ebObject(reason)
+                {
+                }
+
+                ~eTestFailedError() throw() { }
         };
-
-    private:
-
-        void fail() const;
 
     private:
 

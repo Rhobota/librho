@@ -1,41 +1,38 @@
 #include "rho/ip/tcp/tSocket.h"
+#include "rho/tCrashReporter.h"
+#include "rho/tTest.h"
 
 #include <iostream>
+#include <string>
 
 
 using namespace rho;
 using std::cout;
-using std::cin;
 using std::endl;
 
 
-int main()
+void connectTest(const tTest& t)
+{
+    ip::tcp::tSocket("google.com", 80);
+}
+
+void exceptionTest(const tTest& t)
 {
     try
     {
-        ip::tAddrGroup addrGroup(ip::tAddrGroup::kLocalhostConnect);
-        ip::tcp::tSocket sock(addrGroup, 8080);
-
-        ip::tAddr addr = sock.getForeignAddress();
-        u16       port = sock.getForeignPort();
-
-        cout << "Foreign address: " << addr.toString() << endl;
-        cout << "Foreign port:    " << port << endl;
-
-        u8  buf[100];
-        int c;
-        while ((c = sock.read(buf, 100)) > 0)
-        {
-            for (int i = 0; i < c; i++)
-            {
-                printf("%c", buf[i]);
-            }
-        }
+        ip::tAddrGroup g(ip::tAddrGroup::kLocalhostConnect);
+        ip::tcp::tSocket(g, 34);
+        t.fail();
     }
-    catch (std::exception& e)
-    {
-        cout << "Error: " << e.what() << endl;
-    }
+    catch (ip::eHostUnreachableError& e) { }
+}
+
+int main()
+{
+    tCrashReporter::init();
+
+    tTest("connect test", connectTest);
+    tTest("exception test", exceptionTest);
 
     return 0;
 }

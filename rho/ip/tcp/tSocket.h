@@ -6,6 +6,8 @@
 #include "../tAddrGroup.h"
 
 #include "rho/bNonCopyable.h"
+#include "rho/iInputStream.h"
+#include "rho/iOutputStream.h"
 #include "rho/types.h"
 
 #include <arpa/inet.h>     //
@@ -25,7 +27,7 @@ namespace tcp
 {
 
 
-class tSocket : public bNonCopyable
+class tSocket : public bNonCopyable, public iInputStream, public iOutputStream
 {
     public:
 

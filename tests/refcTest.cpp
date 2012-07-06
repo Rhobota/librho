@@ -16,7 +16,7 @@ using std::vector;
 
 static i64 gObjectCount = 0;
 
-static const i32 kMaxTests = 1000;
+static const i32 kMaxTests = 10;
 
 
 class tCountingObject
