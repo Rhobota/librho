@@ -4,6 +4,7 @@
 
 #include <execinfo.h>
 
+#include <cstdlib>
 #include <ostream>
 
 

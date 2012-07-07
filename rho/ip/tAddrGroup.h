@@ -155,7 +155,7 @@ void tAddrGroup::m_init_helper(const char* hostStr, const char* serviceStr,
     }
     if (a != 0)
     {
-        if (a == EAI_NONAME)
+        if (a == EAI_NONAME || a == EAI_NODATA)
             throw eHostNotFoundError("Cannot resolve host to address.");
         else
             throw std::logic_error(gai_strerror(a));
@@ -188,7 +188,7 @@ void tAddrGroup::m_initLocalhostBind()
                                       // Specifying TCP here prevents duplicate
                                       // addresses from being returned by
                                       // getaddrinfo().
-    hints.ai_flags   |= AI_ADDRCONFIG;
+    hints.ai_flags   |= AI_ALL;
 
     m_init_helper(NULL, "80", &hints);   // the port is bogus; we just need
                                          // something here that is not NULL.
@@ -208,7 +208,7 @@ void tAddrGroup::m_initWildcardBind()
                                       // Specifying TCP here prevents duplicate
                                       // addresses from being returned by
                                       // getaddrinfo().
-    hints.ai_flags   |= AI_ADDRCONFIG;
+    hints.ai_flags   |= AI_ALL;
     hints.ai_flags   |= AI_PASSIVE;
 
     m_init_helper(NULL, "80", &hints);   // the port is bogus; we just need
@@ -229,10 +229,16 @@ void tAddrGroup::m_init(std::string host, bool resolve)
                                       // Specifying TCP here prevents duplicate
                                       // addresses from being returned by
                                       // getaddrinfo().
-    hints.ai_flags   |= AI_ADDRCONFIG;
 
     if (!resolve)
+    {
         hints.ai_flags   |= AI_NUMERICHOST;
+        hints.ai_flags   |= AI_ALL;
+    }
+    else
+    {
+        hints.ai_flags   |= AI_ADDRCONFIG;
+    }
 
     m_init_helper(host.c_str(), NULL, &hints);
 }
