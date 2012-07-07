@@ -8,9 +8,10 @@
 #include "rho/types.h"
 
 #include <arpa/inet.h>    //
-#include <sys/socket.h>   // posix headers
-#include <sys/types.h>    //
+#include <sys/socket.h>   //
+#include <sys/types.h>    // posix headers
 #include <netdb.h>        //
+#include <string.h>       //
 
 #include <string>
 #include <vector>

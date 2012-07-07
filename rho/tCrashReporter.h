@@ -8,6 +8,7 @@
 #include <signal.h>
 
 #include <iostream>
+#include <typeinfo>
 
 
 namespace rho
