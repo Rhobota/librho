@@ -4,6 +4,8 @@
 
 #include "ebObject.h"
 
+#include "sync/tAtomicInt.h"
+
 #include <cstdlib>
 #include <map>
 
@@ -37,12 +39,12 @@ class refc
 
     private:
 
-        T*   m_object;
-        int* m_ref_count;
+        T*          m_object;
+        sync::au32* m_ref_count;
 };
 
 
-static std::map<void*, int*> gAllKnownRefcObjectsMap;
+static std::map<void*, sync::au32*> gAllKnownRefcObjectsMap;
 
 
 template <class T>
@@ -62,7 +64,7 @@ refc<T>::refc(T* object)
     else
     {
         m_object = object;
-        m_ref_count = new int(1);
+        m_ref_count = new sync::au32(1);
         gAllKnownRefcObjectsMap.insert(
                 std::make_pair((void*)m_object, m_ref_count));
     }
@@ -84,8 +86,7 @@ const refc<T>& refc<T>::operator= (const refc<T>& other)
     if (m_object == other.m_object)
         return *this;
 
-    --(*m_ref_count);
-    if (*m_ref_count == 0)
+    if (--(*m_ref_count) == 0)
     {
         gAllKnownRefcObjectsMap.erase(m_object);
         delete m_object;
@@ -108,8 +109,7 @@ const refc<T>& refc<T>::operator= (T* object)
     if (object == NULL)
         throw std::logic_error("Reference counting NULL makes no sense.");
 
-    --(*m_ref_count);
-    if (*m_ref_count == 0)
+    if (--(*m_ref_count) == 0)
     {
         gAllKnownRefcObjectsMap.erase(m_object);
         delete m_object;
@@ -125,7 +125,7 @@ const refc<T>& refc<T>::operator= (T* object)
     else
     {
         m_object = object;
-        m_ref_count = new int(1);
+        m_ref_count = new sync::au32(1);
         gAllKnownRefcObjectsMap.insert(
                 std::make_pair((void*)m_object, m_ref_count));
     }
@@ -178,8 +178,7 @@ bool refc<T>::operator< (const refc<T>& other) const
 template <class T>
 refc<T>::~refc()
 {
-    --(*m_ref_count);
-    if (*m_ref_count == 0)
+    if (--(*m_ref_count) == 0)
     {
         gAllKnownRefcObjectsMap.erase(m_object);
         delete m_object;
