@@ -10,6 +10,8 @@ using std::cout;
 using std::endl;
 
 
+const int kNumTestIterations = 10000;
+
 bool gThreadDidRunYay = false;
 
 
@@ -26,10 +28,9 @@ class tFoo : public sync::iRunnable
 
 void test1(const tTest& t)
 {
-    t.iseq(gThreadDidRunYay, false);
+    gThreadDidRunYay = false;
 
-    tFoo foo;
-    sync::tThread thread(&foo);
+    sync::tThread thread(new tFoo);
     thread.join();
 
     t.iseq(gThreadDidRunYay, true);
@@ -40,7 +41,7 @@ int main()
 {
     tCrashReporter::init();
 
-    tTest("Thread test 1", test1);
+    tTest("tThread test 1", test1, kNumTestIterations);
 
     return 0;
 }

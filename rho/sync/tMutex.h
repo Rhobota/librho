@@ -17,7 +17,7 @@ namespace sync
 {
 
 
-class tMutex : public iSync, public bNonCopyable
+class tMutex : public bNonCopyable, public iSync
 {
     public:
 

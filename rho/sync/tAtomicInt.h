@@ -8,6 +8,8 @@
 #include "rho/bNonCopyable.h"
 #include "rho/types.h"
 
+#include <iostream>
+
 
 namespace rho
 {
@@ -31,6 +33,13 @@ typedef tAtomicInt<i64> ai64;
 
 
 template <class T>
+std::ostream& operator<< (std::ostream& o, const tAtomicInt<T>& ai);
+
+template <class T>
+std::istream& operator>> (std::istream& i, tAtomicInt<T>& ai);
+
+
+template <class T>
 class tAtomicInt : public bNonCopyable
 {
     public:
@@ -51,9 +60,16 @@ class tAtomicInt : public bNonCopyable
         void operator= (T val);
 
         /**
-         * Conversion operator: converts to T
+         * Gets the value of the atomic integer.
+         *
+         * (Note: I'm intentionally not putting a cast operator here.
+         *        A cast operator would make it easier to introduce
+         *        race conditions. It's simpler to see when you might
+         *        be doing something wrong if you're forced to ask
+         *        for the internal value of the atomic int instead of
+         *        being handed it whenever the implicit context requires.)
          */
-        operator T ();
+        T val() const;
 
         /**
          * In-place addition operator
@@ -104,7 +120,7 @@ void tAtomicInt<T>::operator= (T val)
 }
 
 template <class T>
-tAtomicInt<T>::operator T ()
+T tAtomicInt<T>::val() const
 {
     T temp = m_val;
     return temp;
@@ -144,6 +160,22 @@ T tAtomicInt<T>::operator-- ()
     --m_val;
     T temp = m_val;
     return temp;
+}
+
+template <class T>
+std::ostream& operator<< (std::ostream& o, const tAtomicInt<T>& ai)
+{
+    o << ai.val();
+    return o;
+}
+
+template <class T>
+std::istream& operator>> (std::istream& i, tAtomicInt<T>& ai)
+{
+    T val;
+    i >> val;
+    ai = val;
+    return i;
 }
 
 

@@ -16,7 +16,7 @@ using std::vector;
 
 static i64 gObjectCount = 0;
 
-static const i32 kMaxTests = 10;
+static const i32 kMaxTests = 1000;
 
 
 class tCountingObject
@@ -306,11 +306,8 @@ int main()
     tTest("Test 3", test3);
 
     srand(time(0));
-    for (int i = 0; i < kMaxTests; i++)
-    {
-        tTest("Randomized test 1", randomTest1);
-        tTest("Randomized test 2", randomTest2);
-    }
+    tTest("Randomized test 1", randomTest1, kMaxTests);
+    tTest("Randomized test 2", randomTest2, kMaxTests);
 
     return 0;
 }
