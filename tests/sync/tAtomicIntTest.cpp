@@ -10,9 +10,11 @@
 
 
 using namespace rho;
-using std::cout;
+using std::cerr;
 using std::endl;
 
+
+const int kTestCount = 1000;
 
 sync::ai32 gCount;
 
@@ -39,28 +41,25 @@ class tFoo : public sync::iRunnable
 
 void test(const tTest& t)
 {
-    while (true)
+    int numThreads = rand() % 100 + 1;
+    gCount = rand() % 100000 + 1;
+    gGotItCount = 0;
+
+    std::vector< refc<sync::tThread> > threads;
+    for (int i = 0; i < numThreads; i++)
+        threads.push_back(new sync::tThread(new tFoo));
+
+    for (int i = 0; i < numThreads; i++)
+        threads[i]->join();
+
+    try
     {
-        int numThreads = rand() % 100 + 1;
-        gCount = rand() % 100000 + 1;
-        gGotItCount = 0;
-
-        std::vector< refc<sync::tThread> > threads;
-        for (int i = 0; i < numThreads; i++)
-            threads.push_back(new sync::tThread(new tFoo));
-
-        for (int i = 0; i < numThreads; i++)
-            threads[i]->join();
-
-        try
-        {
-            t.iseq((i32)gGotItCount, 1);
-        }
-        catch (tTest::eTestFailedError& e)
-        {
-            cout << gGotItCount << " != 1" << endl;
-            throw;
-        }
+        t.iseq(gGotItCount.val(), 1);
+    }
+    catch (tTest::eTestFailedError& e)
+    {
+        cerr << gGotItCount << " != 1" << endl;
+        throw;
     }
 }
 
@@ -71,7 +70,7 @@ int main()
 
     srand(time(0));
 
-    tTest("tAtomicInt test", test);
+    tTest("tAtomicInt test", test, kTestCount);
 
     return 0;
 }

@@ -3,6 +3,7 @@
 
 
 #include "ebObject.h"
+#include "types.h"
 
 #include <iostream>
 #include <sstream>
@@ -19,6 +20,8 @@ class tTest
         typedef void (*testfunc)(const tTest& t);
 
         tTest(std::string name, testfunc f);
+
+        tTest(std::string name, testfunc f, i32 numIterations);
 
         std::string name() const;
 
@@ -57,6 +60,16 @@ tTest::tTest(std::string name, testfunc f)
     : m_name(name)
 {
     f(*this);
+    std::cout << "Test passed: " << m_name << std::endl;
+}
+
+tTest::tTest(std::string name, testfunc f, i32 numIterations)
+    : m_name(name)
+{
+    for (i32 i = 0; i < numIterations; i++)
+    {
+        f(*this);
+    }
     std::cout << "Test passed: " << m_name << std::endl;
 }
 

@@ -1,3 +1,4 @@
+#include "rho/sync/tAutoSync.h"
 #include "rho/sync/tMutex.h"
 #include "rho/sync/tThread.h"
 #include "rho/tCrashReporter.h"
@@ -34,11 +35,10 @@ class tCounter : public sync::iRunnable
         {
             for (int i = 0; i < m_count; i++)
             {
-                m_mutex->acquire();
+                sync::tAutoSync as(*m_mutex);
                 i64 currCount = gCount;
                 currCount += 1;
                 gCount = currCount;
-                m_mutex->release();
             }
         }
 
@@ -84,7 +84,7 @@ int main()
 
     srand(time(0));
 
-    tTest("tMutex test", test, kTestIterations);
+    tTest("tAutoSync test", test, kTestIterations);
 
     return 0;
 }
