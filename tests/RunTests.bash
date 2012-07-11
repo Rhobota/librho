@@ -36,4 +36,4 @@ done
 
 rm -rf "$OUT_FILE"*
 
-echo 0
+exit 0
