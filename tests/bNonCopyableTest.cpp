@@ -34,5 +34,9 @@ int main()
 
     f.foo();
 
+    // The following shouldn't compile.
+    // tFoo z(f);
+    // f = tFoo();
+
     return 0;
 }

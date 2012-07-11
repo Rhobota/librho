@@ -31,7 +31,7 @@ void test(const tTest& t)
 
 int main()
 {
-    tTest("ebSync Test", test);
+    tTest("ebSync test", test);
 
     return 0;
 }

@@ -29,7 +29,7 @@ void test(const tTest& t)
 
 int main()
 {
-    tTest("iRunnable Test", test);
+    tTest("iRunnable test", test);
 
     return 0;
 }
