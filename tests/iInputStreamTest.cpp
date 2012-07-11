@@ -1,26 +1,39 @@
 #include "rho/iInputStream.h"
+#include "rho/tCrashReporter.h"
+#include "rho/tTest.h"
 
 
-/*
- * Just a compilation test. (An interface can't be tested more than that.)
- */
+using namespace rho;
 
 
-class tFoo : public rho::iInputStream
+bool gItWorked = false;
+
+
+class tFoo : public iInputStream
 {
     public:
 
-        int read(rho::u8* buffer, int length) { }
-
-        void foo() { }
+        int read(u8* buffer, int length)
+        {
+            gItWorked = true;
+        }
 };
+
+
+void test(const tTest& t)
+{
+    iInputStream* p = new tFoo();
+    p->read(NULL, 78);            // This only tests if the method is virtual...
+    t.assert(gItWorked);
+    delete p;
+}
 
 
 int main()
 {
-    tFoo f;
+    tCrashReporter::init();
 
-    f.foo();
+    tTest("iInputStream test", test);
 
     return 0;
 }

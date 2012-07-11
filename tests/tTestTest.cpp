@@ -1,4 +1,5 @@
 #include "rho/tTest.h"
+#include "rho/tCrashReporter.h"
 
 #include <iostream>
 #include <sstream>
@@ -61,6 +62,8 @@ void failingTest4(const tTest& t)
 
 int main()
 {
+    tCrashReporter::init();
+
     tTest::testfunc passingTestFuncs[] = {
         passingTest1,
         passingTest2

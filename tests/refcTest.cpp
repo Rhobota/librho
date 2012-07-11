@@ -1,4 +1,5 @@
 #include "rho/refc.h"
+#include "rho/tCrashReporter.h"
 #include "rho/tTest.h"
 #include "rho/types.h"
 
@@ -294,6 +295,8 @@ void randomTest2(const tTest& t)
 
 int main()
 {
+    tCrashReporter::init();
+
     tTest("Example 1", example1);
     tTest("Example 2", example2);
     tTest("Example 3", example3);

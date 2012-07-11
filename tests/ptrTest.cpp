@@ -12,7 +12,7 @@ using namespace rho;
 
 static i64 gObjectCount = 0;
 
-static i32 gMaxRandTests = 10;
+static i32 gMaxRandTests = 100000;
 
 
 class tCountingObject
@@ -113,6 +113,9 @@ void example4(const tTest& t)
         const ptr<tCountingObject> p(new tCountingObject);
         t.iseq(gObjectCount, 1);
 
+        // foo() isn't const, so I can't call him... :(
+
+        // But I can call bar(), woohoo!
         (*p).bar();
         p->bar();
     }
@@ -144,10 +147,7 @@ int main()
     tTest("Example 4", example4);
 
     srand(time(0));
-    for (u32 i = 0; i < gMaxRandTests; i++)
-    {
-        tTest("Randomized test", randomTest);
-    }
+    tTest("Randomized test", randomTest, gMaxRandTests);
 
     return 0;
 }

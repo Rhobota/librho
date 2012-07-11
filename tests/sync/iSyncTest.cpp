@@ -35,7 +35,7 @@ void test(const tTest& t)
 
 int main()
 {
-    tTest("iSync Test", test);
+    tTest("iSync test", test);
 
     return 0;
 }
