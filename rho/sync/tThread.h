@@ -59,12 +59,13 @@ class tThread : public bNonCopyable
 };
 
 
-static void* callRunWithThisNewThread(void* runnableRef)
+static void* rho_sync_threadMain(void* thisBetterBeARunnableRef)
 {
+    refc<iRunnable>* runnable = (refc<iRunnable>*) thisBetterBeARunnableRef;
+
     try
     {
-        refc<iRunnable> runnable = *((refc<iRunnable>*) runnableRef);
-        runnable->run();
+        (*runnable)->run();
     }
     catch (...)
     {
@@ -72,6 +73,8 @@ static void* callRunWithThisNewThread(void* runnableRef)
                   << std::endl;
         rho::terminate();
     }
+
+    delete runnable;
 
     return NULL;
 }
@@ -82,8 +85,11 @@ tThread::tThread(refc<iRunnable> runnable)
       m_joined(false),
       m_detached(false)
 {
-    int threadCreationStatus =
-        pthread_create(&m_thread, NULL, callRunWithThisNewThread, &m_runnable);
+    int threadCreationStatus = pthread_create(
+            &m_thread,
+            NULL,
+            rho_sync_threadMain,
+            new refc<iRunnable>(runnable));
 
     if (threadCreationStatus != 0)
     {
