@@ -18,7 +18,7 @@ void localhostTest(const tTest& t)
     t.iseq(localhostGroup[0].getVersion(), ip::kIPv6);
 }
 
-void noResolveTest(const tTest& t)
+void ipStringTest(const tTest& t)
 {
     {
         std::string ipStr = "2.3.4.5";
@@ -35,20 +35,40 @@ void noResolveTest(const tTest& t)
         t.iseq(someGroup[0].toString(), ipStr);
         t.iseq(someGroup[0].getVersion(), ip::kIPv6);
     }
+
+    {
+        std::string ipStr = "2.3.4.5";
+        ip::tAddrGroup someGroup(ipStr, true);
+        t.iseq(someGroup.size(), 1);
+        t.iseq(someGroup[0].toString(), ipStr);
+        t.iseq(someGroup[0].getVersion(), ip::kIPv4);
+    }
+
+    {
+        std::string ipStr = "1122:3344:5566:7788:99aa:bbcc:ddee:11ff";
+        ip::tAddrGroup someGroup(ipStr, true);
+        t.iseq(someGroup.size(), 1);
+        t.iseq(someGroup[0].toString(), ipStr);
+        t.iseq(someGroup[0].getVersion(), ip::kIPv6);
+    }
 }
 
-void resolveTest(const tTest& t)
+void hostnameStringTest(const tTest& t)
 {
     {
         std::string hostName = "rhobota.com";
         ip::tAddrGroup hostGroup(hostName);       // will set resolve==true
         t.assert(hostGroup.size() > 0);
+        for (int i = 0; i < hostGroup.size(); i++)
+            ip::tAddr a = hostGroup[i];
     }
 
     {
         std::string hostName = "ryanserver.com";
         ip::tAddrGroup hostGroup(hostName, true); // explicitly setting resolve
         t.assert(hostGroup.size() > 0);
+        for (int i = 0; i < hostGroup.size(); i++)
+            ip::tAddr a = hostGroup[i];
     }
 }
 
@@ -77,8 +97,8 @@ int main(int argc, char* argv[])
     tCrashReporter::init();
 
     tTest("Localhost test", localhostTest);
-    tTest("No resolve test", noResolveTest);
-    tTest("Resolve test", resolveTest);
+    tTest("IP string test", ipStringTest);
+    tTest("Hostname string test", hostnameStringTest);
     tTest("Exception test", exceptionTest);
 
     return 0;

@@ -8,9 +8,11 @@
 #include "rho/bNonCopyable.h"
 #include "rho/refc.h"
 #include "rho/tCrashReporter.h"
+#include "rho/types.h"
 
-#include <pthread.h>   // posix headers
-#include <errno.h>     //
+#include <pthread.h>   //
+#include <errno.h>     // posix headers
+#include <unistd.h>    //
 
 #include <iostream>
 
@@ -49,6 +51,25 @@ class tThread : public bNonCopyable
          * if it has not already been joined-with.
          */
         ~tThread();
+
+    public:
+
+        /**
+         * Causes the calling thread to relinquish the CPU.
+         */
+        static void yield();
+
+        /**
+         * Causes the currently running thread to sleep for the given
+         * number of milliseconds (1,000 milliseconds in a second)
+         */
+        static void msleep(u64 msecs);
+
+        /**
+         * Causes the currently running thread to sleep for the given
+         * number of microseconds. (1,000,000 microseconds in a second)
+         */
+        static void usleep(u64 usecs);
 
     private:
 
@@ -152,6 +173,33 @@ tThread::~tThread()
 {
     if (!m_joined && !m_detached)
         detach();
+}
+
+void tThread::yield()
+{
+    #ifdef __linux__
+    pthread_yield();
+    #elif __APPLE__
+    pthread_yield_np();
+    #endif
+}
+
+void tThread::msleep(u64 msecs)
+{
+    tThread::usleep(1000 * msecs);
+}
+
+void tThread::usleep(u64 usecs)
+{
+    if (usecs >= 1000000)              // ::usleep must take a value <1000000
+    {
+        ::sleep(usecs / 1000000);
+        ::usleep(usecs % 1000000);
+    }
+    else
+    {
+        ::usleep(usecs);
+    }
 }
 
 

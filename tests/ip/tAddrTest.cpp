@@ -28,13 +28,23 @@ void ipv4Test(const tTest& t)
     correctIpBytes.push_back(4);
     correctIpBytes.push_back(5);
 
-    ip::tAddrGroup g(ipStr, false);
-    t.iseq(g.size(), 1);
+    {
+        ip::tAddrGroup g(ipStr, false);
+        t.iseq(g.size(), 1);
+        ip::tAddr addr = g[0];
+        t.iseq(addr.getVersion(), ip::kIPv4);
+        t.iseq(addr.toString(), ipStr);
+        t.iseq(addr.getAddress(), correctIpBytes);
+    }
 
-    ip::tAddr addr = g[0];
-    t.iseq(addr.getVersion(), ip::kIPv4);
-    t.iseq(addr.toString(), ipStr);
-    t.iseq(addr.getAddress(), correctIpBytes);
+    {
+        ip::tAddrGroup g(ipStr, true);
+        t.iseq(g.size(), 1);
+        ip::tAddr addr = g[0];
+        t.iseq(addr.getVersion(), ip::kIPv4);
+        t.iseq(addr.toString(), ipStr);
+        t.iseq(addr.getAddress(), correctIpBytes);
+    }
 }
 
 void ipv6Test(const tTest& t)
@@ -58,13 +68,23 @@ void ipv6Test(const tTest& t)
     correctIpBytes.push_back(0x11);
     correctIpBytes.push_back(0xFF);
 
-    ip::tAddrGroup g(ipStr, false);
-    t.iseq(g.size(), 1);
+    {
+        ip::tAddrGroup g(ipStr, false);
+        t.iseq(g.size(), 1);
+        ip::tAddr addr = g[0];
+        t.iseq(addr.getVersion(), ip::kIPv6);
+        t.iseq(addr.toString(), ipStr);
+        t.iseq(addr.getAddress(), correctIpBytes);
+    }
 
-    ip::tAddr addr = g[0];
-    t.iseq(addr.getVersion(), ip::kIPv6);
-    t.iseq(addr.toString(), ipStr);
-    t.iseq(addr.getAddress(), correctIpBytes);
+    {
+        ip::tAddrGroup g(ipStr, true);
+        t.iseq(g.size(), 1);
+        ip::tAddr addr = g[0];
+        t.iseq(addr.getVersion(), ip::kIPv6);
+        t.iseq(addr.toString(), ipStr);
+        t.iseq(addr.getAddress(), correctIpBytes);
+    }
 }
 
 int main()
