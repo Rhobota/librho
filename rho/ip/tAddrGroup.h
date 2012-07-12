@@ -229,16 +229,10 @@ void tAddrGroup::m_init(std::string host, bool resolve)
                                       // Specifying TCP here prevents duplicate
                                       // addresses from being returned by
                                       // getaddrinfo().
+    hints.ai_flags   |= AI_ALL;
 
     if (!resolve)
-    {
         hints.ai_flags   |= AI_NUMERICHOST;
-        hints.ai_flags   |= AI_ALL;
-    }
-    else
-    {
-        hints.ai_flags   |= AI_ADDRCONFIG;
-    }
 
     m_init_helper(host.c_str(), NULL, &hints);
 }
