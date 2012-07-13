@@ -2,6 +2,7 @@
 #define __rho_tTest_h__
 
 
+#include "bNonCopyable.h"
 #include "ebObject.h"
 #include "types.h"
 
@@ -13,7 +14,7 @@ namespace rho
 {
 
 
-class tTest
+class tTest : public bNonCopyable
 {
     public:
 
