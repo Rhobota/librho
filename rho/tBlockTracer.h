@@ -5,6 +5,8 @@
 #include "bNonCopyable.h"
 #include "types.h"
 
+#include "sync/tThreadLocal.h"
+
 #include <iostream>
 #include <string>
 
@@ -32,47 +34,53 @@ class tBlockTracer : public bNonCopyable
 
         void printIndent();
 
-        static u16 m_sIndentWidth;
-        static u32 m_sIndentCount;
+        static u16                     m_sIndentWidth;
+        static sync::tThreadLocal<u32> m_sIndentCount;
 };
 
 
-u16 tBlockTracer::m_sIndentWidth = 4;
-u32 tBlockTracer::m_sIndentCount = 0;
+u16                     tBlockTracer::m_sIndentWidth = 4;
+sync::tThreadLocal<u32> tBlockTracer::m_sIndentCount;
 
 
 tBlockTracer::tBlockTracer(std::string blockName)
     : m_blockName(blockName),
       m_ostream(std::cerr)
 {
+    if (! m_sIndentCount)
+        m_sIndentCount = new u32(0);
     printIndent();
     m_ostream << m_blockName << "\n";
     printIndent();
     m_ostream << "{\n";
-    ++m_sIndentCount;
+    ++(*m_sIndentCount);
 }
 
 tBlockTracer::tBlockTracer(std::string blockName, std::ostream& o)
     : m_blockName(blockName),
       m_ostream(o)
 {
+    if (! m_sIndentCount)
+        m_sIndentCount = new u32(0);
     printIndent();
     m_ostream << m_blockName << "\n";
     printIndent();
     m_ostream << "{\n";
-    ++m_sIndentCount;
+    ++(*m_sIndentCount);
 }
 
 tBlockTracer::~tBlockTracer()
 {
-    --m_sIndentCount;
+    --(*m_sIndentCount);
     printIndent();
     m_ostream << "}\n";
+    if (*m_sIndentCount == 0)
+        m_sIndentCount = NULL;
 }
 
 void tBlockTracer::printIndent()
 {
-    u64 indentAmount = m_sIndentCount * m_sIndentWidth;
+    u64 indentAmount = (*m_sIndentCount) * m_sIndentWidth;
     for (u64 i = 0; i < indentAmount; ++i)
         m_ostream << " ";
 }
