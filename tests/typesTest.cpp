@@ -21,5 +21,8 @@ int main()
     i32 g;
     i64 h;
 
+    (a + b + c + d +
+     e + f + g + h);       // This is just to avoid the "unsued var" error
+
     return 0;
 }

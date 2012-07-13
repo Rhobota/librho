@@ -17,7 +17,7 @@ using std::vector;
 
 static i64 gObjectCount = 0;
 
-static const i32 kMaxTests = 1000;
+static const i32 kMaxTests = 100;
 
 
 class tCountingObject
@@ -59,6 +59,7 @@ void example1(const tTest& t)
 {
     refc<int> r = new int(99);
     int x = *r;                  // x == 99
+    t.iseq(x, 99);
 } // --------------------------> // The 'int' is delete when 'r' goes oos here.
 
 
@@ -71,6 +72,7 @@ void example2(const tTest& t)
 
         tCountingObject& c = *r;
         r->foo();
+        c.foo();
     } // --------------------------> // the tCountingObject is deleted here
     t.assert(gObjectCount == 0);
 }
@@ -85,6 +87,7 @@ void example3(const tTest& t)
 
         const tCountingObject& c = *r;
         r->bar();
+        c.bar();
     }
     t.assert(gObjectCount == 0);
 }

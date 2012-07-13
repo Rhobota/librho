@@ -19,7 +19,8 @@ using std::endl;
 using std::vector;
 
 
-const int kTestIterations = 100;
+const int kTestIterations = 20;
+const int kMaxSendRecvIterations = 50;
 
 int gServerBindPort = 15001;
 
@@ -160,7 +161,7 @@ void test(const tTest& t)
     ++gServerBindPort;
     randomizeWriteData(gServerWriteData);
     randomizeWriteData(gClientWriteData);
-    gSendRecvIterations = rand() % 100 + 1;
+    gSendRecvIterations = rand() % kMaxSendRecvIterations + 1;
 
     sync::tThread serverThread(new tServerRunnable(t));
     sync::tThread clientThread(new tClientRunnable(t));
