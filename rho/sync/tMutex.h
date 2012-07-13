@@ -23,7 +23,14 @@ class tMutex : public bNonCopyable, public iSync
 
         tMutex();
 
+        /**
+         * Blocks until the mutex can be acquired, then acquires it and returns.
+         */
         void acquire();
+
+        /**
+         * Releases the mutex.
+         */
         void release();
 
         ~tMutex();

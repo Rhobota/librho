@@ -13,7 +13,8 @@ int main()
 {
     try
     {
-        ip::tcp::tServer server(8080);
+        ip::tAddrGroup localhostGroup(ip::tAddrGroup::kLocalhostBind);
+        ip::tcp::tServer server(localhostGroup, 8080);
 
         cout << "Server bound to address: "
              << server.getBindAddress().toString() << endl;

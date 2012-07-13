@@ -2,6 +2,7 @@
 #define __rho_tCrashReporter_h__
 
 
+#include "bNonCopyable.h"
 #include "ebObject.h"
 #include "tStacktrace.h"
 
@@ -22,11 +23,15 @@ namespace rho
  *   2. An unexpected exception is thrown (see 'exception specifications'),
  *   3. A segmentation fault occurs.
  */
-class tCrashReporter
+class tCrashReporter : public bNonCopyable
 {
     public:
 
         static void init();
+
+    private:
+
+        tCrashReporter();
 };
 
 

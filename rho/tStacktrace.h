@@ -16,8 +16,15 @@ class tStacktrace
 {
     public:
 
+        /**
+         * This class walks the stack on construction and saves away all the
+         * return addresses so that print() can be called later.
+         */
         tStacktrace();
 
+        /**
+         * Tries to convert each return address to file and line number.
+         */
         void print(std::ostream& o) const;
 
     private:

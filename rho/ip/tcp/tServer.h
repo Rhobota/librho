@@ -27,13 +27,35 @@ class tServer : public bNonCopyable
 {
     public:
 
+        /**
+         * Binds to localhost on port 'bindPort'.
+         */
         explicit tServer(u16 bindPort);
 
+        /**
+         * Binds to 'addrGroup[0]' on port 'bindPort'.
+         *
+         * Note: 'addrGroup.size()' must equal one, or else
+         *       an exception will be thrown.
+         *
+         * Hint: Construct the tAddrGroup using the constructor which takes
+         *       an 'ip::tAddrGroup::nAddrGroupSpecialType'.
+         */
         tServer(const tAddrGroup& addrGroup, u16 bindPort);
 
+        /**
+         * Returns the address on which the server is bound.
+         */
         tAddr getBindAddress() const;
+
+        /**
+         * Returns the port on which the server is bound.
+         */
         u16   getBindPort() const;
 
+        /**
+         * Blocks, waiting for a connection. When one arrives it is returned.
+         */
         refc<tSocket> accept();
 
         ~tServer();

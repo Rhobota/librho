@@ -8,23 +8,38 @@ using std::cout;
 using std::endl;
 
 
+void printAddrGroup(const ip::tAddrGroup& group)
+{
+    for (int i = 0; i < group.size(); i++)
+    {
+        ip::tAddr addr = group[i];
+
+        switch (addr.getVersion())
+        {
+            case ip::kIPv4:
+                cout << "IPv4: ";
+                break;
+            case ip::kIPv6:
+                cout << "IPv6: ";
+                break;
+        }
+
+        cout << addr.toString() << endl;
+    }
+}
+
+
 int main()
 {
     try
     {
         ip::tAddrGroup googleIPs("google.com", true);
-
-        for (int i = 0; i < googleIPs.size(); i++)
-        {
-            cout << googleIPs[i].toString() << endl;
-        }
+        printAddrGroup(googleIPs);
+        cout << endl;
 
         ip::tAddrGroup routerIPs("192.168.1.1", false);
-
-        for (int i = 0; i < routerIPs.size(); i++)
-        {
-            cout << routerIPs[i].toString() << endl;
-        }
+        printAddrGroup(routerIPs);
+        cout << endl;
     }
     catch (ip::ebIP& e)
     {
