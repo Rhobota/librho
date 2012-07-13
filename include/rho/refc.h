@@ -5,6 +5,7 @@
 #include "ebObject.h"
 
 #include "sync/tAtomicInt.h"
+#include "sync/tAutoSync.h"
 #include "sync/tMutex.h"
 
 #include <cstdlib>
@@ -58,6 +59,7 @@ refc<T>::refc(T* object)
     if (object == NULL)
         throw std::logic_error("Reference counting NULL makes no sense.");
 
+    sync::tAutoSync as(gAllKnownRefcObjectsSync);
     if (gAllKnownRefcObjectsMap.find(object) != gAllKnownRefcObjectsMap.end())
     {
         m_object = object;
@@ -91,7 +93,10 @@ const refc<T>& refc<T>::operator= (const refc<T>& other)
 
     if (--(*m_ref_count) == 0)
     {
-        gAllKnownRefcObjectsMap.erase(m_object);
+        {
+            sync::tAutoSync as(gAllKnownRefcObjectsSync);
+            gAllKnownRefcObjectsMap.erase(m_object);
+        }
         delete m_object;
         delete m_ref_count;
     }
@@ -114,11 +119,15 @@ const refc<T>& refc<T>::operator= (T* object)
 
     if (--(*m_ref_count) == 0)
     {
-        gAllKnownRefcObjectsMap.erase(m_object);
+        {
+            sync::tAutoSync as(gAllKnownRefcObjectsSync);
+            gAllKnownRefcObjectsMap.erase(m_object);
+        }
         delete m_object;
         delete m_ref_count;
     }
 
+    sync::tAutoSync as(gAllKnownRefcObjectsSync);
     if (gAllKnownRefcObjectsMap.find(object) != gAllKnownRefcObjectsMap.end())
     {
         m_object = object;
@@ -183,7 +192,10 @@ refc<T>::~refc()
 {
     if (--(*m_ref_count) == 0)
     {
-        gAllKnownRefcObjectsMap.erase(m_object);
+        {
+            sync::tAutoSync as(gAllKnownRefcObjectsSync);
+            gAllKnownRefcObjectsMap.erase(m_object);
+        }
         delete m_object;
         delete m_ref_count;
     }
