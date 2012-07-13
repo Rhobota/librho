@@ -2,6 +2,8 @@
 #define __rho_bObjectTracer_h__
 
 
+#include "tBlockTracer.h"
+
 #include <iostream>
 #include <string>
 
@@ -35,6 +37,7 @@ bObjectTracer::bObjectTracer(std::string subClassName)
     : m_subClassName(subClassName),
       m_ostream(std::cerr)
 {
+    tBlockTracer::printIndent(m_ostream);
     m_ostream << m_subClassName << "()" << std::endl;
 }
 
@@ -42,6 +45,7 @@ bObjectTracer::bObjectTracer(std::string subClassName, std::ostream& o)
     : m_subClassName(subClassName),
       m_ostream(o)
 {
+    tBlockTracer::printIndent(m_ostream);
     m_ostream << m_subClassName << "()" << std::endl;
 }
 
@@ -49,12 +53,14 @@ bObjectTracer::bObjectTracer(const bObjectTracer& other)
     : m_subClassName(other.m_subClassName),
       m_ostream(other.m_ostream)
 {
+    tBlockTracer::printIndent(m_ostream);
     m_ostream << m_subClassName << "(const " << m_subClassName << "&)"
               << std::endl;
 }
 
 const bObjectTracer& bObjectTracer::operator= (const bObjectTracer& other)
 {
+    tBlockTracer::printIndent(m_ostream);
     m_ostream << "operator= (" << m_subClassName << "&, "
               << "const " << other.m_subClassName << "&)" << std::endl;
     m_subClassName = other.m_subClassName;
@@ -63,6 +69,7 @@ const bObjectTracer& bObjectTracer::operator= (const bObjectTracer& other)
 
 bObjectTracer::~bObjectTracer()
 {
+    tBlockTracer::printIndent(m_ostream);
     m_ostream << "~" << m_subClassName << "()" << std::endl;
 }
 
