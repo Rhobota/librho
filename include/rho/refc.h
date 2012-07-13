@@ -5,6 +5,7 @@
 #include "ebObject.h"
 
 #include "sync/tAtomicInt.h"
+#include "sync/tMutex.h"
 
 #include <cstdlib>
 #include <map>
@@ -44,7 +45,9 @@ class refc
 };
 
 
-static std::map<void*, sync::au32*> gAllKnownRefcObjectsMap;
+extern std::map<void*, sync::au32*> gAllKnownRefcObjectsMap;
+
+extern sync::tMutex                 gAllKnownRefcObjectsSync;
 
 
 template <class T>
