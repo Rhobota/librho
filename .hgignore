@@ -1,6 +1,5 @@
 # The default pattern syntax is Python/Perl-style regular expressions.
 
-^build
 \.log$
 \.DS_Store$
 \.out$
