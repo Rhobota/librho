@@ -22,6 +22,7 @@ class ebObject : public std::exception
         ebObject(std::string reason);
 
         virtual std::string reason() const;
+
         virtual const char* what() const throw();   // std::exception override
 
         void printStacktrace(std::ostream& o) const;
@@ -33,32 +34,6 @@ class ebObject : public std::exception
         std::string m_reason;
         tStacktrace m_stacktrace;
 };
-
-
-ebObject::ebObject(std::string reason)
-    : m_reason(reason),
-      m_stacktrace()
-{
-}
-
-std::string ebObject::reason() const
-{
-    return m_reason;
-}
-
-const char* ebObject::what() const throw()
-{
-    return m_reason.c_str();
-}
-
-void ebObject::printStacktrace(std::ostream& o) const
-{
-    m_stacktrace.print(o);
-}
-
-ebObject::~ebObject() throw()
-{
-}
 
 
 }   // namespace rho

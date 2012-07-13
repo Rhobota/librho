@@ -1,18 +1,20 @@
 #!/bin/bash
 
-SEARCH_DIR="."
+TEST_DIR="$(dirname "$0")"
+INCLUDE_DIR="$TEST_DIR/../include"
+LIBRHO_PATH="$TEST_DIR/../objects/librho.a"
 OUT_FILE="a.out"
 
 CC="g++"
-CC_FLAGS="-O0 -fno-inline -g -rdynamic -Wall -Werror -I ../"
-CC_LIB_FLAGS="-lpthread"
+CC_FLAGS="-O0 -fno-inline -g -rdynamic -Wall -Werror -I $INCLUDE_DIR"
+CC_LIB_FLAGS="$LIBRHO_PATH -lpthread"
 
 if [ -n "$1" ]
 then
-    SEARCH_DIR="$1"
+    TEST_DIR="$1"
 fi
 
-for testPath in $(find "$SEARCH_DIR" -name '*.cpp')
+for testPath in $(find "$TEST_DIR" -name '*.cpp')
 do
     echo "---- $testPath ----"
     $CC $CC_FLAGS $testPath $CC_LIB_FLAGS -o "$OUT_FILE"

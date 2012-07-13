@@ -1,10 +1,7 @@
-#ifndef __rho_tCrashReporter_h__
-#define __rho_tCrashReporter_h__
+#include "rho/tCrashReporter.h"
 
-
-#include "bNonCopyable.h"
-#include "ebObject.h"
-#include "tStacktrace.h"
+#include "rho/ebObject.h"
+#include "rho/tStacktrace.h"
 
 #include <signal.h>
 
@@ -16,26 +13,7 @@ namespace rho
 {
 
 
-/**
- * Call tCrashReporter::init() at the very beginning of your program to setup
- * crash reporting. This gives you stacktraces when:
- *   1. An exception is thrown and has no handler,
- *   2. An unexpected exception is thrown (see 'exception specifications'),
- *   3. A segmentation fault occurs.
- */
-class tCrashReporter : public bNonCopyable
-{
-    public:
-
-        static void init();
-
-    private:
-
-        tCrashReporter();
-};
-
-
-void printInFlightException()
+static void printInFlightException()
 {
     try
     {
@@ -60,7 +38,7 @@ void printInFlightException()
     }
 }
 
-void cleanExitWithFailure()
+static void cleanExitWithFailure()
 {
     // Abort() does no cleanup at all. Exit() doesn't unwinds the stack,
     // but it *does* call the destructors of all the global objects.
@@ -68,7 +46,7 @@ void cleanExitWithFailure()
     exit(1);
 }
 
-void terminate()
+static void terminate()
 {
     std::cerr << std::endl;
     std::cerr << "Unhandled exception: ";
@@ -76,7 +54,7 @@ void terminate()
     cleanExitWithFailure();
 }
 
-void unexpected()
+static void unexpected()
 {
     std::cerr << std::endl;
     std::cerr << "Unexpected exception was thrown: ";
@@ -84,7 +62,7 @@ void unexpected()
     cleanExitWithFailure();
 }
 
-void segmentationFault(int sig)
+static void segmentationFault(int sig)
 {
     if (sig == SIGSEGV || sig == SIGILL)
     {
@@ -97,14 +75,16 @@ void segmentationFault(int sig)
 
 void tCrashReporter::init()
 {
-    std::set_terminate(terminate);
-    std::set_unexpected(unexpected);
-    signal(SIGSEGV, segmentationFault);
-    signal(SIGILL, segmentationFault);
+    std::set_terminate(rho::terminate);
+    std::set_unexpected(rho::unexpected);
+    ::signal(SIGSEGV, rho::segmentationFault);
+    ::signal(SIGILL, rho::segmentationFault);
+}
+
+void tCrashReporter::terminate()
+{
+    rho::terminate();
 }
 
 
 }    // namespace rho
-
-
-#endif   // __rho_tCrashReporter_h__

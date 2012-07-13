@@ -1,36 +1,9 @@
-#ifndef __rho_bObjectTracer_h__
-#define __rho_bObjectTracer_h__
-
-
-#include "tBlockTracer.h"
-
-#include <iostream>
-#include <string>
+#include "rho/bObjectTracer.h"
+#include "rho/tBlockTracer.h"
 
 
 namespace rho
 {
-
-
-class bObjectTracer
-{
-    public:
-
-        bObjectTracer(std::string subClassName);
-
-        bObjectTracer(std::string subClassName, std::ostream& o);
-
-        bObjectTracer(const bObjectTracer& other);
-
-        const bObjectTracer& operator= (const bObjectTracer& other);
-
-        ~bObjectTracer();
-
-    private:
-
-        std::string   m_subClassName;
-        std::ostream& m_ostream;
-};
 
 
 bObjectTracer::bObjectTracer(std::string subClassName)
@@ -75,6 +48,3 @@ bObjectTracer::~bObjectTracer()
 
 
 }      // namespace rho
-
-
-#endif    // __rho_bObjectTracer_h__
