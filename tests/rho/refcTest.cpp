@@ -3,6 +3,9 @@
 #include "rho/tTest.h"
 #include "rho/types.h"
 
+#include "rho/sync/tThread.h"
+#include "rho/sync/tThreadLocal.h"
+
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
@@ -15,9 +18,11 @@ using std::endl;
 using std::vector;
 
 
-static i64 gObjectCount = 0;
-
 static const i32 kMaxTests = 100;
+static const i32 kMaxThreads = 100;
+
+
+static i64 gObjectCount = 0;
 
 
 class tCountingObject
@@ -43,6 +48,45 @@ class tCountingObject
         ~tCountingObject()
         {
             gObjectCount--;
+        }
+
+        void foo()
+        {
+        }
+
+        void bar() const
+        {
+        }
+};
+
+
+static sync::tThreadLocal<i64> gThreadLocalObjectCount;
+
+
+class tThreadLocalCountingObject
+{
+    public:
+
+        tThreadLocalCountingObject()
+        {
+            (*gThreadLocalObjectCount)++;
+        }
+
+        tThreadLocalCountingObject(const tThreadLocalCountingObject& other)
+        {
+            exit(1);
+        }
+
+        tThreadLocalCountingObject& operator= (
+                const tThreadLocalCountingObject& other)
+        {
+            exit(1);
+            return *this;
+        }
+
+        ~tThreadLocalCountingObject()
+        {
+            (*gThreadLocalObjectCount)--;
         }
 
         void foo()
@@ -296,6 +340,108 @@ void randomTest2(const tTest& t)
 }
 
 
+void threadLocalRandomTest2(const tTest& t)
+{
+    {
+        const int kVectorSize = 100;
+        vector< refc<tThreadLocalCountingObject> > v;
+        for (int i = 0; i < kVectorSize; i++)
+        {
+            v.push_back(refc<tThreadLocalCountingObject>(
+                                       new tThreadLocalCountingObject));
+        }
+
+        for (int i = 0; i < 100*kVectorSize; i++)
+        {
+            int pos1 = rand() % kVectorSize;
+            int pos2 = rand() % kVectorSize;
+            int op   = rand() % 6;
+            switch (op)
+            {
+                case 0:
+                {
+                    // Tests operator=(T*) with a new object.
+                    v[pos1] = new tThreadLocalCountingObject;
+                    break;
+                }
+                case 1:
+                {
+                    // Tests operator=(T*) with a per-existing object.
+                    tThreadLocalCountingObject& o = *v[pos2];
+                    v[pos1] = &o;
+                    break;
+                }
+                case 2:
+                {
+                    // Tests refc(T*) and operator=(refc&) with a new object.
+                    refc<tThreadLocalCountingObject> r(
+                                          new tThreadLocalCountingObject);
+                    v[pos1] = r;
+                    break;
+                }
+                case 3:
+                {
+                    // Tests refc(T*) and operator=(refc&) with a pre-ex object.
+                    tThreadLocalCountingObject& o = *v[pos2];
+                    refc<tThreadLocalCountingObject> r(&o);
+                    v[pos1] = r;
+                    break;
+                }
+                case 4:
+                {
+                    // Tests operator=(refc&).
+                    v[pos1] = v[pos2];
+                    break;
+                }
+                case 5:
+                {
+                    // Tests refc(refc&).
+                    refc<tThreadLocalCountingObject> r1(v[pos1]);
+                    refc<tThreadLocalCountingObject> r2(v[pos2]);
+                    break;
+                }
+                default:
+                {
+                    t.assert(false);
+                    break;
+                }
+            }
+        }
+    }
+    t.assert(*gThreadLocalObjectCount == 0);
+}
+
+
+class tRefcTestRunnable : public sync::iRunnable
+{
+    public:
+
+        tRefcTestRunnable(const tTest& t) : m_t(t) { }
+
+        void run()
+        {
+            gThreadLocalObjectCount = new i64(0);
+            threadLocalRandomTest2(m_t);
+            gThreadLocalObjectCount = NULL;
+        }
+
+    private:
+
+        const tTest& m_t;
+};
+
+
+void threadTest(const tTest& t)
+{
+    int numThreads = rand() % kMaxThreads + 1;
+    vector< refc<sync::tThread> > threads;
+    for (int i = 0; i < numThreads; i++)
+        threads.push_back(new sync::tThread(new tRefcTestRunnable(t)));
+    for (int i = 0; i < numThreads; i++)
+        threads[i]->join();
+}
+
+
 int main()
 {
     tCrashReporter::init();
@@ -314,6 +460,8 @@ int main()
     srand(time(0));
     tTest("Randomized test 1", randomTest1, kMaxTests);
     tTest("Randomized test 2", randomTest2, kMaxTests);
+
+    tTest("Randomized test 2 (with threads)", threadTest, kMaxTests/10);
 
     return 0;
 }
