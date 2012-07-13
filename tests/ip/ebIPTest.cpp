@@ -19,6 +19,12 @@ void test(const tTest& t)
     ip::ebIP* p3 = &e3;
     ip::ebIP* p4 = &e4;
     ip::ebIP* p5 = &e5;
+
+    p1->what();              //
+    p2->what();              //
+    p3->what();              // These lines are to avoid an 'unused var' error
+    p4->what();              //
+    p5->what();              //
 }
 
 

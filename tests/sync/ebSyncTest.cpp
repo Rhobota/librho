@@ -26,6 +26,13 @@ void test(const tTest& t)
     sync::ebSync* p4 = &e4;
     sync::ebSync* p5 = &e5;
     sync::ebSync* p6 = &e6;
+
+    p1->what();     //
+    p2->what();     //
+    p3->what();     // These lines are to get rid of the "unsued var" error.
+    p4->what();     //
+    p5->what();     //
+    p6->what();     //
 }
 
 

@@ -80,11 +80,19 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
     }
 
     int off = 0;
+    int on  = 1;
     if (::setsockopt(m_fd, IPPROTO_IPV6, IPV6_V6ONLY, (void*)&off, sizeof(off))
             == -1)
     {
         m_finalize();
-        throw std::runtime_error("Cannot set socket option which is vital.");
+        throw std::runtime_error("Cannot set server to ipv6-only.");
+    }
+
+    if (::setsockopt(m_fd, SOL_SOCKET, SO_REUSEADDR, (void*)&on, sizeof(on))
+            == -1)
+    {
+        m_finalize();
+        throw std::runtime_error("Cannot enable reuse-addr on server.");
     }
 
     if (::bind(m_fd, m_addr.m_sockaddr, m_addr.m_sockaddrlen) == -1)

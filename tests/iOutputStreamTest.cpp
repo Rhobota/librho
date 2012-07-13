@@ -16,6 +16,7 @@ class tFoo : public iOutputStream
         int write(const u8* buffer, int length)
         {
             gItWorked = true;
+            return 0;
         }
 };
 

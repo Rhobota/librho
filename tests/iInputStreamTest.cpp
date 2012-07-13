@@ -16,6 +16,7 @@ class tFoo : public iInputStream
         int read(u8* buffer, int length)
         {
             gItWorked = true;
+            return 0;
         }
 };
 

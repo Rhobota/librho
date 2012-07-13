@@ -32,7 +32,7 @@ class tAddrGroup : public bNonCopyable
         {
             kLocalhostConnect,
             kLocalhostBind,
-            kWildcardBind,
+            kWildcardBind
         };
 
         tAddrGroup(nAddrGroupSpecialType type);

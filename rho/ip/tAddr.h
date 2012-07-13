@@ -26,7 +26,7 @@ namespace ip
 enum nVersion
 {
     kIPv4 = 4,
-    kIPv6 = 6,
+    kIPv6 = 6
 };
 
 
@@ -76,6 +76,7 @@ tAddr::tAddr(const tAddr& other)
 tAddr& tAddr::operator= (const tAddr& other)
 {
     m_init(other.m_sockaddr, other.m_sockaddrlen);
+    return *this;
 }
 
 nVersion tAddr::getVersion() const

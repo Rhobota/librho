@@ -4,7 +4,7 @@ SEARCH_DIR="."
 OUT_FILE="a.out"
 
 CC="g++"
-CC_FLAGS="-O0 -fno-inline -g -rdynamic -I ../"
+CC_FLAGS="-O0 -fno-inline -g -rdynamic -Wall -Werror -I ../"
 CC_LIB_FLAGS="-lpthread"
 
 if [ -n "$1" ]

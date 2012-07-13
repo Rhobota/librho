@@ -12,9 +12,9 @@ using namespace rho;
 using std::vector;
 
 
-const int kTestIterations = 500;
+const int kTestIterations = 100;
 const int kMaxThreads = 100;
-const int kThreadIterations = 10000;
+const int kThreadIterations = 1000;
 
 sync::tThreadLocal<int> gGlobalInt1;
 sync::tThreadLocal<int> gGlobalInt2;
