@@ -14,7 +14,6 @@
 #include <sys/types.h>     //
 #include <errno.h>         //
 
-#include <sstream>
 #include <string>
 
 
