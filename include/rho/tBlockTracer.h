@@ -22,21 +22,21 @@ namespace rho
 
 #define RHO_VAR(x) \
     { \
-    rho::tBlockTracer* _top_bl_ = rho::tBlockTracer::top(); \
-    std::ostream& _top_bl_ostream_ = \
+        rho::tBlockTracer* _top_bl_ = rho::tBlockTracer::top(); \
+        std::ostream& _top_bl_ostream_ = \
                         (_top_bl_) ? (_top_bl_->getStream()) : (std::cerr); \
-    rho::tBlockTracer::printIndent(_top_bl_ostream_); \
-    _top_bl_ostream_ << #x << " == " << x << "\n"; \
+        rho::tBlockTracer::printIndent(_top_bl_ostream_); \
+        _top_bl_ostream_ << #x << " == " << x << "\n"; \
     }
 
 
 #define RHO_LOG(x) \
     { \
-    rho::tBlockTracer* _top_bl_ = rho::tBlockTracer::top(); \
-    std::ostream& _top_bl_ostream_ = \
+        rho::tBlockTracer* _top_bl_ = rho::tBlockTracer::top(); \
+        std::ostream& _top_bl_ostream_ = \
                         (_top_bl_) ? (_top_bl_->getStream()) : (std::cerr); \
-    rho::tBlockTracer::printIndent(_top_bl_ostream_); \
-    _top_bl_ostream_ << x << "\n"; \
+        rho::tBlockTracer::printIndent(_top_bl_ostream_); \
+        _top_bl_ostream_ << x << "\n"; \
     }
 
 

@@ -1,7 +1,5 @@
 #include "rho/tBlockTracer.h"
 
-#include "rho/sync/tThreadLocal.h"
-
 
 namespace rho
 {

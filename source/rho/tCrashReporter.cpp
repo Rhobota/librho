@@ -43,7 +43,7 @@ static void cleanExitWithFailure()
     // Abort() does no cleanup at all. Exit() doesn't unwinds the stack,
     // but it *does* call the destructors of all the global objects.
     // So, exit() is better.
-    exit(1);
+    ::exit(1);
 }
 
 static void terminate()
