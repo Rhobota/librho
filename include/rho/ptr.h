@@ -3,7 +3,7 @@
 
 
 #include "bNonCopyable.h"
-#include "ebObject.h"
+#include "eRho.h"
 
 #include <cstdlib>
 
@@ -64,7 +64,7 @@ template <class T>
 T& ptr<T>::operator* ()
 {
     if (!m_p)
-        throw std::logic_error("Dereferencing NULL, oh no!");
+        throw eNullPointer("Dereferencing NULL, oh no!");
     return *m_p;
 }
 
@@ -72,7 +72,7 @@ template <class T>
 const T& ptr<T>::operator* () const
 {
     if (!m_p)
-        throw std::logic_error("Dereferencing NULL, oh no!");
+        throw eNullPointer("Dereferencing NULL, oh no!");
     return *m_p;
 }
 
@@ -80,7 +80,7 @@ template <class T>
 T* ptr<T>::operator-> ()
 {
     if (!m_p)
-        throw std::logic_error("Dereferencing NULL, oh no!");
+        throw eNullPointer("Dereferencing NULL, oh no!");
     return m_p;
 }
 
@@ -88,7 +88,7 @@ template <class T>
 const T* ptr<T>::operator-> () const
 {
     if (!m_p)
-        throw std::logic_error("Dereferencing NULL, oh no!");
+        throw eNullPointer("Dereferencing NULL, oh no!");
     return m_p;
 }
 

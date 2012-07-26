@@ -183,7 +183,7 @@ void example6(const tTest& t)
             refc<tCountingObject> r(NULL);
             t.assert(false);
         }
-        catch (std::logic_error& e)
+        catch (eNullPointer& e)
         {
         }
 
@@ -194,7 +194,7 @@ void example6(const tTest& t)
             r = NULL;
             t.assert(false);
         }
-        catch (std::logic_error& e)
+        catch (eNullPointer& e)
         {
         }
         t.assert(gObjectCount == 0);

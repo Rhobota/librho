@@ -3,7 +3,7 @@
 
 
 #include "rho/bNonCopyable.h"
-#include "rho/ebObject.h"
+#include "rho/eRho.h"
 
 #include <pthread.h>    // posix header
 
@@ -43,7 +43,7 @@ template <class T>
 tThreadLocal<T>::tThreadLocal()
 {
     if (pthread_key_create(&m_key, NULL) != 0)
-        throw std::runtime_error("Dude, this is bad: can't create tls key.");
+        throw eResourceAcquisitionError("Dude, this is bad: can't create tls key.");
 }
 
 template <class T>
@@ -59,7 +59,7 @@ void tThreadLocal<T>::operator= (T* object)
     if (oldObj)
         delete oldObj;
     if (pthread_setspecific(m_key, object) != 0)
-        throw std::runtime_error("Can't store tls object.");
+        throw eRuntimeError("Can't store tls object.");
 }
 
 template <class T>
@@ -84,7 +84,7 @@ template <class T>
 tThreadLocal<T>::~tThreadLocal()
 {
     if (pthread_key_delete(m_key) != 0)
-        throw std::runtime_error("Can't delete tls key.");
+        throw eRuntimeError("Can't delete tls key.");
 }
 
 

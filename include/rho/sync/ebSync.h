@@ -2,9 +2,7 @@
 #define __rho_sync_ebSync_h__
 
 
-#include "rho/ebObject.h"
-
-#include <string>
+#include "rho/eRho.h"
 
 
 namespace rho
@@ -28,7 +26,9 @@ class eThreadCreationError : public ebSync
     public:
 
         eThreadCreationError()
-            : ebSync("Thread creation failed because either there are not enough resources or because there is a system-imposed limit on the number of threads allowed per process.")
+            : ebSync("Thread creation failed because either there are not enough "
+                     "resources or because there is a system-imposed limit on the "
+                     "number of threads allowed per process.")
         {
         }
 

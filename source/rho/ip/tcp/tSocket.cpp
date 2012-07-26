@@ -119,7 +119,7 @@ void tSocket::close()
 {
     if (::shutdown(m_fd, SHUT_RDWR) == -1)
     {
-        throw std::logic_error(strerror(errno));
+        throw eRuntimeError(strerror(errno));
     }
 }
 
@@ -127,7 +127,7 @@ void tSocket::closeRead()
 {
     if (::shutdown(m_fd, SHUT_RD) == -1)
     {
-        throw std::logic_error(strerror(errno));
+        throw eRuntimeError(strerror(errno));
     }
 }
 
@@ -135,7 +135,7 @@ void tSocket::closeWrite()
 {
     if (::shutdown(m_fd, SHUT_WR) == -1)
     {
-        throw std::logic_error(strerror(errno));
+        throw eRuntimeError(strerror(errno));
     }
 }
 
