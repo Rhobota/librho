@@ -29,7 +29,7 @@ tServer::tServer(const tAddrGroup& addrGroup, u16 bindPort)
 void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
 {
     if (addrGroup.size() != 1)
-        throw std::logic_error("A tcp server can only bind to one address.");
+        throw eLogicError("A tcp server can only bind to one address.");
 
     m_addr = addrGroup[0];
     m_addr.setUpperProtoPort(bindPort);
@@ -46,14 +46,14 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
             == -1)
     {
         m_finalize();
-        throw std::runtime_error("Cannot set server to ipv6-only.");
+        throw eRuntimeError("Cannot set server to ipv6-only.");
     }
 
     if (::setsockopt(m_fd, SOL_SOCKET, SO_REUSEADDR, (void*)&on, sizeof(on))
             == -1)
     {
         m_finalize();
-        throw std::runtime_error("Cannot enable reuse-addr on server.");
+        throw eRuntimeError("Cannot enable reuse-addr on server.");
     }
 
     if (::bind(m_fd, m_addr.m_sockaddr, m_addr.m_sockaddrlen) == -1)
@@ -67,7 +67,7 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
     if (::listen(m_fd, kServerAcceptQueueLength) == -1)
     {
         m_finalize();
-        throw std::runtime_error("Cannot put server in listening state.");
+        throw eRuntimeError("Cannot put server in listening state.");
     }
 }
 
@@ -105,12 +105,12 @@ refc<tSocket> tServer::accept()
 
     if (fd == -1)
     {
-        throw std::runtime_error(strerror(errno));
+        throw eResourceAcquisitionError(strerror(errno));
     }
 
     if (returnedLen > sockAddrLen)
     {
-        throw std::logic_error("Something is crazy wrong.");
+        throw eLogicError("Something is crazy wrong.");
     }
 
     tAddr addr((struct sockaddr*)&sockAddr, (int)returnedLen);

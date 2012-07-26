@@ -67,7 +67,7 @@ tAddrGroup::tAddrGroup(nAddrGroupSpecialType type)
             m_initWildcardBind();
             break;
         default:
-            throw std::logic_error("Unknown nAddrGroupSpecialType");
+            throw eLogicError("Unknown nAddrGroupSpecialType");
             break;
     }
 }
@@ -99,7 +99,7 @@ void tAddrGroup::m_init_helper(const char* hostStr, const char* serviceStr,
         if (a == EAI_NONAME || a == EAI_NODATA)
             throw eHostNotFoundError("Cannot resolve host to address.");
         else
-            throw std::logic_error(gai_strerror(a));
+            throw eLogicError(gai_strerror(a));
     }
 
     struct addrinfo* curr = NULL;
@@ -201,7 +201,7 @@ int tAddrGroup::size() const
 tAddr tAddrGroup::operator[](int i) const
 {
     if (i < 0 || i >= size())
-        throw std::logic_error("No address with that index in group.");
+        throw eLogicError("No address with that index in group.");
 
     struct addrinfo* curr = m_valid_addrinfos[i];
     return tAddr(curr->ai_addr, curr->ai_addrlen);

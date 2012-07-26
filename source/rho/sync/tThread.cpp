@@ -53,7 +53,7 @@ tThread::tThread(refc<iRunnable> runnable)
         }
         else
         {
-            throw std::logic_error("Invalid arguments to pthread_create()?");
+            throw eLogicError("Invalid arguments to pthread_create()?");
         }
     }
 }
@@ -74,7 +74,7 @@ void tThread::join()
     int threadJoinStatus = pthread_join(m_thread, NULL);
     if (threadJoinStatus != 0)
     {
-        throw std::runtime_error("Why isn't this thread joinable?");
+        throw eRuntimeError("Why isn't this thread joinable?");
     }
 
     m_joined = true;
@@ -96,7 +96,7 @@ void tThread::detach()
     int threadDetachStatus = pthread_detach(m_thread);
     if (threadDetachStatus != 0)
     {
-        throw std::runtime_error("Why isn't this thread detachable?");
+        throw eRuntimeError("Why isn't this thread detachable?");
     }
 
     m_detached = true;

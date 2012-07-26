@@ -27,7 +27,7 @@ nVersion tAddr::getVersion() const
     else if (m_sockaddr->sa_family == AF_INET6)
         return kIPv6;
     else
-        throw std::logic_error(
+        throw eLogicError(
                 "Internal IP address structure has an unknown version.");
 }
 
@@ -55,7 +55,7 @@ std::vector<u8> tAddr::getAddress() const
     }
     else
     {
-        throw std::logic_error(
+        throw eLogicError(
                 "Internal IP address structure has an unknown version.");
     }
 
@@ -78,7 +78,7 @@ u16 tAddr::getUpperProtoPort() const
     }
     else
     {
-        throw std::logic_error(
+        throw eLogicError(
                 "Internal IP address structure has an unknown version.");
     }
 
@@ -99,7 +99,7 @@ void tAddr::setUpperProtoPort(u16 port)
     }
     else
     {
-        throw std::logic_error(
+        throw eLogicError(
                 "Internal IP address structure has an unknown version.");
     }
 }
@@ -135,7 +135,7 @@ std::string tAddr::toString() const
     }
     else
     {
-        throw std::logic_error(
+        throw eLogicError(
                 "Internal IP address structure has an unknown version.");
     }
 

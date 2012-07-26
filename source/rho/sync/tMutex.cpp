@@ -27,7 +27,7 @@ void tMutex::acquire()
         if (mutexLockStatus == EDEADLK)
             throw eDeadlockDetected();
         else
-            throw std::logic_error("Incorrect m_mutex value?");
+            throw eLogicError("Incorrect m_mutex value?");
     }
 }
 
@@ -37,9 +37,9 @@ void tMutex::release()
     if (mutexUnlockStatus != 0)
     {
         if (mutexUnlockStatus == EPERM)
-            throw std::runtime_error("The current thread is trying to unlock a mutex which it does NOT own.");
+            throw eLogicError("The current thread is trying to unlock a mutex which it does NOT own.");
         else
-            throw std::logic_error("Incorrect m_mutex value?");
+            throw eLogicError("Incorrect m_mutex value?");
     }
 }
 

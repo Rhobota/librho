@@ -2,7 +2,7 @@
 #define __rho_refc_h__
 
 
-#include "ebObject.h"
+#include "eRho.h"
 
 #include "sync/tAtomicInt.h"
 #include "sync/tAutoSync.h"
@@ -57,7 +57,7 @@ refc<T>::refc(T* object)
       m_ref_count(NULL)
 {
     if (object == NULL)
-        throw std::logic_error("Reference counting NULL makes no sense.");
+        throw eNullPointer("Reference counting NULL makes no sense.");
 
     sync::tAutoSync as(gAllKnownRefcObjectsSync);
     if (gAllKnownRefcObjectsMap.find(object) != gAllKnownRefcObjectsMap.end())
@@ -115,7 +115,7 @@ const refc<T>& refc<T>::operator= (T* object)
         return *this;
 
     if (object == NULL)
-        throw std::logic_error("Reference counting NULL makes no sense.");
+        throw eNullPointer("Reference counting NULL makes no sense.");
 
     if (--(*m_ref_count) == 0)
     {
