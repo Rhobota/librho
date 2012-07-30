@@ -1,4 +1,4 @@
-#include "rho/ebObject.h"
+#include <rho/ebObject.h>
 
 
 namespace rho

@@ -2,11 +2,11 @@
 #define __rho_sync_tThread_h__
 
 
-#include "iRunnable.h"
+#include <rho/bNonCopyable.h>
+#include <rho/refc.h>
+#include <rho/types.h>
 
-#include "rho/bNonCopyable.h"
-#include "rho/refc.h"
-#include "rho/types.h"
+#include <rho/sync/iRunnable.h>
 
 #include <pthread.h>   //
 #include <errno.h>     // posix headers

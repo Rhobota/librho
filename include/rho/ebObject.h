@@ -2,7 +2,7 @@
 #define __rho_ebObject_h__
 
 
-#include "tStacktrace.h"
+#include <rho/tStacktrace.h>
 
 #include <cstdlib>
 #include <exception>

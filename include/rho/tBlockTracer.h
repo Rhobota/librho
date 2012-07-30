@@ -2,10 +2,10 @@
 #define __rho_tBlockTracer_h__
 
 
-#include "bNonCopyable.h"
-#include "types.h"
+#include <rho/bNonCopyable.h>
+#include <rho/types.h>
 
-#include "sync/tThreadLocal.h"
+#include <rho/sync/tThreadLocal.h>
 
 #include <iostream>
 #include <stack>

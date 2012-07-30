@@ -2,7 +2,7 @@
 #define __rho_sync_ebSync_h__
 
 
-#include "rho/eRho.h"
+#include <rho/eRho.h>
 
 
 namespace rho

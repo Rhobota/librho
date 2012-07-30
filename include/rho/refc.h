@@ -2,11 +2,11 @@
 #define __rho_refc_h__
 
 
-#include "eRho.h"
+#include <rho/eRho.h>
 
-#include "sync/tAtomicInt.h"
-#include "sync/tAutoSync.h"
-#include "sync/tMutex.h"
+#include <rho/sync/tAtomicInt.h>
+#include <rho/sync/tAutoSync.h>
+#include <rho/sync/tMutex.h>
 
 #include <cstdlib>
 #include <map>

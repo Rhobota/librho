@@ -1,6 +1,5 @@
-#include "rho/sync/tMutex.h"
-
-#include "rho/sync/ebSync.h"
+#include <rho/sync/tMutex.h>
+#include <rho/sync/ebSync.h>
 
 
 namespace rho

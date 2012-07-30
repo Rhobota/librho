@@ -1,7 +1,6 @@
-#include "rho/tCrashReporter.h"
-
-#include "rho/ebObject.h"
-#include "rho/tStacktrace.h"
+#include <rho/tCrashReporter.h>
+#include <rho/ebObject.h>
+#include <rho/tStacktrace.h>
 
 #include <signal.h>
 

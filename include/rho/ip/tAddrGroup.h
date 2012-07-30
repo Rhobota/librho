@@ -2,10 +2,10 @@
 #define __rho_ip_tAddrGroup_h__
 
 
-#include "tAddr.h"
-#include "ebIP.h"
+#include <rho/bNonCopyable.h>
 
-#include "rho/bNonCopyable.h"
+#include <rho/ip/ebIP.h>
+#include <rho/ip/tAddr.h>
 
 #include <arpa/inet.h>    //
 #include <sys/socket.h>   // posix headers

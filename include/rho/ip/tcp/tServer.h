@@ -2,11 +2,11 @@
 #define __rho_ip_tcp_tServer_h__
 
 
-#include "tSocket.h"
+#include <rho/bNonCopyable.h>
+#include <rho/refc.h>
+#include <rho/types.h>
 
-#include "rho/bNonCopyable.h"
-#include "rho/refc.h"
-#include "rho/types.h"
+#include <rho/ip/tcp/tSocket.h>
 
 #include <arpa/inet.h>    //
 #include <sys/socket.h>   // posix headers

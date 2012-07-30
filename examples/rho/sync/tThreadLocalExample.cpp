@@ -1,5 +1,5 @@
-#include "rho/sync/tThreadLocal.h"
-#include "rho/sync/tThread.h"
+#include <rho/sync/tThreadLocal.h>
+#include <rho/sync/tThread.h>
 
 #include <cstdlib>
 #include <ctime>

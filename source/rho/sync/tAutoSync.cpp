@@ -1,4 +1,4 @@
-#include "rho/sync/tAutoSync.h"
+#include <rho/sync/tAutoSync.h>
 
 
 namespace rho

@@ -2,11 +2,10 @@
 #define __rho_ip_tAddr_h__
 
 
-#include "ebIP.h"
+#include <rho/types.h>
 
-#include "tcp/_pre.h"
-
-#include "rho/types.h"
+#include <rho/ip/ebIP.h>
+#include <rho/ip/tcp/_pre.h>
 
 #include <arpa/inet.h>    //
 #include <sys/socket.h>   //
