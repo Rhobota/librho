@@ -2,9 +2,9 @@
 #define __rho_sync_tAutoSync_h__
 
 
-#include "iSync.h"
+#include <rho/bNonCopyable.h>
 
-#include "rho/bNonCopyable.h"
+#include <rho/sync/iSync.h>
 
 
 namespace rho

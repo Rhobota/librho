@@ -2,8 +2,8 @@
 #define __rho_sync_tThreadLocal_h__
 
 
-#include "rho/bNonCopyable.h"
-#include "rho/eRho.h"
+#include <rho/bNonCopyable.h>
+#include <rho/eRho.h>
 
 #include <pthread.h>    // posix header
 

@@ -2,9 +2,9 @@
 #define __rho_sync_tMutex_h__
 
 
-#include "iSync.h"
+#include <rho/bNonCopyable.h>
 
-#include "rho/bNonCopyable.h"
+#include <rho/sync/iSync.h>
 
 #include <pthread.h>   // posix headers
 #include <errno.h>     //

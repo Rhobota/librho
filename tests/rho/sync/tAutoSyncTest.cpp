@@ -1,9 +1,9 @@
-#include "rho/sync/tAutoSync.h"
-#include "rho/sync/tMutex.h"
-#include "rho/sync/tThread.h"
-#include "rho/tCrashReporter.h"
-#include "rho/tTest.h"
-#include "rho/types.h"
+#include <rho/sync/tAutoSync.h>
+#include <rho/sync/tMutex.h>
+#include <rho/sync/tThread.h>
+#include <rho/tCrashReporter.h>
+#include <rho/tTest.h>
+#include <rho/types.h>
 
 #include <cstdlib>
 #include <ctime>

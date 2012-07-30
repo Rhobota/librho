@@ -1,8 +1,6 @@
-#include "rho/sync/tThread.h"
-
-#include "rho/sync/ebSync.h"
-
-#include "rho/tCrashReporter.h"
+#include <rho/sync/tThread.h>
+#include <rho/sync/ebSync.h>
+#include <rho/tCrashReporter.h>
 
 #include <iostream>
 

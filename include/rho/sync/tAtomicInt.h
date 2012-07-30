@@ -2,11 +2,11 @@
 #define __rho_sync_tAtomicInt_h__
 
 
-#include "tAutoSync.h"
-#include "tMutex.h"
+#include <rho/bNonCopyable.h>
+#include <rho/types.h>
 
-#include "rho/bNonCopyable.h"
-#include "rho/types.h"
+#include <rho/sync/tAutoSync.h>
+#include <rho/sync/tMutex.h>
 
 #include <iostream>
 

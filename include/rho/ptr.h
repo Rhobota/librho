@@ -2,8 +2,8 @@
 #define __rho_ptr_h__
 
 
-#include "bNonCopyable.h"
-#include "eRho.h"
+#include <rho/bNonCopyable.h>
+#include <rho/eRho.h>
 
 #include <cstdlib>
 

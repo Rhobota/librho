@@ -2,7 +2,7 @@
 #define __rho_iOutputStream_h__
 
 
-#include "types.h"
+#include <rho/types.h>
 
 
 namespace rho

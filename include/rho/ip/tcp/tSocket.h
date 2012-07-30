@@ -2,12 +2,12 @@
 #define __rho_ip_tcp_tSocket_h__
 
 
-#include "../tAddrGroup.h"
+#include <rho/bNonCopyable.h>
+#include <rho/iInputStream.h>
+#include <rho/iOutputStream.h>
+#include <rho/types.h>
 
-#include "rho/bNonCopyable.h"
-#include "rho/iInputStream.h"
-#include "rho/iOutputStream.h"
-#include "rho/types.h"
+#include <rho/ip/tAddrGroup.h>
 
 #include <arpa/inet.h>     //
 #include <sys/socket.h>    // posix header files

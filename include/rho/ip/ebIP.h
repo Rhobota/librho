@@ -2,7 +2,7 @@
 #define __rho_ip_ebIP_h__
 
 
-#include "rho/eRho.h"
+#include <rho/eRho.h>
 
 
 namespace rho

@@ -2,7 +2,7 @@
 #define __rho_eRho_h__
 
 
-#include "ebObject.h"
+#include <rho/ebObject.h>
 
 
 namespace rho

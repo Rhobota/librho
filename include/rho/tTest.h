@@ -2,9 +2,9 @@
 #define __rho_tTest_h__
 
 
-#include "bNonCopyable.h"
-#include "ebObject.h"
-#include "types.h"
+#include <rho/bNonCopyable.h>
+#include <rho/ebObject.h>
+#include <rho/types.h>
 
 #include <iostream>
 #include <sstream>

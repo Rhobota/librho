@@ -2,7 +2,7 @@
 #define __rho_tCrashReporter_h__
 
 
-#include "bNonCopyable.h"
+#include <rho/bNonCopyable.h>
 
 
 namespace rho
