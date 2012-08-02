@@ -1,5 +1,4 @@
 #include <rho/img/tImageCapFactory.h>
-#include <rho/tCrashReporter.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -24,7 +23,7 @@ void display()
     int bufSize = gImageCap->getRequiredBufSize();
     u8* buffer = new u8[bufSize];
 
-    gImageCap->getFrame(buffer, bufSize);
+    gImageCap->getFrame(buffer, bufSize);   // returns the number of bytes used
 
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -73,8 +72,6 @@ void setupWindow(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
-    tCrashReporter::init();
-
     setupCapture();
 
     setupWindow(argc, argv);
