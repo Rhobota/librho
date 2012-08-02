@@ -139,7 +139,8 @@ static
 int rgb16_to_rgb24(u8* source, int sourceSize,
                    u8* dest, int destSize)
 {
-    return no_conversion(source, sourceSize, dest, destSize);
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
 }
 
 
@@ -147,7 +148,8 @@ static
 int rgb16_to_rgba(u8* source, int sourceSize,
                    u8* dest, int destSize)
 {
-    return no_conversion(source, sourceSize, dest, destSize);
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
 }
 
 
@@ -155,7 +157,8 @@ static
 int rgb16_to_yuyv(u8* source, int sourceSize,
                    u8* dest, int destSize)
 {
-    return no_conversion(source, sourceSize, dest, destSize);
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
 }
 
 
@@ -163,7 +166,8 @@ static
 int rgb24_to_rgb16(u8* source, int sourceSize,
                    u8* dest, int destSize)
 {
-    return no_conversion(source, sourceSize, dest, destSize);
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
 }
 
 
@@ -171,7 +175,8 @@ static
 int rgb24_to_rgba(u8* source, int sourceSize,
                    u8* dest, int destSize)
 {
-    return no_conversion(source, sourceSize, dest, destSize);
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
 }
 
 
@@ -179,7 +184,8 @@ static
 int rgba_to_rgb16(u8* source, int sourceSize,
                    u8* dest, int destSize)
 {
-    return no_conversion(source, sourceSize, dest, destSize);
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
 }
 
 
@@ -187,7 +193,8 @@ static
 int rgba_to_rgb24(u8* source, int sourceSize,
                    u8* dest, int destSize)
 {
-    return no_conversion(source, sourceSize, dest, destSize);
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
 }
 
 
@@ -195,7 +202,8 @@ static
 int rgba_to_yuyv(u8* source, int sourceSize,
                    u8* dest, int destSize)
 {
-    return no_conversion(source, sourceSize, dest, destSize);
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
 }
 
 
@@ -203,7 +211,8 @@ static
 int yuyv_to_rgb16(u8* source, int sourceSize,
                    u8* dest, int destSize)
 {
-    return no_conversion(source, sourceSize, dest, destSize);
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
 }
 
 
@@ -211,7 +220,8 @@ static
 int yuyv_to_rgba(u8* source, int sourceSize,
                    u8* dest, int destSize)
 {
-    return no_conversion(source, sourceSize, dest, destSize);
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
 }
 
 
