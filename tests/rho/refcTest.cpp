@@ -181,17 +181,46 @@ void example6(const tTest& t)
         try
         {
             refc<tCountingObject> r(NULL);
+            tCountingObject& c = *r;
             t.assert(false);
+            c.foo();                      // prevents "unused variable" error
         }
         catch (eNullPointer& e)
         {
         }
+        t.assert(gObjectCount == 0);
 
         try
         {
             refc<tCountingObject> r(new tCountingObject);
             t.assert(gObjectCount == 1);
             r = NULL;
+            tCountingObject& c = *r;
+            t.assert(false);
+            c.foo();                      // prevents "unused variable" error
+        }
+        catch (eNullPointer& e)
+        {
+        }
+        t.assert(gObjectCount == 0);
+
+        try
+        {
+            refc<tCountingObject> r(NULL);
+            r->foo();
+            t.assert(false);
+        }
+        catch (eNullPointer& e)
+        {
+        }
+        t.assert(gObjectCount == 0);
+
+        try
+        {
+            refc<tCountingObject> r(new tCountingObject);
+            t.assert(gObjectCount == 1);
+            r = NULL;
+            r->foo();
             t.assert(false);
         }
         catch (eNullPointer& e)
@@ -274,17 +303,13 @@ void randomTest2(const tTest& t)
 {
     {
         const int kVectorSize = 100;
-        vector< refc<tCountingObject> > v;
-        for (int i = 0; i < kVectorSize; i++)
-        {
-            v.push_back(refc<tCountingObject>(new tCountingObject));
-        }
+        vector< refc<tCountingObject> > v(kVectorSize);
 
-        for (int i = 0; i < 100*kVectorSize; i++)
+        for (int i = 0; i < 200*kVectorSize; i++)
         {
             int pos1 = rand() % kVectorSize;
             int pos2 = rand() % kVectorSize;
-            int op   = rand() % 6;
+            int op   = rand() % 8;
             switch (op)
             {
                 case 0:
@@ -296,8 +321,12 @@ void randomTest2(const tTest& t)
                 case 1:
                 {
                     // Tests operator=(T*) with a per-existing object.
-                    tCountingObject& o = *v[pos2];
-                    v[pos1] = &o;
+                    try
+                    {
+                        tCountingObject& o = *v[pos2];
+                        v[pos1] = &o;
+                    }
+                    catch (eNullPointer& e) { }
                     break;
                 }
                 case 2:
@@ -310,9 +339,13 @@ void randomTest2(const tTest& t)
                 case 3:
                 {
                     // Tests refc(T*) and operator=(refc&) with a pre-ex object.
-                    tCountingObject& o = *v[pos2];
-                    refc<tCountingObject> r(&o);
-                    v[pos1] = r;
+                    try
+                    {
+                        tCountingObject& o = *v[pos2];
+                        refc<tCountingObject> r(&o);
+                        v[pos1] = r;
+                    }
+                    catch (eNullPointer& e) { }
                     break;
                 }
                 case 4:
@@ -326,6 +359,22 @@ void randomTest2(const tTest& t)
                     // Tests refc(refc&).
                     refc<tCountingObject> r1(v[pos1]);
                     refc<tCountingObject> r2(v[pos2]);
+                    break;
+                }
+                case 6:
+                {
+                    // Tests operator=() with a NULL refc.
+                    refc<tCountingObject> r1;
+                    refc<tCountingObject> r2(NULL);
+                    t.assert(r1 == r2);
+                    v[pos1] = r1;
+                    v[pos2] = r2;
+                    break;
+                }
+                case 7:
+                {
+                    // Tests operator=() with a NULL pointer.
+                    v[pos1] = NULL;
                     break;
                 }
                 default:
@@ -351,11 +400,11 @@ void threadLocalRandomTest2(const tTest& t)
                                        new tThreadLocalCountingObject));
         }
 
-        for (int i = 0; i < 100*kVectorSize; i++)
+        for (int i = 0; i < 200*kVectorSize; i++)
         {
             int pos1 = rand() % kVectorSize;
             int pos2 = rand() % kVectorSize;
-            int op   = rand() % 6;
+            int op   = rand() % 8;
             switch (op)
             {
                 case 0:
@@ -367,8 +416,12 @@ void threadLocalRandomTest2(const tTest& t)
                 case 1:
                 {
                     // Tests operator=(T*) with a per-existing object.
-                    tThreadLocalCountingObject& o = *v[pos2];
-                    v[pos1] = &o;
+                    try
+                    {
+                        tThreadLocalCountingObject& o = *v[pos2];
+                        v[pos1] = &o;
+                    }
+                    catch (eNullPointer& e) { }
                     break;
                 }
                 case 2:
@@ -382,9 +435,13 @@ void threadLocalRandomTest2(const tTest& t)
                 case 3:
                 {
                     // Tests refc(T*) and operator=(refc&) with a pre-ex object.
-                    tThreadLocalCountingObject& o = *v[pos2];
-                    refc<tThreadLocalCountingObject> r(&o);
-                    v[pos1] = r;
+                    try
+                    {
+                        tThreadLocalCountingObject& o = *v[pos2];
+                        refc<tThreadLocalCountingObject> r(&o);
+                        v[pos1] = r;
+                    }
+                    catch (eNullPointer& e) { }
                     break;
                 }
                 case 4:
@@ -398,6 +455,22 @@ void threadLocalRandomTest2(const tTest& t)
                     // Tests refc(refc&).
                     refc<tThreadLocalCountingObject> r1(v[pos1]);
                     refc<tThreadLocalCountingObject> r2(v[pos2]);
+                    break;
+                }
+                case 6:
+                {
+                    // Tests operator=() with a NULL refc.
+                    refc<tThreadLocalCountingObject> r1;
+                    refc<tThreadLocalCountingObject> r2(NULL);
+                    t.assert(r1 == r2);
+                    v[pos1] = r1;
+                    v[pos2] = r2;
+                    break;
+                }
+                case 7:
+                {
+                    // Tests operator=() with a NULL pointer.
+                    v[pos1] = NULL;
                     break;
                 }
                 default:
