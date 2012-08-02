@@ -29,6 +29,16 @@ class eRuntimeError : public ebObject
 };
 
 
+class eNotImplemented : public ebObject
+{
+    public:
+
+        eNotImplemented(std::string reason) : ebObject(reason) { }
+
+        ~eNotImplemented() throw() { }
+};
+
+
 class eResourceAcquisitionError : public eRuntimeError
 {
     public:
