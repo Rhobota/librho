@@ -23,6 +23,9 @@ void testParamsEnumerator(const tTest& t)
 void testImageCap(const tTest& t)
 {
     img::tImageCapParams params;
+    params.deviceURL = "/dev/video0";
+    params.captureFormat = img::kYUYV;
+    params.displayFormat = img::kRGB24;
 
     refc<img::iImageCap> cap =
         img::tImageCapFactory::getImageCap(params, true);
@@ -34,8 +37,11 @@ void testImageCap(const tTest& t)
 
     u8* buf = new u8[bufSize];
 
-    int readSize = cap->getFrame(buf, bufSize);
-    t.assert(readSize > 0);
+    for (int i = 0; i < 20; i++)
+    {
+        int readSize = cap->getFrame(buf, bufSize);
+        t.assert(readSize > 0);
+    }
 
     delete [] buf;
 }

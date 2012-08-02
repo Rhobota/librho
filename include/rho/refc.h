@@ -140,7 +140,7 @@ const refc<T>& refc<T>::operator= (T* object)
     {
         m_object = NULL;
         m_ref_count = NULL;
-        return;
+        return *this;
     }
 
     sync::tAutoSync as(gAllKnownRefcObjectsSync);
