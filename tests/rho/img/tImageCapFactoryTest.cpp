@@ -1,78 +1,52 @@
 #include <rho/img/tImageCapFactory.h>
-
-#include <rho/ip/tcp/tSocket.h>
-
-#include <signal.h>
-
-#include <iostream>
+#include <rho/tCrashReporter.h>
+#include <rho/tTest.h>
 
 
 using namespace rho;
-using std::cout;
-using std::endl;
 
 
-bool gStop = false;
-
-static ip::tcp::tSocket gViewerSocket("::1", 12345);
-
-
-void gotKeyboardInterrupt(int sig)
-{
-    if (sig == SIGINT)
-    {
-        gStop = true;
-    }
-}
-
-
-void testParamsEnumerator()
+void testParamsEnumerator(const tTest& t)
 {
     refc<img::iImageCapParamsEnumerator> enumerator =
         img::tImageCapFactory::getImageCapParamsEnumerator();
 
-    cout << "Size: " << enumerator->size() << endl;
+    t.assert(enumerator->size() > 0);
 
     for (int i = 0; i < enumerator->size(); i++)
     {
-        cout << (*enumerator)[i] << endl;
+        img::tImageCapParams params = (*enumerator)[i];
     }
 }
 
 
-void testImageCap()
+void testImageCap(const tTest& t)
 {
     img::tImageCapParams params;
-    params.deviceURL = "/dev/video0";
-    params.captureFormat = img::kYUYV;
-    params.displayFormat = img::kRGB24;
-
-    cout << params << endl;
 
     refc<img::iImageCap> cap =
-        img::tImageCapFactory::getImageCap(params, false);
+        img::tImageCapFactory::getImageCap(params, true);
+
+    img::tImageCapParams coercedParams = cap->getParams();
 
     int bufSize = cap->getRequiredBufSize();
-    u8* buffer = new u8[bufSize];
+    t.assert(bufSize > 0);
 
-    while (!gStop)
-    {
-        int size = cap->getFrame(buffer, bufSize);
-        gViewerSocket.write(buffer, size);
-        cout << "Read a frame, size: " << size << endl;
-    }
+    u8* buf = new u8[bufSize];
+
+    int readSize = cap->getFrame(buf, bufSize);
+    t.assert(readSize > 0);
+
+    delete [] buf;
 }
 
 
 int main()
 {
-    signal(SIGINT, gotKeyboardInterrupt);
+    tCrashReporter::init();
 
-    testParamsEnumerator();
-
-    testImageCap();
-
-    cout << "Exiting cleanly..." << endl;
+    tTest("Params enumeration test", testParamsEnumerator);
+    tTest("Image capture test", testImageCap);
 
     return 0;
 }

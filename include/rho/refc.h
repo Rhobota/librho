@@ -21,6 +21,7 @@ class refc
 {
     public:
 
+        refc();
         refc(T* object);
         refc(const refc& other);
 
@@ -52,12 +53,21 @@ extern sync::tMutex                 gAllKnownRefcObjectsSync;
 
 
 template <class T>
+refc<T>::refc()
+    : m_object(NULL),
+      m_ref_count(NULL)
+{
+}
+
+template <class T>
 refc<T>::refc(T* object)
     : m_object(NULL),
       m_ref_count(NULL)
 {
     if (object == NULL)
-        throw eNullPointer("Reference counting NULL makes no sense.");
+    {
+        return;
+    }
 
     sync::tAutoSync as(gAllKnownRefcObjectsSync);
     if (gAllKnownRefcObjectsMap.find(object) != gAllKnownRefcObjectsMap.end())
@@ -82,7 +92,8 @@ refc<T>::refc(const refc<T>& other)
 {
     m_object = other.m_object;
     m_ref_count = other.m_ref_count;
-    ++(*m_ref_count);
+    if (m_ref_count)
+        ++(*m_ref_count);
 }
 
 template <class T>
@@ -91,7 +102,7 @@ const refc<T>& refc<T>::operator= (const refc<T>& other)
     if (m_object == other.m_object)
         return *this;
 
-    if (--(*m_ref_count) == 0)
+    if ((m_ref_count) && --(*m_ref_count) == 0)
     {
         {
             sync::tAutoSync as(gAllKnownRefcObjectsSync);
@@ -103,7 +114,8 @@ const refc<T>& refc<T>::operator= (const refc<T>& other)
 
     m_object = other.m_object;
     m_ref_count = other.m_ref_count;
-    ++(*m_ref_count);
+    if (m_ref_count)
+        ++(*m_ref_count);
 
     return *this;
 }
@@ -114,10 +126,7 @@ const refc<T>& refc<T>::operator= (T* object)
     if (m_object == object)
         return *this;
 
-    if (object == NULL)
-        throw eNullPointer("Reference counting NULL makes no sense.");
-
-    if (--(*m_ref_count) == 0)
+    if ((m_ref_count) && --(*m_ref_count) == 0)
     {
         {
             sync::tAutoSync as(gAllKnownRefcObjectsSync);
@@ -125,6 +134,13 @@ const refc<T>& refc<T>::operator= (T* object)
         }
         delete m_object;
         delete m_ref_count;
+    }
+
+    if (object == NULL)
+    {
+        m_object = NULL;
+        m_ref_count = NULL;
+        return;
     }
 
     sync::tAutoSync as(gAllKnownRefcObjectsSync);
@@ -148,24 +164,32 @@ const refc<T>& refc<T>::operator= (T* object)
 template <class T>
 T& refc<T>::operator* ()
 {
+    if (m_object == NULL)
+        throw eNullPointer("Dereferencing NULL!");
     return *m_object;
 }
 
 template <class T>
 const T& refc<T>::operator* () const
 {
+    if (m_object == NULL)
+        throw eNullPointer("Dereferencing NULL!");
     return *m_object;
 }
 
 template <class T>
 T* refc<T>::operator-> ()
 {
+    if (m_object == NULL)
+        throw eNullPointer("Dereferencing NULL!");
     return m_object;
 }
 
 template <class T>
 const T* refc<T>::operator-> () const
 {
+    if (m_object == NULL)
+        throw eNullPointer("Dereferencing NULL!");
     return m_object;
 }
 
@@ -190,7 +214,7 @@ bool refc<T>::operator< (const refc<T>& other) const
 template <class T>
 refc<T>::~refc()
 {
-    if (--(*m_ref_count) == 0)
+    if ((m_ref_count) && --(*m_ref_count) == 0)
     {
         {
             sync::tAutoSync as(gAllKnownRefcObjectsSync);
