@@ -13,12 +13,14 @@ namespace img
 
 enum nImageFormat
 {
-    kRGB16          = 0,
-    kRGB24          = 1,
-    kRGBA           = 2,
-    kYUYV           = 3,
+    kRGB16          = 0,      // RGB,  16 bits == 1 pixel
+    kRGB24          = 1,      // RGB,  24 bits == 1 pixel
+    kRGBA           = 2,      // RGBA, 32 bits == 1 pixel
+    kBGRA           = 3,      // BGRA, 32 bits == 1 pixel
+    kYUYV           = 4,      // YUYV, 32 bits == 2 pixels
+    kGrey           = 5,      // Grey, 8 bits  == 1 pixel
 
-    kMaxImageFormat = 4,
+    kMaxImageFormat = 6,
 
     kUnspecified    = 98,
     kUnknown        = 99

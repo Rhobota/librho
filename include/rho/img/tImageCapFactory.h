@@ -24,7 +24,7 @@ class tImageCapFactory : public bNonCopyable
 
         static
         refc<iImageCap> getImageCap(
-                tImageCapParams& params,
+                const tImageCapParams& params,
                 bool allowCoercion
         );
 

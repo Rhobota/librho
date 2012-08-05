@@ -22,7 +22,7 @@ class tImageCapParams
 
     public:
 
-        std::string  deviceURL;
+        int          deviceIndex;
 
         int          inputIndex;
         std::string  inputDescription;

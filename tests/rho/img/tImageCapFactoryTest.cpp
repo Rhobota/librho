@@ -2,8 +2,12 @@
 #include <rho/tCrashReporter.h>
 #include <rho/tTest.h>
 
+#include <iostream>
+
 
 using namespace rho;
+using std::cout;
+using std::endl;
 
 
 void testParamsEnumerator(const tTest& t)
@@ -22,17 +26,25 @@ void testParamsEnumerator(const tTest& t)
 
 void testImageCap(const tTest& t)
 {
-    img::tImageCapParams params;
-    params.deviceURL = "/dev/video0";
-    params.captureFormat = img::kYUYV;
+    refc<img::iImageCapParamsEnumerator> enumerator =
+        img::tImageCapFactory::getImageCapParamsEnumerator();
+
+    for (int i = 0; i < enumerator->size(); i++)
+    {
+        cout << (*enumerator)[i] << endl;
+    }
+
+    img::tImageCapParams params = (*enumerator)[0];
     params.displayFormat = img::kRGB24;
 
     refc<img::iImageCap> cap =
         img::tImageCapFactory::getImageCap(params, true);
 
     img::tImageCapParams coercedParams = cap->getParams();
+    cout << coercedParams << endl;
 
     int bufSize = cap->getRequiredBufSize();
+    cout << bufSize << endl;
     t.assert(bufSize > 0);
 
     u8* buf = new u8[bufSize];

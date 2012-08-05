@@ -224,6 +224,124 @@ int yuyv_to_rgba(u8* source, int sourceSize,
     return 0;
 }
 
+static
+int rgb16_to_bgra(u8* source, int sourceSize,
+                  u8* dest, int destSize)
+{
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
+}
+
+static
+int rgb16_to_grey(u8* source, int sourceSize,
+                  u8* dest, int destSize)
+{
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
+}
+
+static
+int rgb24_to_bgra(u8* source, int sourceSize,
+                  u8* dest, int destSize)
+{
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
+}
+
+static
+int rgb24_to_grey(u8* source, int sourceSize,
+                  u8* dest, int destSize)
+{
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
+}
+
+static
+int rgba_to_bgra(u8* source, int sourceSize,
+                  u8* dest, int destSize)
+{
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
+}
+
+static
+int rgba_to_grey(u8* source, int sourceSize,
+                  u8* dest, int destSize)
+{
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
+}
+
+static
+int bgra_to_rgb16(u8* source, int sourceSize,
+                  u8* dest, int destSize)
+{
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
+}
+
+static
+int bgra_to_rgb24(u8* source, int sourceSize,
+                  u8* dest, int destSize)
+{
+    if (sourceSize % 4)
+        throw eLogicError("An BGRA buffer must be a multiple of 4.");
+    int numPixels = sourceSize / 4;
+    if (numPixels * 3 > destSize)
+        throw eBufferOverflow("Not enough bytes in the RBG buffer.");
+    for (int i = 0; i < destSize; i += 4)
+    {
+        u8 b = source[i+0];
+        u8 g = source[i+1];
+        u8 r = source[i+2];
+        //u8 a = source[i+3];
+        *dest++ = r;
+        *dest++ = g;
+        *dest++ = b;
+    }
+    return numPixels * 3;
+}
+
+static
+int bgra_to_rgba(u8* source, int sourceSize,
+                  u8* dest, int destSize)
+{
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
+}
+
+static
+int bgra_to_yuyv(u8* source, int sourceSize,
+                  u8* dest, int destSize)
+{
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
+}
+
+static
+int bgra_to_grey(u8* source, int sourceSize,
+                  u8* dest, int destSize)
+{
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
+}
+
+static
+int yuyv_to_bgra(u8* source, int sourceSize,
+                  u8* dest, int destSize)
+{
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
+}
+
+static
+int yuyv_to_grey(u8* source, int sourceSize,
+                  u8* dest, int destSize)
+{
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
+}
+
 
 typedef int (*converstion_func)(u8* source, int sourceSize, u8* dest, int destSize);
 
@@ -241,19 +359,33 @@ converstion_func** buildFuncMatrix()
 
     matrix[kRGB16][kRGB24] = rgb16_to_rgb24;
     matrix[kRGB16][kRGBA]  = rgb16_to_rgba;
+    matrix[kRGB16][kBGRA]  = rgb16_to_bgra;
     matrix[kRGB16][kYUYV]  = rgb16_to_yuyv;
+    matrix[kRGB16][kGrey]  = rgb16_to_grey;
 
     matrix[kRGB24][kRGB16] = rgb24_to_rgb16;
     matrix[kRGB24][kRGBA]  = rgb24_to_rgba;
+    matrix[kRGB24][kBGRA]  = rgb24_to_bgra;
     matrix[kRGB24][kYUYV]  = rgb24_to_yuyv;
+    matrix[kRGB24][kGrey]  = rgb24_to_grey;
 
     matrix[kRGBA][kRGB16]  = rgba_to_rgb16;
     matrix[kRGBA][kRGB24]  = rgba_to_rgb24;
+    matrix[kRGBA][kBGRA]   = rgba_to_bgra;
     matrix[kRGBA][kYUYV]   = rgba_to_yuyv;
+    matrix[kRGBA][kGrey]   = rgba_to_grey;
+
+    matrix[kBGRA][kRGB16]  = bgra_to_rgb16;
+    matrix[kBGRA][kRGB24]  = bgra_to_rgb24;
+    matrix[kBGRA][kRGBA]   = bgra_to_rgba;
+    matrix[kBGRA][kYUYV]   = bgra_to_yuyv;
+    matrix[kBGRA][kGrey]   = bgra_to_grey;
 
     matrix[kYUYV][kRGB16]  = yuyv_to_rgb16;
     matrix[kYUYV][kRGB24]  = yuyv_to_rgb24;
     matrix[kYUYV][kRGBA]   = yuyv_to_rgba;
+    matrix[kYUYV][kBGRA]   = yuyv_to_bgra;
+    matrix[kYUYV][kGrey]   = yuyv_to_grey;
 
     return matrix;
 }

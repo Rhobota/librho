@@ -3,6 +3,8 @@
 
 #if __linux__
 #include "linuxImpl.ipp"
+#elif __APPLE__
+#include "osxImpl.ipp"
 #endif
 
 
@@ -18,7 +20,7 @@ refc<iImageCapParamsEnumerator> tImageCapFactory::getImageCapParamsEnumerator()
 }
 
 refc<iImageCap> tImageCapFactory::getImageCap(
-        tImageCapParams& params,
+        const tImageCapParams& params,
         bool allowCoercion)
 {
     return new tImageCap(params);

@@ -1,4 +1,5 @@
 #include <rho/img/tImageCapFactory.h>
+#include <rho/tCrashReporter.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -10,6 +11,7 @@
 using namespace rho;
 using std::cout;
 using std::endl;
+using std::cin;
 
 
 refc<img::iImageCap> gImageCap;
@@ -23,7 +25,8 @@ void display()
     int bufSize = gImageCap->getRequiredBufSize();
     u8* buffer = new u8[bufSize];
 
-    gImageCap->getFrame(buffer, bufSize);   // returns the number of bytes used
+    //int readSize =
+    gImageCap->getFrame(buffer, bufSize);
 
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -42,12 +45,21 @@ void display()
 
 void setupCapture()
 {
-    img::tImageCapParams params;
-    params.deviceURL = "/dev/video0";
-    params.captureFormat = img::kYUYV;
-    params.displayFormat = img::kRGB24;
+    refc<img::iImageCapParamsEnumerator> enumerator =
+        img::tImageCapFactory::getImageCapParamsEnumerator();
 
-    cout << params << endl;
+    for (int i = 0; i < enumerator->size(); i++)
+    {
+        cout << "----- OPTION #" << i << " -----" << endl;
+        cout << (*enumerator)[i] << endl;
+    }
+
+    cout << "Which option? ";
+    int op;
+    cin >> op;
+
+    img::tImageCapParams params = (*enumerator)[op];
+    params.displayFormat = img::kRGB24;
 
     gImageCap = img::tImageCapFactory::getImageCap(params, true);
 }
@@ -72,6 +84,8 @@ void setupWindow(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
+    tCrashReporter::init();
+
     setupCapture();
 
     setupWindow(argc, argv);
