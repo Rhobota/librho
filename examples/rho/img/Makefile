@@ -17,8 +17,8 @@ endif
 
 all : a.out run
 
-a.out : tImageCapFactoryTest.cpp
-	g++ tImageCapFactoryTest.cpp \
+a.out : tImageCapFactoryExample.cpp
+	g++ tImageCapFactoryExample.cpp \
 		$(LIB_FLAGS)
 
 run :
