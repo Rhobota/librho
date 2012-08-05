@@ -244,7 +244,7 @@ void enumDevices(tParamsVector& params)
             tAutoDeviceCloser autoCloser(fd);
             verrifyDeviceCapabilities(fd);
             tImageCapParams currParams;
-            currParams.deviceURL = o.str();
+            currParams.deviceIndex = i;
             enumInputs(fd, params, currParams);
         }
         catch (ebImg& e)
@@ -634,7 +634,9 @@ tImageCap::tImageCap(const tImageCapParams& params)
 
     try
     {
-        m_fd = openDevice(params.deviceURL);
+        std::ostringstream o;
+        o << "/dev/video" << params.deviceIndex;
+        m_fd = openDevice(o.str());
         verrifyDeviceCapabilities(m_fd);
         setInput(m_fd, params.inputIndex);
         setFormat(m_fd, nImageFormat_to_v4l2_pixelformat(params.captureFormat),
