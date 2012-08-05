@@ -74,6 +74,13 @@ void hostnameStringTest(const tTest& t)
 
 void exceptionTest(const tTest& t)
 {
+    /*
+     * A note about this test: if the DNS server you use is weird, it
+     * will return 67.215.65.132 instead of a 'host not found' error.
+     * Such a DNS server will break this test, so if it starts failing
+     * don't be too alarmed.
+     */
+
     try
     {
         // This will require resolution, so an exception will be thrown.

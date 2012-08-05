@@ -45,8 +45,28 @@ static void cleanExitWithFailure()
     ::exit(1);
 }
 
+static void simpleTerminate()
+{
+    tStacktrace().print(std::cerr);
+    cleanExitWithFailure();
+}
+
+static void simpleSigHandler(int sig)
+{
+    simpleTerminate();
+}
+
+static void uninit()
+{
+    std::set_terminate(rho::simpleTerminate);
+    std::set_unexpected(rho::simpleTerminate);
+    ::signal(SIGSEGV, rho::simpleSigHandler);
+    ::signal(SIGILL, rho::simpleSigHandler);
+}
+
 static void terminate()
 {
+    uninit();
     std::cerr << std::endl;
     std::cerr << "Unhandled exception: ";
     printInFlightException();
@@ -55,6 +75,7 @@ static void terminate()
 
 static void unexpected()
 {
+    uninit();
     std::cerr << std::endl;
     std::cerr << "Unexpected exception was thrown: ";
     printInFlightException();
@@ -63,11 +84,12 @@ static void unexpected()
 
 static void segmentationFault(int sig)
 {
+    uninit();
     if (sig == SIGSEGV || sig == SIGILL)
     {
         std::cerr << std::endl;
         std::cerr << "Segmentation fault!" << std::endl;
-        tStacktrace().print(std::cerr);
+        printInFlightException();
     }
     cleanExitWithFailure();
 }
