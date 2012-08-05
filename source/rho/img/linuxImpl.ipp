@@ -701,13 +701,15 @@ int tImageCap::getRequiredBufSize() const
 
 int tImageCap::getFrame(u8* buf, int bufSize)
 {
-    int readSize = readFrame(m_fd, kNumBuffers, m_buffers, m_bufSizes, buf, bufSize);
+    int readSize = readFrame(m_fd, kNumBuffers, m_buffers, m_bufSizes,
+                             buf, bufSize);
     if (m_params.captureFormat == m_params.displayFormat)
         return readSize;
 
-    int convSize = colorspace_conversion(m_params.captureFormat, m_params.displayFormat,
-                                         buf, readSize,
-                                         m_tempBuffer, std::min(bufSize, m_tempBufferSize));
+    int convSize = colorspace_conversion(
+            m_params.captureFormat, m_params.displayFormat,
+            buf, readSize,
+            m_tempBuffer, std::min(bufSize, m_tempBufferSize));
 
     for (int i = 0; i < convSize; i++)
     {

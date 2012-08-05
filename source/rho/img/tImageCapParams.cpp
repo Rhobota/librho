@@ -9,7 +9,7 @@ namespace img
 
 tImageCapParams::tImageCapParams()
     :
-        deviceURL(),
+        deviceIndex(),
 
         inputIndex(0),
         inputDescription(),
@@ -31,8 +31,9 @@ tImageCapParams::tImageCapParams()
 
 std::ostream& operator<< (std::ostream& o, const tImageCapParams& params)
 {
-    o << "Device URL: " << params.deviceURL << std::endl;
+    o << "Device #: " << params.deviceIndex << std::endl;
     o << "  Input #" << params.inputIndex << "  (" << params.inputDescription << ")" << std::endl;
+    o << "    Display format: " << params.displayFormatDescription << std::endl;
     o << "    Capture format: " << params.captureFormatDescription << std::endl;
     o << "    Frame size:     " << params.imageWidth << " x " << params.imageHeight << std::endl;
     o << "    Frame interval: " << params.frameIntervalNumerator << "/"

@@ -30,3 +30,6 @@ Here are a few things I'd like the library to have soon:
     - a thread pool
     - a semaphore
     - a thread-safe queue (producer/consumer style)
+    - iSerializable
+    - network queue
+    - graph library

@@ -9,6 +9,13 @@ CC="g++"
 CC_FLAGS="-O0 -fno-inline -g -rdynamic -Wall -Werror -I $INCLUDE_DIR"
 CC_LIB_FLAGS="$LIBRHO_PATH -lpthread"
 
+CC_FRAMEWORK_FLAGS=
+if [ $(uname) == "Darwin" ]
+then
+    CC_FRAMEWORK_FLAGS+="-framework Foundation -framework AVFoundation "
+    CC_FRAMEWORK_FLAGS+=" -framework CoreVideo -framework CoreMedia "
+fi
+
 if [ -n "$1" ]
 then
     TEST_DIR="$1"
@@ -17,7 +24,7 @@ fi
 for testPath in $(find "$TEST_DIR" -name '*.cpp')
 do
     echo "---- $testPath ----"
-    $CC $CC_FLAGS $testPath $CC_LIB_FLAGS -o "$OUT_FILE"
+    $CC $CC_FLAGS $testPath $CC_LIB_FLAGS $CC_FRAMEWORK_FLAGS -o "$OUT_FILE"
     compileStatus=$?
     if [ $compileStatus -eq 0 ]
     then
