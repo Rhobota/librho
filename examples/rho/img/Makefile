@@ -15,16 +15,16 @@ else
 		-lGLU
 endif
 
-all : a.out run
+all : a.out run clean
 
 a.out : tImageCapFactoryExample.cpp
-	g++ tImageCapFactoryExample.cpp \
+	@g++ tImageCapFactoryExample.cpp \
 		$(LIB_FLAGS)
 
 run :
-	./a.out
+	@./a.out
 
 clean :
-	rm a.out
+	@rm a.out
 
 .PHONY : all run clean
