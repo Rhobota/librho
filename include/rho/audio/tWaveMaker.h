@@ -99,7 +99,8 @@ class tWaveMaker
         u32 getNumSamples();
 
         /**
-         * @return  true if there are two signals, left and right
+         * @return  true if there are two signals (left and right),
+         *          false if there is only one signal (left)
          */
         bool isStereo();
 
@@ -116,7 +117,8 @@ class tWaveMaker
          *
          * @param  path  the file to read from
          */
-        static tWaveMaker readFromFile(std::string path);
+        static
+        tWaveMaker readFromFile(std::string path);
 
         /**
          * Makes a sine wave with a given number of samples.
@@ -126,7 +128,8 @@ class tWaveMaker
          * @param  amplitude   the amplitude of the generated wave
          * @param  numSamples  the number of samples to generate
          */
-        static std::vector<double> genNumSamples(
+        static
+        std::vector<double> genNumSamples(
                 double frequency, double sampleRate,
                 double amplitude, u32 numSamples);
 
@@ -138,7 +141,8 @@ class tWaveMaker
          * @param  amplitude   the amplitude of the generated wave
          * @param  numPhases   the number of phases of the wave to generate
          */
-        static std::vector<double> genNumPhases(
+        static
+        std::vector<double> genNumPhases(
                 double frequency, double sampleRate,
                 double amplitude, u32 numPhases);
 
