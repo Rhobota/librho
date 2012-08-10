@@ -3,6 +3,8 @@
 
 #include "fft_algorithm.ipp"
 
+#include <algorithm>
+
 
 using namespace std;
 
