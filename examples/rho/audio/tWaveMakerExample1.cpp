@@ -19,13 +19,19 @@ int main()
 
     {
         double frequency = 1000.0;
-        double amplitute = 2.4;
+        double amplitute = 1.0;
         m.addWave(frequency, amplitute);
     }
 
     {
         double frequency = 400.0;
-        double amplitute = 1.6;
+        double amplitute = 0.5;
+        m.addWave(frequency, amplitute);
+    }
+
+    {
+        double frequency = 123.0;
+        double amplitute = 0.8;
         m.addWave(frequency, amplitute);
     }
 
