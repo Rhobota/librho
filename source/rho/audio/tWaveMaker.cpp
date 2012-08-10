@@ -272,7 +272,7 @@ void readWAV(istream& in, u32& sampleRate, u32& numChannels,
         {
             for (u32 i = 0; i < length; i++)
             {
-                u16 c = readShort(in);
+                i16 c = readShort(in);
                 left[i] = c / 32767.0;
                 right[i] = left[i];
             }
@@ -281,7 +281,7 @@ void readWAV(istream& in, u32& sampleRate, u32& numChannels,
         {
             for (u32 i = 0; i < length; i++)
             {
-                u16 c = readShort(in);
+                i16 c = readShort(in);
                 left[i] = c / 32767.0;
                 c = readShort(in);
                 right[i] = c / 32767.0;
