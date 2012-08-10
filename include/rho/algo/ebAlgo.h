@@ -21,16 +21,6 @@ class ebAlgo : public ebObject
 };
 
 
-class eInvalidArgument : public ebAlgo
-{
-    public:
-
-        eInvalidArgument(std::string reason) : ebAlgo(reason) { }
-
-        ~eInvalidArgument() throw() { }
-};
-
-
 }    // namespace algo
 }    // namespace rho
 

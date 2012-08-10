@@ -39,41 +39,62 @@ class eNotImplemented : public ebObject
 };
 
 
+class eInvalidArgument : public eLogicError
+{
+    public:
+
+        eInvalidArgument(std::string reason) : eLogicError(reason) { }
+
+        ~eInvalidArgument() throw() { }
+};
+
+
+class eImpossiblePath : public eLogicError
+{
+    public:
+
+        eImpossiblePath()
+            : eLogicError("This codepath should be unreachable.") { }
+
+        ~eImpossiblePath() throw () { }
+};
+
+
 class eResourceAcquisitionError : public eRuntimeError
 {
     public:
 
-        eResourceAcquisitionError(std::string reason) : eRuntimeError(reason) { }
+        eResourceAcquisitionError(std::string reason) : eRuntimeError(reason) {}
 
         ~eResourceAcquisitionError() throw() { }
 };
 
 
-class eNullPointer : public ebObject
+class eNullPointer : public eLogicError
 {
     public:
 
-        eNullPointer(std::string reason) : ebObject(reason) { }
+        eNullPointer(std::string reason) : eLogicError(reason) { }
 
         ~eNullPointer() throw() { }
 };
 
 
-class eBufferOverflow : public ebObject
+class eBufferOverflow : public eLogicError
 {
     public:
 
-        eBufferOverflow(std::string reason) : ebObject(reason) { }
+        eBufferOverflow(std::string reason) : eLogicError(reason) { }
 
         ~eBufferOverflow() throw() { }
 };
 
 
-class eBufferUnderflow : public ebObject
+class eBufferUnderflow : public eLogicError
 {
     public:
 
-        eBufferUnderflow(std::string reason) : ebObject(reason) { }
+        eBufferUnderflow(std::string reason) : eLogicError(reason) { }
 
         ~eBufferUnderflow() throw() { }
 };
