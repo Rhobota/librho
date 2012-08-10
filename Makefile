@@ -25,10 +25,10 @@ install : ensure_root all
 
 ensure_root :
 	$(if $(shell whoami | grep root),,\
-	@echo 'You must be root to run "install".' && exit 1; \
+	@echo 'You must be root to run to perform that operation.' && exit 1; \
 	)
 
-test :
+test : all
 	@$(TESTS_DIR)/RunTests.bash
 
 clean :
