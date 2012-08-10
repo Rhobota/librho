@@ -1,4 +1,8 @@
 
+SOURCE_FILES = tImageCapFactoryExample.cpp
+OBJECT_FILE = viewer
+
+
 ifeq ($(shell uname),Darwin)
 	LIB_FLAGS = \
 		-lrho \
@@ -15,16 +19,17 @@ else
 		-lGLU
 endif
 
-all : a.out run clean
 
-a.out : tImageCapFactoryExample.cpp
-	@g++ tImageCapFactoryExample.cpp \
-		$(LIB_FLAGS)
+all : $(OBJECT_FILE) run clean
+
+$(OBJECT_FILE) : $(SOURCE_FILES)
+	@g++ $^ -o $@ $(LIB_FLAGS)
 
 run :
-	@./a.out
+	-@./$(OBJECT_FILE)
 
 clean :
-	@rm a.out
+	@rm -f $(OBJECT_FILE)
+	@echo "Clean successful."
 
 .PHONY : all run clean
