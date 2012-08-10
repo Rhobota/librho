@@ -231,7 +231,8 @@ class tDST
          * @param  amplitudes  the amplitudes of the sine waves
          * @return             samples of the signal
          */
-        static std::vector<double> inverse(std::vector<double> amplitudes);
+        static
+        std::vector<double> inverse(std::vector<double> amplitudes);
 
     private:
 
