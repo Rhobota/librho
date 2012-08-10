@@ -32,7 +32,7 @@ void test1(const tTest& t)
     u32 sampleRate = 8000;
     u32 numSamples = sampleRate * 3.5;
 
-    audio::tWaveMaker m(sampleRate, numSamples);
+    audio::tWaveMaker m(numSamples, sampleRate);
 
     {
         double frequency = 1000.0;

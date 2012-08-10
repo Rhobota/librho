@@ -295,10 +295,10 @@ void readWAV(istream& in, u32& sampleRate, u32& numChannels,
 }
 
 
-tWaveMaker::tWaveMaker(u32 sampleRate, u32 numSamples)
+tWaveMaker::tWaveMaker(u32 numSamples, u32 sampleRate)
 {
-    m_sampleRate = sampleRate;
     m_numSamples = numSamples;
+    m_sampleRate = sampleRate;
     m_left = vector<double>(numSamples, 0.0);
     m_stereo = false;
 }
