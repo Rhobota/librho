@@ -1,0 +1,35 @@
+To make the library, run:
+
+          make
+
+That will put a bunch of object files and a static library file in 'objects/'.
+
+You can now run the tests with the command:
+
+          make test
+
+If you'd like to install the header files and the static lib permanently, run:
+
+          make install
+
+That will put stuff in '/usr/local/include' and in '/usr/local/lib'. You can
+now compile your programs by passing -lrho to g++. Try it out with the
+examples in 'examples/'.
+
+To clean-up, run:
+
+          make clean
+
+This directory is version-controlled by Mercurial, so feel free to make changes
+and commit them.
+
+Here are a few things I'd like the library to have soon:
+
+    - udp sockets
+    - non-blocking tcp sockets
+    - a thread pool
+    - a semaphore
+    - a thread-safe queue (producer/consumer style)
+    - iSerializable
+    - network queue
+    - graph library
