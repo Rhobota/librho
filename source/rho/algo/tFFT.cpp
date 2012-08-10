@@ -5,7 +5,6 @@
 
 #include <algorithm>
 
-
 using namespace std;
 
 
@@ -157,7 +156,8 @@ bool tFFT::isPowerOf2(int n)
 }
 
 
-tDFT::tDFT(vector<double> input, int sampleRate) : m_sampleRate(sampleRate)
+tDFT::tDFT(vector<double> input, int sampleRate)
+    : m_sampleRate(sampleRate)
 {
     int bin, k;
     double arg;
@@ -263,7 +263,8 @@ vector<double> tDFT::inverse(vector<double> realPart, vector<double> imgPart)
 }
 
 
-tDST::tDST(vector<double> input, int sampleRate) : m_sampleRate(sampleRate)
+tDST::tDST(vector<double> input, int sampleRate)
+    : m_sampleRate(sampleRate)
 {
     int length = input.size();
 
