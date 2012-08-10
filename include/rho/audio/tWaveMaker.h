@@ -31,10 +31,10 @@ class tWaveMaker
          *
          * The wave will be created with a single channel.
          *
-         * @param  sampleRate  the sample rate to create the wave at
          * @param  numSamples  the number of sample to record
+         * @param  sampleRate  the sample rate to create the wave at
          */
-        tWaveMaker(u32 sampleRate, u32 numSamples);
+        tWaveMaker(u32 numSamples, u32 sampleRate);
 
         /**
          * Creates a single channel wave initialized with the given samples.

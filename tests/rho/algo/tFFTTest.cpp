@@ -16,9 +16,9 @@ using std::endl;
 static const int kNumTests = 1000;
 
 
-vector<double> createRandomSignal(u32 sampleRate, u32 numSamples)
+vector<double> createRandomSignal(u32 numSamples, u32 sampleRate)
 {
-    audio::tWaveMaker m(sampleRate, numSamples);
+    audio::tWaveMaker m(numSamples, sampleRate);
 
     int numPartials = (rand() % 20) + 1;
 
@@ -36,14 +36,14 @@ vector<double> createRandomSignal(u32 sampleRate, u32 numSamples)
 vector<double> createRandomSignalForFFT(u32 sampleRate)
 {
     u32 numSamples = 1 << (rand() % 14);
-    return createRandomSignal(sampleRate, numSamples);
+    return createRandomSignal(numSamples, sampleRate);
 }
 
 
 vector<double> createRandomSignalForDFT(u32 sampleRate)
 {
     u32 numSamples = (rand() % 200) + 1;
-    return createRandomSignal(sampleRate, numSamples);
+    return createRandomSignal(numSamples, sampleRate);
 }
 
 
