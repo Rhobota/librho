@@ -7,6 +7,7 @@
 #include <ctime>
 
 using namespace rho;
+using std::vector;
 
 
 static const int kNumTests = 1000;
