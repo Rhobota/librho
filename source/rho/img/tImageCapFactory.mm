@@ -163,6 +163,7 @@ refc<iImageCap> tImageCapFactory::getImageCap(
     {
         p.deviceIndex = firstOption.deviceIndex;
         p.inputIndex = firstOption.inputIndex;
+        p.inputDescription = firstOption.inputDescription;
         possibleParams1 = pruneInput(p, allPossibleParams);
         firstOption = possibleParams1[0];
     }
@@ -171,6 +172,7 @@ refc<iImageCap> tImageCapFactory::getImageCap(
     if (possibleParams2.size() == 0)
     {
         p.captureFormat = firstOption.captureFormat;
+        p.captureFormatDescription = firstOption.captureFormatDescription;
         possibleParams2 = pruneCaptureFmt(p, possibleParams1);
         firstOption = possibleParams2[0];
     }
@@ -181,6 +183,9 @@ refc<iImageCap> tImageCapFactory::getImageCap(
     possibleParams3 = pruneSize(p, possibleParams2);
 
     tImageCapParams finalParams = findClosestFramerate(p, possibleParams3);
+
+    finalParams.displayFormat = params.displayFormat;
+    finalParams.displayFormatDescription = params.displayFormatDescription;
 
     return new tImageCap(finalParams);
 }
