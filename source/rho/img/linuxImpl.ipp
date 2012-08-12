@@ -1,5 +1,8 @@
 #include <rho/img/ebImg.h>
+#include <rho/img/iImageCap.h>
+#include <rho/img/iImageCapParamsEnumerator.h>
 #include <rho/img/nImageFormat.h>
+#include <rho/img/tImageCapParams.h>
 
 #include <errno.h>            // for errno
 #include <fcntl.h>            // for open()
