@@ -3,8 +3,8 @@
 #include <rho/img/iImageCapParamsEnumerator.h>
 #include <rho/img/nImageFormat.h>
 #include <rho/img/tImageCapParams.h>
-
-#include <unistd.h>
+#include <rho/sync/tMutex.h>
+#include <rho/sync/tPCQ.h>
 
 #include <vector>
 
@@ -141,22 +141,15 @@ class tImageCap : public iImageCap
     public:
 
         tImageCap(const tImageCapParams& params)
+            : m_inQueue(4, sync::kBlock),
+              m_outQueue(4, sync::kBlock),
+              destructed(false)
         {
             m_params = params;
-
-            int fildes[2];
-            if (pipe(fildes) != 0)
-                throw eResourceAcquisitionError("Cannot create pipe!");
-            m_read = fildes[0];
-            m_write = fildes[1];
 
             if (params.captureFormat != kBGRA)
                 throw eInvalidDeviceAttributes(
                         "You must capture in BGRA format.");
-
-            m_tempBufferSize = 0;
-            m_tempBufferMaxSize = getRequiredBufSize();
-            m_tempBuffer = new u8[m_tempBufferMaxSize];
 
             NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
             tAutoObjcRelease ar0(pool);
@@ -264,6 +257,10 @@ class tImageCap : public iImageCap
 
             [m_session commitConfiguration];
 
+            int bufSize = getRequiredBufSize();
+            while (m_outQueue.size() < m_outQueue.capacity())
+                m_outQueue.push(new u8[bufSize]);
+
             [m_session startRunning];
 
             [m_session retain];
@@ -277,10 +274,29 @@ class tImageCap : public iImageCap
                 [m_session removeOutput:output];
             [m_session release];
             m_session = nil;
-            delete [] m_tempBuffer;
-            m_tempBuffer = NULL;
-            close(m_read);
-            close(m_write);
+
+            [m_delegate release];
+            m_delegate = nil;
+
+            {
+                destructMutex.acquire();
+
+                while (m_inQueue.size())
+                {
+                    u8* buf = m_inQueue.pop();
+                    delete [] buf;
+                }
+
+                while (m_outQueue.size())
+                {
+                    u8* buf = m_outQueue.pop();
+                    delete [] buf;
+                }
+
+                destructed = true;
+
+                destructMutex.release();
+            }
         }
 
         const tImageCapParams& getParams() const
@@ -295,22 +311,26 @@ class tImageCap : public iImageCap
 
         int getFrame(u8* buf, int bufSize)
         {
-            int r = 0;
-            int req = getRequiredBufSize();
-            while (r < req)
-                r += read(m_read, m_tempBuffer+r, req-r);
-
-            return colorspace_conversion(
+            u8* b = m_inQueue.pop();
+            int frameSize = colorspace_conversion(
                         m_params.captureFormat, m_params.displayFormat,
-                        m_tempBuffer, req,
+                        b, getRequiredBufSize(),
                         buf, bufSize);
+            m_outQueue.push(b);
+            return frameSize;
         }
 
         void addFrame(u8* buf, int bufSize)
         {
-            int w = 0;
-            while (w < bufSize)
-                w += write(m_write, buf+w, bufSize-w);
+            destructMutex.acquire();
+            if (!destructed)
+            {
+                u8* b = m_outQueue.pop();
+                for (int i = 0; i < bufSize; i++)
+                    b[i] = buf[i];
+                m_inQueue.push(b);
+            }
+            destructMutex.release();
         }
 
     private:
@@ -322,12 +342,11 @@ class tImageCap : public iImageCap
 
         tImageCapParams m_params;
 
-        u8* m_tempBuffer;
-        int m_tempBufferSize;
-        int m_tempBufferMaxSize;
+        sync::tPCQ<u8*> m_inQueue;
+        sync::tPCQ<u8*> m_outQueue;
 
-        int m_read;
-        int m_write;
+        sync::tMutex destructMutex;
+        bool         destructed;
 };
 
 
