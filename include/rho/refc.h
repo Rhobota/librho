@@ -38,6 +38,8 @@ class refc
         bool operator!= (const refc& other) const;
         bool operator<  (const refc& other) const;
 
+        u32 count() const;
+
         ~refc();
 
     private:
@@ -209,6 +211,14 @@ template <class T>
 bool refc<T>::operator< (const refc<T>& other) const
 {
     return m_object < other.m_object;
+}
+
+template <class T>
+u32 refc<T>::count() const
+{
+    if (m_ref_count == NULL)
+        throw eNullPointer("Dereferencing NULL!");
+    return m_ref_count->val();
 }
 
 template <class T>
