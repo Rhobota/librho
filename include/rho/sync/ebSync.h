@@ -69,6 +69,20 @@ class eMutexCreationError : public ebSync
 };
 
 
+class eConditionCreationError : public ebSync
+{
+    public:
+
+        eConditionCreationError()
+            : ebSync("The system lacks the resources to create another "
+                     "condition variable.")
+        {
+        }
+
+        ~eConditionCreationError() throw() { }
+};
+
+
 class eDeadlockDetected : public ebSync
 {
     public:
