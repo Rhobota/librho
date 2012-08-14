@@ -23,7 +23,9 @@ void display()
     int height = gImageCap->getParams().imageHeight;
 
     int bufSize = gImageCap->getRequiredBufSize();
-    u8* buffer = new u8[bufSize];
+    static u8* buffer = NULL;
+    if (!buffer)
+        buffer = new u8[bufSize];
 
     //int readSize =
     gImageCap->getFrame(buffer, bufSize);
@@ -36,8 +38,6 @@ void display()
     glDrawPixels(width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer);
 
     glutSwapBuffers();
-
-    delete [] buffer;
 
     glutPostRedisplay();
 }
