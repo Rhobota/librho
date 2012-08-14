@@ -5,6 +5,7 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 
+#include <cmath>
 #include <iostream>
 
 
@@ -15,6 +16,23 @@ using std::cin;
 
 
 refc<img::iImageCap> gImageCap;
+
+
+void verticalFlip(u8* buf, int width, int height)
+{
+    for (int h = 0; h < height; h++)
+    {
+        u8* row = buf + h*width*3;
+        for (int l=0, r=width-1; l < width/2; l++, r--)
+        {
+            u8* lp = row + l*3;
+            u8* rp = row + r*3;
+            std::swap(lp[0], rp[0]);
+            std::swap(lp[1], rp[1]);
+            std::swap(lp[2], rp[2]);
+        }
+    }
+}
 
 
 void display()
@@ -29,6 +47,8 @@ void display()
 
     //int readSize =
     gImageCap->getFrame(buffer, bufSize);
+
+    verticalFlip(buffer, width, height);
 
     glClear(GL_COLOR_BUFFER_BIT);
 
