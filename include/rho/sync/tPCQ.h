@@ -73,14 +73,14 @@ class tPCQ : public bNonCopyable
         /**
          * Returns the number of items in the queue.
          */
-        u32 size();
+        u32 size() const;
 
         /**
          * Returns the capacity of the queue. This is the number of items
          * which will fit into the queue before the overflow behavior is
          * performed.
          */
-        u32 capacity();
+        u32 capacity() const;
 
         /**
          * Destructs...
@@ -214,16 +214,16 @@ T tPCQ<T>::pop()
 }
 
 template <class T>
-u32 tPCQ<T>::size()
+u32 tPCQ<T>::size() const
 {
-    tAutoLock al(this);
+    tAutoLock al((tPCQ<T>*)this);
     return m_size;
 }
 
 template <class T>
-u32 tPCQ<T>::capacity()
+u32 tPCQ<T>::capacity() const
 {
-    tAutoLock al(this);
+    tAutoLock al((tPCQ<T>*)this);
     return m_capacity;
 }
 
