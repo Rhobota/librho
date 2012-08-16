@@ -22,9 +22,9 @@ class tImageCapParams
 
     public:
 
-        int          deviceIndex;
+        u32          deviceIndex;
 
-        int          inputIndex;
+        u32          inputIndex;
         std::string  inputDescription;
 
         nImageFormat displayFormat;
@@ -33,11 +33,11 @@ class tImageCapParams
         nImageFormat captureFormat;
         std::string  captureFormatDescription;
 
-        int          imageWidth;
-        int          imageHeight;
+        u32          imageWidth;
+        u32          imageHeight;
 
-        int          frameIntervalNumerator;      // seconds per frame
-        int          frameIntervalDenominator;    //
+        u32          frameIntervalNumerator;      // seconds per frame
+        u32          frameIntervalDenominator;    //
 };
 
 

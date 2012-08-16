@@ -17,19 +17,27 @@ using std::cin;
 
 refc<img::iImageCap> gImageCap;
 
+img::tImage gImage;
 
-void verticalFlip(u8* buf, int width, int height)
+
+void verticalFlip(img::tImage* image)
 {
+    u8* buf     = image->buf;
+    u32 bufUsed = image->bufUsed;
+    u32 width   = image->width;
+    u32 height  = image->height;
+
+    u32 bpp = bufUsed / (width * height);   // bytes-per-pixel
+
     for (int h = 0; h < height; h++)
     {
-        u8* row = buf + h*width*3;
+        u8* row = buf + (h * width * bpp);
         for (int l=0, r=width-1; l < width/2; l++, r--)
         {
-            u8* lp = row + l*3;
-            u8* rp = row + r*3;
-            std::swap(lp[0], rp[0]);
-            std::swap(lp[1], rp[1]);
-            std::swap(lp[2], rp[2]);
+            u8* lp = row + (l * bpp);
+            u8* rp = row + (r * bpp);
+            for (u32 i = 0; i < bpp; i++)
+                std::swap(lp[i], rp[i]);
         }
     }
 }
@@ -37,28 +45,17 @@ void verticalFlip(u8* buf, int width, int height)
 
 void display()
 {
-    int width  = gImageCap->getParams().imageWidth;
-    int height = gImageCap->getParams().imageHeight;
-
-    int bufSize = gImageCap->getRequiredBufSize();
-    static u8* buffer = NULL;
-    if (!buffer)
-        buffer = new u8[bufSize];
-
-    //int readSize =
-    gImageCap->getFrame(buffer, bufSize);
-
-    verticalFlip(buffer, width, height);
-
-    glClear(GL_COLOR_BUFFER_BIT);
+    gImageCap->getFrame(&gImage);
+    verticalFlip(&gImage);
 
     glRasterPos2i(-1, 1);
     glPixelZoom(1.0, -1.0);
 
-    glDrawPixels(width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDrawPixels(gImage.width, gImage.height,
+                 GL_RGB, GL_UNSIGNED_BYTE, gImage.buf);
 
     glutSwapBuffers();
-
     glutPostRedisplay();
 }
 
@@ -81,7 +78,10 @@ void setupCapture()
     img::tImageCapParams params = (*enumerator)[op];
     params.displayFormat = img::kRGB24;
 
-    gImageCap = img::tImageCapFactory::getImageCap(params, true);
+    gImageCap = img::tImageCapFactory::getImageCap(params, false);
+
+    gImage.bufSize = gImageCap->getRequiredBufSize();
+    gImage.buf = new u8[gImage.bufSize];
 }
 
 
