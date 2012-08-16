@@ -304,20 +304,22 @@ class tImageCap : public iImageCap
             return m_params;
         }
 
-        int getRequiredBufSize() const
+        u32 getRequiredBufSize() const
         {
             return m_params.imageWidth * m_params.imageHeight * 4;
         }
 
-        int getFrame(u8* buf, int bufSize)
+        void getFrame(tImage* image)
         {
             u8* b = m_inQueue.pop();
-            int frameSize = colorspace_conversion(
+            image->bufUsed = colorspace_conversion(
                         m_params.captureFormat, m_params.displayFormat,
                         b, getRequiredBufSize(),
-                        buf, bufSize);
+                        image->buf, image->bufSize);
+            image->width  = m_params.imageWidth;
+            image->height = m_params.imageHeight;
+            image->format = m_params.displayFormat;
             m_outQueue.push(b);
-            return frameSize;
         }
 
         void addFrame(u8* buf, int bufSize)

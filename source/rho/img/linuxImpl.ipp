@@ -593,8 +593,8 @@ class tImageCap : public iImageCap
         ~tImageCap();
 
         const tImageCapParams&  getParams() const;
-        int                     getRequiredBufSize() const;
-        int                     getFrame(u8* buf, int bufSize);
+        u32                     getRequiredBufSize() const;
+        void                    getFrame(tImage* image);
 
     private:
 
@@ -613,7 +613,7 @@ class tImageCap : public iImageCap
         int m_bufSizes[kNumBuffers];
 
         u8* m_tempBuffer;
-        int m_tempBufferSize;
+        u32 m_tempBufferSize;
 };
 
 
@@ -696,7 +696,7 @@ const tImageCapParams& tImageCap::getParams() const
 }
 
 
-int tImageCap::getRequiredBufSize() const
+u32 tImageCap::getRequiredBufSize() const
 {
     // The following returns a worst-case size. We could
     // optimize this later if needed.
@@ -704,24 +704,26 @@ int tImageCap::getRequiredBufSize() const
 }
 
 
-int tImageCap::getFrame(u8* buf, int bufSize)
+void tImageCap::getFrame(tImage* image)
 {
-    int readSize = readFrame(m_fd, kNumBuffers, m_buffers, m_bufSizes,
-                             buf, bufSize);
+    image->width  = m_params.imageWidth;
+    image->height = m_params.imageHeight;
+    image->format = m_params.displayFormat;
+
+    image->bufUsed = readFrame(m_fd, kNumBuffers, m_buffers, m_bufSizes,
+                               image->buf, image->bufSize);
     if (m_params.captureFormat == m_params.displayFormat)
-        return readSize;
+        return;
 
-    int convSize = colorspace_conversion(
+    image->bufUsed = colorspace_conversion(
             m_params.captureFormat, m_params.displayFormat,
-            buf, readSize,
-            m_tempBuffer, std::min(bufSize, m_tempBufferSize));
+            image->buf, image->bufUsed,
+            m_tempBuffer, std::min(image->bufSize, m_tempBufferSize));
 
-    for (int i = 0; i < convSize; i++)
+    for (u32 i = 0; i < image->bufUsed; i++)
     {
-        buf[i] = m_tempBuffer[i];
+        image->buf[i] = m_tempBuffer[i];
     }
-
-    return convSize;
 }
 
 

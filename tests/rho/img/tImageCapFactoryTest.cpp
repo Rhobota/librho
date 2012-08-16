@@ -33,18 +33,34 @@ void testImageCap(const tTest& t)
 
     img::tImageCapParams coercedParams = cap->getParams();
 
-    int bufSize = cap->getRequiredBufSize();
+    t.assert(params.deviceIndex == coercedParams.deviceIndex);
+    t.assert(params.inputIndex == coercedParams.inputIndex);
+    t.assert(params.inputDescription == coercedParams.inputDescription);
+    t.assert(params.captureFormat == coercedParams.captureFormat);
+    t.assert(params.captureFormatDescription == coercedParams.captureFormatDescription);
+    t.assert(params.displayFormat == coercedParams.displayFormat);
+    t.assert(params.displayFormatDescription == coercedParams.displayFormatDescription);
+    t.assert(params.imageWidth == coercedParams.imageWidth);
+    t.assert(params.imageHeight == coercedParams.imageHeight);
+    t.assert(params.frameIntervalNumerator == coercedParams.frameIntervalNumerator);
+    t.assert(params.frameIntervalDenominator == coercedParams.frameIntervalDenominator);
+
+    u32 bufSize = cap->getRequiredBufSize();
     t.assert(bufSize > 0);
 
-    u8* buf = new u8[bufSize];
+    img::tImage image(new u8[bufSize], bufSize);
 
     for (int i = 0; i < 20; i++)
     {
-        int readSize = cap->getFrame(buf, bufSize);
-        t.assert(readSize > 0);
-    }
+        cap->getFrame(&image);
 
-    delete [] buf;
+        t.assert(image.buf != NULL);
+        t.assert(image.bufSize == bufSize);
+        t.assert(image.bufUsed > 0);
+        t.assert(image.width == params.imageWidth);
+        t.assert(image.height == params.imageHeight);
+        t.assert(image.format == params.displayFormat);
+    }
 }
 
 
