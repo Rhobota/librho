@@ -48,7 +48,7 @@ void testImageCap(const tTest& t)
     u32 bufSize = cap->getRequiredBufSize();
     t.assert(bufSize > 0);
 
-    img::tImage image(bufSize);
+    img::tImage image;
 
     for (int i = 0; i < 20; i++)
     {

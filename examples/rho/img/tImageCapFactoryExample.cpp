@@ -79,8 +79,6 @@ void setupCapture()
     params.displayFormat = img::kRGB24;
 
     gImageCap = img::tImageCapFactory::getImageCap(params, false);
-
-    gImage.setBufSize( gImageCap->getRequiredBufSize() );
 }
 
 

@@ -35,13 +35,13 @@ class tImage : public bNonCopyable
         nImageFormat format();
 
         template <int N>
-        struct pix { u8 p[N]; };
+        struct tPixel { u8 data[N]; };
 
         template <int N>
-        pix<N> getpix(u32 x, u32 y);
+        tPixel<N> getpix(u32 x, u32 y);
 
         template <int N>
-        void setpix(u32 x, u32 y, pix<N> p);
+        void setpix(u32 x, u32 y, tPixel<N> pixel);
 
     public:
 
@@ -55,19 +55,19 @@ class tImage : public bNonCopyable
 
 
 template <int N>
-tImage::pix<N> tImage::getpix(u32 x, u32 y)
+tImage::tPixel<N> tImage::getpix(u32 x, u32 y)
 {
-    tImage::pix<N> p;
+    tImage::tPixel<N> pixel;
     for (int i = 0; i < N; i++)
-        p.p[i] = m_buf[y*m_width*N + x*N + i];
-    return p;
+        pixel.data[i] = m_buf[y*m_width*N + x*N + i];
+    return pixel;
 }
 
 template <int N>
-void tImage::setpix(u32 x, u32 y, tImage::pix<N> p)
+void tImage::setpix(u32 x, u32 y, tImage::tPixel<N> pixel)
 {
     for (int i = 0; i < N; i++)
-        m_buf[y*m_width*N + x*N + i] = p.p[i];
+        m_buf[y*m_width*N + x*N + i] = pixel.data[i];
 }
 
 
