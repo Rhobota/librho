@@ -23,7 +23,7 @@ endif
 all : $(OBJECT_FILE) run clean
 
 $(OBJECT_FILE) : $(SOURCE_FILES)
-	@g++ $^ -o $@ $(LIB_FLAGS)
+	@g++ -Wall -Werror $^ -o $@ $(LIB_FLAGS)
 
 run :
 	-@./$(OBJECT_FILE)
