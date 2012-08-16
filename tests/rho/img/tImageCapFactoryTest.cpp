@@ -48,18 +48,18 @@ void testImageCap(const tTest& t)
     u32 bufSize = cap->getRequiredBufSize();
     t.assert(bufSize > 0);
 
-    img::tImage image(new u8[bufSize], bufSize);
+    img::tImage image(bufSize);
 
     for (int i = 0; i < 20; i++)
     {
         cap->getFrame(&image);
 
-        t.assert(image.buf != NULL);
-        t.assert(image.bufSize == bufSize);
-        t.assert(image.bufUsed > 0);
-        t.assert(image.width == params.imageWidth);
-        t.assert(image.height == params.imageHeight);
-        t.assert(image.format == params.displayFormat);
+        t.assert(image.buf() != NULL);
+        t.assert(image.bufSize() == bufSize);
+        t.assert(image.bufUsed() > 0);
+        t.assert(image.width() == params.imageWidth);
+        t.assert(image.height() == params.imageHeight);
+        t.assert(image.format() == params.displayFormat);
     }
 }
 

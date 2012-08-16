@@ -22,10 +22,10 @@ img::tImage gImage;
 
 void verticalFlip(img::tImage* image)
 {
-    u8* buf     = image->buf;
-    u32 bufUsed = image->bufUsed;
-    u32 width   = image->width;
-    u32 height  = image->height;
+    u8* buf     = image->buf();
+    u32 bufUsed = image->bufUsed();
+    u32 width   = image->width();
+    u32 height  = image->height();
 
     u32 bpp = bufUsed / (width * height);   // bytes-per-pixel
 
@@ -52,8 +52,8 @@ void display()
     glPixelZoom(1.0, -1.0);
 
     glClear(GL_COLOR_BUFFER_BIT);
-    glDrawPixels(gImage.width, gImage.height,
-                 GL_RGB, GL_UNSIGNED_BYTE, gImage.buf);
+    glDrawPixels(gImage.width(), gImage.height(),
+                 GL_RGB, GL_UNSIGNED_BYTE, gImage.buf());
 
     glutSwapBuffers();
     glutPostRedisplay();
@@ -80,8 +80,7 @@ void setupCapture()
 
     gImageCap = img::tImageCapFactory::getImageCap(params, false);
 
-    gImage.bufSize = gImageCap->getRequiredBufSize();
-    gImage.buf = new u8[gImage.bufSize];
+    gImage.setBufSize( gImageCap->getRequiredBufSize() );
 }
 
 

@@ -706,23 +706,26 @@ u32 tImageCap::getRequiredBufSize() const
 
 void tImageCap::getFrame(tImage* image)
 {
-    image->width  = m_params.imageWidth;
-    image->height = m_params.imageHeight;
-    image->format = m_params.displayFormat;
+    image->setWidth( m_params.imageWidth );
+    image->setHeight( m_params.imageHeight );
+    image->setFormat( m_params.displayFormat );
 
-    image->bufUsed = readFrame(m_fd, kNumBuffers, m_buffers, m_bufSizes,
-                               image->buf, image->bufSize);
+    int bufUsed = readFrame(m_fd, kNumBuffers, m_buffers, m_bufSizes,
+                              image->buf(), image->bufSize());
+    image->setBufUsed( bufUsed );
+
     if (m_params.captureFormat == m_params.displayFormat)
         return;
 
-    image->bufUsed = colorspace_conversion(
-            m_params.captureFormat, m_params.displayFormat,
-            image->buf, image->bufUsed,
-            m_tempBuffer, std::min(image->bufSize, m_tempBufferSize));
+    bufUsed = colorspace_conversion(
+                m_params.captureFormat, m_params.displayFormat,
+                image->buf(), image->bufUsed(),
+                m_tempBuffer, std::min(image->bufSize(), m_tempBufferSize));
+    image->setBufUsed( bufUsed );
 
-    for (u32 i = 0; i < image->bufUsed; i++)
+    for (int i = 0; i < bufUsed; i++)
     {
-        image->buf[i] = m_tempBuffer[i];
+        image->buf()[i] = m_tempBuffer[i];
     }
 }
 

@@ -18,17 +18,39 @@ class tImage : public bNonCopyable
     public:
 
         tImage();
-        tImage(u8* buf, u32 bufSize);
+        tImage(u32 bufSize);            // allocates a buffer of that size
         ~tImage();
+
+        void setBufSize(u32 bufSize);   // allocates a buffer of that size
+        void setBufUsed(u32 bufUsed);
+        void setWidth(u32 width);
+        void setHeight(u32 height);
+        void setFormat(nImageFormat format);
+
+        u8*          buf();
+        u32          bufSize();
+        u32          bufUsed();
+        u32          width();
+        u32          height();
+        nImageFormat format();
+
+        template <int N>
+        struct pix { u8 p[N]; };
+
+        template <int N>
+        pix<N> getpix(u32 x, u32 y);
+
+        template <int N>
+        void setpix(u32 x, u32 y, pix<N> p);
 
     public:
 
-        u8*          buf;
-        u32          bufSize;
-        u32          bufUsed;
-        u32          width;
-        u32          height;
-        nImageFormat format;
+        u8*          m_buf;
+        u32          m_bufSize;
+        u32          m_bufUsed;
+        u32          m_width;
+        u32          m_height;
+        nImageFormat m_format;
 };
 
 

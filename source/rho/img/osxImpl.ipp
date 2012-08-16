@@ -312,13 +312,14 @@ class tImageCap : public iImageCap
         void getFrame(tImage* image)
         {
             u8* b = m_inQueue.pop();
-            image->bufUsed = colorspace_conversion(
+            u32 bufUsed = colorspace_conversion(
                         m_params.captureFormat, m_params.displayFormat,
                         b, getRequiredBufSize(),
-                        image->buf, image->bufSize);
-            image->width  = m_params.imageWidth;
-            image->height = m_params.imageHeight;
-            image->format = m_params.displayFormat;
+                        image->buf(), image->bufSize());
+            image->setBufUsed( bufUsed );
+            image->setWidth( m_params.imageWidth );
+            image->setHeight( m_params.imageHeight );
+            image->setFormat( m_params.displayFormat );
             m_outQueue.push(b);
         }
 
