@@ -54,6 +54,23 @@ class tImage : public bNonCopyable
 };
 
 
+template <int N>
+tImage::pix<N> tImage::getpix(u32 x, u32 y)
+{
+    tImage::pix<N> p;
+    for (int i = 0; i < N; i++)
+        p.p[i] = m_buf[y*m_width*N + x*N + i];
+    return p;
+}
+
+template <int N>
+void tImage::setpix(u32 x, u32 y, tImage::pix<N> p)
+{
+    for (int i = 0; i < N; i++)
+        m_buf[y*m_width*N + x*N + i] = p.p[i];
+}
+
+
 }    // namespace img
 }    // namespace rho
 
