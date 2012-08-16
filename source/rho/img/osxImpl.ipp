@@ -312,6 +312,8 @@ class tImageCap : public iImageCap
         void getFrame(tImage* image)
         {
             u8* b = m_inQueue.pop();
+            if (image->bufSize() < getRequiredBufSize())
+                image->setBufSize(getRequiredBufSize());
             u32 bufUsed = colorspace_conversion(
                         m_params.captureFormat, m_params.displayFormat,
                         b, getRequiredBufSize(),

@@ -710,8 +710,11 @@ void tImageCap::getFrame(tImage* image)
     image->setHeight( m_params.imageHeight );
     image->setFormat( m_params.displayFormat );
 
+    if (image->bufSize() < getRequiredBufSize())
+        image->setBufSize(getRequiredBufSize());
+
     int bufUsed = readFrame(m_fd, kNumBuffers, m_buffers, m_bufSizes,
-                              image->buf(), image->bufSize());
+                            image->buf(), image->bufSize());
     image->setBufUsed( bufUsed );
 
     if (m_params.captureFormat == m_params.displayFormat)
@@ -723,10 +726,7 @@ void tImageCap::getFrame(tImage* image)
                 m_tempBuffer, std::min(image->bufSize(), m_tempBufferSize));
     image->setBufUsed( bufUsed );
 
-    for (int i = 0; i < bufUsed; i++)
-    {
-        image->buf()[i] = m_tempBuffer[i];
-    }
+    memcpy(image->buf(), m_tempBuffer, bufUsed);
 }
 
 
