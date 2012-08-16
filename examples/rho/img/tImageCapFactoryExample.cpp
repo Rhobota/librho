@@ -29,10 +29,10 @@ void verticalFlip(img::tImage* image)
 
     u32 bpp = bufUsed / (width * height);   // bytes-per-pixel
 
-    for (int h = 0; h < height; h++)
+    for (u32 h = 0; h < height; h++)
     {
         u8* row = buf + (h * width * bpp);
-        for (int l=0, r=width-1; l < width/2; l++, r--)
+        for (u32 l=0, r=width-1; l < width/2; l++, r--)
         {
             u8* lp = row + (l * bpp);
             u8* rp = row + (r * bpp);
