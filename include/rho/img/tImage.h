@@ -2,8 +2,10 @@
 #define __rho_img_tImage_h__
 
 
-#include <rho/img/nImageFormat.h>
 #include <rho/bNonCopyable.h>
+#include <rho/geo/tRect.h>
+#include <rho/img/nImageFormat.h>
+
 #include <cstdlib>
 
 
@@ -28,17 +30,23 @@ class tImage : public bNonCopyable
         void setFormat(nImageFormat format);
 
         u8*          buf();
-        u32          bufSize();
-        u32          bufUsed();
-        u32          width();
-        u32          height();
-        nImageFormat format();
+        const u8*    buf()      const;
+        u32          bufSize()  const;
+        u32          bufUsed()  const;
+        u32          width()    const;
+        u32          height()   const;
+        nImageFormat format()   const;
+
+        void verticalFlip();
+
+        void crop (geo::tRect rect,    tImage* dest)  const;
+        void scale(double scaleFactor, tImage* dest)  const;
 
         template <int N>
         struct tPixel { u8 data[N]; };
 
         template <int N>
-        tPixel<N> getpix(u32 x, u32 y);
+        tPixel<N> getpix(u32 x, u32 y) const;
 
         template <int N>
         void setpix(u32 x, u32 y, tPixel<N> pixel);
@@ -55,7 +63,7 @@ class tImage : public bNonCopyable
 
 
 template <int N>
-tImage::tPixel<N> tImage::getpix(u32 x, u32 y)
+tImage::tPixel<N> tImage::getpix(u32 x, u32 y) const
 {
     tImage::tPixel<N> pixel;
     for (int i = 0; i < N; i++)
