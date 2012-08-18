@@ -157,7 +157,7 @@ class tImageCap : public iImageCap
             NSArray* devices =
                 [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
 
-            if (params.deviceIndex<0 || params.deviceIndex>=(int)devices.count)
+            if (params.deviceIndex >= (u32)devices.count)
                 throw eInvalidDeviceAttributes("Bad device index.");
 
             AVCaptureDevice* device =
