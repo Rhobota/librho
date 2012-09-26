@@ -43,6 +43,17 @@ tImage::~tImage()
     m_format = kUnspecified;
 }
 
+void tImage::copyTo(tImage* other) const
+{
+    other->setBufSize(m_bufSize);
+    other->setBufUsed(m_bufUsed);
+    other->setWidth(m_width);
+    other->setHeight(m_height);
+    other->setFormat(m_format);
+    for (u32 i = 0; i < m_bufUsed; i++)
+        other->m_buf[i] = m_buf[i];
+}
+
 void tImage::setBufSize(u32 bufSize)
 {
     if (m_buf)

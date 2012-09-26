@@ -20,10 +20,12 @@ class tImage : public bNonCopyable
     public:
 
         tImage();
-        tImage(u32 bufSize);            // allocates a buffer of that size
+        tImage(u32 bufSize);               // allocates a buffer of that size
         ~tImage();
 
-        void setBufSize(u32 bufSize);   // allocates a buffer of that size
+        void copyTo(tImage* other) const;  // copies should be explicit
+
+        void setBufSize(u32 bufSize);      // allocates a buffer of that size
         void setBufUsed(u32 bufUsed);
         void setWidth(u32 width);
         void setHeight(u32 height);
