@@ -203,9 +203,7 @@ std::ostream& operator<<(std::ostream& stream, const tVector& a)
 
 tVector operator-(const tVector& a, const tVector& b)
 {
-    if (!a.isPoint())
-        throw rho::eLogicError("This operation requires a point.");
-    if (!b.isPoint())
+    if (a.isVector() && b.isPoint())
         throw rho::eLogicError("This operation requires a point.");
     return tVector(a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w);
 }
