@@ -11,7 +11,7 @@ namespace geo
 {
 
 
-void glDraw(const tRect& r);
+void glDraw(const tRect& r, bool filled = true);
 
 
 }     // namespace geo
