@@ -1,5 +1,7 @@
 #include <rho/geo/tMatrix.h>
 
+#include <cmath>
+
 
 namespace rho
 {

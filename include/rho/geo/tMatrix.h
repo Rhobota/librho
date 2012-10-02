@@ -5,7 +5,6 @@
 #include <rho/geo/tVector.h>
 #include <rho/geo/units.h>
 
-#include <cmath>
 #include <ostream>
 
 

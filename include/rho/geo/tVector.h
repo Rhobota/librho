@@ -5,7 +5,6 @@
 #include <rho/eRho.h>
 #include <rho/geo/units.h>
 
-#include <cmath>
 #include <ostream>
 
 

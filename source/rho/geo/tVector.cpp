@@ -1,5 +1,7 @@
 #include <rho/geo/tVector.h>
 
+#include <cmath>
+
 
 namespace rho
 {

@@ -2,7 +2,7 @@
 #define __rho_geo_glhelper_h__
 
 
-#include <rho/geo/tRect.h>
+#include <rho/geo/tBox.h>
 
 
 namespace rho
@@ -11,7 +11,14 @@ namespace geo
 {
 
 
-void glDraw(const tRect& r, bool filled = true);
+enum nRenderMode
+{
+    kFilled,
+    kWireframe
+};
+
+
+void glDraw(const tBox& b, nRenderMode rm = kFilled);
 
 
 }     // namespace geo
