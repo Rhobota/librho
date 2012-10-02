@@ -11,11 +11,11 @@ namespace geo
 {
 
 
-void glDraw(const tRect& r, bool filled)
+void glDraw(const tBox& b, nRenderMode rm)
 {
-    if (filled)
+    if (rm == kFilled)
         glBegin(GL_QUADS);
-    else
+    else if (rm == kWireframe)
         glBegin(GL_LINE_LOOP);
     glVertex2i(r.x, r.y);
     glVertex2i(r.x, r.y+r.height);

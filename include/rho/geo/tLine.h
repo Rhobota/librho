@@ -2,8 +2,7 @@
 #define __rho_geo_tLine_h__
 
 
-#include <rho/geo/tPoint.h>
-#include <rho/geo/tRect.h>
+#include <rho/geo/tVector.h>
 
 
 namespace rho
@@ -18,11 +17,18 @@ class tLine
 
         tLine();
 
-        tRect rect();
+        tLine(double x,  double y,
+              double dx, double dy);
+
+        tLine(double x,  double y,  double z,
+              double dx, double dy, double dz);
+
+        tLine(const tVector& p, const tVector& v);
 
     public:
 
-        tPoint p1, p2;
+        tVector p;    // a point on the line
+        tVector v;    // the line's direction vector
 };
 
 

@@ -1,7 +1,5 @@
 #include <rho/geo/tLine.h>
 
-#include <algorithm>
-
 
 namespace rho
 {
@@ -10,17 +8,29 @@ namespace geo
 
 
 tLine::tLine()
-    : p1(), p2()
+    : p(tVector::origin()),       // point on the line
+      v(0.0, 0.0, 0.0)            // the line's direction vector
 {
 }
 
-tRect tLine::rect()
+tLine::tLine(double x,  double y,
+             double dx, double dy)
+    : p(tVector::point(x, y)),
+      v(dx, dy)
 {
-    double x1 = std::min(p1.x, p2.x);
-    double y1 = std::min(p1.y, p2.y);
-    double x2 = std::max(p1.x, p2.x);
-    double y2 = std::max(p1.y, p2.y);
-    return tRect(x1, y1, x2-x1, y2-y1);
+}
+
+tLine::tLine(double x,  double y,  double z,
+             double dx, double dy, double dz)
+    : p(tVector::point(x, y, z)),
+      v(dx, dy, dz)
+{
+}
+
+tLine::tLine(const tVector& p, const tVector& v)
+    : p(p),
+      v(v)
+{
 }
 
 
