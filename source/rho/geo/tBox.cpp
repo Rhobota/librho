@@ -47,6 +47,22 @@ tBox::tBox(double x1, double y1, double z1,
     p2.z = z2;
 }
 
+void tBox::normalize()
+{
+    double x1 = std::min(p1.x, p2.x);
+    double y1 = std::min(p1.y, p2.y);
+    double z1 = std::min(p1.z, p2.z);
+    double x2 = std::max(p1.x, p2.x);
+    double y2 = std::max(p1.y, p2.y);
+    double z2 = std::max(p1.z, p2.z);
+    p1.x = x1;
+    p1.y = y1;
+    p1.z = z1;
+    p2.x = x2;
+    p2.y = y2;
+    p2.z = z2;
+}
+
 tBox& tBox::operator* (double a)
 {
     p1 *= a;

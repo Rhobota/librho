@@ -18,7 +18,7 @@ enum nRenderMode
 };
 
 
-void glDraw(const tBox& b, nRenderMode rm = kFilled);
+void glDraw(tBox b, nRenderMode rm = kFilled);
 
 
 }     // namespace geo
