@@ -18,6 +18,11 @@ tRect::tRect(double x,     double y,
 {
 }
 
+tBox tRect::toBox() const
+{
+    return tBox(x, y, x+width, y+height);
+}
+
 tRect tRect::operator* (double a) const
 {
     tRect r = (*this);
