@@ -25,11 +25,10 @@ class tBox
         tBox(double x1, double y1, double z1,
              double x2, double y2, double z2);
 
-        void normalize();
+        tBox normalize() const;
 
-        tBox& operator* (double a);
-
-        tBox& operator/ (double a);
+        tBox operator* (double a) const;
+        tBox operator/ (double a) const;
 
     public:
 
