@@ -167,6 +167,12 @@ class tVector
 std::ostream& operator<<(std::ostream& stream, const tVector& a);
 
 /**
+ * Vectors are comparable.
+ */
+bool operator<(const tVector& a, const tVector& b);
+bool operator==(const tVector& a, const tVector& b);
+
+/**
  * Point - Point = Vector
  */
 tVector operator-(const tVector& a, const tVector& b);
