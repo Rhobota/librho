@@ -203,6 +203,25 @@ std::ostream& operator<<(std::ostream& stream, const tVector& a)
     return stream;
 }
 
+bool operator<(const tVector& a, const tVector& b)
+{
+    if (a.x != b.x)
+        return a.x < b.x;
+    if (a.y != b.y)
+        return a.y < b.y;
+    if (a.z != b.z)
+        return a.z < b.z;
+    return a.w < b.w;
+}
+
+bool operator==(const tVector& a, const tVector& b)
+{
+    return (a.x == b.x &&
+            a.y == b.y &&
+            a.z == b.z &&
+            a.w == b.w);
+}
+
 tVector operator-(const tVector& a, const tVector& b)
 {
     if (a.isVector() && b.isPoint())
