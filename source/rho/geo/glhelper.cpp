@@ -16,7 +16,7 @@ namespace geo
 void glDraw(tBox b, nRenderMode rm)
 {
     // Normalize b so that we can assume things about b.p1 and b.p2.
-    b.normalize();
+    b = b.normalize();
 
     // Begin.
     if (rm == kFilled)
@@ -71,6 +71,29 @@ void glDraw(tBox b, nRenderMode rm)
     glVertex3d(b.p2.x, b.p2.y, b.p1.z);
     glVertex3d(b.p2.x, b.p1.y, b.p1.z);
     glVertex3d(b.p2.x, b.p1.y, b.p2.z);
+
+    // End.
+    glEnd();
+}
+
+
+void glDraw(tRect r, nRenderMode rm)
+{
+    // Begin.
+    if (rm == kFilled)
+        glBegin(GL_QUADS);
+    else if (rm == kWireframe)
+        glBegin(GL_LINE_STRIP);
+    else
+        throw eLogicError("Invalid nRenderMode.");
+
+    // One one face...
+    glVertex2d(r.x, r.y);
+    glVertex2d(r.x+r.width, r.y);
+    glVertex2d(r.x+r.width, r.y+r.height);
+    glVertex2d(r.x, r.y+r.height);
+    if (rm == kWireframe)
+        glVertex2d(r.x, r.y);
 
     // End.
     glEnd();

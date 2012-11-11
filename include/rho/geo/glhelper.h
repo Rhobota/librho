@@ -3,6 +3,7 @@
 
 
 #include <rho/geo/tBox.h>
+#include <rho/geo/tRect.h>
 
 
 namespace rho
@@ -19,6 +20,8 @@ enum nRenderMode
 
 
 void glDraw(tBox b, nRenderMode rm = kFilled);
+
+void glDraw(tRect r, nRenderMode rm = kFilled);
 
 
 }     // namespace geo

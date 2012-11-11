@@ -1,3 +1,4 @@
+#include <rho/refc.h>
 #include <rho/sync/tMutex.h>
 #include <rho/sync/tAtomicInt.h>
 
