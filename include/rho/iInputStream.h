@@ -13,6 +13,10 @@ class iInputStream
 {
     public:
 
+        /**
+         * Returns the number of bytes read, or 0 when eof is reached,
+         * or -1 if the stream is closed.
+         */
         virtual int read(u8* buffer, int length) = 0;
 
         virtual ~iInputStream() { }

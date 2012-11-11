@@ -1,6 +1,7 @@
 #include <rho/ip/tcp/tSocket.h>
 #include <rho/ip/ebIP.h>
 
+#include <signal.h>    // posix header
 #include <sstream>
 
 
@@ -137,6 +138,19 @@ void tSocket::closeWrite()
         throw eRuntimeError(strerror(errno));
     }
 }
+
+
+/*
+ * On Linux, when you write() to a broken pipe or socket, the program gets
+ * a SIGPIPE signal delivered to it. If not handled, that will kill the
+ * program. The following code causes that signal to be ignored.
+ */
+static int setSigPipeHandler()
+{
+    signal(SIGPIPE, SIG_IGN);
+    return 1;
+}
+const int kSigPipeIgnoreKickoff = setSigPipeHandler();
 
 
 } // namespace tcp
