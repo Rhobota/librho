@@ -115,7 +115,7 @@ i32 tSocket::readAll(u8* buffer, i32 length)
     i32 amountRead = 0;
     while (amountRead < length)
     {
-        i32 n = ::read(m_fd, buffer, length - amountRead);
+        i32 n = ::read(m_fd, buffer+amountRead, length-amountRead);
         if (n <= 0)
             return (amountRead>0) ? amountRead : n;
         amountRead += n;
@@ -133,7 +133,7 @@ i32 tSocket::writeAll(const u8* buffer, i32 length)
     i32 amountWritten = 0;
     while (amountWritten < length)
     {
-        i32 n = ::write(m_fd, buffer, length);
+        i32 n = ::write(m_fd, buffer+amountWritten, length-amountWritten);
         if (n <= 0)
             return (amountWritten>0) ? amountWritten : n;
         amountWritten += n;
