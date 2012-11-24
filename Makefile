@@ -7,7 +7,7 @@ TESTS_DIR   := tests
 STATIC_LIB_NAME := librho.a
 
 CC := g++
-CC_FLAGS := -g -rdynamic -Wall -Werror -I $(INCLUDE_DIR)
+CC_FLAGS += -g -rdynamic -Wall -Werror -I $(INCLUDE_DIR)
 
 CPP_SRC_FILES := $(shell find $(SRC_DIR) -name '*.cpp' -type f)
 CPP_OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(CPP_SRC_FILES))
