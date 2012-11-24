@@ -28,6 +28,7 @@ class tCountingObject
         tCountingObject()
         {
             gObjectCount++;
+            cout << "New object!" << endl;
         }
 
         tCountingObject(const tCountingObject& other)
@@ -44,6 +45,7 @@ class tCountingObject
         ~tCountingObject()
         {
             gObjectCount--;
+            cout << "Dead object..." << endl;
         }
 
         void foo()
@@ -140,34 +142,6 @@ void example5()
 }
 
 
-void example6()
-{
-    {
-        try
-        {
-            refc<tCountingObject> r(NULL);    // Don't try to ref-count NULL...
-            assert(false);
-        }
-        catch (std::logic_error& e)
-        {
-            // ... or you'll end up here.
-        }
-
-        try
-        {
-            refc<tCountingObject> r(new tCountingObject);
-            assert(gObjectCount == 1);
-            r = NULL;                        // Again...
-            assert(false);
-        }
-        catch (std::logic_error& e)
-        {
-        }
-        assert(gObjectCount == 0);
-    }
-}
-
-
 int main()
 {
     example1();
@@ -175,7 +149,6 @@ int main()
     example3();
     example4();
     example5();
-    example6();
 
     cout << "This example is all about memory allocation..." << endl;
     cout << "... so you'll have to acutally look at the code." << endl;

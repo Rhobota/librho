@@ -21,6 +21,8 @@ class iImageCap
         virtual  const tImageCapParams&  getParams()                      const = 0;
         virtual  u32                     getRequiredBufSize()             const = 0;
         virtual  void                    getFrame(tImage* image)                = 0;
+
+        virtual ~iImageCap() { }
 };
 
 
