@@ -18,6 +18,8 @@ class iImageCapParamsEnumerator
         virtual int size() const = 0;
 
         virtual const tImageCapParams& operator[] (int i) = 0;
+
+        virtual ~iImageCapParamsEnumerator() { }
 };
 
 
