@@ -12,6 +12,7 @@
 #include <sys/ioctl.h>        // for ioctl()
 #include <sys/mman.h>         // for mmap()
 #include <sys/select.h>       // for select()
+#include <unistd.h>           // for close()
 
 #include <cmath>
 #include <iostream>

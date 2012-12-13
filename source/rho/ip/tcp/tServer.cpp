@@ -1,6 +1,9 @@
 #include <rho/ip/tcp/tServer.h>
 #include <rho/ip/ebIP.h>
 
+#include <fcntl.h>       // posix headers
+#include <unistd.h>      //
+
 #include <sstream>
 
 

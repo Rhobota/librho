@@ -1,7 +1,10 @@
 #include <rho/ip/tcp/tSocket.h>
 #include <rho/ip/ebIP.h>
 
-#include <signal.h>    // posix header
+#include <signal.h>    //
+#include <unistd.h>    // posix header
+#include <fcntl.h>     //
+
 #include <sstream>
 
 
