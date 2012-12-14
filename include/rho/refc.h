@@ -22,11 +22,18 @@ class refc
     public:
 
         refc();
-        refc(T* object);
-        refc(const refc& other);
 
-        const refc& operator= (T* object);
-        const refc& operator= (const refc& other);
+        template <class U>
+        refc(U* object);
+
+        template <class U>
+        refc(const refc<U>& other);
+
+        template <class U>
+        const refc& operator= (U* object);
+
+        template <class U>
+        const refc& operator= (const refc<U>& other);
 
         T& operator* ();
         T* operator-> ();
@@ -46,6 +53,8 @@ class refc
 
         T*          m_object;
         sync::au32* m_ref_count;
+
+        template<typename> friend class refc;
 };
 
 
@@ -62,7 +71,8 @@ refc<T>::refc()
 }
 
 template <class T>
-refc<T>::refc(T* object)
+template <class U>
+refc<T>::refc(U* object)
     : m_object(NULL),
       m_ref_count(NULL)
 {
@@ -88,7 +98,8 @@ refc<T>::refc(T* object)
 }
 
 template <class T>
-refc<T>::refc(const refc<T>& other)
+template <class U>
+refc<T>::refc(const refc<U>& other)
     : m_object(NULL),
       m_ref_count(NULL)
 {
@@ -99,7 +110,8 @@ refc<T>::refc(const refc<T>& other)
 }
 
 template <class T>
-const refc<T>& refc<T>::operator= (const refc<T>& other)
+template <class U>
+const refc<T>& refc<T>::operator= (const refc<U>& other)
 {
     if (m_object == other.m_object)
         return *this;
@@ -123,7 +135,8 @@ const refc<T>& refc<T>::operator= (const refc<T>& other)
 }
 
 template <class T>
-const refc<T>& refc<T>::operator= (T* object)
+template <class U>
+const refc<T>& refc<T>::operator= (U* object)
 {
     if (m_object == object)
         return *this;
