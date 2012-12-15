@@ -1,6 +1,6 @@
 
-SOURCE_FILES = tImageCapFactoryExample.cpp
-OBJECT_FILE = viewer
+SOURCE_FILES = $(wildcard *.cpp)
+EXECUTABLES = $(patsubst %.cpp,%.exec,$(SOURCE_FILES))
 
 
 ifeq ($(shell uname),Darwin)
@@ -20,16 +20,13 @@ else
 endif
 
 
-all : $(OBJECT_FILE) run clean
+all : $(EXECUTABLES)
 
-$(OBJECT_FILE) : $(SOURCE_FILES)
+%.exec : %.cpp
 	@g++ -Wall -Werror $^ -o $@ $(LIB_FLAGS)
 
-run :
-	-@./$(OBJECT_FILE)
-
 clean :
-	@rm -f $(OBJECT_FILE)
+	@rm -f *.exec
 	@echo "Clean successful."
 
-.PHONY : all run clean
+.PHONY : all clean
