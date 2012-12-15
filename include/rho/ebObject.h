@@ -27,7 +27,7 @@ class ebObject : public std::exception
 
         void printStacktrace(std::ostream& o) const;
 
-        virtual ~ebObject() throw();
+        ~ebObject() throw();
 
     private:
 
