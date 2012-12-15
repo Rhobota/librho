@@ -391,14 +391,28 @@ converstion_func** buildFuncMatrix()
 }
 
 
-converstion_func** gConversionFuncMatrix = buildFuncMatrix();
+void freeFuncMatrix(converstion_func** matrix)
+{
+    int numFormats = (int) kMaxImageFormat;
+    for (int i = 0; i < numFormats; i++)
+        delete [] matrix[i];
+    delete [] matrix;
+}
 
 
 int colorspace_conversion(nImageFormat from, nImageFormat to,
                           u8* source, int sourceSize,
                           u8* dest, int destSize)
 {
-    return gConversionFuncMatrix[from][to](source, sourceSize, dest, destSize);
+    int numFormats = (int) kMaxImageFormat;
+    if (from >= numFormats || to >= numFormats || from < 0 || to < 0)
+        throw eInvalidArgument("'from' or 'to' format is invalid");
+
+    converstion_func** conversionFuncMatrix = buildFuncMatrix();
+    int res = conversionFuncMatrix[from][to](source, sourceSize, dest, destSize);
+    freeFuncMatrix(conversionFuncMatrix);
+
+    return res;
 }
 
 

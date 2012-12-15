@@ -317,6 +317,7 @@ void tImage::scale(double scaleFactor, tImage* dest)  const
 
 void tImage::convertToFormat(nImageFormat format, tImage* dest) const
 {
+    dest->setBufSize(1024);
     while (true)
     {
         try
@@ -333,10 +334,7 @@ void tImage::convertToFormat(nImageFormat format, tImage* dest) const
         catch (eBufferOverflow& e)
         {
             u32 bufSize = dest->bufSize();
-            if (bufSize == 0)
-                bufSize = 1024;
-            else
-                bufSize *= 2;
+            bufSize *= 2;
             dest->setBufSize(bufSize);
         }
     }
