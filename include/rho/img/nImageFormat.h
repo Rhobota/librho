@@ -27,6 +27,7 @@ enum nImageFormat
 };
 
 
+// Converts an image buffer. Returns the number of bytes used of 'dest'.
 int colorspace_conversion(nImageFormat from, nImageFormat to,
                           u8* source, int sourceSize,
                           u8* dest, int destSize);

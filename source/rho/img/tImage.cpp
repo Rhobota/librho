@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "stb_image.h"
+
 
 namespace rho
 {
@@ -29,6 +31,53 @@ tImage::tImage(u32 bufSize)
       m_height(0),
       m_format(kUnspecified)
 {
+}
+
+tImage::tImage(std::string filepath, nImageFormat format)
+    : m_buf(NULL),
+      m_bufSize(0),
+      m_bufUsed(0),
+      m_width(0),
+      m_height(0),
+      m_format(kUnspecified)
+{
+    int width, height, numComponents, req;
+    nImageFormat readFormat;
+    switch (format)
+    {
+        case kRGB16:
+        case kRGB24:
+        case kYUYV:
+            req = 3;
+            readFormat = kRGB24;
+            break;
+        case kRGBA:
+        case kBGRA:
+            req = 4;
+            readFormat = kRGBA;
+            break;
+        case kGrey:
+            req = 1;
+            readFormat = kGrey;
+            break;
+        default:
+            throw eInvalidArgument("The format you specified is not supported.");
+    }
+    u8* buf = stbi_load(filepath.c_str(), &width, &height, &numComponents, req);
+    if (buf == NULL)
+        throw eInvalidArgument("The filepath specified contains a bad image.");
+    u32 bufSize = width * height * req;
+    setBufSize(bufSize);
+    for (u32 i = 0; i < bufSize; i++)
+        m_buf[i] = buf[i];
+    stbi_image_free(buf);
+    setBufUsed(bufSize);
+    setWidth(width);
+    setHeight(height);
+    setFormat(readFormat);
+    tImage image;
+    convertToFormat(format, &image);
+    image.copyTo(this);
 }
 
 tImage::~tImage()
@@ -264,6 +313,33 @@ void tImage::crop(geo::tRect rect, tImage* dest)  const
 void tImage::scale(double scaleFactor, tImage* dest)  const
 {
     s_scale(this, scaleFactor, dest);
+}
+
+void tImage::convertToFormat(nImageFormat format, tImage* dest) const
+{
+    while (true)
+    {
+        try
+        {
+            int bufUsed = colorspace_conversion(m_format, format,
+                    m_buf, m_bufUsed,
+                    dest->buf(), dest->bufSize());
+            dest->setBufUsed(bufUsed);
+            dest->setWidth(m_width);
+            dest->setHeight(m_height);
+            dest->setFormat(format);
+            break;
+        }
+        catch (eBufferOverflow& e)
+        {
+            u32 bufSize = dest->bufSize();
+            if (bufSize == 0)
+                bufSize = 1024;
+            else
+                bufSize *= 2;
+            dest->setBufSize(bufSize);
+        }
+    }
 }
 
 
