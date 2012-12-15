@@ -40,16 +40,12 @@ class refc
 
         u32 count() const;
 
-        template <class U> operator refc<U> ();     // conversion operator
-
         ~refc();
 
     private:
 
         T*          m_object;
         sync::au32* m_ref_count;
-
-        template <typename> friend class refc;
 };
 
 
@@ -223,16 +219,6 @@ u32 refc<T>::count() const
     if (m_ref_count == NULL)
         throw eNullPointer("Dereferencing NULL!");
     return m_ref_count->val();
-}
-
-template <class T>
-template <class U>
-refc<T>::operator refc<U> ()
-{
-    refc<U> other;
-    other.m_object = m_object;
-    other.m_ref_count = m_ref_count;
-    return other;
 }
 
 template <class T>
