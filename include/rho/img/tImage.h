@@ -7,6 +7,7 @@
 #include <rho/img/nImageFormat.h>
 
 #include <cstdlib>
+#include <string>
 
 
 namespace rho
@@ -21,6 +22,9 @@ class tImage : public bNonCopyable
 
         tImage();
         tImage(u32 bufSize);               // allocates a buffer of that size
+
+        tImage(std::string filepath, nImageFormat format);
+
         ~tImage();
 
         void copyTo(tImage* other) const;  // copies should be explicit
@@ -38,6 +42,8 @@ class tImage : public bNonCopyable
         u32          width()    const;
         u32          height()   const;
         nImageFormat format()   const;
+
+        void convertToFormat(nImageFormat format, tImage* dest) const;
 
         void verticalFlip();
 
