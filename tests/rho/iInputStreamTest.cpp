@@ -6,7 +6,7 @@
 using namespace rho;
 
 
-bool gItWorked = false;
+int gItWorked = 0;
 
 
 class tFoo : public iInputStream
@@ -15,7 +15,13 @@ class tFoo : public iInputStream
 
         int read(u8* buffer, int length)
         {
-            gItWorked = true;
+            gItWorked++;
+            return 0;
+        }
+
+        int readAll(u8* buffer, int length)
+        {
+            gItWorked++;
             return 0;
         }
 };
@@ -25,7 +31,8 @@ void test(const tTest& t)
 {
     iInputStream* p = new tFoo();
     p->read(NULL, 78);            // This only tests if the method is virtual...
-    t.assert(gItWorked);
+    p->readAll(NULL, 78);            // This only tests if the method is virtual...
+    t.assert(gItWorked == 2);
     delete p;
 }
 

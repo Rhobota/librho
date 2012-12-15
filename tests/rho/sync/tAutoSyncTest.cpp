@@ -64,8 +64,8 @@ void test(const tTest& t)
 
     for (int i = 0; i < numThreads; i++)
     {
-        tCounter* counter = new tCounter(&mutex, count);
-        sync::tThread* thread = new sync::tThread(counter);
+        refc<sync::iRunnable> counter = refc<sync::iRunnable>(new tCounter(&mutex, count));
+        refc<sync::tThread> thread = refc<sync::tThread>(new sync::tThread(counter));
         threads.push_back(thread);
     }
 

@@ -22,7 +22,7 @@ class refc
     public:
 
         refc();
-        refc(T* object);
+        explicit refc(T* object);
         refc(const refc& other);
 
         const refc& operator= (T* object);

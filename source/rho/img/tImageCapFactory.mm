@@ -133,7 +133,7 @@ tImageCapParams findClosestFramerate(tImageCapParams params,
 
 refc<iImageCapParamsEnumerator> tImageCapFactory::getImageCapParamsEnumerator()
 {
-    return new tImageCapParamsEnumerator();
+    return refc<iImageCapParamsEnumerator>(new tImageCapParamsEnumerator());
 }
 
 
@@ -142,7 +142,7 @@ refc<iImageCap> tImageCapFactory::getImageCap(
         bool allowCoercion)
 {
     if (!allowCoercion)
-        return new tImageCap(params);
+        return refc<iImageCap>(new tImageCap(params));
 
     tImageCapParams p = params;
 
@@ -187,7 +187,7 @@ refc<iImageCap> tImageCapFactory::getImageCap(
     finalParams.displayFormat = params.displayFormat;
     finalParams.displayFormatDescription = params.displayFormatDescription;
 
-    return new tImageCap(finalParams);
+    return refc<iImageCap>(new tImageCap(finalParams));
 }
 
 
