@@ -213,7 +213,7 @@ void blockTest(const tTest& t)
 {
     u32 cap = 10;
 
-    refc<tIntPCQ> q = new tIntPCQ(cap, sync::kBlock);
+    refc<tIntPCQ> q(new tIntPCQ(cap, sync::kBlock));
     t.iseq((u32)0, q->size());
     t.iseq(cap, q->capacity());
 
@@ -229,7 +229,7 @@ void blockTest(const tTest& t)
 
     bool doneflag = false;
 
-    tConsumeOne* co = new tConsumeOne(100, q, &doneflag);
+    refc<sync::iRunnable> co(new tConsumeOne(100, q, &doneflag));
     sync::tThread ct(co);
 
     q->push(100);
@@ -313,16 +313,16 @@ void stressTest(const tTest& t, refc<tIntPCQ> pcq)
     for (int i = 0; i < kNumConsumers; i++)
     {
         int numThingsToConsume = kNumThingsToProduce / kNumConsumers;
-        refc<sync::iRunnable> consumer = new tConsumer(numThingsToConsume, pcq);
-        refc<sync::tThread> consumerThread = new sync::tThread(consumer);
+        refc<sync::iRunnable> consumer(new tConsumer(numThingsToConsume, pcq));
+        refc<sync::tThread> consumerThread(new sync::tThread(consumer));
         consumerThreads.push_back(consumerThread);
     }
 
     for (int i = 0; i < kNumProducers; i++)
     {
         int numThingsToProduce = kNumThingsToProduce / kNumProducers;
-        refc<sync::iRunnable> producer = new tProducer(numThingsToProduce, pcq);
-        refc<sync::tThread> producerThread = new sync::tThread(producer);
+        refc<sync::iRunnable> producer(new tProducer(numThingsToProduce, pcq));
+        refc<sync::tThread> producerThread(new sync::tThread(producer));
         producerThreads.push_back(producerThread);
     }
 
@@ -347,13 +347,13 @@ void stressTest(const tTest& t, refc<tIntPCQ> pcq)
 void stressTest(const tTest& t)
 {
     {
-        refc<tIntPCQ> pcq = new tIntPCQ(1, sync::kGrow);
+        refc<tIntPCQ> pcq(new tIntPCQ(1, sync::kGrow));
         stressTest(t, pcq);
         t.assert((u32)1 < pcq->capacity());
     }
 
     {
-        refc<tIntPCQ> pcq = new tIntPCQ(1, sync::kBlock);
+        refc<tIntPCQ> pcq(new tIntPCQ(1, sync::kBlock));
         stressTest(t, pcq);
         t.iseq((u32)1, pcq->capacity());
     }
@@ -362,7 +362,7 @@ void stressTest(const tTest& t)
 
 void orderTest(const tTest& t, refc<tIntPCQ> pcq)
 {
-    sync::tThread producerThread(new tLCGProducer(kNumThingsToProduce, pcq));
+    sync::tThread producerThread(refc<sync::iRunnable>(new tLCGProducer(kNumThingsToProduce, pcq)));
 
     u32 val = 0;
     for (int i = 0; i < kNumThingsToProduce; i++)
@@ -379,13 +379,13 @@ void orderTest(const tTest& t, refc<tIntPCQ> pcq)
 void orderTest(const tTest& t)
 {
     {
-        refc<tIntPCQ> pcq = new tIntPCQ(1, sync::kGrow);
+        refc<tIntPCQ> pcq(new tIntPCQ(1, sync::kGrow));
         orderTest(t, pcq);
         t.assert((u32)1 < pcq->capacity());
     }
 
     {
-        refc<tIntPCQ> pcq = new tIntPCQ(1, sync::kBlock);
+        refc<tIntPCQ> pcq(new tIntPCQ(1, sync::kBlock));
         orderTest(t, pcq);
         t.iseq((u32)1, pcq->capacity());
     }

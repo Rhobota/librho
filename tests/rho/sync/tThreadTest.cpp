@@ -30,7 +30,7 @@ void test1(const tTest& t)
 {
     gThreadDidRunYay = false;
 
-    sync::tThread thread(new tFoo);
+    sync::tThread thread(refc<sync::iRunnable>(new tFoo));
     thread.join();
 
     t.iseq(gThreadDidRunYay, true);

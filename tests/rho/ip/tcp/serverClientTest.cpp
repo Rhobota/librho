@@ -163,8 +163,8 @@ void test(const tTest& t)
     randomizeWriteData(gClientWriteData);
     gSendRecvIterations = rand() % kMaxSendRecvIterations + 1;
 
-    sync::tThread serverThread(new tServerRunnable(t));
-    sync::tThread clientThread(new tClientRunnable(t));
+    sync::tThread serverThread(refc<sync::iRunnable>(new tServerRunnable(t)));
+    sync::tThread clientThread(refc<sync::iRunnable>(new tClientRunnable(t)));
 
     serverThread.join();
     clientThread.join();

@@ -117,7 +117,7 @@ refc<tSocket> tServer::accept()
 
     tAddr addr((struct sockaddr*)&sockAddr, (int)returnedLen);
 
-    return new tSocket(fd, addr);
+    return refc<tSocket>(new tSocket(fd, addr));
 }
 
 

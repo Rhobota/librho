@@ -101,7 +101,7 @@ class tThreadLocalCountingObject
 
 void example1(const tTest& t)
 {
-    refc<int> r = new int(99);
+    refc<int> r(new int(99));
     int x = *r;                  // x == 99
     t.iseq(x, 99);
 } // --------------------------> // The 'int' is delete when 'r' goes oos here.
@@ -111,7 +111,7 @@ void example2(const tTest& t)
 {
     {
         t.assert(gObjectCount == 0);
-        refc<tCountingObject> r = new tCountingObject;
+        refc<tCountingObject> r(new tCountingObject);
         t.assert(gObjectCount == 1);
 
         tCountingObject& c = *r;
@@ -126,7 +126,7 @@ void example3(const tTest& t)
 {
     {
         t.assert(gObjectCount == 0);
-        const refc<tCountingObject> r = new tCountingObject;
+        const refc<tCountingObject> r(new tCountingObject);
         t.assert(gObjectCount == 1);
 
         const tCountingObject& c = *r;
@@ -140,9 +140,9 @@ void example3(const tTest& t)
 void example4(const tTest& t)
 {
     {
-        refc<int> myref = new int(15);
+        refc<int> myref(new int(15));
         refc<int> myref2 = myref;
-        refc<int> myref3 = new int(48);
+        refc<int> myref3(new int(48));
 
         t.assert(myref == myref2);
         t.assert(myref != myref3);
@@ -234,8 +234,8 @@ void example6(const tTest& t)
 void test1(const tTest& t)
 {
     {
-        refc<tCountingObject> myref = new tCountingObject;
-        refc<tCountingObject> myref2 = new tCountingObject;
+        refc<tCountingObject> myref(new tCountingObject);
+        refc<tCountingObject> myref2(new tCountingObject);
         t.assert(gObjectCount == 2);
         myref = myref2;
         t.assert(gObjectCount == 1);
@@ -247,7 +247,7 @@ void test1(const tTest& t)
 void test2(const tTest& t)
 {
     {
-        refc<tCountingObject> myref = new tCountingObject;
+        refc<tCountingObject> myref(new tCountingObject);
         refc<tCountingObject> myref2 = myref;
         t.assert(gObjectCount == 1);
         {
@@ -284,7 +284,7 @@ void randomTest1(const tTest& t)
         vector< refc<tCountingObject> > v;
         for (int i = 0; i < kVectorSize; i++)
         {
-            refc<tCountingObject> r = new tCountingObject;
+            refc<tCountingObject> r(new tCountingObject);
             v.push_back(r);
             t.assert(gObjectCount == i+1);
         }
@@ -509,7 +509,9 @@ void threadTest(const tTest& t)
     int numThreads = rand() % kMaxThreads + 1;
     vector< refc<sync::tThread> > threads;
     for (int i = 0; i < numThreads; i++)
-        threads.push_back(new sync::tThread(new tRefcTestRunnable(t)));
+        threads.push_back(
+                refc<sync::tThread>(new sync::tThread(
+                        refc<sync::iRunnable>(new tRefcTestRunnable(t)))));
     for (int i = 0; i < numThreads; i++)
         threads[i]->join();
 }

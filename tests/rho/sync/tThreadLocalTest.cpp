@@ -72,7 +72,7 @@ void test(const tTest& t)
     vector< refc<sync::tThread> > threads;
 
     for (int i = 0; i < numThreads; i++)
-        threads.push_back(new sync::tThread(new tFoo(t)));
+        threads.push_back(refc<sync::tThread>(new sync::tThread(refc<sync::iRunnable>(new tFoo(t)))));
 
     for (int i = 0; i < numThreads; i++)
         threads[i]->join();

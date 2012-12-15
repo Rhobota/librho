@@ -6,7 +6,7 @@
 using namespace rho;
 
 
-bool gItWorked = false;
+int gItWorked = 0;
 
 
 class tFoo : public iOutputStream
@@ -15,7 +15,13 @@ class tFoo : public iOutputStream
 
         int write(const u8* buffer, int length)
         {
-            gItWorked = true;
+            gItWorked++;
+            return 0;
+        }
+
+        int writeAll(const u8* buffer, int length)
+        {
+            gItWorked++;
             return 0;
         }
 };
@@ -25,7 +31,8 @@ void test(const tTest& t)
 {
     iOutputStream* p = new tFoo();
     p->write(NULL, 29);     // Makes sure the method is virtual.
-    t.assert(gItWorked);
+    p->writeAll(NULL, 29);     // Makes sure the method is virtual.
+    t.assert(gItWorked == 2);
     delete p;
 }
 
