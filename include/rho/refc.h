@@ -40,6 +40,8 @@ class refc
 
         u32 count() const;
 
+        operator T* ();
+
         ~refc();
 
     private:
@@ -219,6 +221,12 @@ u32 refc<T>::count() const
     if (m_ref_count == NULL)
         throw eNullPointer("Dereferencing NULL!");
     return m_ref_count->val();
+}
+
+template <class T>
+refc<T>::operator T* ()
+{
+    return m_object;
 }
 
 template <class T>
