@@ -2,7 +2,6 @@
 
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <GL/glut.h>
 
 #include <algorithm>
 
@@ -30,47 +29,60 @@ void glDraw(tBox b, nRenderMode rm)
     // the negative z-axis. Positive x is to the right. Positive y is up.
 
     // Front
-    glVertex3d(b.p1.x, b.p1.y, b.p1.z);
-    glVertex3d(b.p2.x, b.p1.y, b.p1.z);
-    glVertex3d(b.p2.x, b.p2.y, b.p1.z);
-    glVertex3d(b.p1.x, b.p2.y, b.p1.z);
-
-    // Left
-    glVertex3d(b.p1.x, b.p2.y, b.p2.z);
-    glVertex3d(b.p1.x, b.p1.y, b.p2.z);
-    glVertex3d(b.p1.x, b.p1.y, b.p1.z);
-    glVertex3d(b.p1.x, b.p2.y, b.p1.z);
-
-    // Top
-    glVertex3d(b.p2.x, b.p2.y, b.p1.z);
+    glNormal3d(0.0, 0.0, 1.0);
     glVertex3d(b.p2.x, b.p2.y, b.p2.z);
     glVertex3d(b.p1.x, b.p2.y, b.p2.z);
-    glVertex3d(b.p1.x, b.p2.y, b.p1.z);
+    glVertex3d(b.p1.x, b.p1.y, b.p2.z);
+    glVertex3d(b.p2.x, b.p1.y, b.p2.z);
 
-    // Unfortunately we need to pick up the pen here when drawing wireframes.
+    // Right
+    glNormal3d(1.0, 0.0, 0.0);
+    glVertex3d(b.p2.x, b.p2.y, b.p2.z);
+    glVertex3d(b.p2.x, b.p1.y, b.p2.z);
+    glVertex3d(b.p2.x, b.p1.y, b.p1.z);
+    glVertex3d(b.p2.x, b.p2.y, b.p1.z);
+
+    // Top
+    glNormal3d(0.0, 1.0, 0.0);
+    glVertex3d(b.p2.x, b.p2.y, b.p2.z);
+    glVertex3d(b.p2.x, b.p2.y, b.p1.z);
+    glVertex3d(b.p1.x, b.p2.y, b.p1.z);
+    glVertex3d(b.p1.x, b.p2.y, b.p2.z);
+
+    // Unfortunately, we need to lift the pen here for wireframe drawing.
     if (rm == kWireframe)
     {
+        glVertex3d(b.p2.x, b.p2.y, b.p2.z);
         glEnd();
         glBegin(GL_LINE_STRIP);
     }
 
-    // Bottom
-    glVertex3d(b.p2.x, b.p1.y, b.p2.z);
-    glVertex3d(b.p2.x, b.p1.y, b.p1.z);
-    glVertex3d(b.p1.x, b.p1.y, b.p1.z);
-    glVertex3d(b.p1.x, b.p1.y, b.p2.z);
-
     // Back
-    glVertex3d(b.p2.x, b.p2.y, b.p2.z);
-    glVertex3d(b.p2.x, b.p1.y, b.p2.z);
-    glVertex3d(b.p1.x, b.p1.y, b.p2.z);
-    glVertex3d(b.p1.x, b.p2.y, b.p2.z);
-
-    // Right
-    glVertex3d(b.p2.x, b.p2.y, b.p2.z);
+    glNormal3d(0.0, 0.0, -1.0);
+    glVertex3d(b.p1.x, b.p1.y, b.p1.z);
+    glVertex3d(b.p1.x, b.p2.y, b.p1.z);
     glVertex3d(b.p2.x, b.p2.y, b.p1.z);
     glVertex3d(b.p2.x, b.p1.y, b.p1.z);
+
+    // Left
+    glNormal3d(-1.0, 0.0, 0.0);
+    glVertex3d(b.p1.x, b.p1.y, b.p1.z);
+    glVertex3d(b.p1.x, b.p1.y, b.p2.z);
+    glVertex3d(b.p1.x, b.p2.y, b.p2.z);
+    glVertex3d(b.p1.x, b.p2.y, b.p1.z);
+
+    // Bottom
+    glNormal3d(0.0, -1.0, 0.0);
+    glVertex3d(b.p1.x, b.p1.y, b.p1.z);
+    glVertex3d(b.p2.x, b.p1.y, b.p1.z);
     glVertex3d(b.p2.x, b.p1.y, b.p2.z);
+    glVertex3d(b.p1.x, b.p1.y, b.p2.z);
+
+    // Another annoying wireframe thing.
+    if (rm == kWireframe)
+    {
+        glVertex3d(b.p1.x, b.p1.y, b.p1.z);
+    }
 
     // End.
     glEnd();
