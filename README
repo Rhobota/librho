@@ -10,7 +10,7 @@ You can now run the tests with the command:
 
 If you'd like to install the header files and the static lib permanently, run:
 
-          make install
+          sudo make install
 
 That will put stuff in '/usr/local/include' and in '/usr/local/lib'. You can
 now compile your programs by passing -lrho to g++. Try it out with the
@@ -28,6 +28,4 @@ Here are a few things I'd like the library to have soon:
     - udp sockets
     - non-blocking tcp sockets
     - a thread pool
-    - iSerializable
-    - network queue
     - graph library
