@@ -20,7 +20,7 @@ class tAutoSync : public bNonCopyable
         /**
          * Calls s.acquire()
          */
-        tAutoSync(iSync& s);
+        tAutoSync(const iSync& s);
 
         /**
          * Calls s.release()
@@ -29,7 +29,7 @@ class tAutoSync : public bNonCopyable
 
     private:
 
-        iSync& m_s;
+        const iSync& m_s;
 };
 
 

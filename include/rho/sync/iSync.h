@@ -16,12 +16,12 @@ class iSync
          * Blocks until the synchronization object can be acquired,
          * then acquires the sync-object and returns.
          */
-        virtual void acquire() = 0;
+        virtual void acquire() const = 0;
 
         /**
          * Releases the synchronization object.
          */
-        virtual void release() = 0;
+        virtual void release() const = 0;
 
         virtual ~iSync() { }
 };

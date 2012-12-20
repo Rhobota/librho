@@ -12,12 +12,12 @@ class tFoo : public sync::iSync
 {
     public:
 
-        void acquire()
+        void acquire() const
         {
             ++gCallCount;
         }
 
-        void release()
+        void release() const
         {
             ++gCallCount;
         }
