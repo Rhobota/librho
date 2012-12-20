@@ -124,11 +124,11 @@ class tMyPackable : public iPackable
             e = rand() % (1LL<<32);
             f = (rand() % (1LL<<32)) - (1<<31);
 
-            int len = rand() % 100;
+            int len = rand() % 500;
             for (int i = 0; i < len; i++)
                 str += (char)((rand() % 26) + 'a');
 
-            len = rand() % 100;
+            len = rand() % 500;
             for (int i = 0; i < len; i++)
                 intVector.push_back((rand() % (1<<16)) - (1<<15));
 
@@ -136,17 +136,17 @@ class tMyPackable : public iPackable
             for (int i = 0; i < len; i++)
             {
                 string s;
-                int len2 = rand() % 100;
+                int len2 = rand() % 10;
                 for (int i = 0; i < len2; i++)
                     s += (char)((rand() % 26) + 'a');
                 stringVector.push_back(s);
             }
 
-            len = rand() % 100;
+            len = rand() % 10;
             for (int i = 0; i < len; i++)
             {
                 vector<string> vs;
-                int len2 = rand() % 100;
+                int len2 = rand() % 10;
                 for (int j = 0; j < len2; j++)
                 {
                     string s;
