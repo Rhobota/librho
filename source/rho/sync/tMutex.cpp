@@ -18,9 +18,10 @@ tMutex::tMutex()
     }
 }
 
-void tMutex::acquire()
+void tMutex::acquire() const
 {
-    int mutexLockStatus = pthread_mutex_lock(&m_mutex);
+    int mutexLockStatus =
+        pthread_mutex_lock(const_cast<pthread_mutex_t*>(&m_mutex));
     if (mutexLockStatus != 0)
     {
         if (mutexLockStatus == EDEADLK)
@@ -30,9 +31,10 @@ void tMutex::acquire()
     }
 }
 
-void tMutex::release()
+void tMutex::release() const
 {
-    int mutexUnlockStatus = pthread_mutex_unlock(&m_mutex);
+    int mutexUnlockStatus =
+        pthread_mutex_unlock(const_cast<pthread_mutex_t*>(&m_mutex));
     if (mutexUnlockStatus != 0)
     {
         if (mutexUnlockStatus == EPERM)

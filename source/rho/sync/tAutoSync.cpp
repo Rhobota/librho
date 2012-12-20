@@ -7,7 +7,7 @@ namespace sync
 {
 
 
-tAutoSync::tAutoSync(iSync& s)
+tAutoSync::tAutoSync(const iSync& s)
     : m_s(s)
 {
     s.acquire();
