@@ -3,6 +3,7 @@
 
 
 #include <rho/bNonCopyable.h>
+#include <rho/iClosable.h>
 #include <rho/iInputStream.h>
 #include <rho/iOutputStream.h>
 #include <rho/types.h>
@@ -25,7 +26,9 @@ namespace tcp
 {
 
 
-class tSocket : public bNonCopyable, public iInputStream, public iOutputStream
+class tSocket :
+    public bNonCopyable, public iClosable,
+    public iInputStream, public iOutputStream
 {
     public:
 
