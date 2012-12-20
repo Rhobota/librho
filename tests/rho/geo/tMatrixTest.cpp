@@ -12,6 +12,11 @@ using std::cout;
 using std::endl;
 
 
+/**
+ * This provides only a compilation test... and not even that very well.
+ */
+
+
 void matrixTest1(const tTest& t)
 {
     geo::tMatrix m = geo::tMatrix::identity();

@@ -41,8 +41,11 @@ function gotSignal
 
 trap gotSignal SIGTERM SIGINT
 
+somethingRun=0
+
 for testPath in $(find "$TEST_DIR" -name '*.cpp' -o -name '*.mm')
 do
+    somethingRun=1
     echo "---- $testPath ----"
     $CC $CC_FLAGS $testPath $CC_LIB_FLAGS $CC_FRAMEWORK_FLAGS -o "$OUT_FILE"
     compileStatus=$?
@@ -66,6 +69,12 @@ do
         exit 1
     fi
 done
+
+if [ $somethingRun -eq 0 ]
+then
+    echo "^^^^^^^^ NO TESTS WHERE RUN ^^^^^^^^"
+    exit 1
+fi
 
 cleanup
 echo "____ ALL TESTS PASSED ____"

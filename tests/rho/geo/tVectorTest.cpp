@@ -12,6 +12,11 @@ using std::cout;
 using std::endl;
 
 
+/**
+ * This provides only a compilation test... and not even that very well.
+ */
+
+
 void vectorTest1(const tTest& t)
 {
     geo::tVector v(0.0, 0.0);
