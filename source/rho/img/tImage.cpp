@@ -340,6 +340,31 @@ void tImage::convertToFormat(nImageFormat format, tImage* dest) const
     }
 }
 
+void tImage::pack(iOutputStream* out) const
+{
+    rho::pack(out, m_bufUsed);
+    for (u32 i = 0; i < m_bufUsed; i++)
+        rho::pack(out, m_buf[i]);
+    rho::pack(out, m_width);
+    rho::pack(out, m_height);
+    rho::pack(out, (u32)m_format);
+}
+
+void tImage::unpack(iInputStream* in)
+{
+    if (m_buf)
+        delete [] m_buf;
+    rho::unpack(in, m_bufUsed);
+    m_bufSize = m_bufUsed;
+    m_buf = new u8[m_bufSize];
+    for (u32 i = 0; i < m_bufUsed; i++)
+        rho::unpack(in, m_buf[i]);
+    rho::unpack(in, m_width);
+    rho::unpack(in, m_height);
+    u32 format; rho::unpack(in, format);
+    m_format = (nImageFormat)format;
+}
+
 
 }     // namespace img
 }     // namespace rho
