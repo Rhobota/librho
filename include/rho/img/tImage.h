@@ -5,6 +5,7 @@
 #include <rho/bNonCopyable.h>
 #include <rho/geo/tRect.h>
 #include <rho/img/nImageFormat.h>
+#include <rho/iPackable.h>
 
 #include <cstdlib>
 #include <string>
@@ -16,7 +17,7 @@ namespace img
 {
 
 
-class tImage : public bNonCopyable
+class tImage : public bNonCopyable, public iPackable
 {
     public:
 
@@ -58,6 +59,10 @@ class tImage : public bNonCopyable
 
         template <int N>
         void setpix(u32 x, u32 y, tPixel<N> pixel);
+
+        // iPackable interface
+        void pack(iOutputStream* out) const;
+        void unpack(iInputStream* in);
 
     public:
 
