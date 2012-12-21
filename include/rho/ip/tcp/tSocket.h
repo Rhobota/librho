@@ -66,6 +66,11 @@ class tSocket :
         u16 getForeignPort() const;
 
         /**
+         * Enables/disables Nagle's algorithm. (It is enabled by default.)
+         */
+        void setNagles(bool on);
+
+        /**
          * Reads up to 'length' bytes from the socket into 'buffer'.
          *
          * Returns the number of bytes read, or 0 when eof is reached,
