@@ -52,6 +52,9 @@ void tBufferedOutputStream::flush()
     if (r < 0 || ((u32)r) != m_bufUsed)
         throw eRuntimeError("Could not flush the buffered output stream!");
     m_bufUsed = 0;
+    iFlushable* flushable = dynamic_cast<iFlushable*>(m_stream);
+    if (flushable)
+        flushable->flush();
 }
 
 
