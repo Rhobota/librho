@@ -27,7 +27,7 @@ class tFoo : public iInputStream
 };
 
 
-void test(const tTest& t)
+void interfaceTest(const tTest& t)
 {
     iInputStream* p = new tFoo();
     p->read(NULL, 78);            // This only tests if the method is virtual...
@@ -37,11 +37,21 @@ void test(const tTest& t)
 }
 
 
+void bufferedInputStreamTest(const tTest& t)
+{
+    iInputStream* stream1 = new tFoo();
+    iInputStream* stream2 = new tBufferedInputStream(stream1);
+    delete stream2;
+    delete stream1;
+}
+
+
 int main()
 {
     tCrashReporter::init();
 
-    tTest("iInputStream test", test);
+    tTest("iInputStream test", interfaceTest);
+    tTest("tBufferedInputStream test", bufferedInputStreamTest);
 
     return 0;
 }
