@@ -27,7 +27,7 @@ class tFoo : public iOutputStream
 };
 
 
-void test(const tTest& t)
+void interfaceTest(const tTest& t)
 {
     iOutputStream* p = new tFoo();
     p->write(NULL, 29);     // Makes sure the method is virtual.
@@ -37,11 +37,21 @@ void test(const tTest& t)
 }
 
 
+void bufferedOutputStreamTest(const tTest& t)
+{
+    iOutputStream* stream1 = new tFoo();
+    iOutputStream* stream2 = new tBufferedOutputStream(stream1);
+    delete stream2;
+    delete stream1;
+}
+
+
 int main()
 {
     tCrashReporter::init();
 
-    tTest("iOutputStream test", test);
+    tTest("iOutputStream test", interfaceTest);
+    tTest("tBufferedOutputStream test", bufferedOutputStreamTest);
 
     return 0;
 }
