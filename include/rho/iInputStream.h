@@ -36,6 +36,31 @@ class iInputStream
 };
 
 
+class tBufferedInputStream : public iInputStream
+{
+    public:
+
+        tBufferedInputStream(iInputStream* internalStream, u32 bufSize=4096);
+
+        ~tBufferedInputStream();
+
+        i32 read(u8* buffer, i32 length);
+        i32 readAll(u8* buffer, i32 length);
+
+    private:
+
+        bool refill();
+
+    private:
+
+        iInputStream* m_stream;
+        u8* m_buf;
+        u32 m_bufSize;
+        u32 m_bufUsed;
+        u32 m_pos;
+};
+
+
 }     // namespace rho
 
 

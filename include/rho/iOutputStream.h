@@ -2,6 +2,7 @@
 #define __rho_iOutputStream_h__
 
 
+#include <rho/iFlushable.h>
 #include <rho/types.h>
 
 
@@ -37,6 +38,28 @@ class iOutputStream
         virtual i32 writeAll(const u8* buffer, i32 length) = 0;
 
         virtual ~iOutputStream() { }
+};
+
+
+class tBufferedOutputStream : public iOutputStream, public iFlushable
+{
+    public:
+
+        tBufferedOutputStream(iOutputStream* internalStream, u32 bufSize=4096);
+
+        ~tBufferedOutputStream();
+
+        i32 write(const u8* buffer, i32 length);
+        i32 writeAll(const u8* buffer, i32 length);
+
+        void flush();
+
+    private:
+
+        iOutputStream* m_stream;
+        u8* m_buf;
+        u32 m_bufSize;
+        u32 m_bufUsed;
 };
 
 

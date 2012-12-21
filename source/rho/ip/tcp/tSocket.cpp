@@ -1,9 +1,11 @@
 #include <rho/ip/tcp/tSocket.h>
 #include <rho/ip/ebIP.h>
 
-#include <signal.h>    //
-#include <unistd.h>    // posix header
-#include <fcntl.h>     //
+#include <fcntl.h>       //
+#include <netinet/tcp.h> //
+#include <signal.h>      // posix header
+#include <sys/socket.h>  //
+#include <unistd.h>      //
 
 #include <sstream>
 
@@ -108,6 +110,16 @@ u16 tSocket::getForeignPort() const
     return m_addr.getUpperProtoPort();
 }
 
+void tSocket::setNagles(bool on)
+{
+    int flag = on ? 0 : 1;    // Nagle's on == TCP_NODELAY off
+    if(::setsockopt(m_fd, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(int))
+            == -1)
+    {
+        throw eRuntimeError(strerror(errno));
+    }
+}
+
 i32 tSocket::read(u8* buffer, i32 length)
 {
     return ::read(m_fd, buffer, length);
@@ -179,6 +191,7 @@ static int setSigPipeHandler()
     signal(SIGPIPE, SIG_IGN);
     return 1;
 }
+extern const int kSigPipeIgnoreKickoff;
 const int kSigPipeIgnoreKickoff = setSigPipeHandler();
 
 
