@@ -61,35 +61,35 @@ class tVector
     public:
 
         /**
-         * Forces this object to represent a point in 3-space.
-         *
-         * This objects represents a point when the w-coord is
-         * greater than 0.0.
-         */
-        void bePoint();
-
-        /**
-         * Forces this object to represent a vector in 3-space.
+         * Returns true if the object represents a vector.
          *
          * This object represents a vector when the w-coord is
          * equal to 0.0.
          */
+        bool isVector() const;
+
+        /**
+         * Forces this object to represent a vector in 3-space.
+         */
         void beVector();
 
         /**
-         * Scales the vector to the new length (magnitude).
-         */
-        void setLength(double newLength);
-
-        /**
          * Returns true if the object represents a point.
+         *
+         * This objects represents a point when the w-coord is
+         * greater than 0.0. (Usually the w-coord is 1.0.)
          */
         bool isPoint() const;
 
         /**
-         * Returns true if the object represents a vector.
+         * Forces this object to represent a point in 3-space.
          */
-        bool isVector() const;
+        void bePoint();
+
+        /**
+         * Returns the length (magnitude) of the vector.
+         */
+        double length() const;
 
         /**
          * Returns the squared length (magnitude) of the vector.
@@ -97,9 +97,9 @@ class tVector
         double lengthSquared() const;
 
         /**
-         * Returns the length (magnitude) of the vector.
+         * Scales the vector to the new length (magnitude).
          */
-        double length() const;
+        void setLength(double newLength);
 
         /**
          * Calculates and returns the vector's angle in the xy plane.
@@ -108,10 +108,20 @@ class tVector
         double theta() const;
 
         /**
+         * Sets the value of theta.
+         */
+        void setTheta(double t);
+
+        /**
          * Calculates and returns the vector's altitude angle.
          * The returned value is in the range [-pi/2, pi/2].
          */
         double phi() const;
+
+        /**
+         * Sets the value of phi.
+         */
+        void setPhi(double p);
 
         /**
          * Returns a vector perpendicular to the receiver.
