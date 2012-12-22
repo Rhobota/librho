@@ -105,7 +105,7 @@ tVector tVector::perp() const
     return tVector(-y, x, z);
 }
 
-void tVector::rotateZ(double angle)
+tVector tVector::rotatedZ(double angle) const
 {
     if (!isVector())
         throw rho::eLogicError("This operation requires a vector.");
@@ -118,11 +118,14 @@ void tVector::rotateZ(double angle)
     t += angle;
 
     // Convert the vector back to Cartesian coordinates.
-    x = len * cos(t);
-    y = len * sin(t);
+    tVector vect = *this;
+    vect.x = len * cos(t);
+    vect.y = len * sin(t);
+
+    return vect;
 }
 
-void tVector::rotateX(double angle)
+tVector tVector::rotatedX(double angle) const
 {
     if (!isVector())
         throw rho::eLogicError("This operation requires a vector.");
@@ -135,11 +138,14 @@ void tVector::rotateX(double angle)
     t += angle;
 
     // Convert the vector back to Cartesian coordinates.
-    y = len * cos(t);
-    z = len * sin(t);
+    tVector vect = *this;
+    vect.y = len * cos(t);
+    vect.z = len * sin(t);
+
+    return vect;
 }
 
-void tVector::rotateY(double angle)
+tVector tVector::rotatedY(double angle) const
 {
     if (!isVector())
         throw rho::eLogicError("This operation requires a vector.");
@@ -152,8 +158,11 @@ void tVector::rotateY(double angle)
     t += angle;
 
     // Convert the vector back to Cartesian coordinates.
-    z = len * cos(t);
-    x = len * sin(t);
+    tVector vect = *this;
+    vect.z = len * cos(t);
+    vect.x = len * sin(t);
+
+    return vect;
 }
 
 tVector tVector::unit() const
