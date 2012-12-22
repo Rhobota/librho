@@ -77,6 +77,11 @@ class tVector
         void beVector();
 
         /**
+         * Scales the vector to the new length (magnitude).
+         */
+        void setLength(double newLength);
+
+        /**
          * Returns true if the object represents a point.
          */
         bool isPoint() const;
@@ -109,32 +114,27 @@ class tVector
         double phi() const;
 
         /**
-         * Scales the vector to the new length (magnitude).
-         */
-        void setLength(double newLength);
-
-        /**
          * Returns a vector perpendicular to the receiver.
          */
         tVector perp() const;
 
         /**
-         * Rotates the vector around the z-axis by 'angle' radians.
+         * Returns the vector rotated around the z-axis by 'angle' radians.
          * (Note that the z-coord will not change.)
          */
-        void rotateZ(double angle);
+        tVector rotatedZ(double angle) const;
 
         /**
-         * Rotates the vector around the x-axis by 'angle' radians.
+         * Returns the vector rotated around the x-axis by 'angle' radians.
          * (Note that the x-coord will not change.)
          */
-        void rotateX(double angle);
+        tVector rotatedX(double angle) const;
 
         /**
-         * Rotates the vector around the y-axis by 'angle' radians.
+         * Returns the vector rotated around the y-axis by 'angle' radians.
          * (Note that the y-coord will not change.)
          */
-        void rotateY(double angle);
+        tVector rotatedY(double angle) const;
 
         /**
          * Calculates and returns the unit vector.
