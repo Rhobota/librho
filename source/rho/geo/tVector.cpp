@@ -83,11 +83,33 @@ double tVector::theta() const
     return atan2(y, x);    // returns [-pi, pi]
 }
 
+void tVector::setTheta(double t)
+{
+    if (!isVector())
+        throw rho::eLogicError("This operation requires a vector.");
+    double len = length();
+    double p = phi();
+    x = len * cos(p)*cos(t);
+    y = len * cos(p)*sin(t);
+    z = len * sin(p);
+}
+
 double tVector::phi() const
 {
     if (!isVector())
         throw rho::eLogicError("This operation requires a vector.");
     return asin(z / length());   // returns [-pi/2, pi/2]
+}
+
+void tVector::setPhi(double p)
+{
+    if (!isVector())
+        throw rho::eLogicError("This operation requires a vector.");
+    double len = length();
+    double t = theta();
+    x = len * cos(p)*cos(t);
+    y = len * cos(p)*sin(t);
+    z = len * sin(p);
 }
 
 void tVector::setLength(double newLength)
