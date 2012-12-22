@@ -1,4 +1,4 @@
-#include <rho/geo/glhelper.h>
+#include <rho/gl/artist.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -8,11 +8,11 @@
 
 namespace rho
 {
-namespace geo
+namespace gl
 {
 
 
-void glDraw(tBox b, nRenderMode rm)
+void draw(geo::tBox b, nRenderMode rm)
 {
     // Normalize b so that we can assume things about b.p1 and b.p2.
     b = b.normalize();
@@ -89,7 +89,7 @@ void glDraw(tBox b, nRenderMode rm)
 }
 
 
-void glDraw(tRect r, nRenderMode rm)
+void draw(geo::tRect r, nRenderMode rm)
 {
     // Begin.
     if (rm == kFilled)
@@ -112,5 +112,11 @@ void glDraw(tRect r, nRenderMode rm)
 }
 
 
-}    // namespace geo
+void draw(const geo::tMesh& m, nRenderMode rm)
+{
+
+}
+
+
+}    // namespace gl
 }    // namespace rho
