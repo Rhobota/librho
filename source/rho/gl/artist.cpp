@@ -5,6 +5,8 @@
 
 #include <algorithm>
 
+using std::vector;
+
 
 namespace rho
 {
@@ -114,7 +116,29 @@ void draw(geo::tRect r, nRenderMode rm)
 
 void draw(const geo::tMesh& m, nRenderMode rm)
 {
+    const vector<geo::tVector>& mv = m.getVertices();
+    const vector<geo::tVector>& mt = m.getTextureCoords();
+    const vector<geo::tVector>& mn = m.getNormals();
+    const vector<geo::tMesh::tMeshFace>& mf = m.getFaces();
 
+    for (size_t i = 0; i < mf.size(); i++)
+    {
+        const geo::tMesh::tMeshFace& f = mf[i];
+        const vector<int>& fv = f.getVertexIndices();
+        const vector<int>& ft = f.getTextureCoordIndices();
+        const vector<int>& fn = f.getNormalIndices();
+        glBegin(GL_POLYGON);
+        for (size_t j = 0; j < fv.size(); j++)
+        {
+            int v = fv[j];
+            int t = ft[j];
+            int n = fn[j];
+            if (t >= 0) glTexCoord3d(mt[t].x, mt[t].y, mt[t].z);
+            if (n >= 0) glNormal3d(mn[n].x, mn[n].y, mn[n].z);
+            glVertex3d(mv[v].x, mv[v].y, mv[v].z);
+        }
+        glEnd();
+    }
 }
 
 
