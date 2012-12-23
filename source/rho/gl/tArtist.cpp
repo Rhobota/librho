@@ -128,13 +128,15 @@ void draw(const geo::tMesh& m, nRenderMode rm)
     const vector<geo::tVector>& mn = m.getNormals();
     const vector<geo::tMesh::tMeshFace>& mf = m.getFaces();
 
+    int primativeType = (rm == kFilled) ? GL_POLYGON : GL_LINE_LOOP;
+
     for (size_t i = 0; i < mf.size(); i++)
     {
         const geo::tMesh::tMeshFace& f = mf[i];
         const vector<int>& fv = f.getVertexIndices();
         const vector<int>& ft = f.getTextureCoordIndices();
         const vector<int>& fn = f.getNormalIndices();
-        glBegin(GL_POLYGON);
+        glBegin(primativeType);
         for (size_t j = 0; j < fv.size(); j++)
         {
             int v = fv[j];
@@ -149,7 +151,7 @@ void draw(const geo::tMesh& m, nRenderMode rm)
 }
 
 
-tArtist::tArtist(nRenderMode rm = kFilled)
+tArtist::tArtist(nRenderMode rm)
     : m_rm(rm)
 {
 }
