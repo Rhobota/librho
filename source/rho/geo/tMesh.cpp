@@ -146,10 +146,11 @@ void readFacePart(string str, bool* errorFlag,
     }
     vector<string> parts = split(str, '/');
     *vertexIndex = toInt(parts[0], errorFlag);
-    *texcoordIndex = (parts.size() > 1) ?
-        toInt(parts[1], errorFlag) : -1;
-    *normalIndex = (parts.size() > 2) ?
-        toInt(parts[2], errorFlag) : -1;
+    *texcoordIndex = (parts.size() > 1 && parts[1].length() > 0) ?
+        toInt(parts[1], errorFlag) : 0;    // If the texcoord or normal is
+    *normalIndex = (parts.size() > 2 && parts[2].length() > 0) ?
+        toInt(parts[2], errorFlag) : 0;    // unspecified, we'll set it to 0,
+                                           // which is out of the allowed range.
 }
 
 static
@@ -227,15 +228,31 @@ tMesh::tMesh(string filename)
         {
             if (parts.size() < 4) // there must be at least 3 vertices in a face
                 throwErrorOnLine("Incorrect number of parts!",filename,lineNum);
+
             tMesh::tMeshFace face;
             bool errorFlag = false;
+
             for (size_t i = 1; i < parts.size(); i++)
             {
                 int vertexIndex, texcoordIndex, normalIndex;
                 readFacePart(parts[i], &errorFlag,
                         &vertexIndex, &texcoordIndex, &normalIndex);
+
+                vertexIndex -= 1;       // Obj face defs use one-indexed arrays.
+                texcoordIndex -= 1;     // This converts to zero-indexed arrays.
+                normalIndex -= 1;       //
+
+                if (vertexIndex < -1 || texcoordIndex < -1 || normalIndex < -1)
+                    throwErrorOnLine("Bad face def!", filename, lineNum);
+
+                if (vertexIndex >= (int)m_vertices.size() ||
+                    texcoordIndex >= (int)m_texcoords.size() ||
+                    normalIndex >= (int)m_normals.size())
+                    throwErrorOnLine("Bad face def(2)!", filename, lineNum);
+
                 face.add(vertexIndex, texcoordIndex, normalIndex);
             }
+
             if (errorFlag)
                 throwErrorOnLine("Double-format error!", filename, lineNum);
             m_faces.push_back(face);
