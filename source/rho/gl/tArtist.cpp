@@ -1,4 +1,8 @@
-#include <rho/gl/artist.h>
+#include <rho/gl/tArtist.h>
+
+#include <rho/geo/tBox.h>
+#include <rho/geo/tRect.h>
+#include <rho/geo/tMesh.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -14,6 +18,7 @@ namespace gl
 {
 
 
+static
 void draw(geo::tBox b, nRenderMode rm)
 {
     // Normalize b so that we can assume things about b.p1 and b.p2.
@@ -91,6 +96,7 @@ void draw(geo::tBox b, nRenderMode rm)
 }
 
 
+static
 void draw(geo::tRect r, nRenderMode rm)
 {
     // Begin.
@@ -114,6 +120,7 @@ void draw(geo::tRect r, nRenderMode rm)
 }
 
 
+static
 void draw(const geo::tMesh& m, nRenderMode rm)
 {
     const vector<geo::tVector>& mv = m.getVertices();
@@ -139,6 +146,27 @@ void draw(const geo::tMesh& m, nRenderMode rm)
         }
         glEnd();
     }
+}
+
+
+tArtist::tArtist(nRenderMode rm = kFilled)
+    : m_rm(rm)
+{
+}
+
+void tArtist::drawBox(geo::tBox b)
+{
+    draw(b, m_rm);
+}
+
+void tArtist::drawRect(geo::tRect r)
+{
+    draw(r, m_rm);
+}
+
+void tArtist::drawMesh(const geo::tMesh& mesh)
+{
+    draw(mesh, m_rm);
 }
 
 

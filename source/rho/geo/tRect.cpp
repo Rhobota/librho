@@ -38,6 +38,11 @@ tRect tRect::operator/ (double a) const
     return (*this) * (1.0/a);
 }
 
+void tRect::drawWithArtist(iArtist& artist)
+{
+    artist.drawRect(*this);
+}
+
 
 }    // namespace geo
 }    // namespace rho

@@ -2,6 +2,7 @@
 #define __rho_geo_tBox_h__
 
 
+#include <rho/geo/iDrawable.h>
 #include <rho/geo/tVector.h>
 
 
@@ -11,7 +12,7 @@ namespace geo
 {
 
 
-class tBox
+class tBox : public iDrawable
 {
     public:
 
@@ -29,6 +30,8 @@ class tBox
 
         tBox operator* (double a) const;
         tBox operator/ (double a) const;
+
+        void drawWithArtist(iArtist& artist);
 
     public:
 
