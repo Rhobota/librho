@@ -347,6 +347,11 @@ const vector<tMesh::tMeshFace>& tMesh::getFaces() const
     return m_faces;
 }
 
+void tMesh::drawWithArtist(iArtist& artist)
+{
+    artist.drawMesh(*this);
+}
+
 
 }   // namespace geo
 }   // namespace rho

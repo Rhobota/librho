@@ -71,6 +71,11 @@ tBox tBox::operator/ (double a) const
     return (*this) * (1.0/a);
 }
 
+void tBox::drawWithArtist(iArtist& artist)
+{
+    artist.drawBox(*this);
+}
+
 
 }    // namespace geo
 }    // namespace rho
