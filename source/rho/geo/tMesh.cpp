@@ -301,6 +301,28 @@ tMesh::tMesh(string filename)
         }
     }
 
+    // Sometimes there are faces which have no normals associated with them...
+    // We will calculate our own normals for such faces!
+    for (size_t i = 0; i < m_faces.size(); i++)
+    {
+        vector<int>& vertexIndices = m_faces[i].getVertexIndices();
+        vector<int>& normalIndices = m_faces[i].getNormalIndices();
+        for (size_t j = 0; j < vertexIndices.size(); j++)
+        {
+            if (normalIndices[j] != -1)
+                continue;
+            tVector& a = (j>0) ? m_vertices[vertexIndices[j-1]] :
+                                 m_vertices[vertexIndices.back()];
+            tVector& b = m_vertices[vertexIndices[j]];
+            tVector& c = (j<vertexIndices.size()-1) ?
+                                 m_vertices[vertexIndices[j+1]] :
+                                 m_vertices[vertexIndices.front()];
+            tVector normal = (c-b).cross(a-b).unit();
+            normalIndices[j] = m_normals.size();
+            m_normals.push_back(normal);
+        }
+    }
+
     // Print summary.
     cout << "Loaded mesh: " << filename << "  ("
          << m_vertices.size() << " vertices, "
