@@ -7,13 +7,15 @@ OUT_FILE="a.out"
 
 CC="g++"
 CC_FLAGS+="-O0 -fno-inline -g -rdynamic -Wall -Werror -I $INCLUDE_DIR"
-CC_LIB_FLAGS+="$LIBRHO_PATH -lpthread"
+CC_LIB_FLAGS+="$LIBRHO_PATH -lpthread -lglut -lglfw -lGLU"
 
 CC_FRAMEWORK_FLAGS=
 if [ $(uname) == "Darwin" ]
 then
     CC_FRAMEWORK_FLAGS+="-framework Foundation -framework AVFoundation "
     CC_FRAMEWORK_FLAGS+="-framework CoreVideo -framework CoreMedia "
+    CC_FRAMEWORK_FLAGS+="-framework OpenGL -framework IOKit "
+    CC_FRAMEWORK_FLAGS+="-framework Cocoa "
 fi
 
 if [ -n "$1" ]
