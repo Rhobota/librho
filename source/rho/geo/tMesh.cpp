@@ -1,10 +1,12 @@
 #include <rho/geo/tMesh.h>
 
+#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 
 using namespace rho;
+using std::cerr;
 using std::cout;
 using std::endl;
 using std::ifstream;
@@ -24,7 +26,8 @@ namespace geo
 // tMeshFace implementation
 ///////////////////////////////////////////////////////////////////////////////
 
-tMesh::tMeshFace::tMeshFace()
+tMesh::tMeshFace::tMeshFace(int materialIndex)
+    : m_materialIndex(materialIndex)
 {
 }
 
@@ -33,6 +36,11 @@ void tMesh::tMeshFace::add(int vertexIndex, int texcoordIndex, int normalIndex)
     m_vertexIndices.push_back(vertexIndex);
     m_texcoordIndices.push_back(texcoordIndex);
     m_normalIndices.push_back(normalIndex);
+}
+
+int tMesh::tMeshFace::getMaterialIndex() const
+{
+    return m_materialIndex;
 }
 
 vector<int>& tMesh::tMeshFace::getVertexIndices()
@@ -65,10 +73,45 @@ const vector<int>& tMesh::tMeshFace::getNormalIndices() const
     return m_normalIndices;
 }
 
+bool tMesh::tMeshFace::operator< (const tMeshFace& other) const
+{
+    if (m_materialIndex != other.m_materialIndex)
+        return m_materialIndex < other.m_materialIndex;
+    return (this) < (&other);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// tMeshMaterial implementation
+///////////////////////////////////////////////////////////////////////////////
+
+tMesh::tMeshMaterial::tMeshMaterial()
+{
+    for (int i = 0; i < 4; i++)
+    {
+        ka[i] = kd[i] = ks[i] = 1.0;
+        ke[i] = 0.0;
+    }
+    ns = 0.0;
+    d  = 0.0;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // tMesh implementation
 ///////////////////////////////////////////////////////////////////////////////
+
+static
+string findDirName(string path)
+{
+    if (path.length() == 0)
+        return "";
+    int i = (int) path.length()-1;
+    for (; i >= 0; i--)
+        if (path[i] == '/' || path[i] == '\\')
+            break;
+    return path.substr(0, i+1);
+}
 
 static
 string stripComment(string str)
@@ -161,11 +204,205 @@ void throwErrorOnLine(string error, string filename, int lineNum)
     throw eResourceAcquisitionError(out.str());
 }
 
+static
+vector<tMesh::tMeshMaterial> readMtlFile(string filename)
+{
+    vector<tMesh::tMeshMaterial> mats;
+    ifstream f(filename.c_str());
+    if (!f)
+        throwErrorOnLine("Cannot open file!", filename, 0);
+
+    string line;
+    tMesh::tMeshMaterial currMaterial;
+    bool started = false;
+
+    for (int lineNum = 1; getline(f, line); lineNum++)
+    {
+        line = stripComment(line);
+        line = trim(line);
+        if (line.length() == 0)
+            continue;
+        vector<string> parts = split(line, ' ');
+        parts = removeEmptyParts(parts);
+
+        // New material...
+        if (parts[0] == "newmtl")
+        {
+            if (parts.size() != 2)
+                throwErrorOnLine("Incorrect number of parts!", filename, lineNum);
+            if (started)
+                mats.push_back(currMaterial);
+            currMaterial = tMesh::tMeshMaterial();
+            currMaterial.name = parts[1];
+            started = true;
+        }
+
+        // Ambient color...
+        else if (parts[0] == "Ka")
+        {
+            if (!started)
+                throwErrorOnLine("A material has not been started!", filename, lineNum);
+            if (parts.size() != 4)
+                throwErrorOnLine("Incorrect number of parts!", filename, lineNum);
+            bool errorFlag = false;
+            double r = toDouble(parts[1], &errorFlag);
+            double g = toDouble(parts[2], &errorFlag);
+            double b = toDouble(parts[3], &errorFlag);
+            if (errorFlag)
+                throwErrorOnLine("Double-format error!", filename, lineNum);
+            currMaterial.ka[0] = r;
+            currMaterial.ka[1] = g;
+            currMaterial.ka[2] = b;
+        }
+
+        // Diffuse color...
+        else if (parts[0] == "Kd")
+        {
+            if (!started)
+                throwErrorOnLine("A material has not been started!", filename, lineNum);
+            if (parts.size() != 4)
+                throwErrorOnLine("Incorrect number of parts!", filename, lineNum);
+            bool errorFlag = false;
+            double r = toDouble(parts[1], &errorFlag);
+            double g = toDouble(parts[2], &errorFlag);
+            double b = toDouble(parts[3], &errorFlag);
+            if (errorFlag)
+                throwErrorOnLine("Double-format error!", filename, lineNum);
+            currMaterial.kd[0] = r;
+            currMaterial.kd[1] = g;
+            currMaterial.kd[2] = b;
+        }
+
+        // Emission color...
+        else if (parts[0] == "Ke")
+        {
+            if (!started)
+                throwErrorOnLine("A material has not been started!", filename, lineNum);
+            if (parts.size() != 4)
+                throwErrorOnLine("Incorrect number of parts!", filename, lineNum);
+            bool errorFlag = false;
+            double r = toDouble(parts[1], &errorFlag);
+            double g = toDouble(parts[2], &errorFlag);
+            double b = toDouble(parts[3], &errorFlag);
+            if (errorFlag)
+                throwErrorOnLine("Double-format error!", filename, lineNum);
+            currMaterial.ke[0] = r;
+            currMaterial.ke[1] = g;
+            currMaterial.ke[2] = b;
+        }
+
+        // Specular color...
+        else if (parts[0] == "Ks")
+        {
+            if (!started)
+                throwErrorOnLine("A material has not been started!", filename, lineNum);
+            if (parts.size() != 4)
+                throwErrorOnLine("Incorrect number of parts!", filename, lineNum);
+            bool errorFlag = false;
+            double r = toDouble(parts[1], &errorFlag);
+            double g = toDouble(parts[2], &errorFlag);
+            double b = toDouble(parts[3], &errorFlag);
+            if (errorFlag)
+                throwErrorOnLine("Double-format error!", filename, lineNum);
+            currMaterial.ks[0] = r;
+            currMaterial.ks[1] = g;
+            currMaterial.ks[2] = b;
+        }
+
+        // Specular "shininess"...
+        else if (parts[0] == "Ns")
+        {
+            if (!started)
+                throwErrorOnLine("A material has not been started!", filename, lineNum);
+            if (parts.size() != 2)
+                throwErrorOnLine("Incorrect number of parts!", filename, lineNum);
+            bool errorFlag = false;
+            double s = toDouble(parts[1], &errorFlag);
+            if (errorFlag)
+                throwErrorOnLine("Double-format error!", filename, lineNum);
+            currMaterial.ns = s;
+        }
+
+        // Dissolved (transparency) ...
+        else if (parts[0] == "d" || parts[0] == "Tr")
+        {
+            if (!started)
+                throwErrorOnLine("A material has not been started!", filename, lineNum);
+            if (parts.size() != 2)
+                throwErrorOnLine("Incorrect number of parts!", filename, lineNum);
+            bool errorFlag = false;
+            double d = toDouble(parts[1], &errorFlag);
+            if (errorFlag)
+                throwErrorOnLine("Double-format error!", filename, lineNum);
+            currMaterial.d = d;
+        }
+
+        // Ambient texture map...
+        else if (parts[0] == "map_Ka")
+        {
+            // todo
+        }
+
+        // Diffuse texture map...
+        else if (parts[0] == "map_Kd")
+        {
+            // todo
+        }
+
+        // Specular color texture map...
+        else if (parts[0] == "map_Ks")
+        {
+            // todo
+        }
+
+        // Specular highlight texture map...
+        else if (parts[0] == "map_Ns")
+        {
+            // todo
+        }
+
+        // Alpha texture map...
+        else if (parts[0] == "map_d")
+        {
+            // todo
+        }
+
+        // Illumination model...
+        else if (parts[0] == "illum")
+        {
+            // todo
+        }
+
+        // Reflection map...?
+        else if (parts[0] == "map_refl")
+        {
+            // todo
+        }
+
+        // Other stuff...?
+        else
+        {
+            cerr << "Unsupported mtl line: " << line << endl;
+            //throwErrorOnLine("Unsupported feature!", filename, lineNum);
+        }
+    }
+
+    if (started)
+        mats.push_back(currMaterial);
+
+    return mats;
+}
+
 tMesh::tMesh(string filename)
 {
     ifstream f(filename.c_str());
     if (!f)
         throwErrorOnLine("Cannot open file!", filename, 0);
+
+    m_materials.push_back(tMesh::tMeshMaterial());  // the default material
+    int currMaterialIndex = 0;
+
+    string dirname = findDirName(filename);
 
     string line;
     for (int lineNum = 1; getline(f, line); lineNum++)
@@ -229,7 +466,7 @@ tMesh::tMesh(string filename)
             if (parts.size() < 4) // there must be at least 3 vertices in a face
                 throwErrorOnLine("Incorrect number of parts!",filename,lineNum);
 
-            tMesh::tMeshFace face;
+            tMesh::tMeshFace face(currMaterialIndex);
             bool errorFlag = false;
 
             for (size_t i = 1; i < parts.size(); i++)
@@ -261,13 +498,26 @@ tMesh::tMesh(string filename)
         // Library file...
         else if (parts[0] == "mtllib")
         {
-            // todo
+            if (parts.size() != 2)
+                throwErrorOnLine("Incorrect number of parts!",filename,lineNum);
+            vector<tMesh::tMeshMaterial> newMaterials =
+                readMtlFile(dirname + parts[1]);
+            for (size_t i = 0; i < newMaterials.size(); i++)
+                m_materials.push_back(newMaterials[i]);
         }
 
         // Library use...
         else if (parts[0] == "usemtl")
         {
-            // todo
+            if (parts.size() != 2)
+                throwErrorOnLine("Incorrect number of parts!",filename,lineNum);
+            size_t i;
+            for (i = 0; i < m_materials.size(); i++)
+                if (m_materials[i].name == parts[1])
+                    break;
+            if (i == m_materials.size())
+                throwErrorOnLine("Unknown material name!", filename, lineNum);
+            currMaterialIndex = i;
         }
 
         // Named object...
@@ -323,10 +573,18 @@ tMesh::tMesh(string filename)
         }
     }
 
+    // Sort the faces by material index.
+    std::sort(m_faces.begin(), m_faces.end());
+
     // Print summary.
     cout << "Loaded mesh: " << filename << "  ("
          << m_vertices.size() << " vertices, "
          << m_faces.size() << " faces)" << endl;
+}
+
+vector<tMesh::tMeshMaterial>& tMesh::getMaterials()
+{
+    return m_materials;
 }
 
 vector<tVector>& tMesh::getVertices()
@@ -347,6 +605,11 @@ vector<tVector>& tMesh::getNormals()
 vector<tMesh::tMeshFace>& tMesh::getFaces()
 {
     return m_faces;
+}
+
+const vector<tMesh::tMeshMaterial>& tMesh::getMaterials() const
+{
+    return m_materials;
 }
 
 const vector<tVector>& tMesh::getVertices() const

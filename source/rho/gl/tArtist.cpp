@@ -8,8 +8,11 @@
 #include <GL/glu.h>
 
 #include <algorithm>
+#include <iostream>
 
 using std::vector;
+using std::cout;
+using std::endl;
 
 
 namespace rho
@@ -121,18 +124,38 @@ void draw(geo::tRect r, nRenderMode rm)
 
 
 static
+void setMaterial(const geo::tMesh::tMeshMaterial& mat)
+{
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, const_cast<float*>(mat.ka));
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, const_cast<float*>(mat.kd));
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, const_cast<float*>(mat.ke));
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, const_cast<float*>(mat.ks));
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, mat.ns);
+}
+
+
+static
 void draw(const geo::tMesh& m, nRenderMode rm)
 {
-    const vector<geo::tVector>& mv = m.getVertices();
-    const vector<geo::tVector>& mt = m.getTextureCoords();
-    const vector<geo::tVector>& mn = m.getNormals();
-    const vector<geo::tMesh::tMeshFace>& mf = m.getFaces();
+    const vector<geo::tMesh::tMeshMaterial>& mm = m.getMaterials();
+    const vector<geo::tVector>&              mv = m.getVertices();
+    const vector<geo::tVector>&              mt = m.getTextureCoords();
+    const vector<geo::tVector>&              mn = m.getNormals();
+    const vector<geo::tMesh::tMeshFace>&     mf = m.getFaces();
 
     int primativeType = (rm == kFilled) ? GL_POLYGON : GL_LINE_LOOP;
+
+    int lastFm = -1;
 
     for (size_t i = 0; i < mf.size(); i++)
     {
         const geo::tMesh::tMeshFace& f = mf[i];
+        int fm = f.getMaterialIndex();
+        if (lastFm != fm)
+        {
+            setMaterial(mm[fm]);
+            lastFm = fm;
+        }
         const vector<int>& fv = f.getVertexIndices();
         const vector<int>& ft = f.getTextureCoordIndices();
         const vector<int>& fn = f.getNormalIndices();

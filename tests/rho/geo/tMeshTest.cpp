@@ -27,7 +27,8 @@ const bool   kCullBack = false;
 
 // App constants
 const double kStepSize = 0.1;
-const double kPixelsPerRadian = 150.0;
+const double kPixelsPerRadian = 300.0;
+const double kCameraPhiEpsilon = 0.0001;
 
 
 void GLFWCALL windowsResized(int width, int height)
@@ -75,20 +76,6 @@ void initGL()
     glLightfv(GL_LIGHT0, GL_SPECULAR, sColor);
     float aColor[] = {0.4, 0.4, 0.4, 1.0};
     glLightfv(GL_LIGHT0, GL_AMBIENT, aColor);
-
-    // Tell OpenGL that when I call glColor() I want to set the material color.
-    // (As opposed to the render-color.)
-    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
-    glEnable(GL_COLOR_MATERIAL);
-
-    // Set the material specular and emission color (glColor() will handle other two)
-    float msColor[] = {1.0, 1.0, 1.0, 1.0};
-    glMaterialfv(GL_FRONT, GL_SPECULAR, msColor);
-    float eColor[] = {0.0, 0.0, 0.0, 1.0};
-    glMaterialfv(GL_FRONT, GL_EMISSION, eColor);
-
-    // Set the 'shininess'.
-    glMaterialf(GL_FRONT, GL_SHININESS, 50);
 }
 
 int main()
@@ -97,7 +84,7 @@ int main()
 
     // Print instructions to the user.
     cout << "Use RIGHT/LEFT/UP/DOWN/n/m to control the light." << endl;
-    cout << "Use w/a/s/d and the mouse to control the camera." << endl;
+    cout << "Use w/a/s/d/space/lshift and the mouse to control the camera." << endl;
     cout << endl;
 
     // Initialize GLFW.
@@ -140,7 +127,7 @@ int main()
 
     // Drawables
     rho::geo::iArtist* artist = new rho::gl::tArtist(rho::gl::kFilled);
-    rho::geo::tMesh    mesh("/Users/Ryan/Desktop/objs/Coin.obj");
+    rho::geo::tMesh    mesh("/home/ryan/temp/LegoMan.obj");
     rho::geo::tBox     lightBox(
             rho::geo::tVector::point(-0.3, -0.3, -0.3),
             rho::geo::tVector::point(0.3, 0.3, 0.3));
@@ -205,7 +192,10 @@ int main()
         double alphaZ = -(newMouseY-mouseY) / kPixelsPerRadian;
         mouseX = newMouseX; mouseY = newMouseY;
         cameraDir = cameraDir.rotatedZ(alphaXY);
-        cameraDir.setPhi(cameraDir.phi() + alphaZ);
+        double phi = cameraDir.phi() + alphaZ;
+        phi = (phi < -rho::geo::kPI/2+kCameraPhiEpsilon) ? -rho::geo::kPI/2+kCameraPhiEpsilon : phi;
+        phi = (phi > rho::geo::kPI/2-kCameraPhiEpsilon) ? rho::geo::kPI/2-kCameraPhiEpsilon : phi;
+        cameraDir.setPhi(phi);
 
         // Move the camera.
         rho::geo::tVector flatCameraDir = cameraDir.unit();
@@ -218,6 +208,10 @@ int main()
             cameraPos += flatCameraDir.rotatedZ(rho::geo::kPI/2) * kStepSize;
         if (glfwGetKey('D'))
             cameraPos -= flatCameraDir.rotatedZ(rho::geo::kPI/2) * kStepSize;
+        if (glfwGetKey(' '))
+            cameraPos.z += kStepSize;
+        if (glfwGetKey(GLFW_KEY_LSHIFT))
+            cameraPos.z -= kStepSize;
     }
 
     // Close window and terminate GLFW.
