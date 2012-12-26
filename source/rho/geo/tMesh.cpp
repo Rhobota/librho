@@ -73,11 +73,13 @@ const vector<int>& tMesh::tMeshFace::getNormalIndices() const
     return m_normalIndices;
 }
 
-bool tMesh::tMeshFace::operator< (const tMeshFace& other) const
+bool meshFaceComparator(const tMesh::tMeshFace& a, const tMesh::tMeshFace& b)
 {
-    if (m_materialIndex != other.m_materialIndex)
-        return m_materialIndex < other.m_materialIndex;
-    return (this) < (&other);
+    int ma = a.getMaterialIndex();
+    int mb = b.getMaterialIndex();
+    if (ma != mb)
+        return ma < mb;
+    return (&a) < (&b);
 }
 
 
@@ -574,7 +576,8 @@ tMesh::tMesh(string filename)
     }
 
     // Sort the faces by material index.
-    std::sort(m_faces.begin(), m_faces.end());
+    //std::sort(m_faces.begin(), m_faces.end(), meshFaceComparator);
+           // this crashes on my mac sometimes... :(  ?
 
     // Print summary.
     cout << "Loaded mesh: " << filename << "  ("

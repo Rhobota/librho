@@ -37,8 +37,6 @@ class tMesh : public iDrawable
                 const std::vector<int>& getTextureCoordIndices() const;
                 const std::vector<int>& getNormalIndices() const;
 
-                bool operator< (const tMeshFace& other) const;
-
             private:
 
                 int              m_materialIndex;

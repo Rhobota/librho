@@ -7,15 +7,17 @@ OUT_FILE="a.out"
 
 CC="g++"
 CC_FLAGS+="-O0 -fno-inline -g -rdynamic -Wall -Werror -I $INCLUDE_DIR"
-CC_LIB_FLAGS+="$LIBRHO_PATH -lpthread -lglut -lglfw -lGLU"
+CC_LIB_FLAGS+="$LIBRHO_PATH"
 
-CC_FRAMEWORK_FLAGS=
 if [ $(uname) == "Darwin" ]
 then
-    CC_FRAMEWORK_FLAGS+="-framework Foundation -framework AVFoundation "
-    CC_FRAMEWORK_FLAGS+="-framework CoreVideo -framework CoreMedia "
-    CC_FRAMEWORK_FLAGS+="-framework OpenGL -framework IOKit "
-    CC_FRAMEWORK_FLAGS+="-framework Cocoa "
+    CC_LIB_FLAGS+=" -lpthread -lglfw"
+    CC_LIB_FLAGS+=" -framework Foundation -framework AVFoundation "
+    CC_LIB_FLAGS+=" -framework CoreVideo -framework CoreMedia "
+    CC_LIB_FLAGS+=" -framework OpenGL -framework IOKit "
+    CC_LIB_FLAGS+=" -framework Cocoa -framework GLUT"
+else
+    CC_LIB_FLAGS+=" -lpthread -lglut -lglfw -lGLU"
 fi
 
 if [ -n "$1" ]
@@ -49,7 +51,7 @@ for testPath in $(find "$TEST_DIR" -name '*.cpp' -o -name '*.mm')
 do
     somethingRun=1
     echo "---- $testPath ----"
-    $CC $CC_FLAGS $testPath $CC_LIB_FLAGS $CC_FRAMEWORK_FLAGS -o "$OUT_FILE"
+    $CC $CC_FLAGS $testPath $CC_LIB_FLAGS -o "$OUT_FILE"
     compileStatus=$?
     if [ $compileStatus -eq 0 ]
     then
