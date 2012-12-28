@@ -29,3 +29,8 @@ Here are a few things I'd like the library to have soon:
     - non-blocking tcp sockets
     - a thread pool
     - graph library
+
+
+Random notes:
+
+1. On OSX, the OpenGL and GLU headers live in a different place. To fix OSX to be like the rest of the world, create two files: /usr/include/GL/gl.h and /usr/include/GL/glu.h and in each do a #include <OpenGL/gl.h> and a #include <OpenGL/glu.h>, respectively.
