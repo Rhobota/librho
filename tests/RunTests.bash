@@ -11,13 +11,13 @@ CC_LIB_FLAGS+="$LIBRHO_PATH"
 
 if [ $(uname) == "Darwin" ]
 then
-    CC_LIB_FLAGS+=" -lpthread -lglfw"
+    CC_LIB_FLAGS+=" -lpthread"
     CC_LIB_FLAGS+=" -framework Foundation -framework AVFoundation "
     CC_LIB_FLAGS+=" -framework CoreVideo -framework CoreMedia "
     CC_LIB_FLAGS+=" -framework OpenGL -framework IOKit "
     CC_LIB_FLAGS+=" -framework Cocoa -framework GLUT"
 else
-    CC_LIB_FLAGS+=" -lpthread -lglut -lglfw -lGLU"
+    CC_LIB_FLAGS+=" -lpthread"
 fi
 
 if [ -n "$1" ]
