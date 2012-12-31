@@ -3,6 +3,10 @@
 
 
 #include <rho/iArtist.h>
+#include <rho/types.h>
+
+#include <map>
+#include <string>
 
 
 namespace rho
@@ -23,12 +27,18 @@ class tArtist : public iArtist
     public:
 
         tArtist(nRenderMode rm = kFilled);
+        ~tArtist();
 
         void draw(const iDrawable& drawable);
+
+        void setTexture(const std::string& textureFilePath);
+        void unsetTexture();
 
     private:
 
         nRenderMode m_rm;
+
+        std::map<std::string, u32> m_textureFileMap;
 };
 
 

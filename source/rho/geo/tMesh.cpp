@@ -214,6 +214,8 @@ vector<tMesh::tMeshMaterial> readMtlFile(string filename)
     if (!f)
         throwErrorOnLine("Cannot open file!", filename, 0);
 
+    string dirname = findDirName(filename);
+
     string line;
     tMesh::tMeshMaterial currMaterial;
     bool started = false;
@@ -340,46 +342,50 @@ vector<tMesh::tMeshMaterial> readMtlFile(string filename)
         }
 
         // Ambient texture map...
-        else if (parts[0] == "map_Ka")
-        {
-            // todo
-        }
+//         else if (parts[0] == "map_Ka")
+//         {
+//             // todo
+//         }
 
         // Diffuse texture map...
         else if (parts[0] == "map_Kd")
         {
-            // todo
+            if (!started)
+                throwErrorOnLine("A material has not been started!", filename, lineNum);
+            if (parts.size() != 2)
+                throwErrorOnLine("Incorrect number of parts!", filename, lineNum);
+            currMaterial.td = dirname + parts[1];
         }
 
         // Specular color texture map...
-        else if (parts[0] == "map_Ks")
-        {
-            // todo
-        }
+//         else if (parts[0] == "map_Ks")
+//         {
+//             // todo
+//         }
 
         // Specular highlight texture map...
-        else if (parts[0] == "map_Ns")
-        {
-            // todo
-        }
+//         else if (parts[0] == "map_Ns")
+//         {
+//             // todo
+//         }
 
         // Alpha texture map...
-        else if (parts[0] == "map_d")
-        {
-            // todo
-        }
+//         else if (parts[0] == "map_d")
+//         {
+//             // todo
+//         }
 
         // Illumination model...
-        else if (parts[0] == "illum")
-        {
-            // todo
-        }
+//         else if (parts[0] == "illum")
+//         {
+//             // todo
+//         }
 
         // Reflection map...?
-        else if (parts[0] == "map_refl")
-        {
-            // todo
-        }
+//         else if (parts[0] == "map_refl")
+//         {
+//             // todo
+//         }
 
         // Other stuff...?
         else

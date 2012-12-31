@@ -3,6 +3,7 @@
 #include <rho/geo/tBox.h>
 #include <rho/geo/tRect.h>
 #include <rho/geo/tMesh.h>
+#include <rho/img/tImage.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -13,6 +14,8 @@
 using std::vector;
 using std::cout;
 using std::endl;
+using std::map;
+using std::string;
 
 
 namespace rho
@@ -124,18 +127,19 @@ void drawRect(geo::tRect r, nRenderMode rm)
 
 
 static
-void setMaterial(const geo::tMesh::tMeshMaterial& mat)
+void setMaterial(const geo::tMesh::tMeshMaterial& mat, tArtist* artist)
 {
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, const_cast<float*>(mat.ka));
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, const_cast<float*>(mat.kd));
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, const_cast<float*>(mat.ke));
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, const_cast<float*>(mat.ks));
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, mat.ns);
+    artist->setTexture(mat.td);
 }
 
 
 static
-void drawMesh(const geo::tMesh& m, nRenderMode rm)
+void drawMesh(const geo::tMesh& m, nRenderMode rm, tArtist* artist)
 {
     const vector<geo::tMesh::tMeshMaterial>& mm = m.getMaterials();
     const vector<geo::tVector>&              mv = m.getVertices();
@@ -147,13 +151,15 @@ void drawMesh(const geo::tMesh& m, nRenderMode rm)
 
     int lastFm = -1;
 
+    artist->unsetTexture();
+
     for (size_t i = 0; i < mf.size(); i++)
     {
         const geo::tMesh::tMeshFace& f = mf[i];
         int fm = f.getMaterialIndex();
         if (lastFm != fm)
         {
-            setMaterial(mm[fm]);
+            setMaterial(mm[fm], artist);
             lastFm = fm;
         }
         const vector<int>& fv = f.getVertexIndices();
@@ -171,6 +177,8 @@ void drawMesh(const geo::tMesh& m, nRenderMode rm)
         }
         glEnd();
     }
+
+    artist->unsetTexture();
 }
 
 
@@ -200,11 +208,59 @@ void tArtist::draw(const iDrawable& drawable)
     const geo::tMesh* meshPtr = dynamic_cast<const geo::tMesh*>(drawablePtr);
     if (meshPtr != NULL)
     {
-        drawMesh(*meshPtr, m_rm);
+        drawMesh(*meshPtr, m_rm, this);
         return;
     }
 
     throw eInvalidArgument("rho::gl::tArtist cannot draw the given object.");
+}
+
+void tArtist::setTexture(const string& textureFilePath)
+{
+    if (textureFilePath == "")
+    {
+        unsetTexture();
+        return;
+    }
+
+    map<string, u32>::iterator itr = m_textureFileMap.find(textureFilePath);
+    if (itr == m_textureFileMap.end())
+    {
+        cout << "Loading texture image: " << textureFilePath << endl;
+        img::tImage image(textureFilePath, img::kRGBA);
+        GLuint texId;
+        glGenTextures(1, &texId);
+        m_textureFileMap[textureFilePath] = (u32)texId;
+        glBindTexture(GL_TEXTURE_2D, texId);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+                image.width(), image.height(),
+                0, GL_RGBA, GL_UNSIGNED_BYTE,
+                image.buf());
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    }
+    else
+    {
+        GLuint texId = itr->second;
+        glBindTexture(GL_TEXTURE_2D, texId);
+    }
+}
+
+void tArtist::unsetTexture()
+{
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+tArtist::~tArtist()
+{
+    unsetTexture();
+    map<string, u32>::iterator itr;
+    for (itr = m_textureFileMap.begin(); itr != m_textureFileMap.end(); itr++)
+    {
+        GLuint texId = itr->second;
+        glDeleteTextures(1, &texId);
+    }
+    m_textureFileMap.clear();
 }
 
 
