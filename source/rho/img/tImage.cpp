@@ -201,6 +201,31 @@ void s_verticalFlip(tImage* image)
 }
 
 static
+void s_horizontalFlip(tImage* image)
+{
+    u8* buf     = image->buf();
+    u32 bufUsed = image->bufUsed();
+    u32 width   = image->width();
+    u32 height  = image->height();
+
+    if (width == 0 || height == 0)
+        return;
+
+    if (bufUsed % (width * height))
+        throw eLogicError("Something is wack with the given image.");
+
+    u32 bpr = bufUsed / height;              // bytes-per-row
+
+    for (u32 t = 0, b = height-1; t < b; t++, b--)
+    {
+        u32 tOff = t * bpr;
+        u32 bOff = b * bpr;
+        for (u32 i = 0; i < bpr; i++)
+            std::swap(buf[tOff++], buf[bOff++]);
+    }
+}
+
+static
 void s_crop(const tImage* image, geo::tRect rect, tImage* dest)
 {
     int x = rect.x;
@@ -308,6 +333,11 @@ void s_scale(const tImage* from, double scaleFactor, tImage* to)
 void tImage::verticalFlip()
 {
     s_verticalFlip(this);
+}
+
+void tImage::horizontalFlip()
+{
+    s_horizontalFlip(this);
 }
 
 void tImage::crop(geo::tRect rect, tImage* dest)  const
