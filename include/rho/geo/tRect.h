@@ -2,7 +2,7 @@
 #define __rho_geo_tRect_h__
 
 
-#include <rho/geo/iDrawable.h>
+#include <rho/iDrawable.h>
 #include <rho/geo/tBox.h>
 
 
@@ -12,7 +12,7 @@ namespace geo
 {
 
 
-class tRect : public iDrawable
+class tRect : public bDrawableByArtist
 {
     public:
 

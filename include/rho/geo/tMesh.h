@@ -2,7 +2,7 @@
 #define __rho_geo_tMesh_h__
 
 
-#include <rho/geo/iDrawable.h>
+#include <rho/iDrawable.h>
 #include <rho/geo/tVector.h>
 
 #include <string>
@@ -15,7 +15,7 @@ namespace geo
 {
 
 
-class tMesh : public iDrawable
+class tMesh : public bDrawableByArtist
 {
     public:
 
@@ -79,8 +79,6 @@ class tMesh : public iDrawable
         const std::vector<tVector>&       getTextureCoords() const;
         const std::vector<tVector>&       getNormals() const;
         const std::vector<tMeshFace>&     getFaces() const;
-
-        void drawWithArtist(iArtist& artist);
 
     private:
 

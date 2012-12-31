@@ -2,7 +2,7 @@
 #define __rho_gl_tArtist_h__
 
 
-#include <rho/geo/iArtist.h>
+#include <rho/iArtist.h>
 
 
 namespace rho
@@ -18,15 +18,13 @@ enum nRenderMode
 };
 
 
-class tArtist : public geo::iArtist
+class tArtist : public iArtist
 {
     public:
 
         tArtist(nRenderMode rm = kFilled);
 
-        void drawBox(geo::tBox b);
-        void drawRect(geo::tRect r);
-        void drawMesh(const geo::tMesh& mesh);
+        void draw(const iDrawable& drawable);
 
     private:
 
