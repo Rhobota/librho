@@ -22,7 +22,7 @@ namespace gl
 
 
 static
-void draw(geo::tBox b, nRenderMode rm)
+void drawBox(geo::tBox b, nRenderMode rm)
 {
     // Normalize b so that we can assume things about b.p1 and b.p2.
     b = b.normalize();
@@ -100,7 +100,7 @@ void draw(geo::tBox b, nRenderMode rm)
 
 
 static
-void draw(geo::tRect r, nRenderMode rm)
+void drawRect(geo::tRect r, nRenderMode rm)
 {
     // Begin.
     if (rm == kFilled)
@@ -135,7 +135,7 @@ void setMaterial(const geo::tMesh::tMeshMaterial& mat)
 
 
 static
-void draw(const geo::tMesh& m, nRenderMode rm)
+void drawMesh(const geo::tMesh& m, nRenderMode rm)
 {
     const vector<geo::tMesh::tMeshMaterial>& mm = m.getMaterials();
     const vector<geo::tVector>&              mv = m.getVertices();
@@ -179,19 +179,32 @@ tArtist::tArtist(nRenderMode rm)
 {
 }
 
-void tArtist::drawBox(geo::tBox b)
+void tArtist::draw(const iDrawable& drawable)
 {
-    draw(b, m_rm);
-}
+    const iDrawable* drawablePtr = &drawable;
 
-void tArtist::drawRect(geo::tRect r)
-{
-    draw(r, m_rm);
-}
+    const geo::tBox* boxPtr = dynamic_cast<const geo::tBox*>(drawablePtr);
+    if (boxPtr != NULL)
+    {
+        drawBox(*boxPtr, m_rm);
+        return;
+    }
 
-void tArtist::drawMesh(const geo::tMesh& mesh)
-{
-    draw(mesh, m_rm);
+    const geo::tRect* rectPtr = dynamic_cast<const geo::tRect*>(drawablePtr);
+    if (rectPtr != NULL)
+    {
+        drawRect(*rectPtr, m_rm);
+        return;
+    }
+
+    const geo::tMesh* meshPtr = dynamic_cast<const geo::tMesh*>(drawablePtr);
+    if (meshPtr != NULL)
+    {
+        drawMesh(*meshPtr, m_rm);
+        return;
+    }
+
+    throw eInvalidArgument("rho::gl::tArtist cannot draw the given object.");
 }
 
 

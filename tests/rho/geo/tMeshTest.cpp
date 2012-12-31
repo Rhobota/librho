@@ -127,7 +127,7 @@ int main()
 
     // Drawables
     rho::geo::iArtist* artist = new rho::gl::tArtist(rho::gl::kFilled);
-    rho::geo::tMesh    mesh("/home/ryan/temp/LegoMan.obj");
+    rho::geo::tMesh    mesh("/home/ryan/objs/LegoMan.obj");
     rho::geo::tBox     lightBox(
             rho::geo::tVector::point(-0.3, -0.3, -0.3),
             rho::geo::tVector::point(0.3, 0.3, 0.3));
