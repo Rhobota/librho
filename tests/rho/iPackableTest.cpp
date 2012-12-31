@@ -331,14 +331,14 @@ void i16test(const tTest& t)
 
 void u32test(const tTest& t)
 {
-    u32 v1 = 1413227351; // binary 0101 0100 0011 1100 0010 0011 0101 0111
-    u32 v2 = 2991341219; // binary 1011 0010 0100 1100 0011 1110 1010 0011
+    u32 v1 = 1413227351u; // binary 0101 0100 0011 1100 0010 0011 0101 0111
+    u32 v2 = 2991341219u; // binary 1011 0010 0100 1100 0011 1110 1010 0011
     u32 v3 = 0, v4 = 0;
     tByteOutputStream out;
     pack(&out, v1);
     pack(&out, v2);
-    t.assert(v1 == 1413227351);
-    t.assert(v2 == 2991341219);
+    t.assert(v1 == 1413227351u);
+    t.assert(v2 == 2991341219u);
     vector<u8> buf = out.getBuf();
     t.assert(buf.size() == 8);
     t.assert(buf[0] == 0x54);    // 0101 0100
@@ -352,8 +352,8 @@ void u32test(const tTest& t)
     tByteInputStream in(buf);
     unpack(&in, v3);
     unpack(&in, v4);
-    t.assert(v3 == 1413227351);
-    t.assert(v4 == 2991341219);
+    t.assert(v3 == 1413227351u);
+    t.assert(v4 == 2991341219u);
 }
 
 void i32test(const tTest& t)
