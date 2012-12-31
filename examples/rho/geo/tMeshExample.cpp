@@ -29,6 +29,7 @@ const bool   kCullBack = false;
 const double kStepSize = 0.1;
 const double kPixelsPerRadian = 300.0;
 const double kCameraPhiEpsilon = 0.0001;
+const string kObjFilePath = "LegoMan.obj";
 
 
 void GLFWCALL windowsResized(int width, int height)
@@ -130,7 +131,7 @@ int main()
 
     // Drawables
     rho::refc<rho::iArtist> artist(new rho::gl::tArtist(rho::gl::kFilled));
-    rho::geo::tMesh mesh("/home/ryan/objs/LegoMan.obj");
+    rho::geo::tMesh mesh(kObjFilePath);
     mesh.setArtist(artist);
     rho::geo::tBox lightBox(
             rho::geo::tVector::point(-0.3, -0.3, -0.3),
