@@ -57,6 +57,9 @@ void initGL()
     // Have OpenGL normalize all normal-vectors we give it.
     glEnable(GL_NORMALIZE);
 
+    // Enable texturing.
+    glEnable(GL_TEXTURE_2D);
+
     // Only draw the front of every polygon face.
     if (kCullBack)
     {
@@ -126,11 +129,13 @@ int main()
     glfwGetMousePos(&mouseX, &mouseY);
 
     // Drawables
-    rho::geo::iArtist* artist = new rho::gl::tArtist(rho::gl::kFilled);
-    rho::geo::tMesh    mesh("/home/ryan/objs/LegoMan.obj");
-    rho::geo::tBox     lightBox(
+    rho::refc<rho::iArtist> artist(new rho::gl::tArtist(rho::gl::kFilled));
+    rho::geo::tMesh mesh("/home/ryan/objs/LegoMan.obj");
+    mesh.setArtist(artist);
+    rho::geo::tBox lightBox(
             rho::geo::tVector::point(-0.3, -0.3, -0.3),
             rho::geo::tVector::point(0.3, 0.3, 0.3));
+    lightBox.setArtist(artist);
 
     // Main loop.
     int running = GL_TRUE;
@@ -154,14 +159,14 @@ int main()
         float lightPosArray[] = {0.0, 0.0, 0.0, 1.0};  // will be transformed by the modelview matrix.
         glLightfv(GL_LIGHT0, GL_POSITION, lightPosArray);
         glColor3d(0.0, 1.0, 0.0);
-        lightBox.drawWithArtist(*artist);
+        lightBox.draw();
         glPopMatrix();
 
         // Draw the obj in the center.
         glPushMatrix();
         glTranslated(0, 0, 0);
         glColor3d(1.0, 0.0, 0.0);
-        mesh.drawWithArtist(*artist);
+        mesh.draw();
         glPopMatrix();
 
         // Swap front and back rendering buffers and poll for events.

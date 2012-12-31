@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <sstream>
 
 #include "stb_image.h"
 
@@ -65,7 +66,11 @@ tImage::tImage(std::string filepath, nImageFormat format)
     }
     u8* buf = stbi_load(filepath.c_str(), &width, &height, &numComponents, req);
     if (buf == NULL)
-        throw eInvalidArgument("The filepath specified contains a bad image.");
+    {
+        std::ostringstream out;
+        out << "Cannot load image (" << stbi_failure_reason() << "): " << filepath;
+        throw eInvalidArgument(out.str());
+    }
     u32 bufSize = width * height * req;
     setBufSize(bufSize);
     for (u32 i = 0; i < bufSize; i++)

@@ -53,6 +53,8 @@ class tMesh : public bDrawableByArtist
 
                 std::string name;
 
+                std::string td;  // diffuse texture file path
+
                 float ka[4];     // ambient color
                 float kd[4];     // diffuse color
                 float ke[4];     // emission color
