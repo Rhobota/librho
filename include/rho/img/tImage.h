@@ -47,6 +47,7 @@ class tImage : public bNonCopyable, public iPackable
         void convertToFormat(nImageFormat format, tImage* dest) const;
 
         void verticalFlip();
+        void horizontalFlip();
 
         void crop (geo::tRect rect,    tImage* dest)  const;
         void scale(double scaleFactor, tImage* dest)  const;

@@ -228,6 +228,7 @@ void tArtist::setTexture(const string& textureFilePath)
     {
         cout << "Loading texture image: " << textureFilePath << endl;
         img::tImage image(textureFilePath, img::kRGBA);
+        image.horizontalFlip();   // glTexImage2D() expect row #0 to be on the bottom
         GLuint texId;
         glGenTextures(1, &texId);
         m_textureFileMap[textureFilePath] = (u32)texId;
