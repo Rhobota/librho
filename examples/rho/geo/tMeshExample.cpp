@@ -69,6 +69,12 @@ void initGL()
         glEnable(GL_CULL_FACE);
     }
 
+    // In case the back-facing polygons are not culled, we want to calculate lighting for them properly.
+    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);
+
+    // The specular component should be calculated correctly (instead of the weird -z axis only thing that is done by default).
+    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
+
     // First enable lighting and light0.
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
