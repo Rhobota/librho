@@ -13,7 +13,7 @@ If you'd like to install the header files and the static lib permanently, run:
           sudo make install
 
 That will put stuff in '/usr/local/include' and in '/usr/local/lib'. You can
-now compile your programs by passing -lrho to g++. Try it out with the
+now compile your programs by passing '-lrho' to `g++`. Try it out with the
 examples in 'examples/'.
 
 To clean-up, run:
@@ -33,4 +33,16 @@ Here are a few things I'd like the library to have soon:
 
 Random notes:
 
-1. On OSX, the OpenGL and GLU headers live in a different place. To fix OSX to be like the rest of the world, create two files: /usr/include/GL/gl.h and /usr/include/GL/glu.h and in each do a #include <OpenGL/gl.h> and a #include <OpenGL/glu.h>, respectively.
+1. On OSX, the OpenGL and GLU headers live in a different place. To fix OSX to
+be like the rest of the world, create two files: /usr/include/GL/gl.h and
+/usr/include/GL/glu.h and in each do a #include <OpenGL/gl.h> and a
+#include <OpenGL/glu.h>, respectively.
+
+2. To compile the library for x86 (as opposed to for x86_64), you must pass '-m32'
+to `g++`. You can easily do this by running `CC_FLAGS=-m32 make`. That sets
+$CC_FLAGS equal to '-m32' just for the command `make`.
+
+3. If you want to run a version of `g++` that contains a prefix (for example,
+for doing some sort of cross-compilation), you can set the $TARGET variable
+to the desired g++-prefix before running `make`. Do this in the same way as
+described by note #2.

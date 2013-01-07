@@ -2,7 +2,11 @@
 #include <rho/tTest.h>
 #include <rho/tCrashReporter.h>
 
+#include <iostream>
+
 using namespace rho;
+using std::cout;
+using std::endl;
 
 
 class iBaseOne
@@ -102,6 +106,10 @@ int main()
 
     tTest("rtti test", rttiTest);
     tTest("types test", typesTest);
+
+    cout << endl;
+    cout << "Current platform:  " << platformEnumToString(getCurrPlatform()) << endl;
+    cout << "Machine's bitness: " << getMachineBitness() << endl;
 
     return 0;
 }

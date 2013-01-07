@@ -6,7 +6,7 @@ LIBRHO_PATH="$TEST_DIR/../objects/librho.a"
 OUT_FILE="a.out"
 
 CC="g++"
-CC_FLAGS+="-O0 -fno-inline -g -rdynamic -Wall -Werror -I $INCLUDE_DIR"
+CC_FLAGS+=" -O0 -fno-inline -g -rdynamic -Wall -Werror -I $INCLUDE_DIR"
 CC_LIB_FLAGS+="$LIBRHO_PATH"
 
 if [ $(uname) == "Darwin" ]

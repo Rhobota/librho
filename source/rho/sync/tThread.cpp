@@ -108,10 +108,12 @@ tThread::~tThread()
 
 void tThread::yield()
 {
-    #ifdef __linux__
+    #if __linux__
     pthread_yield();
     #elif __APPLE__
     pthread_yield_np();
+    #else
+    #error Look up what should go here...
     #endif
 }
 
