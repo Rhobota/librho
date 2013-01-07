@@ -4,6 +4,8 @@
 
 #include <stdint.h>   // posix header file
 
+#include <string>
+
 
 namespace rho
 {
@@ -20,6 +22,21 @@ typedef uint32_t u32;
 
 typedef int64_t  i64;
 typedef uint64_t u64;
+
+
+enum nPlatform
+{
+    kLinux,
+    kOSX,
+    kWindows
+};
+
+
+nPlatform getCurrPlatform();
+
+std::string platformEnumToString(nPlatform plat);
+
+int getMachineBitness();
 
 
 }  // namespace rho
