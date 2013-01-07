@@ -6,7 +6,7 @@ TESTS_DIR   := tests
 
 STATIC_LIB_NAME := librho.a
 
-CC := g++
+CC := $(TARGET)g++
 CC_FLAGS += -g -rdynamic -Wall -Werror -I $(INCLUDE_DIR)
 
 CPP_SRC_FILES := $(shell find $(SRC_DIR) -name '*.cpp' -type f)
