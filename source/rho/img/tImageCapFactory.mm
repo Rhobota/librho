@@ -3,7 +3,7 @@
 #elif __APPLE__
 #include "osxImpl.ipp"
 #else
-#error tImageCapFactory not supported on this platform
+#include "notImpl.ipp"
 #endif
 
 

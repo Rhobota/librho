@@ -11,6 +11,8 @@ nPlatform getCurrPlatform()
     return kLinux;
     #elif __APPLE__
     return kOSX;
+    #elif __CYGWIN__
+    return kCygwin;
     #elif __MINGW32__
     return kWindows;
     #else
@@ -27,6 +29,8 @@ std::string platformEnumToString(nPlatform plat)
             return "Linux";
         case kOSX:
             return "OSX";
+        case kCygwin:
+            return "Cygwin";
         case kWindows:
             return "Windows";
         default:
