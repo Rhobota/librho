@@ -108,7 +108,7 @@ tThread::~tThread()
 
 void tThread::yield()
 {
-    #if __linux__
+    #if __linux__ || __CYGWIN__
     pthread_yield();
     #elif __APPLE__
     pthread_yield_np();
