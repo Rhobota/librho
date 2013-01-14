@@ -2,16 +2,10 @@
 #define __rho_ip_tAddr_h__
 
 
-#include <rho/types.h>
-
-#include <rho/ip/ebIP.h>
+#include <rho/ip/_pre.h>
 #include <rho/ip/tcp/_pre.h>
-
-#include <arpa/inet.h>    //
-#include <sys/socket.h>   //
-#include <sys/types.h>    // posix headers
-#include <netdb.h>        //
-#include <string.h>       //
+#include <rho/ip/ebIP.h>
+#include <rho/types.h>
 
 #include <string>
 #include <vector>

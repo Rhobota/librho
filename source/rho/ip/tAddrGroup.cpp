@@ -129,7 +129,6 @@ void tAddrGroup::m_initLocalhostBind()
                                       // Specifying TCP here prevents duplicate
                                       // addresses from being returned by
                                       // getaddrinfo().
-    hints.ai_flags   |= AI_ALL;
 
     m_init_helper(NULL, "80", &hints);   // the port is bogus; we just need
                                          // something here that is not NULL.
@@ -149,8 +148,11 @@ void tAddrGroup::m_initWildcardBind()
                                       // Specifying TCP here prevents duplicate
                                       // addresses from being returned by
                                       // getaddrinfo().
-    hints.ai_flags   |= AI_ALL;
-    hints.ai_flags   |= AI_PASSIVE;
+
+    hints.ai_flags   |= AI_PASSIVE;   // Specifies that we wish to bind() on
+                                      // the socket returned. The socket's
+                                      // address will be set to INADDR_ANY or
+                                      // IN6ADDR_ANY_INIT.
 
     m_init_helper(NULL, "80", &hints);   // the port is bogus; we just need
                                          // something here that is not NULL.
@@ -170,7 +172,6 @@ void tAddrGroup::m_init(std::string host, bool resolve)
                                       // Specifying TCP here prevents duplicate
                                       // addresses from being returned by
                                       // getaddrinfo().
-    hints.ai_flags   |= AI_ALL;
 
     if (!resolve)
         hints.ai_flags   |= AI_NUMERICHOST;

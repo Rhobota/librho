@@ -1,8 +1,7 @@
+#include <rho/ip/_pre.h>   // for ntohs, ntohl, htons, htonl
+
 #include <rho/iPackable.h>
 #include <rho/eRho.h>
-
-#include <arpa/inet.h>   // for ntohs, ntohl, htons, htonl
-
 
 namespace rho
 {
