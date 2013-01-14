@@ -1,12 +1,6 @@
 #include <rho/ip/tcp/tSocket.h>
 #include <rho/ip/ebIP.h>
 
-#include <fcntl.h>       //
-#include <netinet/tcp.h> //
-#include <signal.h>      // posix header
-#include <sys/socket.h>  //
-#include <unistd.h>      //
-
 #include <sstream>
 
 
@@ -90,7 +84,13 @@ void tSocket::m_finalize()
 {
     if (m_fd >= 0)
     {
+        #if __linux__ || __APPLE__ || __CYGWIN__
         ::close(m_fd);
+        #elif __MINGW32__
+        ::closesocket(m_fd);
+        #else
+        #error What platform are you on!?
+        #endif
         m_fd = -1;
     }
 }
@@ -122,7 +122,13 @@ void tSocket::setNagles(bool on)
 
 i32 tSocket::read(u8* buffer, i32 length)
 {
+    #if __linux__ || __APPLE__ || __CYGWIN__
     return ::read(m_fd, buffer, length);
+    #elif __MINGW32__
+    return ::recv(m_fd, (char*)buffer, length, 0);
+    #else
+    #error What platform are you on!?
+    #endif
 }
 
 i32 tSocket::readAll(u8* buffer, i32 length)
@@ -130,7 +136,7 @@ i32 tSocket::readAll(u8* buffer, i32 length)
     i32 amountRead = 0;
     while (amountRead < length)
     {
-        i32 n = ::read(m_fd, buffer+amountRead, length-amountRead);
+        i32 n = read(buffer+amountRead, length-amountRead);
         if (n <= 0)
             return (amountRead>0) ? amountRead : n;
         amountRead += n;
@@ -140,7 +146,13 @@ i32 tSocket::readAll(u8* buffer, i32 length)
 
 i32 tSocket::write(const u8* buffer, i32 length)
 {
+    #if __linux__ || __APPLE__ || __CYGWIN__
     return ::write(m_fd, buffer, length);
+    #elif __MINGW32__
+    return ::send(m_fd, (const char*)buffer, length, 0);
+    #else
+    #error What platform are you on!?
+    #endif
 }
 
 i32 tSocket::writeAll(const u8* buffer, i32 length)
@@ -148,7 +160,7 @@ i32 tSocket::writeAll(const u8* buffer, i32 length)
     i32 amountWritten = 0;
     while (amountWritten < length)
     {
-        i32 n = ::write(m_fd, buffer+amountWritten, length-amountWritten);
+        i32 n = write(buffer+amountWritten, length-amountWritten);
         if (n <= 0)
             return (amountWritten>0) ? amountWritten : n;
         amountWritten += n;
@@ -158,7 +170,13 @@ i32 tSocket::writeAll(const u8* buffer, i32 length)
 
 void tSocket::close()
 {
+    #if __linux__ || __APPLE__ || __CYGWIN__
     if (::shutdown(m_fd, SHUT_RDWR) == -1)
+    #elif __MINGW32__
+    if (::shutdown(m_fd, SD_BOTH) == -1)
+    #else
+    #error What platform are you on!?
+    #endif
     {
         throw eRuntimeError(strerror(errno));
     }
@@ -166,7 +184,13 @@ void tSocket::close()
 
 void tSocket::closeRead()
 {
+    #if __linux__ || __APPLE__ || __CYGWIN__
     if (::shutdown(m_fd, SHUT_RD) == -1)
+    #elif __MINGW32__
+    if (::shutdown(m_fd, SD_RECEIVE) == -1)
+    #else
+    #error What platform are you on!?
+    #endif
     {
         throw eRuntimeError(strerror(errno));
     }
@@ -174,13 +198,20 @@ void tSocket::closeRead()
 
 void tSocket::closeWrite()
 {
+    #if __linux__ || __APPLE__ || __CYGWIN__
     if (::shutdown(m_fd, SHUT_WR) == -1)
+    #elif __MINGW32__
+    if (::shutdown(m_fd, SD_SEND) == -1)
+    #else
+    #error What platform are you on!?
+    #endif
     {
         throw eRuntimeError(strerror(errno));
     }
 }
 
 
+#if __linux__ || __APPLE__ || __CYGWIN__
 /*
  * On Linux, when you write() to a broken pipe or socket, the program gets
  * a SIGPIPE signal delivered to it. If not handled, that will kill the
@@ -193,6 +224,11 @@ static int setSigPipeHandler()
 }
 extern const int kSigPipeIgnoreKickoff;
 const int kSigPipeIgnoreKickoff = setSigPipeHandler();
+#elif __MINGW32__
+// Do something?
+#else
+#error What platform are you on!?
+#endif
 
 
 } // namespace tcp

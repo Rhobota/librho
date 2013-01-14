@@ -228,28 +228,34 @@ void s_horizontalFlip(tImage* image)
 static
 void s_crop(const tImage* image, geo::tRect rect, tImage* dest)
 {
-    int x = rect.x;
-    int y = rect.y;
-    int width = rect.width;
-    int height = rect.height;
+    if (rect.x < 0.0)
+        rect.x = 0.0;
 
-    if (x < 0 || (u32)x > image->width())
-        x = 0;
+    if (rect.y < 0.0)
+        rect.y = 0.0;
 
-    if (y < 0 || (u32)y > image->height())
-        y = 0;
+    if (rect.x > image->width())
+        rect.x = image->width();
 
-    if (width < 0)
-        width = 0;
+    if (rect.y > image->height())
+        rect.y = image->height();
 
-    if (height < 0)
-        height = 0;
+    if (rect.width < 0.0)
+        rect.width = 0.0;
 
-    if ((u32)(x + width) > image->width())
-        width = image->width() - x;
+    if (rect.height < 0.0)
+        rect.height = 0.0;
 
-    if ((u32)(y + height) > image->height())
-        height = image->height() - y;
+    if ((rect.x + rect.width) > image->width())
+        rect.width = image->width() - rect.x;
+
+    if ((rect.y + rect.height) > image->height())
+        rect.height = image->height() - rect.y;
+
+    u32 x = (u32) rect.x;
+    u32 y = (u32) rect.y;
+    u32 width = (u32) rect.width;
+    u32 height = (u32) rect.height;
 
     dest->setBufUsed(0);
     dest->setWidth(width);
@@ -272,9 +278,9 @@ void s_crop(const tImage* image, geo::tRect rect, tImage* dest)
     const u8* sbuf = image->buf() + (y*image->width() + x) * bpp;
     u8* dbuf = dest->buf();
 
-    for (int j = 0; j < height; j++)
+    for (u32 j = 0; j < height; j++)
     {
-        for (int i = 0; i < width; i++)
+        for (u32 i = 0; i < width; i++)
         {
             for (int k = 0; k < bpp; k++)
             {
@@ -288,8 +294,8 @@ void s_crop(const tImage* image, geo::tRect rect, tImage* dest)
 static
 void s_scale(const tImage* from, double scaleFactor, tImage* to)
 {
-    u32 width  = from->width() * scaleFactor;
-    u32 height = from->height() * scaleFactor;
+    u32 width  = (u32) (from->width() * scaleFactor);
+    u32 height = (u32) (from->height() * scaleFactor);
 
     to->setBufUsed(0);
     to->setWidth(width);
@@ -309,9 +315,9 @@ void s_scale(const tImage* from, double scaleFactor, tImage* to)
     if (to->bufSize() < to->bufUsed())
         to->setBufSize(to->bufUsed());
 
-    u32 stride = floor(1.0 / scaleFactor);
-    u32 xstride = stride * bpp;
-    u32 ystride = (stride * from->width() * bpp) - (width * xstride);
+    u32 stride = (u32) floor(1.0 / scaleFactor);
+    u32 xstride = (u32) (stride * bpp);
+    u32 ystride = (u32) ((stride * from->width() * bpp) - (width * xstride));
 
     const u8* fbuf = from->buf();
     u8* tbuf = to->buf();

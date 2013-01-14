@@ -1,9 +1,6 @@
 #include <rho/ip/tcp/tServer.h>
 #include <rho/ip/ebIP.h>
 
-#include <fcntl.h>       // posix headers
-#include <unistd.h>      //
-
 #include <sstream>
 
 
@@ -30,6 +27,8 @@ tServer::tServer(const tAddrGroup& addrGroup, u16 bindPort)
 
 void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
 {
+    m_finalize();
+
     if (addrGroup.size() != 1)
         throw eLogicError("A tcp server can only bind to one address.");
 
@@ -42,16 +41,18 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
         throw eSocketCreationError("Cannot create posix socket.");
     }
 
+    #if __linux__ || __APPLE__ || __CYGWIN__
     int off = 0;
-    int on  = 1;
-    if (::setsockopt(m_fd, IPPROTO_IPV6, IPV6_V6ONLY, (void*)&off, sizeof(off))
+    if (::setsockopt(m_fd, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&off, sizeof(off))
             == -1)
     {
         m_finalize();
         throw eRuntimeError("Cannot set server to ipv6-only.");
     }
+    #endif
 
-    if (::setsockopt(m_fd, SOL_SOCKET, SO_REUSEADDR, (void*)&on, sizeof(on))
+    int on  = 1;
+    if (::setsockopt(m_fd, SOL_SOCKET, SO_REUSEADDR, (char*)&on, sizeof(on))
             == -1)
     {
         m_finalize();
@@ -77,7 +78,13 @@ void tServer::m_finalize()
 {
     if (m_fd >= 0)
     {
+        #if __linux__ || __APPLE__ || __CYGWIN__
         ::close(m_fd);
+        #elif __MINGW32__
+        ::closesocket(m_fd);
+        #else
+        #error What platform are you on!?
+        #endif
         m_fd = -1;
     }
 }

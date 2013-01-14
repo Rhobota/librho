@@ -437,7 +437,7 @@ vector<double> tWaveMaker::genNumSamples(double frequency, double sampleRate,
 vector<double> tWaveMaker::genNumPhases(double frequency, double sampleRate,
                                        double amplitude, u32 numPhases)
 {
-    u32 numSamples = sampleRate * numPhases / frequency;
+    u32 numSamples = (u32) (sampleRate * numPhases / frequency);
     return genNumSamples(frequency, sampleRate, amplitude, numSamples);
 }
 

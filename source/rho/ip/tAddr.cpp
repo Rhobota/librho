@@ -129,9 +129,16 @@ std::string tAddr::toString() const
     if (addr)
     {
         char* addrStr = new char[buffSize];
+        #if __linux__ || __APPLE__ || __CYGWIN__
         inet_ntop(m_sockaddr->sa_family, addr, addrStr, buffSize);
+        #elif __MINGW32__
+        DWORD lengthOfReturnedString = buffSize;
+        WSAAddressToString(m_sockaddr, m_sockaddrlen, NULL, addrStr, &lengthOfReturnedString);
+        #elif
+        #error What platform are you on!?
+        #endif
         rep = addrStr;
-        delete addrStr;
+        delete [] addrStr;
     }
     else
     {
