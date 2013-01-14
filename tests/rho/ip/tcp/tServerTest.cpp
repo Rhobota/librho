@@ -34,12 +34,16 @@ void localhostBindTest(const tTest& t)
 
 void exceptionTest(const tTest& t)
 {
+    bool boundOnce = false;
     try
     {
-        ip::tcp::tServer server(1);   // Only root can bind to ports <1024.
+        ip::tcp::tServer server1(2013);
+        boundOnce = true;
+        ip::tcp::tServer server2(2013);
         t.fail();
     }
     catch (ip::eSocketBindError& e) { }
+    t.assert(boundOnce);
 }
 
 int main()

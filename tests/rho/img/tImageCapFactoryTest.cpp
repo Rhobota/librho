@@ -8,8 +8,17 @@ using namespace rho;
 
 void testParamsEnumerator(const tTest& t)
 {
-    refc<img::iImageCapParamsEnumerator> enumerator =
-        img::tImageCapFactory::getImageCapParamsEnumerator();
+    refc<img::iImageCapParamsEnumerator> enumerator;
+
+    try
+    {
+        enumerator =
+            img::tImageCapFactory::getImageCapParamsEnumerator();
+    }
+    catch (eNotImplemented& e)
+    {
+        return;   // it's ok if the enumerator is not implemented on this platform
+    }
 
     t.assert(enumerator->size() > 0);
 
@@ -22,14 +31,32 @@ void testParamsEnumerator(const tTest& t)
 
 void testImageCap(const tTest& t)
 {
-    refc<img::iImageCapParamsEnumerator> enumerator =
-        img::tImageCapFactory::getImageCapParamsEnumerator();
+    refc<img::iImageCapParamsEnumerator> enumerator;
+
+    try
+    {
+        enumerator =
+            img::tImageCapFactory::getImageCapParamsEnumerator();
+    }
+    catch (eNotImplemented& e)
+    {
+        return;   // it's ok if the enumerator is not implemented on this platform
+    }
 
     img::tImageCapParams params = (*enumerator)[0];
     params.displayFormat = img::kRGB24;
 
-    refc<img::iImageCap> cap =
-        img::tImageCapFactory::getImageCap(params, true);
+    refc<img::iImageCap> cap;
+
+    try
+    {
+        cap =
+            img::tImageCapFactory::getImageCap(params, true);
+    }
+    catch (eNotImplemented& e)
+    {
+        return;   // it's ok if the capturer is not implemented on this platform
+    }
 
     img::tImageCapParams coercedParams = cap->getParams();
 
