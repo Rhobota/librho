@@ -30,7 +30,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
-#elif
+#else
 
 #error What platform are you on!?
 

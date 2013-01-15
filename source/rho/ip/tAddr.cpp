@@ -134,7 +134,7 @@ std::string tAddr::toString() const
         #elif __MINGW32__
         DWORD lengthOfReturnedString = buffSize;
         WSAAddressToString(m_sockaddr, m_sockaddrlen, NULL, addrStr, &lengthOfReturnedString);
-        #elif
+        #else
         #error What platform are you on!?
         #endif
         rep = addrStr;
