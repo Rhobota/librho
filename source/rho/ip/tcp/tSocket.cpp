@@ -211,26 +211,6 @@ void tSocket::closeWrite()
 }
 
 
-#if __linux__ || __APPLE__ || __CYGWIN__
-/*
- * On Linux, when you write() to a broken pipe or socket, the program gets
- * a SIGPIPE signal delivered to it. If not handled, that will kill the
- * program. The following code causes that signal to be ignored.
- */
-static int setSigPipeHandler()
-{
-    signal(SIGPIPE, SIG_IGN);
-    return 1;
-}
-extern const int kSigPipeIgnoreKickoff;
-const int kSigPipeIgnoreKickoff = setSigPipeHandler();
-#elif __MINGW32__
-// Do something?
-#else
-#error What platform are you on!?
-#endif
-
-
 } // namespace tcp
 } // namespace ip
 } // namespace rho
