@@ -8,7 +8,13 @@
 using namespace rho;
 
 
+#if __linux__ || __APPLE__ || __CYGWIN__
 std::string gWavePath = "/tmp/wavemakertest.wav";
+#elif __MINGW32__
+std::string gWavePath = "C:\\wavemakertest.wav";
+#else
+#error What platform are you on!?
+#endif
 
 std::vector<double> gWave;
 
@@ -30,7 +36,7 @@ std::vector<double> normalize(const std::vector<double>& v)
 void test1(const tTest& t)
 {
     u32 sampleRate = 8000;
-    u32 numSamples = sampleRate * 3.5;
+    u32 numSamples = (u32) (sampleRate * 3.5);
 
     audio::tWaveMaker m(numSamples, sampleRate);
 

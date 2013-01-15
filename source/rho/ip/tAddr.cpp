@@ -1,5 +1,7 @@
 #include <rho/ip/tAddr.h>
 
+#include <iostream>
+
 
 namespace rho
 {
@@ -186,6 +188,42 @@ tAddr::~tAddr()
 {
     m_finalize();
 }
+
+
+#if __linux__ || __APPLE__ || __CYGWIN__
+
+/*
+ * On Linux, when you write() to a broken pipe or socket, the program gets
+ * a SIGPIPE signal delivered to it. If not handled, that will kill the
+ * program. The following code causes that signal to be ignored.
+ */
+static int setSigPipeHandler()
+{
+    signal(SIGPIPE, SIG_IGN);
+    return 1;
+}
+const int kSigPipeIgnoreKickoff = setSigPipeHandler();
+
+#elif __MINGW32__
+
+/*
+ * On Windows, you must call WSAStartup() before any other winsock call.
+ */
+static int initForWindows()
+{
+    WSADATA info;
+    if (WSAStartup(MAKEWORD(2,2), &info) != 0)
+    {
+        std::cerr << "Couldn't start winsock!" << std::endl;
+        std::exit(1);
+    }
+    return 1;
+}
+const int kInitForWindowsKickoff = initForWindows();
+
+#else
+#error What platform are you on!?
+#endif
 
 
 }   // namespace ip

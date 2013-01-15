@@ -11,6 +11,10 @@
 #include <sstream>
 #include <vector>
 
+#ifdef assert
+#undef assert
+#endif
+
 
 namespace rho
 {

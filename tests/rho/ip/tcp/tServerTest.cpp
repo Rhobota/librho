@@ -7,8 +7,7 @@
 
 
 using namespace rho;
-using std::cout;
-using std::endl;
+using std::string;
 
 
 void localhostBindTest(const tTest& t)
@@ -17,7 +16,8 @@ void localhostBindTest(const tTest& t)
         // When no tAddrGroup is given, the server is bound to
         // the localhost address.
         ip::tcp::tServer server(8571);
-        t.iseq(server.getBindAddress().toString(), "::1");
+        string str = server.getBindAddress().toString();
+        t.assert(str == "::1" || str == "[::1]:8571");
         t.iseq(server.getBindAddress().getVersion(), ip::kIPv6);
         t.iseq(server.getBindPort(), 8571);
     }
@@ -26,7 +26,8 @@ void localhostBindTest(const tTest& t)
         // Or you can be explicit about binding to the localhost address.
         ip::tAddrGroup g(ip::tAddrGroup::kLocalhostBind);
         ip::tcp::tServer server(g, 8572);
-        t.iseq(server.getBindAddress().toString(), "::1");
+        string str = server.getBindAddress().toString();
+        t.assert(str == "::1" || str == "[::1]:8572");
         t.iseq(server.getBindAddress().getVersion(), ip::kIPv6);
         t.iseq(server.getBindPort(), 8572);
     }

@@ -33,7 +33,7 @@ static void* rho_sync_threadMain(void* thisBetterBeARunnableRef)
 
 tThread::tThread(refc<iRunnable> runnable)
     : m_runnable(runnable),
-      m_thread(0),
+      m_thread(),
       m_joined(false),
       m_detached(false)
 {
@@ -113,7 +113,7 @@ void tThread::yield()
     #elif __APPLE__
     pthread_yield_np();
     #else
-    #error Look up what should go here...
+    throw eNotImplemented("tThread::yield() is not implemented on this platform.");
     #endif
 }
 
@@ -124,12 +124,12 @@ void tThread::msleep(u64 msecs)
 
 void tThread::usleep(u64 usecs)
 {
-    if (usecs >= 1000000)              // ::usleep must take a value <1000000
+    while (usecs >= 1000000)              // ::usleep must take a value <1000000
     {
-        ::sleep(usecs / 1000000);
-        ::usleep(usecs % 1000000);
+        ::usleep(1000000-1);
+        usecs -= 1000000-1;
     }
-    else
+    if (usecs > 0)
     {
         ::usleep(usecs);
     }

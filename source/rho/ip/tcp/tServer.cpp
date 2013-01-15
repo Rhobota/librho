@@ -52,8 +52,13 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
     #endif
 
     int on  = 1;
-    if (::setsockopt(m_fd, SOL_SOCKET, SO_REUSEADDR, (char*)&on, sizeof(on))
-            == -1)
+    #if __linux__ || __APPLE__ || __CYGWIN__
+    if (::setsockopt(m_fd, SOL_SOCKET, SO_REUSEADDR, (char*)&on, sizeof(on)) == -1)
+    #elif __MINGW32__
+    if (::setsockopt(m_fd, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (char*)&on, sizeof(on)) == -1)
+    #else
+    #error What platform are you on!?
+    #endif
     {
         m_finalize();
         throw eRuntimeError("Cannot enable reuse-addr on server.");

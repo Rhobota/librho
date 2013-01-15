@@ -15,6 +15,8 @@
 #include <sys/types.h>           //
 #include <unistd.h>              //
 
+extern const int kSigPipeIgnoreKickoff;
+
 #elif __MINGW32__
 
 #include <w32api.h>
@@ -29,6 +31,8 @@
 #endif
 #include <winsock2.h>
 #include <ws2tcpip.h>
+
+extern const int kInitForWindowsKickoff;
 
 #else
 
