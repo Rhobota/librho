@@ -7,6 +7,7 @@ TESTS_DIR   := tests
 STATIC_LIB_NAME := librho.a
 
 CC := $(TARGET)g++
+AR := $(TARGET)ar
 CC_FLAGS += -g -Wall -Werror -I $(INCLUDE_DIR)
 
 ifeq ($(shell uname),Linux)
@@ -53,14 +54,14 @@ $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
 	@echo "Compiling $< ..."
 	@mkdir -p $(@D)
 	$(CC) $(CC_FLAGS) -c $< -o $@
-	ar crsv $(OBJ_DIR)/$(STATIC_LIB_NAME) $@
+	$(AR) crsv $(OBJ_DIR)/$(STATIC_LIB_NAME) $@
 	@echo
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.mm
 	@echo "Compiling $< ..."
 	@mkdir -p $(@D)
 	$(CC) $(CC_FLAGS) -c $< -o $@
-	ar crsv $(OBJ_DIR)/$(STATIC_LIB_NAME) $@
+	$(AR) crsv $(OBJ_DIR)/$(STATIC_LIB_NAME) $@
 	@echo
 
 osx_pre_step :
