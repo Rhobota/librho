@@ -20,6 +20,11 @@ To clean-up, run:
 
           make clean
 
+This library compiles under Linux, OSX, Cygwin, and Mingw. Compiling and
+testing under Linux, OSX, and Cygwin is easy. Compiling for Mingw is easy
+if you do so using the Cygwin environment. Simply install Mingw and Cygwin,
+then use Cygwin to compile and test the code, using the Mingw `g++` compiler.
+
 This directory is version-controlled by Mercurial, so feel free to make changes
 and commit them.
 
@@ -40,7 +45,7 @@ be like the rest of the world, create two files: /usr/include/GL/gl.h and
 
 2. To compile the library for x86 (as opposed to for x86_64), you must pass '-m32'
 to `g++`. You can easily do this by running `CC_FLAGS=-m32 make`. That sets
-$CC_FLAGS equal to '-m32' just for the command `make`.
+$CC_FLAGS equal to '-m32' just for the duration of the `make` command.
 
 3. If you want to run a version of `g++` that contains a prefix (for example,
 for doing some sort of cross-compilation), you can set the $TARGET variable

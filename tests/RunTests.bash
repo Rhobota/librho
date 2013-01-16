@@ -7,16 +7,15 @@ OUT_FILE="a.out"
 
 CC="$TARGET""g++"
 CC_FLAGS+=" -O0 -fno-inline -g -Wall -Werror -I $INCLUDE_DIR"
-CC_LIB_FLAGS="$LIBRHO_PATH $CC_LIB_FLAGS"
+CC_LIB_FLAGS="$LIBRHO_PATH -lpthread $CC_LIB_FLAGS"
 
 if [ $(uname) == "Linux" ]
 then
     CC_FLAGS+=" -rdynamic"
-    CC_LIB_FLAGS+=" -lpthread"
+    CC_LIB_FLAGS+=" "
 elif [ $(uname) == "Darwin" ]
 then
     CC_FLAGS+=" -rdynamic"
-    CC_LIB_FLAGS+=" -lpthread"
     CC_LIB_FLAGS+=" -framework Foundation -framework AVFoundation"
     CC_LIB_FLAGS+=" -framework CoreVideo -framework CoreMedia"
     CC_LIB_FLAGS+=" -framework OpenGL -framework IOKit"
@@ -24,7 +23,7 @@ then
 else
     # Mingw
     CC_FLAGS+=" "
-    CC_LIB_FLAGS+=" -lws2_32"
+    CC_LIB_FLAGS+=" -lwsock32 -lws2_32"
 fi
 
 if [ -n "$1" ]
