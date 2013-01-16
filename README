@@ -1,3 +1,11 @@
+This library compiles under Linux, OSX, Cygwin, and Mingw. Compiling and
+testing under Linux, OSX, and Cygwin is easy. Compiling for Mingw is easy
+if you do so using the Cygwin environment. Simply install Cygwin (make sure
+the Mingw package is installed along with it), then within the Cygwin
+environment, set the $TARGET environment variable equal to the mingw-prefix
+(which was 'i686-pc-mingw32-' last time I checked). You can then proceed as
+follows:
+
 To make the library, run:
 
           make
@@ -19,11 +27,6 @@ examples in 'examples/'.
 To clean-up, run:
 
           make clean
-
-This library compiles under Linux, OSX, Cygwin, and Mingw. Compiling and
-testing under Linux, OSX, and Cygwin is easy. Compiling for Mingw is easy
-if you do so using the Cygwin environment. Simply install Mingw and Cygwin,
-then use Cygwin to compile and test the code, using the Mingw `g++` compiler.
 
 This directory is version-controlled by Mercurial, so feel free to make changes
 and commit them.
@@ -50,4 +53,5 @@ $CC_FLAGS equal to '-m32' just for the duration of the `make` command.
 3. If you want to run a version of `g++` that contains a prefix (for example,
 for doing some sort of cross-compilation), you can set the $TARGET variable
 to the desired g++-prefix before running `make`. Do this in the same way as
-described by note #2.
+described by note #2. Sub-note: This is how compiling for Mingw within the
+Cygwin environment is done (as described previously in this document)!
