@@ -17,18 +17,18 @@ else
 ifeq ($(shell uname),Darwin)
 	# OSX stuff:
 	CC_FLAGS  += -rdynamic
-	PRE_STEP  := 'osx_pre_step'
-	POST_STEP := 'osx_post_step'
+	PRE_STEP  := osx_pre_step
+	POST_STEP := osx_post_step
 else
 	# Mingw stuff:
 endif
 endif
 
-CPP_SRC_FILES := $(shell find $(SRC_DIR) -name '*.cpp' -type f)
-CPP_OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(CPP_SRC_FILES))
+CPP_SRC_FILES = $(shell find $(SRC_DIR) -name '*.cpp' -type f)
+CPP_OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(CPP_SRC_FILES))
 
-MM_SRC_FILES := $(shell find $(SRC_DIR) -name '*.mm' -type f)
-MM_OBJ_FILES := $(patsubst $(SRC_DIR)/%.mm,$(OBJ_DIR)/%.o,$(MM_SRC_FILES))
+MM_SRC_FILES = $(shell find $(SRC_DIR) -name '*.mm' -type f)
+MM_OBJ_FILES = $(patsubst $(SRC_DIR)/%.mm,$(OBJ_DIR)/%.o,$(MM_SRC_FILES))
 
 all : $(PRE_STEP) $(CPP_OBJ_FILES) $(MM_OBJ_FILES) $(POST_STEP)
 
