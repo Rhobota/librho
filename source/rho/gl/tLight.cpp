@@ -65,10 +65,14 @@ void tLight::enable()
         throw eLogicError("Cannot enable light. Too many lights are enabled!");
     }
 
-    float dColor[] = { m_diffuse.x,  m_diffuse.y,  m_diffuse.z,  m_diffuse.w };
-    float sColor[] = { m_specular.x, m_specular.y, m_specular.z, m_specular.w };
-    float aColor[] = { m_ambient.x,  m_ambient.y,  m_ambient.z,  m_ambient.w };
-    float loc[]    = { m_loc.x,      m_loc.y,      m_loc.z,      m_loc.w };
+    float dColor[] = { (float)m_diffuse.x,  (float)m_diffuse.y,
+                       (float)m_diffuse.z,  (float)m_diffuse.w };
+    float sColor[] = { (float)m_specular.x, (float)m_specular.y,
+                       (float)m_specular.z, (float)m_specular.w };
+    float aColor[] = { (float)m_ambient.x,  (float)m_ambient.y,
+                       (float)m_ambient.z,  (float)m_ambient.w };
+    float loc[]    = { (float)m_loc.x,      (float)m_loc.y,
+                       (float)m_loc.z,      (float)m_loc.w };
     glLightfv(intToEnum(m_index), GL_DIFFUSE, dColor);
     glLightfv(intToEnum(m_index), GL_SPECULAR, sColor);
     glLightfv(intToEnum(m_index), GL_AMBIENT, aColor);
@@ -89,7 +93,8 @@ void tLight::setLocation(geo::tVector p)
     m_loc = p;
     if (m_index != -1)
     {
-        float loc[]    = { m_loc.x,      m_loc.y,      m_loc.z,      m_loc.w };
+        float loc[]    = { (float)m_loc.x,      (float)m_loc.y,
+                           (float)m_loc.z,      (float)m_loc.w };
         glLightfv(intToEnum(m_index), GL_POSITION, loc);
     }
 }
@@ -99,7 +104,8 @@ void tLight::setAmbientColor(geo::tVector c)
     m_ambient = c;
     if (m_index != -1)
     {
-        float aColor[] = { m_ambient.x, m_ambient.y, m_ambient.z, m_ambient.w };
+        float aColor[] = { (float)m_ambient.x,  (float)m_ambient.y,
+                           (float)m_ambient.z,  (float)m_ambient.w };
         glLightfv(intToEnum(m_index), GL_AMBIENT, aColor);
     }
 }
@@ -109,7 +115,8 @@ void tLight::setDiffuseColor(geo::tVector c)
     m_diffuse = c;
     if (m_index != -1)
     {
-        float dColor[] = { m_diffuse.x, m_diffuse.y, m_diffuse.z, m_diffuse.w };
+        float dColor[] = { (float)m_diffuse.x,  (float)m_diffuse.y,
+                           (float)m_diffuse.z,  (float)m_diffuse.w };
         glLightfv(intToEnum(m_index), GL_DIFFUSE, dColor);
     }
 }
@@ -119,8 +126,8 @@ void tLight::setSpecularColor(geo::tVector c)
     m_specular = c;
     if (m_index != -1)
     {
-        float sColor[] =
-            { m_specular.x, m_specular.y, m_specular.z, m_specular.w };
+        float sColor[] = { (float)m_specular.x, (float)m_specular.y,
+                           (float)m_specular.z, (float)m_specular.w };
         glLightfv(intToEnum(m_index), GL_SPECULAR, sColor);
     }
 }
