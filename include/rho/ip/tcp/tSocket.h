@@ -6,8 +6,8 @@
 #include <rho/ip/tAddrGroup.h>
 #include <rho/bNonCopyable.h>
 #include <rho/iClosable.h>
-#include <rho/iInputStream.h>
-#include <rho/iOutputStream.h>
+#include <rho/iReadable.h>
+#include <rho/iWritable.h>
 #include <rho/types.h>
 
 #include <string>
@@ -23,7 +23,7 @@ namespace tcp
 
 class tSocket :
     public bNonCopyable, public iClosable,
-    public iInputStream, public iOutputStream
+    public iReadable, public iWritable
 {
     public:
 

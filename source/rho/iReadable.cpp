@@ -1,4 +1,4 @@
-#include <rho/iInputStream.h>
+#include <rho/iReadable.h>
 
 #include <rho/eRho.h>
 
@@ -7,8 +7,8 @@ namespace rho
 {
 
 
-tBufferedInputStream::tBufferedInputStream(
-        iInputStream* internalStream, u32 bufSize)
+tBufferedReadable::tBufferedReadable(
+        iReadable* internalStream, u32 bufSize)
     : m_stream(internalStream), m_buf(NULL),
       m_bufSize(0), m_bufUsed(0), m_pos(0)
 {
@@ -18,12 +18,12 @@ tBufferedInputStream::tBufferedInputStream(
     m_bufSize = bufSize;
 }
 
-tBufferedInputStream::~tBufferedInputStream()
+tBufferedReadable::~tBufferedReadable()
 {
     delete [] m_buf;
 }
 
-i32 tBufferedInputStream::read(u8* buffer, i32 length)
+i32 tBufferedReadable::read(u8* buffer, i32 length)
 {
     if (m_pos >= m_bufUsed)
         if (! refill())
@@ -34,7 +34,7 @@ i32 tBufferedInputStream::read(u8* buffer, i32 length)
     return i;
 }
 
-i32 tBufferedInputStream::readAll(u8* buffer, i32 length)
+i32 tBufferedReadable::readAll(u8* buffer, i32 length)
 {
     i32 amountRead = 0;
     while (amountRead < length)
@@ -47,7 +47,7 @@ i32 tBufferedInputStream::readAll(u8* buffer, i32 length)
     return amountRead;
 }
 
-bool tBufferedInputStream::refill()
+bool tBufferedReadable::refill()
 {
     m_pos = 0;
     m_bufUsed = 0;

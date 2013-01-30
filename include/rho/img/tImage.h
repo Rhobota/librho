@@ -62,8 +62,8 @@ class tImage : public bNonCopyable, public iPackable
         void setpix(u32 x, u32 y, tPixel<N> pixel);
 
         // iPackable interface
-        void pack(iOutputStream* out) const;
-        void unpack(iInputStream* in);
+        void pack(iWritable* out) const;
+        void unpack(iReadable* in);
 
     public:
 

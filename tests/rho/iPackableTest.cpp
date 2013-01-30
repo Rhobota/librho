@@ -15,11 +15,11 @@ using std::string;
 using std::vector;
 
 
-class tByteOutputStream : public iOutputStream
+class tByteWritable : public iWritable
 {
     public:
 
-        tByteOutputStream()
+        tByteWritable()
             : m_buf()
         {
         }
@@ -47,11 +47,11 @@ class tByteOutputStream : public iOutputStream
 };
 
 
-class tByteInputStream : public iInputStream
+class tByteReadable : public iReadable
 {
     public:
 
-        tByteInputStream(vector<u8> inputBuf)
+        tByteReadable(vector<u8> inputBuf)
             : m_buf(inputBuf), m_pos(0)
         {
         }
@@ -87,7 +87,7 @@ class tMyPackable : public iPackable
         {
         }
 
-        void pack(iOutputStream* out) const
+        void pack(iWritable* out) const
         {
             rho::pack(out, a);
             rho::pack(out, b);
@@ -101,7 +101,7 @@ class tMyPackable : public iPackable
             rho::pack(out, stringMatrix);
         }
 
-        void unpack(iInputStream* in)
+        void unpack(iReadable* in)
         {
             rho::unpack(in, a);
             rho::unpack(in, b);
@@ -246,7 +246,7 @@ void u8test(const tTest& t)
     u8 v1 = 98;    // binary 0110 0010
     u8 v2 = 148;   // binary 1001 0100
     u8 v3 = 0, v4 = 0;
-    tByteOutputStream out;
+    tByteWritable out;
     pack(&out, v1);
     pack(&out, v2);
     t.assert(v1 == 98);
@@ -255,7 +255,7 @@ void u8test(const tTest& t)
     t.assert(buf.size() == 2);
     t.assert(buf[0] == 98);
     t.assert(buf[1] == 148);
-    tByteInputStream in(buf);
+    tByteReadable in(buf);
     unpack(&in, v3);
     unpack(&in, v4);
     t.assert(v3 == 98);
@@ -267,7 +267,7 @@ void i8test(const tTest& t)
     i8 v1 = 98;    // binary 0110 0010
     i8 v2 = -38;   // binary 1101 1010
     i8 v3 = 0, v4 = 0;
-    tByteOutputStream out;
+    tByteWritable out;
     pack(&out, v1);
     pack(&out, v2);
     t.assert(v1 == 98);
@@ -276,7 +276,7 @@ void i8test(const tTest& t)
     t.assert(buf.size() == 2);
     t.assert(buf[0] == 98);
     t.assert(buf[1] == 218);
-    tByteInputStream in(buf);
+    tByteReadable in(buf);
     unpack(&in, v3);
     unpack(&in, v4);
     t.assert(v3 == 98);
@@ -288,7 +288,7 @@ void u16test(const tTest& t)
     u16 v1 = 17114;    // binary 0100 0010 1101 1010
     u16 v2 = 49886;    // binary 1100 0010 1101 1110
     u16 v3 = 0, v4 = 0;
-    tByteOutputStream out;
+    tByteWritable out;
     pack(&out, v1);
     pack(&out, v2);
     t.assert(v1 == 17114);
@@ -299,7 +299,7 @@ void u16test(const tTest& t)
     t.assert(buf[1] == 0xDA);    // 1101 1010
     t.assert(buf[2] == 0xC2);    // 1100 0010
     t.assert(buf[3] == 0xDE);    // 1101 1110
-    tByteInputStream in(buf);
+    tByteReadable in(buf);
     unpack(&in, v3);
     unpack(&in, v4);
     t.assert(v3 == 17114);
@@ -311,7 +311,7 @@ void i16test(const tTest& t)
     i16 v1 = 17114;     // binary 0100 0010 1101 1010
     i16 v2 = -15650;    // binary 1100 0010 1101 1110
     i16 v3 = 0, v4 = 0;
-    tByteOutputStream out;
+    tByteWritable out;
     pack(&out, v1);
     pack(&out, v2);
     t.assert(v1 == 17114);
@@ -322,7 +322,7 @@ void i16test(const tTest& t)
     t.assert(buf[1] == 0xDA);    // 1101 1010
     t.assert(buf[2] == 0xC2);    // 1100 0010
     t.assert(buf[3] == 0xDE);    // 1101 1110
-    tByteInputStream in(buf);
+    tByteReadable in(buf);
     unpack(&in, v3);
     unpack(&in, v4);
     t.assert(v3 == 17114);
@@ -334,7 +334,7 @@ void u32test(const tTest& t)
     u32 v1 = 1413227351u; // binary 0101 0100 0011 1100 0010 0011 0101 0111
     u32 v2 = 2991341219u; // binary 1011 0010 0100 1100 0011 1110 1010 0011
     u32 v3 = 0, v4 = 0;
-    tByteOutputStream out;
+    tByteWritable out;
     pack(&out, v1);
     pack(&out, v2);
     t.assert(v1 == 1413227351u);
@@ -349,7 +349,7 @@ void u32test(const tTest& t)
     t.assert(buf[5] == 0x4C);    // 0100 1100
     t.assert(buf[6] == 0x3E);    // 0011 1110
     t.assert(buf[7] == 0xA3);    // 1010 0011
-    tByteInputStream in(buf);
+    tByteReadable in(buf);
     unpack(&in, v3);
     unpack(&in, v4);
     t.assert(v3 == 1413227351u);
@@ -361,7 +361,7 @@ void i32test(const tTest& t)
     i32 v1 = 1413227351;  // binary 0101 0100 0011 1100 0010 0011 0101 0111
     i32 v2 = -1303626077; // binary 1011 0010 0100 1100 0011 1110 1010 0011
     i32 v3 = 0, v4 = 0;
-    tByteOutputStream out;
+    tByteWritable out;
     pack(&out, v1);
     pack(&out, v2);
     t.assert(v1 == 1413227351);
@@ -376,7 +376,7 @@ void i32test(const tTest& t)
     t.assert(buf[5] == 0x4C);    // 0100 1100
     t.assert(buf[6] == 0x3E);    // 0011 1110
     t.assert(buf[7] == 0xA3);    // 1010 0011
-    tByteInputStream in(buf);
+    tByteReadable in(buf);
     unpack(&in, v3);
     unpack(&in, v4);
     t.assert(v3 == 1413227351);
@@ -388,9 +388,9 @@ void stringtest(const tTest& t)
     string str1 = "Hi. Ryan speaking. Hope your day is going well.";
     string orig = str1;
     string str2;
-    tByteOutputStream out;
+    tByteWritable out;
     pack(&out, str1);
-    tByteInputStream in(out.getBuf());
+    tByteReadable in(out.getBuf());
     unpack(&in, str2);
     t.assert(str1 == orig);
     t.assert(str1 == str2);
@@ -404,10 +404,10 @@ void supertest(const tTest& t)
     vector<tMyPackable> orig = packableVector1;
     vector<tMyPackable> packableVector2;
 
-    tByteOutputStream out;
+    tByteWritable out;
     pack(&out, packableVector1);
 
-    tByteInputStream in(out.getBuf());
+    tByteReadable in(out.getBuf());
     unpack(&in, packableVector2);
 
     t.assert(packableVector1.size() == orig.size());

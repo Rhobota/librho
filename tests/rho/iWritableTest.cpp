@@ -1,4 +1,4 @@
-#include <rho/iOutputStream.h>
+#include <rho/iWritable.h>
 #include <rho/tCrashReporter.h>
 #include <rho/tTest.h>
 
@@ -9,7 +9,7 @@ using namespace rho;
 int gItWorked = 0;
 
 
-class tFoo : public iOutputStream
+class tFoo : public iWritable
 {
     public:
 
@@ -29,7 +29,7 @@ class tFoo : public iOutputStream
 
 void interfaceTest(const tTest& t)
 {
-    iOutputStream* p = new tFoo();
+    iWritable* p = new tFoo();
     p->write(NULL, 29);     // Makes sure the method is virtual.
     p->writeAll(NULL, 29);     // Makes sure the method is virtual.
     t.assert(gItWorked == 2);
@@ -37,10 +37,10 @@ void interfaceTest(const tTest& t)
 }
 
 
-void bufferedOutputStreamTest(const tTest& t)
+void bufferedWritableTest(const tTest& t)
 {
-    iOutputStream* stream1 = new tFoo();
-    iOutputStream* stream2 = new tBufferedOutputStream(stream1);
+    iWritable* stream1 = new tFoo();
+    iWritable* stream2 = new tBufferedWritable(stream1);
     delete stream2;
     delete stream1;
 }
@@ -50,8 +50,8 @@ int main()
 {
     tCrashReporter::init();
 
-    tTest("iOutputStream test", interfaceTest);
-    tTest("tBufferedOutputStream test", bufferedOutputStreamTest);
+    tTest("iWritable test", interfaceTest);
+    tTest("tBufferedWritable test", bufferedWritableTest);
 
     return 0;
 }
