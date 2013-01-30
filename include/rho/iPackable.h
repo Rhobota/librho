@@ -25,28 +25,40 @@ class iPackable
 };
 
 
-void pack(iWritable* out, u8  x);
+void pack(iWritable*  out, u8  x);
 void unpack(iReadable* in, u8& x);
 
-void pack(iWritable* out, i8  x);
+void pack(iWritable*  out, i8  x);
 void unpack(iReadable* in, i8& x);
 
-void pack(iWritable* out, u16  x);
+void pack(iWritable*  out, u16  x);
 void unpack(iReadable* in, u16& x);
 
-void pack(iWritable* out, i16  x);
+void pack(iWritable*  out, i16  x);
 void unpack(iReadable* in, i16& x);
 
-void pack(iWritable* out, u32  x);
+void pack(iWritable*  out, u32  x);
 void unpack(iReadable* in, u32& x);
 
-void pack(iWritable* out, i32  x);
+void pack(iWritable*  out, i32  x);
 void unpack(iReadable* in, i32& x);
 
-void pack(iWritable* out, const std::string& str);
+void pack(iWritable*  out, u64  x);
+void unpack(iReadable* in, u64& x);
+
+void pack(iWritable*  out, i64  x);
+void unpack(iReadable* in, i64& x);
+
+void pack(iWritable*  out, f32  x);
+void unpack(iReadable* in, f32& x);
+
+void pack(iWritable*  out, f64  x);
+void unpack(iReadable* in, f64& x);
+
+void pack(iWritable*  out, const std::string& str);
 void unpack(iReadable* in, std::string& str);
 
-void pack(iWritable* out, const iPackable& packable);
+void pack(iWritable*  out, const iPackable& packable);
 void unpack(iReadable* in, iPackable& packable);
 
 template <class T>

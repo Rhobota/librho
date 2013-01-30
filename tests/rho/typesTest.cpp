@@ -78,6 +78,8 @@ void typesTest(const tTest& t)
     t.assert(sizeof(i32) == 4);
     t.assert(sizeof(u64) == 8);
     t.assert(sizeof(i64) == 8);
+    t.assert(sizeof(f32) == 4);
+    t.assert(sizeof(f64) == 8);
 
     u8  a;
     u16 b;
@@ -89,6 +91,9 @@ void typesTest(const tTest& t)
     i32 g;
     i64 h;
 
+    f32 i;
+    f64 j;
+
     t.assert(sizeof(a) == 1);
     t.assert(sizeof(b) == 2);
     t.assert(sizeof(c) == 4);
@@ -97,6 +102,8 @@ void typesTest(const tTest& t)
     t.assert(sizeof(f) == 2);
     t.assert(sizeof(g) == 4);
     t.assert(sizeof(h) == 8);
+    t.assert(sizeof(i) == 4);
+    t.assert(sizeof(j) == 8);
 }
 
 
