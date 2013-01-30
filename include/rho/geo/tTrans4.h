@@ -1,5 +1,5 @@
-#ifndef __rho_geo_tMatrix_h__
-#define __rho_geo_tMatrix_h__
+#ifndef __rho_geo_tTrans4_h__
+#define __rho_geo_tTrans4_h__
 
 
 #include <rho/geo/tVector.h>
@@ -19,7 +19,7 @@ namespace geo
  * transformations (rotation, scaling, and translation). Matrices can be
  * multiplied together to combine transformations.
  */
-class tMatrix
+class tTrans4
 {
     private:
 
@@ -28,19 +28,19 @@ class tMatrix
          * Use the identity() static method (or any of the other
          * static methods) to create a matrix.
          */
-        tMatrix();
+        tTrans4();
 
     public:
 
         /**
          * Builds and returns the identity matrix.
          */
-        static tMatrix identity();
+        static tTrans4 identity();
 
         /**
          * Builds and returns the zero matrix.
          */
-        static tMatrix zero();
+        static tTrans4 zero();
 
         /**
          * Builds and returns a translation matrix.
@@ -49,12 +49,12 @@ class tMatrix
          * by 'dx', 'dy', and 'dz'. This matrix will have no effect
          * on vectors.
          */
-        static tMatrix translate(double dx, double dy, double dz);
+        static tTrans4 translate(double dx, double dy, double dz);
 
         /**
          * Builds and returns a translation matrix.
          */
-        static tMatrix translate(const tVector& v);
+        static tTrans4 translate(const tVector& v);
 
         /**
          * Builds and returns a scaling matrix.
@@ -62,12 +62,12 @@ class tMatrix
          * Any point or vector, when multiplied by this matrix,
          * will be scaled by 'sx', 'sy', and 'sz'.
          */
-        static tMatrix scale(double sx, double sy, double sz);
+        static tTrans4 scale(double sx, double sy, double sz);
 
         /**
          * Builds and returns a scaling matrix.
          */
-        static tMatrix scale(const tVector& v);
+        static tTrans4 scale(const tVector& v);
 
         /**
          * Builds and returns a rotation matrix.
@@ -75,7 +75,7 @@ class tMatrix
          * Any point or vector, when multiplied by this matrix,
          * will be rotated about the z-axis by 'angle' radians.
          */
-        static tMatrix rotateZ(double angle);
+        static tTrans4 rotateZ(double angle);
 
         /**
          * Builds and returns a rotation matrix.
@@ -83,7 +83,7 @@ class tMatrix
          * Any point or vector, when multiplied by this matrix,
          * will be rotated about the x-axis by 'angle' radians.
          */
-        static tMatrix rotateX(double angle);
+        static tTrans4 rotateX(double angle);
 
         /**
          * Builds and returns a rotation matrix.
@@ -91,7 +91,7 @@ class tMatrix
          * Any point or vector, when multiplied by this matrix,
          * will be rotated about the y-axis by 'angle' radians.
          */
-        static tMatrix rotateY(double angle);
+        static tTrans4 rotateY(double angle);
 
         /**
          * Builds and returns a matrix that converts from one frame
@@ -99,7 +99,7 @@ class tMatrix
          *
          * TODO - NEED MORE COMMENTS HERE!
          */
-        static tMatrix frame(const tVector& vx, const tVector& vy,
+        static tTrans4 frame(const tVector& vx, const tVector& vy,
                              const tVector& vz, const tVector& o);
 
     public:
@@ -114,19 +114,19 @@ class tMatrix
         /**
          * Calculates and returns the transpose matrix.
          */
-        tMatrix transpose() const;
+        tTrans4 transpose() const;
 
         /**
          * Calculates and returns the inverse matrix.
          */
-        tMatrix inverse() const;
+        tTrans4 inverse() const;
 };
 
 
 /**
  * Matrices are printable.
  */
-std::ostream& operator<<(std::ostream& stream, const tMatrix& m);
+std::ostream& operator<<(std::ostream& stream, const tTrans4& m);
 
 /**
  * Matrix * Vector = Vector
@@ -135,7 +135,7 @@ std::ostream& operator<<(std::ostream& stream, const tMatrix& m);
  * Vectors can be scaled and rotated.
  * Points can be scaled, rotated, and translated.
  */
-tVector operator*(const tMatrix& m, const tVector& a);
+tVector operator*(const tTrans4& m, const tVector& a);
 
 /**
  * Matrix * Matrix = Matrix
@@ -143,16 +143,16 @@ tVector operator*(const tMatrix& m, const tVector& a);
  * Two transformations can be combined by multiplying the
  * transformation matrices together!
  */
-tMatrix operator*(const tMatrix& a, const tMatrix& b);
+tTrans4 operator*(const tTrans4& a, const tTrans4& b);
 
 /**
  * Matrix * Matrix = Matrix
  */
-void operator*=(tMatrix& a, const tMatrix& b);
+void operator*=(tTrans4& a, const tTrans4& b);
 
 
 }    // namespace geo
 }    // namespace rho
 
 
-#endif    // __rho_geo_tMatrix_h__
+#endif    // __rho_geo_tTrans4_h__

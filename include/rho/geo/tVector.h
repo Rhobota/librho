@@ -18,7 +18,7 @@ namespace geo
  * This class represents a vector or point in 3-space (specifically, it
  * represents a vector or point in "homogeneous coordinates"). It is capable
  * of performing many vector-geometry operations, and it is particularly
- * useful when used alongside the tMatrix class to do affine transformations.
+ * useful when used alongside the tTrans4 class to do affine transformations.
  */
 class tVector
 {
