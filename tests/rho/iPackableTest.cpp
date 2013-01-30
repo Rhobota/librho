@@ -383,6 +383,46 @@ void i32test(const tTest& t)
     t.assert(v4 == -1303626077);
 }
 
+void u64test(const tTest& t)
+{
+    u64 v1 = 1413227351u + (0x43uLL << 56);   // same as the u32 test, but with some extra
+    u64 v2 = 2991341219u + (0xDAuLL << 56);   // same as the u32 test, but with some extra
+    u64 v3 = 0, v4 = 0;
+    tByteWritable out;
+    pack(&out, v1);
+    pack(&out, v2);
+    t.assert(v1 == 1413227351u + (0x43uLL << 56));
+    t.assert(v2 == 2991341219u + (0xDAuLL << 56));
+    vector<u8> buf = out.getBuf();
+    t.assert(buf.size() == 16);
+    t.assert(buf[0]  == 0x43);    // 0100 0011
+    t.assert(buf[1]  == 0x00);    // 0000 0000
+    t.assert(buf[2]  == 0x00);    // 0000 0000
+    t.assert(buf[3]  == 0x00);    // 0000 0000
+    t.assert(buf[4]  == 0x54);    // 0101 0100
+    t.assert(buf[5]  == 0x3C);    // 0011 1100
+    t.assert(buf[6]  == 0x23);    // 0010 0011
+    t.assert(buf[7]  == 0x57);    // 0101 0111
+    t.assert(buf[8]  == 0xDA);    // 1101 1010
+    t.assert(buf[9]  == 0x00);    // 0000 0000
+    t.assert(buf[10] == 0x00);    // 0000 0000
+    t.assert(buf[11] == 0x00);    // 0000 0000
+    t.assert(buf[12] == 0xB2);    // 1011 0010
+    t.assert(buf[13] == 0x4C);    // 0100 1100
+    t.assert(buf[14] == 0x3E);    // 0011 1110
+    t.assert(buf[15] == 0xA3);    // 1010 0011
+    tByteReadable in(buf);
+    unpack(&in, v3);
+    unpack(&in, v4);
+    t.assert(v3 == 1413227351u + (0x43uLL << 56));
+    t.assert(v4 == 2991341219u + (0xDAuLL << 56));
+}
+
+void i64test(const tTest& t)
+{
+    // It should work...
+}
+
 void stringtest(const tTest& t)
 {
     string str1 = "Hi. Ryan speaking. Hope your day is going well.";
@@ -432,6 +472,8 @@ int main()
     tTest("i16 test", i16test);
     tTest("u32 test", u32test);
     tTest("i32 test", i32test);
+    tTest("u64 test", u64test);
+    tTest("i64 test", i64test);
 
     tTest("string test", stringtest);
 
