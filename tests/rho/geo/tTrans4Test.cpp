@@ -1,4 +1,4 @@
-#include <rho/geo/tMatrix.h>
+#include <rho/geo/tTrans4.h>
 #include <rho/tCrashReporter.h>
 #include <rho/tTest.h>
 
@@ -17,9 +17,9 @@ using std::endl;
  */
 
 
-void matrixTest1(const tTest& t)
+void trans4Test1(const tTest& t)
 {
-    geo::tMatrix m = geo::tMatrix::identity();
+    geo::tTrans4 m = geo::tTrans4::identity();
     m[0][0] = 0;
 }
 
@@ -28,7 +28,7 @@ int main()
 {
     tCrashReporter::init();
 
-    tTest("Matrix test 1", matrixTest1);
+    tTest("tTrans4 test 1", trans4Test1);
 
     return 0;
 }
