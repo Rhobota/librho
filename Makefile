@@ -34,6 +34,7 @@ all : $(PRE_STEP) $(CPP_OBJ_FILES) $(MM_OBJ_FILES) $(POST_STEP)
 
 install : ensure_root all
 	@echo
+	@(cd $(INCLUDE_DIR) && for i in *; do rm -rf /usr/local/include/$$i; done)
 	@cp -r $(INCLUDE_DIR)/* /usr/local/include
 	@cp $(OBJ_DIR)/$(STATIC_LIB_NAME) /usr/local/lib
 	@echo "Install successful."
