@@ -1,4 +1,4 @@
-#include <rho/iOutputStream.h>
+#include <rho/iWritable.h>
 
 #include <rho/eRho.h>
 
@@ -7,8 +7,8 @@ namespace rho
 {
 
 
-tBufferedOutputStream::tBufferedOutputStream(
-        iOutputStream* internalStream, u32 bufSize)
+tBufferedWritable::tBufferedWritable(
+        iWritable* internalStream, u32 bufSize)
     : m_stream(internalStream), m_buf(NULL),
       m_bufSize(0), m_bufUsed(0)
 {
@@ -18,12 +18,12 @@ tBufferedOutputStream::tBufferedOutputStream(
     m_bufSize = bufSize;
 }
 
-tBufferedOutputStream::~tBufferedOutputStream()
+tBufferedWritable::~tBufferedWritable()
 {
     delete [] m_buf;
 }
 
-i32 tBufferedOutputStream::write(const u8* buffer, i32 length)
+i32 tBufferedWritable::write(const u8* buffer, i32 length)
 {
     if (m_bufUsed >= m_bufSize)
         flush();
@@ -33,7 +33,7 @@ i32 tBufferedOutputStream::write(const u8* buffer, i32 length)
     return i;
 }
 
-i32 tBufferedOutputStream::writeAll(const u8* buffer, i32 length)
+i32 tBufferedWritable::writeAll(const u8* buffer, i32 length)
 {
     i32 amountWritten = 0;
     while (amountWritten < length)
@@ -46,7 +46,7 @@ i32 tBufferedOutputStream::writeAll(const u8* buffer, i32 length)
     return amountWritten;
 }
 
-void tBufferedOutputStream::flush()
+void tBufferedWritable::flush()
 {
     i32 r = m_stream->writeAll(m_buf, m_bufUsed);
     if (r < 0 || ((u32)r) != m_bufUsed)

@@ -1,5 +1,5 @@
-#ifndef __rho_iOutputStream_h__
-#define __rho_iOutputStream_h__
+#ifndef __rho_iWritable_h__
+#define __rho_iWritable_h__
 
 
 #include <rho/iFlushable.h>
@@ -10,7 +10,7 @@ namespace rho
 {
 
 
-class iOutputStream
+class iWritable
 {
     public:
 
@@ -37,17 +37,17 @@ class iOutputStream
          */
         virtual i32 writeAll(const u8* buffer, i32 length) = 0;
 
-        virtual ~iOutputStream() { }
+        virtual ~iWritable() { }
 };
 
 
-class tBufferedOutputStream : public iOutputStream, public iFlushable
+class tBufferedWritable : public iWritable, public iFlushable
 {
     public:
 
-        tBufferedOutputStream(iOutputStream* internalStream, u32 bufSize=4096);
+        tBufferedWritable(iWritable* internalStream, u32 bufSize=4096);
 
-        ~tBufferedOutputStream();
+        ~tBufferedWritable();
 
         i32 write(const u8* buffer, i32 length);
         i32 writeAll(const u8* buffer, i32 length);
@@ -56,7 +56,7 @@ class tBufferedOutputStream : public iOutputStream, public iFlushable
 
     private:
 
-        iOutputStream* m_stream;
+        iWritable* m_stream;
         u8* m_buf;
         u32 m_bufSize;
         u32 m_bufUsed;
@@ -66,4 +66,4 @@ class tBufferedOutputStream : public iOutputStream, public iFlushable
 }    // namespace rho
 
 
-#endif    // __rho_iOutputStream_h__
+#endif    // __rho_iWritable_h__

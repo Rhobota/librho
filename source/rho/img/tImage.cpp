@@ -381,7 +381,7 @@ void tImage::convertToFormat(nImageFormat format, tImage* dest) const
     }
 }
 
-void tImage::pack(iOutputStream* out) const
+void tImage::pack(iWritable* out) const
 {
     rho::pack(out, m_bufUsed);
     for (u32 i = 0; i < m_bufUsed; i++)
@@ -391,7 +391,7 @@ void tImage::pack(iOutputStream* out) const
     rho::pack(out, (u32)m_format);
 }
 
-void tImage::unpack(iInputStream* in)
+void tImage::unpack(iReadable* in)
 {
     if (m_buf)
         delete [] m_buf;

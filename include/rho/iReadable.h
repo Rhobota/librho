@@ -1,5 +1,5 @@
-#ifndef __rho_iInputStream_h__
-#define __rho_iInputStream_h__
+#ifndef __rho_iReadable_h__
+#define __rho_iReadable_h__
 
 
 #include <rho/types.h>
@@ -9,7 +9,7 @@ namespace rho
 {
 
 
-class iInputStream
+class iReadable
 {
     public:
 
@@ -32,17 +32,17 @@ class iInputStream
          */
         virtual i32 readAll(u8* buffer, i32 length) = 0;
 
-        virtual ~iInputStream() { }
+        virtual ~iReadable() { }
 };
 
 
-class tBufferedInputStream : public iInputStream
+class tBufferedReadable : public iReadable
 {
     public:
 
-        tBufferedInputStream(iInputStream* internalStream, u32 bufSize=4096);
+        tBufferedReadable(iReadable* internalStream, u32 bufSize=4096);
 
-        ~tBufferedInputStream();
+        ~tBufferedReadable();
 
         i32 read(u8* buffer, i32 length);
         i32 readAll(u8* buffer, i32 length);
@@ -53,7 +53,7 @@ class tBufferedInputStream : public iInputStream
 
     private:
 
-        iInputStream* m_stream;
+        iReadable* m_stream;
         u8* m_buf;
         u32 m_bufSize;
         u32 m_bufUsed;
@@ -64,4 +64,4 @@ class tBufferedInputStream : public iInputStream
 }     // namespace rho
 
 
-#endif    // __rho_iInputStream_h__
+#endif    // __rho_iReadable_h__
