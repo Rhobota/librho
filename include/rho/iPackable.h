@@ -6,6 +6,7 @@
 #include <rho/iReadable.h>
 #include <rho/types.h>
 
+#include <cmath>
 #include <string>
 #include <vector>
 
