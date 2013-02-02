@@ -3,6 +3,7 @@
 #include <rho/tCrashReporter.h>
 
 #include <cstdlib>
+#include <cmath>
 #include <ctime>
 #include <iostream>
 #include <string>
@@ -420,7 +421,288 @@ void u64test(const tTest& t)
 
 void i64test(const tTest& t)
 {
-    // It should work...
+    // It should work if the u64 test works...
+    u64test(t);
+}
+
+void f32test(const tTest& t)
+{
+}
+
+void f32posinftest(const tTest& t)
+{
+    f32 inf = INFINITY;
+    t.assert(inf == INFINITY);
+    t.reject(std::isfinite(inf));
+
+    f32 big = 1e30f;
+    f32 small = 1.0f;
+    t.assert(std::isfinite(big));
+    t.assert(std::isfinite(small));
+
+    t.assert(inf > big);
+    t.assert(inf > small);
+    t.assert(big < inf);
+    t.assert(small < inf);
+    t.assert(big != inf);
+    t.assert(big != inf);
+
+    t.reject(inf < big);
+    t.reject(inf < small);
+    t.reject(big > inf);
+    t.reject(small > inf);
+    t.reject(big == inf);
+    t.reject(small == inf);
+
+    t.reject(inf > inf);
+    t.reject(inf < inf);
+    t.reject(inf != inf);
+    t.assert(inf == inf);
+    t.assert(inf >= inf);
+    t.assert(inf <= inf);
+
+    t.assert(inf*big == INFINITY);
+    t.reject(std::isfinite(inf*big));
+    t.assert(inf*4.0 == INFINITY);
+    t.reject(std::isfinite(inf*4.0));
+    t.assert(inf+big == INFINITY);
+    t.reject(std::isfinite(inf+big));
+    t.assert(inf+4.0 == INFINITY);
+    t.reject(std::isfinite(inf+4.0));
+    t.assert(inf-big == INFINITY);
+    t.reject(std::isfinite(inf-big));
+    t.assert(inf-4.0 == INFINITY);
+    t.reject(std::isfinite(inf-4.0));
+}
+
+void f32neginftest(const tTest& t)
+{
+    f32 ninf = -INFINITY;
+    t.assert(ninf == -INFINITY);
+    t.reject(std::isfinite(ninf));
+
+    t.assert(ninf < INFINITY);
+    t.assert(ninf <= INFINITY);
+    t.assert(ninf != INFINITY);
+    t.reject(ninf > INFINITY);
+    t.reject(ninf >= INFINITY);
+    t.reject(ninf == INFINITY);
+
+    f32 big = 1e30f;
+    f32 small = 1.0f;
+    t.assert(std::isfinite(big));
+    t.assert(std::isfinite(small));
+
+    t.assert(ninf < big);
+    t.assert(ninf < small);
+    t.assert(big > ninf);
+    t.assert(small > ninf);
+    t.assert(big != ninf);
+    t.assert(big != ninf);
+
+    t.reject(ninf > big);
+    t.reject(ninf > small);
+    t.reject(big < ninf);
+    t.reject(small < ninf);
+    t.reject(big == ninf);
+    t.reject(small == ninf);
+
+    t.reject(ninf > ninf);
+    t.reject(ninf < ninf);
+    t.reject(ninf != ninf);
+    t.assert(ninf == ninf);
+    t.assert(ninf >= ninf);
+    t.assert(ninf <= ninf);
+
+    t.assert(ninf*big == -INFINITY);
+    t.reject(std::isfinite(ninf*big));
+    t.assert(ninf*4.0 == -INFINITY);
+    t.reject(std::isfinite(ninf*4.0));
+    t.assert(ninf+big == -INFINITY);
+    t.reject(std::isfinite(ninf+big));
+    t.assert(ninf+4.0 == -INFINITY);
+    t.reject(std::isfinite(ninf+4.0));
+    t.assert(ninf-big == -INFINITY);
+    t.reject(std::isfinite(ninf-big));
+    t.assert(ninf-4.0 == -INFINITY);
+    t.reject(std::isfinite(ninf-4.0));
+}
+
+void f32nantest(const tTest& t)
+{
+    f32 nan = NAN;
+    t.assert(std::isnan(nan));
+    t.assert(std::isnan(sqrtf(-1.0f)));
+    t.reject(std::isfinite(nan));
+
+    t.reject(nan == nan);
+    t.assert(nan != nan);  // <-- this is the only one that evaluates to true!
+    t.reject(nan > nan);
+    t.reject(nan < nan);
+    t.reject(nan >= nan);
+    t.reject(nan <= nan);
+    t.reject(nan < INFINITY);
+    t.reject(nan > INFINITY);
+    t.reject(nan < -INFINITY);
+    t.reject(nan > -INFINITY);
+
+    f32 big = 1e30f;
+    f32 small = 1.0f;
+    t.reject(std::isnan(big));
+    t.reject(std::isnan(small));
+
+    t.assert(std::isnan(nan*big));
+    t.assert(std::isnan(nan*small));
+    t.assert(std::isnan(nan*nan));
+    t.assert(std::isnan(nan/big));
+    t.assert(std::isnan(nan/small));
+    t.assert(std::isnan(nan/nan));
+    t.assert(std::isnan(nan+big));
+    t.assert(std::isnan(nan+small));
+    t.assert(std::isnan(nan+nan));
+    t.assert(std::isnan(nan-big));
+    t.assert(std::isnan(nan-small));
+    t.assert(std::isnan(nan-nan));
+}
+
+void f64test(const tTest& t)
+{
+}
+
+void f64posinftest(const tTest& t)
+{
+    f64 inf = INFINITY;
+    t.assert(inf == INFINITY);
+    t.reject(std::isfinite(inf));
+
+    f64 big = 1e99;
+    f64 small = 1.0;
+    t.assert(std::isfinite(big));
+    t.assert(std::isfinite(small));
+
+    t.assert(inf > big);
+    t.assert(inf > small);
+    t.assert(big < inf);
+    t.assert(small < inf);
+    t.assert(big != inf);
+    t.assert(big != inf);
+
+    t.reject(inf < big);
+    t.reject(inf < small);
+    t.reject(big > inf);
+    t.reject(small > inf);
+    t.reject(big == inf);
+    t.reject(small == inf);
+
+    t.reject(inf > inf);
+    t.reject(inf < inf);
+    t.reject(inf != inf);
+    t.assert(inf == inf);
+    t.assert(inf >= inf);
+    t.assert(inf <= inf);
+
+    t.assert(inf*big == INFINITY);
+    t.reject(std::isfinite(inf*big));
+    t.assert(inf*4.0 == INFINITY);
+    t.reject(std::isfinite(inf*4.0));
+    t.assert(inf+big == INFINITY);
+    t.reject(std::isfinite(inf+big));
+    t.assert(inf+4.0 == INFINITY);
+    t.reject(std::isfinite(inf+4.0));
+    t.assert(inf-big == INFINITY);
+    t.reject(std::isfinite(inf-big));
+    t.assert(inf-4.0 == INFINITY);
+    t.reject(std::isfinite(inf-4.0));
+}
+
+void f64neginftest(const tTest& t)
+{
+    f64 ninf = -INFINITY;
+    t.assert(ninf == -INFINITY);
+    t.reject(std::isfinite(ninf));
+
+    t.assert(ninf < INFINITY);
+    t.assert(ninf <= INFINITY);
+    t.assert(ninf != INFINITY);
+    t.reject(ninf > INFINITY);
+    t.reject(ninf >= INFINITY);
+    t.reject(ninf == INFINITY);
+
+    f64 big = 1e99;
+    f64 small = 1.0;
+    t.assert(std::isfinite(big));
+    t.assert(std::isfinite(small));
+
+    t.assert(ninf < big);
+    t.assert(ninf < small);
+    t.assert(big > ninf);
+    t.assert(small > ninf);
+    t.assert(big != ninf);
+    t.assert(big != ninf);
+
+    t.reject(ninf > big);
+    t.reject(ninf > small);
+    t.reject(big < ninf);
+    t.reject(small < ninf);
+    t.reject(big == ninf);
+    t.reject(small == ninf);
+
+    t.reject(ninf > ninf);
+    t.reject(ninf < ninf);
+    t.reject(ninf != ninf);
+    t.assert(ninf == ninf);
+    t.assert(ninf >= ninf);
+    t.assert(ninf <= ninf);
+
+    t.assert(ninf*big == -INFINITY);
+    t.reject(std::isfinite(ninf*big));
+    t.assert(ninf*4.0 == -INFINITY);
+    t.reject(std::isfinite(ninf*4.0));
+    t.assert(ninf+big == -INFINITY);
+    t.reject(std::isfinite(ninf+big));
+    t.assert(ninf+4.0 == -INFINITY);
+    t.reject(std::isfinite(ninf+4.0));
+    t.assert(ninf-big == -INFINITY);
+    t.reject(std::isfinite(ninf-big));
+    t.assert(ninf-4.0 == -INFINITY);
+    t.reject(std::isfinite(ninf-4.0));
+}
+
+void f64nantest(const tTest& t)
+{
+    f64 nan = NAN;
+    t.assert(std::isnan(nan));
+    t.assert(std::isnan(sqrt(-1.0)));
+    t.reject(std::isfinite(nan));
+
+    t.reject(nan == nan);
+    t.assert(nan != nan);  // <-- this is the only one that evaluates to true!
+    t.reject(nan > nan);
+    t.reject(nan < nan);
+    t.reject(nan >= nan);
+    t.reject(nan <= nan);
+    t.reject(nan < INFINITY);
+    t.reject(nan > INFINITY);
+    t.reject(nan < -INFINITY);
+    t.reject(nan > -INFINITY);
+
+    f64 big = 1e99;
+    f64 small = 1.0;
+    t.reject(std::isnan(big));
+    t.reject(std::isnan(small));
+
+    t.assert(std::isnan(nan*big));
+    t.assert(std::isnan(nan*small));
+    t.assert(std::isnan(nan*nan));
+    t.assert(std::isnan(nan/big));
+    t.assert(std::isnan(nan/small));
+    t.assert(std::isnan(nan/nan));
+    t.assert(std::isnan(nan+big));
+    t.assert(std::isnan(nan+small));
+    t.assert(std::isnan(nan+nan));
+    t.assert(std::isnan(nan-big));
+    t.assert(std::isnan(nan-small));
+    t.assert(std::isnan(nan-nan));
 }
 
 void stringtest(const tTest& t)
@@ -474,6 +756,16 @@ int main()
     tTest("i32 test", i32test);
     tTest("u64 test", u64test);
     tTest("i64 test", i64test);
+
+    tTest("f32 test", f32test);
+    tTest("f32 pos inf test", f32posinftest);
+    tTest("f32 neg inf test", f32neginftest);
+    tTest("f32 nan test", f32nantest);
+
+    tTest("f64 test", f64test);
+    tTest("f64 pos inf test", f64posinftest);
+    tTest("f64 neg inf test", f64neginftest);
+    tTest("f64 nan test", f64nantest);
 
     tTest("string test", stringtest);
 
