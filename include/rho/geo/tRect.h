@@ -3,6 +3,7 @@
 
 
 #include <rho/iDrawable.h>
+#include <rho/iPackable.h>
 #include <rho/geo/tBox.h>
 
 
@@ -18,20 +19,24 @@ class tRect : public bDrawableByArtist
 
         tRect();
 
-        tRect(double x,     double y,
-              double width, double height);
+        tRect(f64 x,     f64 y,
+              f64 width, f64 height);
 
         tBox toBox() const;
 
-        tRect operator* (double a) const;
-        tRect operator/ (double a) const;
+        tRect operator* (f64 a) const;
+        tRect operator/ (f64 a) const;
 
         void drawWithArtist(iArtist& artist);
 
     public:
 
-        double x, y, width, height;
+        f64 x, y, width, height;
 };
+
+
+void pack(iWritable* out, const tRect&);
+void unpack(iReadable* in, tRect&);
 
 
 }    // namespace geo

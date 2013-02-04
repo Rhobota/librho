@@ -13,15 +13,15 @@ tLine::tLine()
 {
 }
 
-tLine::tLine(double x,  double y,
-             double dx, double dy)
+tLine::tLine(f64 x,  f64 y,
+             f64 dx, f64 dy)
     : p(tVector::point(x, y)),
       v(dx, dy)
 {
 }
 
-tLine::tLine(double x,  double y,  double z,
-             double dx, double dy, double dz)
+tLine::tLine(f64 x,  f64 y,  f64 z,
+             f64 dx, f64 dy, f64 dz)
     : p(tVector::point(x, y, z)),
       v(dx, dy, dz)
 {
@@ -31,6 +31,19 @@ tLine::tLine(const tVector& p, const tVector& v)
     : p(p),
       v(v)
 {
+}
+
+
+void pack(iWritable* out, const tLine& line)
+{
+    pack(out, line.p);
+    pack(out, line.v);
+}
+
+void unpack(iReadable* in, tLine& line)
+{
+    unpack(in, line.p);
+    unpack(in, line.v);
 }
 
 
