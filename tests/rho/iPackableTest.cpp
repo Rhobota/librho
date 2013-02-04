@@ -425,8 +425,102 @@ void i64test(const tTest& t)
     u64test(t);
 }
 
+void packunpackf32test(const tTest& t, f32 x, f32& y)
+{
+    tByteWritable out;
+    pack(&out, x);
+    vector<u8> buf = out.getBuf();
+    t.assert(buf.size() == 8);
+    tByteReadable in(buf);
+    unpack(&in, y);
+}
+
+void packunpackf64test(const tTest& t, f64 x, f64& y)
+{
+    tByteWritable out;
+    pack(&out, x);
+    vector<u8> buf = out.getBuf();
+    t.assert(buf.size() == 12);
+    tByteReadable in(buf);
+    unpack(&in, y);
+}
+
 void f32test(const tTest& t)
 {
+    // Nan test
+    {
+        f32 nan = NAN;
+        f32 nan2 = 0.0;
+        t.assert(std::isnan(nan));
+        t.reject(std::isnan(nan2));
+        packunpackf32test(t, nan, nan2);
+        t.assert(std::isnan(nan));
+        t.assert(std::isnan(nan2));
+    }
+
+    // Infinity test
+    {
+        f32 inf = INFINITY;
+        f32 inf2 = 0.0;
+        t.reject(std::isfinite(inf));
+        t.assert(std::isfinite(inf2));
+        t.assert(inf == INFINITY);
+        t.reject(inf2 == INFINITY);
+        packunpackf32test(t, inf, inf2);
+        t.reject(std::isfinite(inf));
+        t.reject(std::isfinite(inf2));
+        t.assert(inf == INFINITY);
+        t.assert(inf2 == INFINITY);
+    }
+
+    // Negative infinity test
+    {
+        f32 ninf = -INFINITY;
+        f32 ninf2 = 0.0;
+        t.reject(std::isfinite(ninf));
+        t.assert(std::isfinite(ninf2));
+        t.assert(ninf == -INFINITY);
+        t.reject(ninf2 == -INFINITY);
+        packunpackf32test(t, ninf, ninf2);
+        t.reject(std::isfinite(ninf));
+        t.reject(std::isfinite(ninf2));
+        t.assert(ninf == -INFINITY);
+        t.assert(ninf2 == -INFINITY);
+    }
+
+    // Zero test
+    {
+        f32 zero = 0.0;
+        f32 zero2 = NAN;
+        t.assert(std::isfinite(zero));
+        t.reject(std::isfinite(zero2));
+        t.assert(zero == 0.0);
+        t.reject(zero2 == 0.0);
+        t.reject(std::isnan(zero));
+        t.assert(std::isnan(zero2));
+        packunpackf32test(t, zero, zero2);
+        t.assert(std::isfinite(zero));
+        t.assert(std::isfinite(zero2));
+        t.assert(zero == 0.0);
+        t.assert(zero2 == 0.0);
+        t.reject(std::isnan(zero));
+        t.reject(std::isnan(zero2));
+    }
+
+    // Randomized tests.
+    for (int i = 0; i < 1000000; i++)
+    {
+        f32 x;
+        u8* p = (u8*)(&x);
+        for (int i = 0; i < 4; i++)
+            p[i] = rand() % 256;
+        if (std::isnan(x))
+            continue;
+        f32 y = NAN;
+        t.assert(x != y);
+        packunpackf32test(t, x, y);
+        t.assert(x == y);
+    }
 }
 
 void f32posinftest(const tTest& t)
@@ -567,6 +661,80 @@ void f32nantest(const tTest& t)
 
 void f64test(const tTest& t)
 {
+    // Nan test
+    {
+        f64 nan = NAN;
+        f64 nan2 = 0.0;
+        t.assert(std::isnan(nan));
+        t.reject(std::isnan(nan2));
+        packunpackf64test(t, nan, nan2);
+        t.assert(std::isnan(nan));
+        t.assert(std::isnan(nan2));
+    }
+
+    // Infinity test
+    {
+        f64 inf = INFINITY;
+        f64 inf2 = 0.0;
+        t.reject(std::isfinite(inf));
+        t.assert(std::isfinite(inf2));
+        t.assert(inf == INFINITY);
+        t.reject(inf2 == INFINITY);
+        packunpackf64test(t, inf, inf2);
+        t.reject(std::isfinite(inf));
+        t.reject(std::isfinite(inf2));
+        t.assert(inf == INFINITY);
+        t.assert(inf2 == INFINITY);
+    }
+
+    // Negative infinity test
+    {
+        f64 ninf = -INFINITY;
+        f64 ninf2 = 0.0;
+        t.reject(std::isfinite(ninf));
+        t.assert(std::isfinite(ninf2));
+        t.assert(ninf == -INFINITY);
+        t.reject(ninf2 == -INFINITY);
+        packunpackf64test(t, ninf, ninf2);
+        t.reject(std::isfinite(ninf));
+        t.reject(std::isfinite(ninf2));
+        t.assert(ninf == -INFINITY);
+        t.assert(ninf2 == -INFINITY);
+    }
+
+    // Zero test
+    {
+        f64 zero = 0.0;
+        f64 zero2 = NAN;
+        t.assert(std::isfinite(zero));
+        t.reject(std::isfinite(zero2));
+        t.assert(zero == 0.0);
+        t.reject(zero2 == 0.0);
+        t.reject(std::isnan(zero));
+        t.assert(std::isnan(zero2));
+        packunpackf64test(t, zero, zero2);
+        t.assert(std::isfinite(zero));
+        t.assert(std::isfinite(zero2));
+        t.assert(zero == 0.0);
+        t.assert(zero2 == 0.0);
+        t.reject(std::isnan(zero));
+        t.reject(std::isnan(zero2));
+    }
+
+    // Randomized tests.
+    for (int i = 0; i < 1000000; i++)
+    {
+        f64 x;
+        u8* p = (u8*)(&x);
+        for (int i = 0; i < 8; i++)
+            p[i] = rand() % 256;
+        if (std::isnan(x))
+            continue;
+        f64 y = NAN;
+        t.assert(x != y);
+        packunpackf64test(t, x, y);
+        t.assert(x == y);
+    }
 }
 
 void f64posinftest(const tTest& t)
