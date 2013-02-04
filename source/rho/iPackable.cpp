@@ -5,6 +5,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <iostream>
 
 namespace rho
 {
@@ -127,19 +128,52 @@ void unpack(iReadable* in, i64& x)
 
 void pack(iWritable*  out, f32  x)
 {
-    const static u32 kMaxU32 = ~0;
-
     i32 exp = 0;
     u32 fracI = 0;
 
-    f32 fracF = frexpf(x, &exp);   // fracF is 0.0 or in [0.5, 1)
-                                   // x = fracF * 2^exp
-
-    if (fracF > 0.0)
+    if (std::isnan(x))
     {
-        fracF -= 0.5;                    // fracF in [0.0, 0.5)
-        fracF *= 2.0;                    // fracF in [0.0, 1.0)
-        fracI = (u32)(fracF * kMaxU32);  // fracI in [0, kMaxU32)
+        // x is not-a-number (nan).
+        exp = 0x7FFFFFFF;
+    }
+    else if (! std::isfinite(x))
+    {
+        // x must be infinity or -infinity.
+        if (x == INFINITY)
+            exp = 0x7FFFFFFE;
+        else if (x == -INFINITY)
+            exp = 0x7FFFFFFD;
+        else
+            throw eImpossiblePath();
+    }
+    else if (x == 0.0f)
+    {
+        // x is zero.
+        exp = 0x7FFFFFFC;
+    }
+    else
+    {
+        // x is finite and non-zero.
+        f32 fracF = frexpf(x, &exp);   // fracF is in [0.5, 1)
+                                       // x = fracF * 2^exp
+
+        bool isneg = (fracF < 0.0f);
+
+        fracF = fabsf(fracF);
+
+        if (fracF >= 0.5f && fracF < 1.0f)
+        {
+            fracF -= 0.5f;             // fracF is in [0.0, 0.5)
+            fracF *= 2.0f;             // fracF is in [0.0, 1.0)
+            fracF *= 0x7FFFFFFF;       // fracF is in [0, 0x7FFFFFFF)
+            fracI = (u32)fracF;
+        }
+        else
+        {
+            throw eImpossiblePath();
+        }
+
+        if (isneg) fracI |= 0x80000000;
     }
 
     pack(out, fracI);
@@ -154,26 +188,85 @@ void unpack(iReadable* in, f32& x)
     unpack(in, fracI);
     unpack(in, exp);
 
-    f32 fracF = (f32) fracI;
+    if (exp == 0x7FFFFFFF)       // nan indicator
+    {
+        x = NAN;
+    }
+    else if (exp == 0x7FFFFFFE)  // infinity indicator
+    {
+        x = INFINITY;
+    }
+    else if (exp == 0x7FFFFFFD)  // -infinity indicator
+    {
+        x = -INFINITY;
+    }
+    else if (exp == 0x7FFFFFFC)  // zero indicator
+    {
+        x = 0.0f;
+    }
+    else
+    {
+        bool isneg = ((fracI & 0x80000000) != 0);
+        if (isneg) fracI ^= 0x80000000;
 
-    x = ldexpf(fracF, exp);
+        f32 fracF = (f32)fracI;        // fracF is in [0, 0x7FFFFFFF)
+        fracF /= 0x7FFFFFFF;           // fracF is in [0.0, 1.0)
+        fracF /= 2.0f;                 // fracF is in [0.0, 0.5)
+        fracF += 0.5f;                 // fracF is in [0.5, 1.0)
+        if (isneg) fracF = -fracF;
+
+        x = ldexpf(fracF, exp);
+    }
 }
 
 void pack(iWritable*  out, f64  x)
 {
-    const static u64 kMaxU64 = ~0LL;
-
     i32 exp = 0;
-    u64 fracI = 0LL;
+    u64 fracI = 0;
 
-    f64 fracF = frexp(x, &exp);   // fracF is 0.0 or in [0.5, 1)
-                                  // x = fracF * 2^exp
-
-    if (fracF > 0.0)
+    if (std::isnan(x))
     {
-        fracF -= 0.5;                    // fracF in [0.0, 0.5)
-        fracF *= 2.0;                    // fracF in [0.0, 1.0)
-        fracI = (u64)(fracF * kMaxU64);  // fracI in [0, kMaxU64)
+        // x is not-a-number (nan).
+        exp = 0x7FFFFFFF;
+    }
+    else if (! std::isfinite(x))
+    {
+        // x must be infinity or -infinity.
+        if (x == INFINITY)
+            exp = 0x7FFFFFFE;
+        else if (x == -INFINITY)
+            exp = 0x7FFFFFFD;
+        else
+            throw eImpossiblePath();
+    }
+    else if (x == 0.0)
+    {
+        // x is zero.
+        exp = 0x7FFFFFFC;
+    }
+    else
+    {
+        // x is finite and non-zero.
+        f64 fracF = frexp(x, &exp);   // fracF is in [0.5, 1)
+                                      // x = fracF * 2^exp
+
+        bool isneg = (fracF < 0.0);
+
+        fracF = fabs(fracF);
+
+        if (fracF >= 0.5 && fracF < 1.0)
+        {
+            fracF -= 0.5;                // fracF is in [0.0, 0.5)
+            fracF *= 2.0;                // fracF is in [0.0, 1.0)
+            fracF *= 0x7FFFFFFFFFFFFFFF; // fracF is in [0, 0x7FFFFFFF)
+            fracI = (u64)fracF;
+        }
+        else
+        {
+            throw eImpossiblePath();
+        }
+
+        if (isneg) fracI |= 0x8000000000000000;
     }
 
     pack(out, fracI);
@@ -183,14 +276,40 @@ void pack(iWritable*  out, f64  x)
 void unpack(iReadable* in, f64& x)
 {
     i32 exp = 0;
-    u64 fracI = 0LL;
+    u64 fracI = 0;
 
     unpack(in, fracI);
     unpack(in, exp);
 
-    f64 fracF = (f64) fracI;
+    if (exp == 0x7FFFFFFF)       // nan indicator
+    {
+        x = NAN;
+    }
+    else if (exp == 0x7FFFFFFE)  // infinity indicator
+    {
+        x = INFINITY;
+    }
+    else if (exp == 0x7FFFFFFD)  // -infinity indicator
+    {
+        x = -INFINITY;
+    }
+    else if (exp == 0x7FFFFFFC)  // zero indicator
+    {
+        x = 0.0;
+    }
+    else
+    {
+        bool isneg = ((fracI & 0x8000000000000000) != 0);
+        if (isneg) fracI ^= 0x8000000000000000;
 
-    x = ldexp(fracF, exp);
+        f64 fracF = (f64)fracI;        // fracF is in [0, 0x7FFFFFFF)
+        fracF /= 0x7FFFFFFFFFFFFFFF;   // fracF is in [0.0, 1.0)
+        fracF /= 2.0;                 // fracF is in [0.0, 0.5)
+        fracF += 0.5;                 // fracF is in [0.5, 1.0)
+        if (isneg) fracF = -fracF;
+
+        x = ldexp(fracF, exp);
+    }
 }
 
 void pack(iWritable* out, const std::string& str)
