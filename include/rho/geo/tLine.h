@@ -2,6 +2,7 @@
 #define __rho_geo_tLine_h__
 
 
+#include <rho/iPackable.h>
 #include <rho/geo/tVector.h>
 
 
@@ -17,11 +18,11 @@ class tLine
 
         tLine();
 
-        tLine(double x,  double y,
-              double dx, double dy);
+        tLine(f64 x,  f64 y,
+              f64 dx, f64 dy);
 
-        tLine(double x,  double y,  double z,
-              double dx, double dy, double dz);
+        tLine(f64 x,  f64 y,  f64 z,
+              f64 dx, f64 dy, f64 dz);
 
         tLine(const tVector& p, const tVector& v);
 
@@ -30,6 +31,10 @@ class tLine
         tVector p;    // a point on the line
         tVector v;    // the line's direction vector
 };
+
+
+void pack(iWritable* out, const tLine&);
+void unpack(iReadable* in, tLine&);
 
 
 }   // namespace geo

@@ -2,16 +2,19 @@
 #define __rho_geo_units_h__
 
 
+#include <rho/types.h>
+
+
 namespace rho
 {
 namespace geo
 {
 
 
-extern const double kPI;
+extern const f64 kPI;
 
-double toRadians(double angle);
-double toDegrees(double angle);
+f64 toRadians(f64 angle);
+f64 toDegrees(f64 angle);
 
 
 }

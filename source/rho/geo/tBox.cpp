@@ -23,8 +23,8 @@ tBox::tBox(const tVector& p1, const tVector& p2)
         throw rho::eLogicError("P2 must be a point!");
 }
 
-tBox::tBox(double x1, double y1,
-           double x2, double y2)
+tBox::tBox(f64 x1, f64 y1,
+           f64 x2, f64 y2)
     : p1(tVector::origin()),
       p2(tVector::origin())
 {
@@ -34,8 +34,8 @@ tBox::tBox(double x1, double y1,
     p2.y = y2;
 }
 
-tBox::tBox(double x1, double y1, double z1,
-           double x2, double y2, double z2)
+tBox::tBox(f64 x1, f64 y1, f64 z1,
+           f64 x2, f64 y2, f64 z2)
     : p1(tVector::origin()),
       p2(tVector::origin())
 {
@@ -49,16 +49,16 @@ tBox::tBox(double x1, double y1, double z1,
 
 tBox tBox::normalize() const
 {
-    double x1 = std::min(p1.x, p2.x);
-    double y1 = std::min(p1.y, p2.y);
-    double z1 = std::min(p1.z, p2.z);
-    double x2 = std::max(p1.x, p2.x);
-    double y2 = std::max(p1.y, p2.y);
-    double z2 = std::max(p1.z, p2.z);
+    f64 x1 = std::min(p1.x, p2.x);
+    f64 y1 = std::min(p1.y, p2.y);
+    f64 z1 = std::min(p1.z, p2.z);
+    f64 x2 = std::max(p1.x, p2.x);
+    f64 y2 = std::max(p1.y, p2.y);
+    f64 z2 = std::max(p1.z, p2.z);
     return tBox(x1, y1, z1, x2, y2, z2);
 }
 
-tBox tBox::operator* (double a) const
+tBox tBox::operator* (f64 a) const
 {
     tBox b = (*this);
     b.p1 *= a;
@@ -66,9 +66,22 @@ tBox tBox::operator* (double a) const
     return b;
 }
 
-tBox tBox::operator/ (double a) const
+tBox tBox::operator/ (f64 a) const
 {
     return (*this) * (1.0/a);
+}
+
+
+void pack(iWritable* out, const tBox& box)
+{
+    pack(out, box.p1);
+    pack(out, box.p2);
+}
+
+void unpack(iReadable* in, tBox& box)
+{
+    unpack(in, box.p1);
+    unpack(in, box.p2);
 }
 
 

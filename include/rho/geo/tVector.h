@@ -3,6 +3,7 @@
 
 
 #include <rho/eRho.h>
+#include <rho/iPackable.h>
 #include <rho/geo/units.h>
 
 #include <ostream>
@@ -25,29 +26,34 @@ class tVector
     public:
 
         /**
-         * Constructs a vector (not a point).
+         * Constructs the zero vector.
          */
-        tVector(double x, double y);
+        tVector();
 
         /**
          * Constructs a vector (not a point).
          */
-        tVector(double x, double y, double z);
+        tVector(f64 x, f64 y);
 
         /**
          * Constructs a vector (not a point).
          */
-        tVector(double x, double y, double z, double w);
+        tVector(f64 x, f64 y, f64 z);
+
+        /**
+         * Constructs a vector (not a point).
+         */
+        tVector(f64 x, f64 y, f64 z, f64 w);
 
         /**
          * Builds a point at the given values.
          */
-        static tVector point(double x, double y);
+        static tVector point(f64 x, f64 y);
 
         /**
          * Builds a point at the given values.
          */
-        static tVector point(double x, double y, double z);
+        static tVector point(f64 x, f64 y, f64 z);
 
         /**
          * Builds the origin point.
@@ -56,7 +62,7 @@ class tVector
 
     public:
 
-        double x, y, z, w;
+        f64 x, y, z, w;
 
     public:
 
@@ -89,39 +95,39 @@ class tVector
         /**
          * Returns the length (magnitude) of the vector.
          */
-        double length() const;
+        f64 length() const;
 
         /**
          * Returns the squared length (magnitude) of the vector.
          */
-        double lengthSquared() const;
+        f64 lengthSquared() const;
 
         /**
          * Scales the vector to the new length (magnitude).
          */
-        void setLength(double newLength);
+        void setLength(f64 newLength);
 
         /**
          * Calculates and returns the vector's angle in the xy plane.
          * The returned value is in the range [-pi, pi].
          */
-        double theta() const;
+        f64 theta() const;
 
         /**
          * Sets the value of theta.
          */
-        void setTheta(double t);
+        void setTheta(f64 t);
 
         /**
          * Calculates and returns the vector's altitude angle.
          * The returned value is in the range [-pi/2, pi/2].
          */
-        double phi() const;
+        f64 phi() const;
 
         /**
          * Sets the value of phi.
          */
-        void setPhi(double p);
+        void setPhi(f64 p);
 
         /**
          * Returns a vector perpendicular to the receiver.
@@ -132,19 +138,19 @@ class tVector
          * Returns the vector rotated around the z-axis by 'angle' radians.
          * (Note that the z-coord will not change.)
          */
-        tVector rotatedZ(double angle) const;
+        tVector rotatedZ(f64 angle) const;
 
         /**
          * Returns the vector rotated around the x-axis by 'angle' radians.
          * (Note that the x-coord will not change.)
          */
-        tVector rotatedX(double angle) const;
+        tVector rotatedX(f64 angle) const;
 
         /**
          * Returns the vector rotated around the y-axis by 'angle' radians.
          * (Note that the y-coord will not change.)
          */
-        tVector rotatedY(double angle) const;
+        tVector rotatedY(f64 angle) const;
 
         /**
          * Calculates and returns the unit vector.
@@ -155,13 +161,13 @@ class tVector
          * Calculates and returns the squared distance from this point
          * to the other point.
          */
-        double distanceSquared(const tVector& other) const;
+        f64 distanceSquared(const tVector& other) const;
 
         /**
          * Calculates and returns the distance from this point
          * to the other point.
          */
-        double distance(const tVector& other) const;
+        f64 distance(const tVector& other) const;
 
         /**
          * Calculates and returns the cross of this vector with
@@ -214,32 +220,36 @@ void operator+=(tVector& a, const tVector& b);
 /**
  * Vector / Scalar = Vector
  */
-tVector operator/(const tVector& a, double c);
+tVector operator/(const tVector& a, f64 c);
 
 /**
  * Vector / Scalar = Vector
  */
-void operator/=(tVector& a, double c);
+void operator/=(tVector& a, f64 c);
 
 /**
  * Vector * Scalar = Vector
  */
-tVector operator*(const tVector& a, double c);
+tVector operator*(const tVector& a, f64 c);
 
 /**
  * Vector * Scalar = Vector
  */
-void operator*=(tVector& a, double c);
+void operator*=(tVector& a, f64 c);
 
 /**
  * Scalar * Vector = Vector
  */
-tVector operator*(double c, const tVector& a);
+tVector operator*(f64 c, const tVector& a);
 
 /**
  * Vector * Vector = Scalar (dot product)
  */
-double operator*(const tVector& a, const tVector& b);
+f64 operator*(const tVector& a, const tVector& b);
+
+
+void pack(iWritable* out, const tVector&);
+void unpack(iReadable* in, tVector&);
 
 
 }    // namespace geo

@@ -26,57 +26,57 @@ namespace geo
 // tMeshFace implementation
 ///////////////////////////////////////////////////////////////////////////////
 
-tMesh::tMeshFace::tMeshFace(int materialIndex)
+tMesh::tMeshFace::tMeshFace(i32 materialIndex)
     : m_materialIndex(materialIndex)
 {
 }
 
-void tMesh::tMeshFace::add(int vertexIndex, int texcoordIndex, int normalIndex)
+void tMesh::tMeshFace::add(i32 vertexIndex, i32 texcoordIndex, i32 normalIndex)
 {
     m_vertexIndices.push_back(vertexIndex);
     m_texcoordIndices.push_back(texcoordIndex);
     m_normalIndices.push_back(normalIndex);
 }
 
-int tMesh::tMeshFace::getMaterialIndex() const
+i32 tMesh::tMeshFace::getMaterialIndex() const
 {
     return m_materialIndex;
 }
 
-vector<int>& tMesh::tMeshFace::getVertexIndices()
+vector<i32>& tMesh::tMeshFace::getVertexIndices()
 {
     return m_vertexIndices;
 }
 
-vector<int>& tMesh::tMeshFace::getTextureCoordIndices()
+vector<i32>& tMesh::tMeshFace::getTextureCoordIndices()
 {
     return m_texcoordIndices;
 }
 
-vector<int>& tMesh::tMeshFace::getNormalIndices()
+vector<i32>& tMesh::tMeshFace::getNormalIndices()
 {
     return m_normalIndices;
 }
 
-const vector<int>& tMesh::tMeshFace::getVertexIndices() const
+const vector<i32>& tMesh::tMeshFace::getVertexIndices() const
 {
     return m_vertexIndices;
 }
 
-const vector<int>& tMesh::tMeshFace::getTextureCoordIndices() const
+const vector<i32>& tMesh::tMeshFace::getTextureCoordIndices() const
 {
     return m_texcoordIndices;
 }
 
-const vector<int>& tMesh::tMeshFace::getNormalIndices() const
+const vector<i32>& tMesh::tMeshFace::getNormalIndices() const
 {
     return m_normalIndices;
 }
 
 bool meshFaceComparator(const tMesh::tMeshFace& a, const tMesh::tMeshFace& b)
 {
-    int ma = a.getMaterialIndex();
-    int mb = b.getMaterialIndex();
+    i32 ma = a.getMaterialIndex();
+    i32 mb = b.getMaterialIndex();
     if (ma != mb)
         return ma < mb;
     return (&a) < (&b);
@@ -161,20 +161,20 @@ vector<string> removeEmptyParts(vector<string> parts)
 }
 
 static
-double toDouble(string str, bool* errorFlag)
+f64 toDouble(string str, bool* errorFlag)
 {
     istringstream in(str);
-    double d = 0.0;
+    f64 d = 0.0;
     if (!(in >> d))
         *errorFlag = true;
     return d;
 }
 
 static
-int toInt(string str, bool* errorFlag)
+i32 toInt(string str, bool* errorFlag)
 {
     istringstream in(str);
-    int i = 0;
+    i32 i = 0;
     if (!(in >> i))
         *errorFlag = true;
     return i;
@@ -182,7 +182,7 @@ int toInt(string str, bool* errorFlag)
 
 static
 void readFacePart(string str, bool* errorFlag,
-        int* vertexIndex, int* texcoordIndex, int* normalIndex)
+        i32* vertexIndex, i32* texcoordIndex, i32* normalIndex)
 {
     if (str.length() == 0)
     {
@@ -249,9 +249,9 @@ vector<tMesh::tMeshMaterial> readMtlFile(string filename)
             if (parts.size() != 4)
                 throwErrorOnLine("Incorrect number of parts!", filename, lineNum);
             bool errorFlag = false;
-            double r = toDouble(parts[1], &errorFlag);
-            double g = toDouble(parts[2], &errorFlag);
-            double b = toDouble(parts[3], &errorFlag);
+            f64 r = toDouble(parts[1], &errorFlag);
+            f64 g = toDouble(parts[2], &errorFlag);
+            f64 b = toDouble(parts[3], &errorFlag);
             if (errorFlag)
                 throwErrorOnLine("Double-format error!", filename, lineNum);
             currMaterial.ka[0] = r;
@@ -267,9 +267,9 @@ vector<tMesh::tMeshMaterial> readMtlFile(string filename)
             if (parts.size() != 4)
                 throwErrorOnLine("Incorrect number of parts!", filename, lineNum);
             bool errorFlag = false;
-            double r = toDouble(parts[1], &errorFlag);
-            double g = toDouble(parts[2], &errorFlag);
-            double b = toDouble(parts[3], &errorFlag);
+            f64 r = toDouble(parts[1], &errorFlag);
+            f64 g = toDouble(parts[2], &errorFlag);
+            f64 b = toDouble(parts[3], &errorFlag);
             if (errorFlag)
                 throwErrorOnLine("Double-format error!", filename, lineNum);
             currMaterial.kd[0] = r;
@@ -285,9 +285,9 @@ vector<tMesh::tMeshMaterial> readMtlFile(string filename)
             if (parts.size() != 4)
                 throwErrorOnLine("Incorrect number of parts!", filename, lineNum);
             bool errorFlag = false;
-            double r = toDouble(parts[1], &errorFlag);
-            double g = toDouble(parts[2], &errorFlag);
-            double b = toDouble(parts[3], &errorFlag);
+            f64 r = toDouble(parts[1], &errorFlag);
+            f64 g = toDouble(parts[2], &errorFlag);
+            f64 b = toDouble(parts[3], &errorFlag);
             if (errorFlag)
                 throwErrorOnLine("Double-format error!", filename, lineNum);
             currMaterial.ke[0] = r;
@@ -303,9 +303,9 @@ vector<tMesh::tMeshMaterial> readMtlFile(string filename)
             if (parts.size() != 4)
                 throwErrorOnLine("Incorrect number of parts!", filename, lineNum);
             bool errorFlag = false;
-            double r = toDouble(parts[1], &errorFlag);
-            double g = toDouble(parts[2], &errorFlag);
-            double b = toDouble(parts[3], &errorFlag);
+            f64 r = toDouble(parts[1], &errorFlag);
+            f64 g = toDouble(parts[2], &errorFlag);
+            f64 b = toDouble(parts[3], &errorFlag);
             if (errorFlag)
                 throwErrorOnLine("Double-format error!", filename, lineNum);
             currMaterial.ks[0] = r;
@@ -321,7 +321,7 @@ vector<tMesh::tMeshMaterial> readMtlFile(string filename)
             if (parts.size() != 2)
                 throwErrorOnLine("Incorrect number of parts!", filename, lineNum);
             bool errorFlag = false;
-            double s = toDouble(parts[1], &errorFlag);
+            f64 s = toDouble(parts[1], &errorFlag);
             if (errorFlag)
                 throwErrorOnLine("Double-format error!", filename, lineNum);
             currMaterial.ns = s;
@@ -335,7 +335,7 @@ vector<tMesh::tMeshMaterial> readMtlFile(string filename)
             if (parts.size() != 2)
                 throwErrorOnLine("Incorrect number of parts!", filename, lineNum);
             bool errorFlag = false;
-            double d = toDouble(parts[1], &errorFlag);
+            f64 d = toDouble(parts[1], &errorFlag);
             if (errorFlag)
                 throwErrorOnLine("Double-format error!", filename, lineNum);
             currMaterial.d = d;
@@ -408,7 +408,7 @@ tMesh::tMesh(string filename)
         throwErrorOnLine("Cannot open file!", filename, 0);
 
     m_materials.push_back(tMesh::tMeshMaterial());  // the default material
-    int currMaterialIndex = 0;
+    i32 currMaterialIndex = 0;
 
     string dirname = findDirName(filename);
 
@@ -428,10 +428,10 @@ tMesh::tMesh(string filename)
             if (parts.size() != 4 && parts.size() != 5)
                 throwErrorOnLine("Incorrect number of parts!",filename,lineNum);
             bool errorFlag = false;
-            double x = toDouble(parts[1], &errorFlag);
-            double y = toDouble(parts[2], &errorFlag);
-            double z = toDouble(parts[3], &errorFlag);
-            double w = (parts.size() == 5) ?
+            f64 x = toDouble(parts[1], &errorFlag);
+            f64 y = toDouble(parts[2], &errorFlag);
+            f64 z = toDouble(parts[3], &errorFlag);
+            f64 w = (parts.size() == 5) ?
                 toDouble(parts[4], &errorFlag) : 1.0;
             if (errorFlag)
                 throwErrorOnLine("Double-format error!", filename, lineNum);
@@ -444,10 +444,10 @@ tMesh::tMesh(string filename)
             if (parts.size() != 2 && parts.size() != 3 && parts.size() != 4)
                 throwErrorOnLine("Incorrect number of parts!",filename,lineNum);
             bool errorFlag = false;
-            double u = toDouble(parts[1], &errorFlag);
-            double v = (parts.size() > 2) ?
+            f64 u = toDouble(parts[1], &errorFlag);
+            f64 v = (parts.size() > 2) ?
                 toDouble(parts[2], &errorFlag) : 0.0;
-            double w = (parts.size() > 3) ?
+            f64 w = (parts.size() > 3) ?
                 toDouble(parts[3], &errorFlag) : 0.0;
             if (errorFlag)
                 throwErrorOnLine("Double-format error!", filename, lineNum);
@@ -460,9 +460,9 @@ tMesh::tMesh(string filename)
             if (parts.size() != 4)
                 throwErrorOnLine("Incorrect number of parts!",filename,lineNum);
             bool errorFlag = false;
-            double x = toDouble(parts[1], &errorFlag);
-            double y = toDouble(parts[2], &errorFlag);
-            double z = toDouble(parts[3], &errorFlag);
+            f64 x = toDouble(parts[1], &errorFlag);
+            f64 y = toDouble(parts[2], &errorFlag);
+            f64 z = toDouble(parts[3], &errorFlag);
             if (errorFlag)
                 throwErrorOnLine("Double-format error!", filename, lineNum);
             m_normals.push_back(tVector(x, y, z, 1.0));
@@ -479,7 +479,7 @@ tMesh::tMesh(string filename)
 
             for (size_t i = 1; i < parts.size(); i++)
             {
-                int vertexIndex, texcoordIndex, normalIndex;
+                i32 vertexIndex, texcoordIndex, normalIndex;
                 readFacePart(parts[i], &errorFlag,
                         &vertexIndex, &texcoordIndex, &normalIndex);
 
@@ -490,9 +490,9 @@ tMesh::tMesh(string filename)
                 if (vertexIndex < -1 || texcoordIndex < -1 || normalIndex < -1)
                     throwErrorOnLine("Bad face def!", filename, lineNum);
 
-                if (vertexIndex >= (int)m_vertices.size() ||
-                    texcoordIndex >= (int)m_texcoords.size() ||
-                    normalIndex >= (int)m_normals.size())
+                if (vertexIndex >= (i32)m_vertices.size() ||
+                    texcoordIndex >= (i32)m_texcoords.size() ||
+                    normalIndex >= (i32)m_normals.size())
                     throwErrorOnLine("Bad face def(2)!", filename, lineNum);
 
                 face.add(vertexIndex, texcoordIndex, normalIndex);
@@ -563,8 +563,8 @@ tMesh::tMesh(string filename)
     // We will calculate our own normals for such faces!
     for (size_t i = 0; i < m_faces.size(); i++)
     {
-        vector<int>& vertexIndices = m_faces[i].getVertexIndices();
-        vector<int>& normalIndices = m_faces[i].getNormalIndices();
+        vector<i32>& vertexIndices = m_faces[i].getVertexIndices();
+        vector<i32>& normalIndices = m_faces[i].getNormalIndices();
         for (size_t j = 0; j < vertexIndices.size(); j++)
         {
             if (normalIndices[j] != -1)
@@ -639,6 +639,68 @@ const vector<tVector>& tMesh::getNormals() const
 const vector<tMesh::tMeshFace>& tMesh::getFaces() const
 {
     return m_faces;
+}
+
+
+void pack(iWritable* out, const tMesh& mesh)
+{
+    pack(out, mesh.getMaterials());
+    pack(out, mesh.getVertices());
+    pack(out, mesh.getTextureCoords());
+    pack(out, mesh.getNormals());
+    pack(out, mesh.getFaces());
+}
+
+void unpack(iReadable* in, tMesh& mesh)
+{
+    unpack(in, mesh.getMaterials());
+    unpack(in, mesh.getVertices());
+    unpack(in, mesh.getTextureCoords());
+    unpack(in, mesh.getNormals());
+    unpack(in, mesh.getFaces());
+}
+
+
+void pack(iWritable* out, const tMesh::tMeshMaterial& mat)
+{
+    pack(out, mat.name);
+    pack(out, mat.td);
+    for (int i = 0; i < 4; i++) pack(out, mat.ka[i]);
+    for (int i = 0; i < 4; i++) pack(out, mat.kd[i]);
+    for (int i = 0; i < 4; i++) pack(out, mat.ke[i]);
+    for (int i = 0; i < 4; i++) pack(out, mat.ks[i]);
+    pack(out, mat.ns);
+    pack(out, mat.d);
+}
+
+void unpack(iReadable* in, tMesh::tMeshMaterial& mat)
+{
+    unpack(in, mat.name);
+    unpack(in, mat.td);
+    for (int i = 0; i < 4; i++) unpack(in, mat.ka[i]);
+    for (int i = 0; i < 4; i++) unpack(in, mat.kd[i]);
+    for (int i = 0; i < 4; i++) unpack(in, mat.ke[i]);
+    for (int i = 0; i < 4; i++) unpack(in, mat.ks[i]);
+    unpack(in, mat.ns);
+    unpack(in, mat.d);
+}
+
+
+void pack(iWritable* out, const tMesh::tMeshFace& face)
+{
+    pack(out, face.getMaterialIndex());
+    pack(out, face.getVertexIndices());
+    pack(out, face.getTextureCoordIndices());
+    pack(out, face.getNormalIndices());
+}
+
+void unpack(iReadable* in, tMesh::tMeshFace& face)
+{
+    i32 matIndex;
+    unpack(in, matIndex); face.m_materialIndex = matIndex;
+    unpack(in, face.getVertexIndices());
+    unpack(in, face.getTextureCoordIndices());
+    unpack(in, face.getNormalIndices());
 }
 
 

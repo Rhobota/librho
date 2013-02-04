@@ -3,6 +3,7 @@
 
 
 #include <rho/iDrawable.h>
+#include <rho/iPackable.h>
 #include <rho/geo/tVector.h>
 
 #include <string>
@@ -23,26 +24,32 @@ class tMesh : public bDrawableByArtist
         {
             public:
 
-                tMeshFace(int materialIndex);
+                tMeshFace(i32 materialIndex);
 
-                void add(int vertexIndex, int texcoordIndex, int normalIndex);
+                void add(i32 vertexIndex, i32 texcoordIndex, i32 normalIndex);
 
-                int getMaterialIndex() const;
+                i32 getMaterialIndex() const;
 
-                std::vector<int>& getVertexIndices();
-                std::vector<int>& getTextureCoordIndices();
-                std::vector<int>& getNormalIndices();
+                std::vector<i32>& getVertexIndices();
+                std::vector<i32>& getTextureCoordIndices();
+                std::vector<i32>& getNormalIndices();
 
-                const std::vector<int>& getVertexIndices() const;
-                const std::vector<int>& getTextureCoordIndices() const;
-                const std::vector<int>& getNormalIndices() const;
+                const std::vector<i32>& getVertexIndices() const;
+                const std::vector<i32>& getTextureCoordIndices() const;
+                const std::vector<i32>& getNormalIndices() const;
 
             private:
 
-                int              m_materialIndex;
-                std::vector<int> m_vertexIndices;
-                std::vector<int> m_texcoordIndices;
-                std::vector<int> m_normalIndices;
+                i32              m_materialIndex;
+                std::vector<i32> m_vertexIndices;
+                std::vector<i32> m_texcoordIndices;
+                std::vector<i32> m_normalIndices;
+
+            private:
+
+                tMeshFace() : m_materialIndex(-1) { }
+                friend void unpack(iReadable* in, tMeshFace&);
+                friend void unpack(iReadable* in, std::vector<tMeshFace>&);
         };
 
         class tMeshMaterial
@@ -55,12 +62,12 @@ class tMesh : public bDrawableByArtist
 
                 std::string td;  // diffuse texture file path
 
-                float ka[4];     // ambient color
-                float kd[4];     // diffuse color
-                float ke[4];     // emission color
-                float ks[4];     // specular color
-                float ns;        // specular "shininess"
-                float d;         // dissolved value (transparency) [0,1]
+                f32 ka[4];     // ambient color
+                f32 kd[4];     // diffuse color
+                f32 ke[4];     // emission color
+                f32 ks[4];     // specular color
+                f32 ns;        // specular "shininess"
+                f32 d;         // dissolved value (transparency) [0,1]
         };
 
     public:
@@ -90,6 +97,18 @@ class tMesh : public bDrawableByArtist
         std::vector<tVector>       m_normals;
         std::vector<tMeshFace>     m_faces;
 };
+
+
+void pack(iWritable* out, const tMesh&);
+void unpack(iReadable* in, tMesh&);
+
+
+void pack(iWritable* out, const tMesh::tMeshMaterial&);
+void unpack(iReadable* in, tMesh::tMeshMaterial&);
+
+
+void pack(iWritable* out, const tMesh::tMeshFace&);
+void unpack(iReadable* in, tMesh::tMeshFace&);
 
 
 }   // namespace geo

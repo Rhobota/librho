@@ -12,8 +12,8 @@ tRect::tRect()
 {
 }
 
-tRect::tRect(double x,     double y,
-             double width, double height)
+tRect::tRect(f64 x,     f64 y,
+             f64 width, f64 height)
     : x(x), y(y), width(width), height(height)
 {
 }
@@ -23,7 +23,7 @@ tBox tRect::toBox() const
     return tBox(x, y, x+width, y+height);
 }
 
-tRect tRect::operator* (double a) const
+tRect tRect::operator* (f64 a) const
 {
     tRect r = (*this);
     r.x *= a;
@@ -33,9 +33,26 @@ tRect tRect::operator* (double a) const
     return r;
 }
 
-tRect tRect::operator/ (double a) const
+tRect tRect::operator/ (f64 a) const
 {
     return (*this) * (1.0/a);
+}
+
+
+void pack(iWritable* out, const tRect& rect)
+{
+    pack(out, rect.x);
+    pack(out, rect.y);
+    pack(out, rect.width);
+    pack(out, rect.height);
+}
+
+void unpack(iReadable* in, tRect& rect)
+{
+    unpack(in, rect.x);
+    unpack(in, rect.y);
+    unpack(in, rect.width);
+    unpack(in, rect.height);
 }
 
 

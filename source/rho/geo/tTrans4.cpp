@@ -31,7 +31,7 @@ tTrans4 tTrans4::zero()
     return mat;
 }
 
-tTrans4 tTrans4::translate(double dx, double dy, double dz)
+tTrans4 tTrans4::translate(f64 dx, f64 dy, f64 dz)
 {
     tTrans4 mat;
     mat[0][3] = dx;
@@ -45,7 +45,7 @@ tTrans4 tTrans4::translate(const tVector& v)
     return translate(v.x, v.y, v.z);
 }
 
-tTrans4 tTrans4::scale(double sx, double sy, double sz)
+tTrans4 tTrans4::scale(f64 sx, f64 sy, f64 sz)
 {
     tTrans4 mat;
     mat[0][0] = sx;
@@ -59,11 +59,11 @@ tTrans4 tTrans4::scale(const tVector& v)
     return scale(v.x, v.y, v.z);
 }
 
-tTrans4 tTrans4::rotateZ(double angle)
+tTrans4 tTrans4::rotateZ(f64 angle)
 {
     tTrans4 mat;
-    double c = cos(angle);
-    double s = sin(angle);
+    f64 c = cos(angle);
+    f64 s = sin(angle);
     mat[0][0] = c;
     mat[0][1] = -s;
     mat[1][0] = s;
@@ -71,11 +71,11 @@ tTrans4 tTrans4::rotateZ(double angle)
     return mat;
 }
 
-tTrans4 tTrans4::rotateX(double angle)
+tTrans4 tTrans4::rotateX(f64 angle)
 {
     tTrans4 mat;
-    double c = cos(angle);
-    double s = sin(angle);
+    f64 c = cos(angle);
+    f64 s = sin(angle);
     mat[1][1] = c;
     mat[1][2] = -s;
     mat[2][1] = s;
@@ -83,11 +83,11 @@ tTrans4 tTrans4::rotateX(double angle)
     return mat;
 }
 
-tTrans4 tTrans4::rotateY(double angle)
+tTrans4 tTrans4::rotateY(f64 angle)
 {
     tTrans4 mat;
-    double c = cos(angle);
-    double s = sin(angle);
+    f64 c = cos(angle);
+    f64 s = sin(angle);
     mat[0][0] = c;
     mat[0][2] = s;
     mat[2][0] = -s;
@@ -122,14 +122,14 @@ tTrans4 tTrans4::frame(const tVector& vx, const tVector& vy,
     return result;
 }
 
-double* tTrans4::operator[](unsigned int i)
+f64* tTrans4::operator[](unsigned int i)
 {
     if (!(i < 4))
         throw rho::eLogicError("(!(i < 4))");
     return m[i];
 }
 
-const double* tTrans4::operator[](unsigned int i) const
+const f64* tTrans4::operator[](unsigned int i) const
 {
     if (!(i < 4))
         throw rho::eLogicError("(!(i < 4))");
@@ -173,7 +173,7 @@ tTrans4 tTrans4::inverse() const
         }
 
         // Normalize the pivot row (i.e. put a one on the diagonal).
-        double pivot = m[r][r];
+        f64 pivot = m[r][r];
         for (c = 0; c < 4; c++)
         {
             m[r][c] /= pivot;
@@ -185,7 +185,7 @@ tTrans4 tTrans4::inverse() const
         {
             if (i != r)
             {
-                double scale = m[i][r];
+                f64 scale = m[i][r];
                 for (c = 0; c < 4; c++)
                 {
                     m[i][c] -= scale * m[r][c];
@@ -237,6 +237,21 @@ tTrans4 operator*(const tTrans4& a, const tTrans4& b)
 void operator*=(tTrans4& a, const tTrans4& b)
 {
     a = a * b;
+}
+
+
+void pack(iWritable* out, const tTrans4& trans)
+{
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+            pack(out, trans[i][j]);
+}
+
+void unpack(iReadable* in, tTrans4& trans)
+{
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+            unpack(in, trans[i][j]);
 }
 
 

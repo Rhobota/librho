@@ -9,27 +9,32 @@ namespace geo
 {
 
 
-tVector::tVector(double x, double y)
+tVector::tVector()
+    : x(0.0), y(0.0), z(0.0), w(0.0)
+{
+}
+
+tVector::tVector(f64 x, f64 y)
     : x(x), y(y), z(0.0), w(0.0)
 {
 }
 
-tVector::tVector(double x, double y, double z)
+tVector::tVector(f64 x, f64 y, f64 z)
     : x(x), y(y), z(z), w(0.0)
 {
 }
 
-tVector::tVector(double x, double y, double z, double w)
+tVector::tVector(f64 x, f64 y, f64 z, f64 w)
     : x(x), y(y), z(z), w(w)
 {
 }
 
-tVector tVector::point(double x, double y)
+tVector tVector::point(f64 x, f64 y)
 {
     return tVector(x, y, 0.0, 1.0);
 }
 
-tVector tVector::point(double x, double y, double z)
+tVector tVector::point(f64 x, f64 y, f64 z)
 {
     return tVector(x, y, z, 1.0);
 }
@@ -59,14 +64,14 @@ bool tVector::isVector() const
     return (w == 0.0);
 }
 
-double tVector::lengthSquared() const
+f64 tVector::lengthSquared() const
 {
     if (!isVector())
         throw rho::eLogicError("This operation requires a vector.");
     return x*x + y*y + z*z;
 }
 
-double tVector::length() const
+f64 tVector::length() const
 {
     /*
      * This returns the length (magnitude) of the vector.
@@ -76,47 +81,47 @@ double tVector::length() const
     return sqrt(lengthSquared());
 }
 
-double tVector::theta() const
+f64 tVector::theta() const
 {
     if (!isVector())
         throw rho::eLogicError("This operation requires a vector.");
     return atan2(y, x);    // returns [-pi, pi]
 }
 
-void tVector::setTheta(double t)
+void tVector::setTheta(f64 t)
 {
     if (!isVector())
         throw rho::eLogicError("This operation requires a vector.");
-    double len = length();
-    double p = phi();
+    f64 len = length();
+    f64 p = phi();
     x = len * cos(p)*cos(t);
     y = len * cos(p)*sin(t);
     z = len * sin(p);
 }
 
-double tVector::phi() const
+f64 tVector::phi() const
 {
     if (!isVector())
         throw rho::eLogicError("This operation requires a vector.");
     return asin(z / length());   // returns [-pi/2, pi/2]
 }
 
-void tVector::setPhi(double p)
+void tVector::setPhi(f64 p)
 {
     if (!isVector())
         throw rho::eLogicError("This operation requires a vector.");
-    double len = length();
-    double t = theta();
+    f64 len = length();
+    f64 t = theta();
     x = len * cos(p)*cos(t);
     y = len * cos(p)*sin(t);
     z = len * sin(p);
 }
 
-void tVector::setLength(double newLength)
+void tVector::setLength(f64 newLength)
 {
     if (!isVector())
         throw rho::eLogicError("This operation requires a vector.");
-    double ratio = newLength / length();
+    f64 ratio = newLength / length();
     x *= ratio;
     y *= ratio;
     z *= ratio;
@@ -127,14 +132,14 @@ tVector tVector::perp() const
     return tVector(-y, x, z);
 }
 
-tVector tVector::rotatedZ(double angle) const
+tVector tVector::rotatedZ(f64 angle) const
 {
     if (!isVector())
         throw rho::eLogicError("This operation requires a vector.");
 
     // First convert the vector to polar coordinates.
-    double t = atan2(y, x);
-    double len = sqrt(x*x + y*y);
+    f64 t = atan2(y, x);
+    f64 len = sqrt(x*x + y*y);
 
     // Rotate...
     t += angle;
@@ -147,14 +152,14 @@ tVector tVector::rotatedZ(double angle) const
     return vect;
 }
 
-tVector tVector::rotatedX(double angle) const
+tVector tVector::rotatedX(f64 angle) const
 {
     if (!isVector())
         throw rho::eLogicError("This operation requires a vector.");
 
     // First convert the vector to polar coordinates.
-    double t = atan2(z, y);
-    double len = sqrt(y*y + z*z);
+    f64 t = atan2(z, y);
+    f64 len = sqrt(y*y + z*z);
 
     // Rotate...
     t += angle;
@@ -167,14 +172,14 @@ tVector tVector::rotatedX(double angle) const
     return vect;
 }
 
-tVector tVector::rotatedY(double angle) const
+tVector tVector::rotatedY(f64 angle) const
 {
     if (!isVector())
         throw rho::eLogicError("This operation requires a vector.");
 
     // First convert the vector to polar coordinates.
-    double t = atan2(x, z);
-    double len = sqrt(x*x + z*z);
+    f64 t = atan2(x, z);
+    f64 len = sqrt(x*x + z*z);
 
     // Rotate...
     t += angle;
@@ -191,23 +196,23 @@ tVector tVector::unit() const
 {
     if (!isVector())
         throw rho::eLogicError("This operation requires a vector.");
-    double len = length();
+    f64 len = length();
     return tVector(x/len, y/len, z/len, 0.0);
 }
 
-double tVector::distanceSquared(const tVector& other) const
+f64 tVector::distanceSquared(const tVector& other) const
 {
     if (!isPoint())
         throw rho::eLogicError("This operation requires a point.");
     if (!other.isPoint())
         throw rho::eLogicError("This operation requires a point.");
-    double dx = other.x - x;
-    double dy = other.y - y;
-    double dz = other.z - z;
+    f64 dx = other.x - x;
+    f64 dy = other.y - y;
+    f64 dz = other.z - z;
     return dx*dx + dy*dy + dz*dz;
 }
 
-double tVector::distance(const tVector& other) const
+f64 tVector::distance(const tVector& other) const
 {
     if (!isPoint())
         throw rho::eLogicError("This operation requires a point.");
@@ -282,42 +287,59 @@ void operator+=(tVector& a, const tVector& b)
     a = a + b;
 }
 
-tVector operator/(const tVector& a, double c)
+tVector operator/(const tVector& a, f64 c)
 {
     if (!a.isVector())
         throw rho::eLogicError("This operation requires a vector.");
     return tVector(a.x/c, a.y/c, a.z/c, a.w);
 }
 
-void operator/=(tVector& a, double c)
+void operator/=(tVector& a, f64 c)
 {
     a = a / c;
 }
 
-tVector operator*(const tVector& a, double c)
+tVector operator*(const tVector& a, f64 c)
 {
     if (!a.isVector())
         throw rho::eLogicError("This operation requires a vector.");
     return tVector(a.x*c, a.y*c, a.z*c, a.w);
 }
 
-void operator*=(tVector& a, double c)
+void operator*=(tVector& a, f64 c)
 {
     a = a * c;
 }
 
-tVector operator*(double c, const tVector& a)
+tVector operator*(f64 c, const tVector& a)
 {
     if (!a.isVector())
         throw rho::eLogicError("This operation requires a vector.");
     return tVector(a.x*c, a.y*c, a.z*c, a.w);
 }
 
-double operator*(const tVector& a, const tVector& b)
+f64 operator*(const tVector& a, const tVector& b)
 {
     if (!(a.isVector() && b.isVector()))
         throw rho::eLogicError("This operation requires a vector.");
     return a.x*b.x + a.y*b.y + a.z*b.z;
+}
+
+
+void pack(iWritable* out, const tVector& vect)
+{
+    pack(out, vect.x);
+    pack(out, vect.y);
+    pack(out, vect.z);
+    pack(out, vect.w);
+}
+
+void unpack(iReadable* in, tVector& vect)
+{
+    unpack(in, vect.x);
+    unpack(in, vect.y);
+    unpack(in, vect.z);
+    unpack(in, vect.w);
 }
 
 

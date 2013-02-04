@@ -2,6 +2,7 @@
 #define __rho_geo_tTrans4_h__
 
 
+#include <rho/iPackable.h>
 #include <rho/geo/tVector.h>
 #include <rho/geo/units.h>
 
@@ -49,7 +50,7 @@ class tTrans4
          * by 'dx', 'dy', and 'dz'. This matrix will have no effect
          * on vectors.
          */
-        static tTrans4 translate(double dx, double dy, double dz);
+        static tTrans4 translate(f64 dx, f64 dy, f64 dz);
 
         /**
          * Builds and returns a translation matrix.
@@ -62,7 +63,7 @@ class tTrans4
          * Any point or vector, when multiplied by this matrix,
          * will be scaled by 'sx', 'sy', and 'sz'.
          */
-        static tTrans4 scale(double sx, double sy, double sz);
+        static tTrans4 scale(f64 sx, f64 sy, f64 sz);
 
         /**
          * Builds and returns a scaling matrix.
@@ -75,7 +76,7 @@ class tTrans4
          * Any point or vector, when multiplied by this matrix,
          * will be rotated about the z-axis by 'angle' radians.
          */
-        static tTrans4 rotateZ(double angle);
+        static tTrans4 rotateZ(f64 angle);
 
         /**
          * Builds and returns a rotation matrix.
@@ -83,7 +84,7 @@ class tTrans4
          * Any point or vector, when multiplied by this matrix,
          * will be rotated about the x-axis by 'angle' radians.
          */
-        static tTrans4 rotateX(double angle);
+        static tTrans4 rotateX(f64 angle);
 
         /**
          * Builds and returns a rotation matrix.
@@ -91,7 +92,7 @@ class tTrans4
          * Any point or vector, when multiplied by this matrix,
          * will be rotated about the y-axis by 'angle' radians.
          */
-        static tTrans4 rotateY(double angle);
+        static tTrans4 rotateY(f64 angle);
 
         /**
          * Builds and returns a matrix that converts from one frame
@@ -104,10 +105,10 @@ class tTrans4
 
     public:
 
-        double m[4][4];
+        f64 m[4][4];
 
-        double*       operator[](unsigned int i);
-        const double* operator[](unsigned int i) const;
+        f64*       operator[](unsigned int i);
+        const f64* operator[](unsigned int i) const;
 
     public:
 
@@ -149,6 +150,10 @@ tTrans4 operator*(const tTrans4& a, const tTrans4& b);
  * Matrix * Matrix = Matrix
  */
 void operator*=(tTrans4& a, const tTrans4& b);
+
+
+void pack(iWritable* out, const tTrans4&);
+void unpack(iReadable* in, tTrans4&);
 
 
 }    // namespace geo
