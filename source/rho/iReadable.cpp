@@ -2,6 +2,10 @@
 
 #include <rho/eRho.h>
 
+#include <errno.h>
+#include <string.h>
+#include <sstream>
+
 
 namespace rho
 {
@@ -56,6 +60,43 @@ bool tBufferedReadable::refill()
         return false;
     m_bufUsed = r;
     return true;
+}
+
+
+tFileReadable::tFileReadable(std::string filename)
+    : m_file(NULL)
+{
+    m_file = fopen(filename.c_str(), "rb");
+    if (m_file == NULL)
+    {
+        std::ostringstream out;
+        out << "Cannot open [" << filename << "] for reading (error: " << strerror(errno);
+        throw eRuntimeError(out.str());
+    }
+}
+
+tFileReadable::~tFileReadable()
+{
+    fclose(m_file);
+    m_file = NULL;
+}
+
+i32 tFileReadable::read(u8* buffer, i32 length)
+{
+    return fread(buffer, 1, length, m_file);
+}
+
+i32 tFileReadable::readAll(u8* buffer, i32 length)
+{
+    i32 amountRead = 0;
+    while (amountRead < length)
+    {
+        i32 n = read(buffer+amountRead, length-amountRead);
+        if (n <= 0)
+            return (amountRead>0) ? amountRead : n;
+        amountRead += n;
+    }
+    return amountRead;
 }
 
 

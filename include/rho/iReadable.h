@@ -4,6 +4,10 @@
 
 #include <rho/types.h>
 
+#include <cstdio>
+#include <string>
+#include <vector>
+
 
 namespace rho
 {
@@ -61,33 +65,50 @@ class tBufferedReadable : public iReadable
 };
 
 
+class tFileReadable : public iReadable
+{
+    public:
+
+        tFileReadable(std::string filename);
+
+        ~tFileReadable();
+
+        i32 read(u8* buffer, i32 length);
+        i32 readAll(u8* buffer, i32 length);
+
+    private:
+
+        FILE* m_file;
+};
+
+
 class tByteReadable : public iReadable
 {
     public:
 
-        tByteReadable(vector<u8> inputBuf)
+        tByteReadable(std::vector<u8> inputBuf)
             : m_buf(inputBuf), m_pos(0)
         {
         }
 
-        i32 read(u8* buf, i32 len)
+        i32 read(u8* buffer, i32 length)
         {
-            return readAll(buf, len);
+            return readAll(buffer, length);
         }
 
-        i32 readAll(u8* buf, i32 len)
+        i32 readAll(u8* buffer, i32 length)
         {
             if (m_pos >= m_buf.size())
                 return -1;
             i32 i;
-            for (i = 0; i < len && m_pos < m_buf.size(); i++)
-                buf[i] = m_buf[m_pos++];
+            for (i = 0; i < length && m_pos < m_buf.size(); i++)
+                buffer[i] = m_buf[m_pos++];
             return i;
         }
 
     private:
 
-        vector<u8> m_buf;
+        std::vector<u8> m_buf;
         size_t m_pos;
 };
 

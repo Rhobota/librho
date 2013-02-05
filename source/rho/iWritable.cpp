@@ -2,6 +2,10 @@
 
 #include <rho/eRho.h>
 
+#include <errno.h>
+#include <string.h>
+#include <sstream>
+
 
 namespace rho
 {
@@ -55,6 +59,48 @@ void tBufferedWritable::flush()
     iFlushable* flushable = dynamic_cast<iFlushable*>(m_stream);
     if (flushable)
         flushable->flush();
+}
+
+
+tFileWritable::tFileWritable(std::string filename)
+    : m_file(NULL)
+{
+    m_file = fopen(filename.c_str(), "wb");
+    if (m_file == NULL)
+    {
+        std::ostringstream out;
+        out << "Cannot open [" << filename << "] for writing (error: " << strerror(errno);
+        throw eRuntimeError(out.str());
+    }
+}
+
+tFileWritable::~tFileWritable()
+{
+    fclose(m_file);
+    m_file = NULL;
+}
+
+i32 tFileWritable::write(const u8* buffer, i32 length)
+{
+    return fwrite(buffer, 1, length, m_file);
+}
+
+i32 tFileWritable::writeAll(const u8* buffer, i32 length)
+{
+    i32 amountWritten = 0;
+    while (amountWritten < length)
+    {
+        i32 n = write(buffer+amountWritten, length-amountWritten);
+        if (n <= 0)
+            return (amountWritten>0) ? amountWritten : n;
+        amountWritten += n;
+    }
+    return amountWritten;
+}
+
+void tFileWritable::flush()
+{
+    fflush(m_file);
 }
 
 
