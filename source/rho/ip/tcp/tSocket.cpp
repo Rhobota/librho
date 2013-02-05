@@ -123,9 +123,9 @@ void tSocket::setNagles(bool on)
 i32 tSocket::read(u8* buffer, i32 length)
 {
     #if __linux__ || __APPLE__ || __CYGWIN__
-    return ::read(m_fd, buffer, length);
+    return (i32) ::read(m_fd, buffer, length);
     #elif __MINGW32__
-    return ::recv(m_fd, (char*)buffer, length, 0);
+    return (i32) ::recv(m_fd, (char*)buffer, length, 0);
     #else
     #error What platform are you on!?
     #endif
@@ -147,9 +147,9 @@ i32 tSocket::readAll(u8* buffer, i32 length)
 i32 tSocket::write(const u8* buffer, i32 length)
 {
     #if __linux__ || __APPLE__ || __CYGWIN__
-    return ::write(m_fd, buffer, length);
+    return (i32) ::write(m_fd, buffer, length);
     #elif __MINGW32__
-    return ::send(m_fd, (const char*)buffer, length, 0);
+    return (i32) ::send(m_fd, (const char*)buffer, length, 0);
     #else
     #error What platform are you on!?
     #endif

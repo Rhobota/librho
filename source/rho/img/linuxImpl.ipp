@@ -74,7 +74,7 @@ void verrifyDeviceCapabilities(int fd)
     struct v4l2_capability caps;
     memset(&caps, 0, sizeof(caps));
 
-    if (xioctl(fd, VIDIOC_QUERYCAP, &caps) == -1)
+    if (xioctl(fd, (int)VIDIOC_QUERYCAP, &caps) == -1)
     {
         throw eInvalidDeviceCapabilities("Querying device capabilities failed. :(");
     }
@@ -138,7 +138,7 @@ typedef std::vector<tImageCapParams> tParamsVector;
 static
 void setInput(int fd, int inputIndex)
 {
-    if (xioctl(fd, VIDIOC_S_INPUT, &inputIndex) == -1)
+    if (xioctl(fd, (int)VIDIOC_S_INPUT, &inputIndex) == -1)
     {
         throw eInvalidDeviceAttributes("Device input index is invalid.");
     }
@@ -157,7 +157,7 @@ void enumFrameintervals(int fd, unsigned int pixelformat, unsigned int width, un
     posinterval.height = height;
     posinterval.type = V4L2_FRMIVAL_TYPE_DISCRETE;
 
-    for (; xioctl(fd, VIDIOC_ENUM_FRAMEINTERVALS, &posinterval) == 0;
+    for (; xioctl(fd, (int)VIDIOC_ENUM_FRAMEINTERVALS, &posinterval) == 0;
             ++posinterval.index)
     {
         if (posinterval.type == V4L2_FRMIVAL_TYPE_DISCRETE)
@@ -180,7 +180,7 @@ void enumFramesizes(int fd, unsigned int pixelformat,
     possize.pixel_format = pixelformat;
     possize.type = V4L2_FRMSIZE_TYPE_DISCRETE;
 
-    for (; xioctl(fd, VIDIOC_ENUM_FRAMESIZES, &possize) == 0;
+    for (; xioctl(fd, (int)VIDIOC_ENUM_FRAMESIZES, &possize) == 0;
             ++possize.index)
     {
         if (possize.type == V4L2_FRMSIZE_TYPE_DISCRETE)
@@ -205,7 +205,7 @@ void enumFormats(int fd, tParamsVector& params, tImageCapParams currParams)
     posfmt.flags |= V4L2_FMT_FLAG_COMPRESSED;
     posfmt.flags |= V4L2_FMT_FLAG_EMULATED;
 
-    for (; xioctl(fd, VIDIOC_ENUM_FMT, &posfmt) == 0; ++posfmt.index)
+    for (; xioctl(fd, (int)VIDIOC_ENUM_FMT, &posfmt) == 0; ++posfmt.index)
     {
         nImageFormat format = v4l2_pixelformat_to_nImageFormat(posfmt.pixelformat);
         if (format != kUnknown && format != kUnspecified)
@@ -225,7 +225,7 @@ void enumInputs(int fd, tParamsVector& params, tImageCapParams currParams)
     memset(&posinput, 0, sizeof(posinput));
     posinput.index = 0;
 
-    for (; xioctl(fd, VIDIOC_ENUMINPUT, &posinput) == 0; ++posinput.index)
+    for (; xioctl(fd, (int)VIDIOC_ENUMINPUT, &posinput) == 0; ++posinput.index)
     {
         currParams.inputIndex       = posinput.index;
         currParams.inputDescription = (char*) posinput.name;
@@ -273,7 +273,7 @@ void setFormat(int fd, unsigned int pixelformat, unsigned int width, unsigned in
     format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     format.fmt.pix = pixinf;
 
-    if (xioctl(fd, VIDIOC_S_FMT, &format) == -1)
+    if (xioctl(fd, (int)VIDIOC_S_FMT, &format) == -1)
     {
         throw eInvalidDeviceAttributes("System call to set the video format failed.");
     }
@@ -314,7 +314,7 @@ void printCurrentFormat(int fd)                 // use for debugging!!!
     struct v4l2_format format;
     memset(&format, 0, sizeof(format));
 
-    if (xioctl(fd, VIDIOC_G_FMT, &format) == -1)
+    if (xioctl(fd, (int)VIDIOC_G_FMT, &format) == -1)
     {
         std::cout << "Reading current pixel format is not supported by this device." << std::endl;
         std::cout << std::endl;
@@ -350,7 +350,7 @@ void setStreamParameters(int fd, unsigned int timeperframeNum, unsigned int time
     streamparm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     streamparm.parm.capture = capparm;
 
-    if (xioctl(fd, VIDIOC_S_PARM, &streamparm) == -1)
+    if (xioctl(fd, (int)VIDIOC_S_PARM, &streamparm) == -1)
     {
         throw eInvalidDeviceAttributes("Cannot set stream parameters. :(");
     }
@@ -386,7 +386,7 @@ void printCurrentStreamParameters(int fd)         // use for debugging!!!
     memset(&streamparm, 0, sizeof(streamparm));
     streamparm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-    if (xioctl(fd, VIDIOC_G_PARM, &streamparm) == -1)
+    if (xioctl(fd, (int)VIDIOC_G_PARM, &streamparm) == -1)
     {
         std::cout << "Reading the current stream parameters is not supported by this device."
                   << std::endl;
@@ -453,7 +453,7 @@ void obtainBuffers(int fd, unsigned int numBuffers, u8* buffers[], int bufSizes[
     rbufs.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     rbufs.memory = V4L2_MEMORY_MMAP;
 
-    if (xioctl(fd, VIDIOC_REQBUFS, &rbufs) == -1)
+    if (xioctl(fd, (int)VIDIOC_REQBUFS, &rbufs) == -1)
     {
         throw eInvalidDeviceAttributes("Requesting buffers failed. :(");
     }
@@ -470,7 +470,7 @@ void obtainBuffers(int fd, unsigned int numBuffers, u8* buffers[], int bufSizes[
         buf.index = i;
         buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-        if (xioctl(fd, VIDIOC_QUERYBUF, &buf) == -1)
+        if (xioctl(fd, (int)VIDIOC_QUERYBUF, &buf) == -1)
         {
             throw eInvalidDeviceAttributes("Cannot request buffer info... :(");
         }
@@ -487,7 +487,7 @@ void obtainBuffers(int fd, unsigned int numBuffers, u8* buffers[], int bufSizes[
 
     for (unsigned int i = 0; i < rbufs.count; i++)
     {
-        if (xioctl(fd, VIDIOC_QBUF, &bufs[i]) == -1)
+        if (xioctl(fd, (int)VIDIOC_QBUF, &bufs[i]) == -1)
         {
             throw eInvalidDeviceAttributes("Cannot enqueue a buffer update. :(");
         }
@@ -496,7 +496,7 @@ void obtainBuffers(int fd, unsigned int numBuffers, u8* buffers[], int bufSizes[
 
 
 static
-void relinquishBuffers(int fd, int numBuffers, u8* buffers[], int bufSizes[])
+void relinquishBuffers(int numBuffers, u8* buffers[], int bufSizes[])
 {
     for (int i = 0; i < numBuffers; i++)
     {
@@ -511,7 +511,7 @@ void relinquishBuffers(int fd, int numBuffers, u8* buffers[], int bufSizes[])
 
 
 static
-int readFrame(int fd, int numBuffers, u8* buffers[], int bufSizes[], u8* outData, int outSize)
+int readFrame(int fd, int numBuffers, u8* buffers[], u8* outData, int outSize)
 {
     bool ready = false;
     while (!ready)
@@ -527,7 +527,7 @@ int readFrame(int fd, int numBuffers, u8* buffers[], int bufSizes[], u8* outData
     buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     buf.memory = V4L2_MEMORY_MMAP;
 
-    if (xioctl(fd, VIDIOC_DQBUF, &buf) == -1)
+    if (xioctl(fd, (int)VIDIOC_DQBUF, &buf) == -1)
         throw eInvalidDeviceAttributes("Buffer dequeue failed. :(");
 
     int bufIndex  = buf.index;
@@ -545,7 +545,7 @@ int readFrame(int fd, int numBuffers, u8* buffers[], int bufSizes[], u8* outData
     for (int i = 0; i < bufLength; i++)
         outData[i] = bufPtr[i];
 
-    if (xioctl(fd, VIDIOC_QBUF, &buf) == -1)
+    if (xioctl(fd, (int)VIDIOC_QBUF, &buf) == -1)
         throw eInvalidDeviceAttributes("Cannot re-queue buffer. :(");
 
     return bufLength;
@@ -674,7 +674,7 @@ void tImageCap::m_finalize()
     }
     catch (...) { }
 
-    relinquishBuffers(m_fd, kNumBuffers, m_buffers, m_bufSizes);
+    relinquishBuffers(kNumBuffers, m_buffers, m_bufSizes);
     closeDevice(m_fd);
     m_fd = -1;
 
@@ -714,7 +714,7 @@ void tImageCap::getFrame(tImage* image)
     if (image->bufSize() < getRequiredBufSize())
         image->setBufSize(getRequiredBufSize());
 
-    int bufUsed = readFrame(m_fd, kNumBuffers, m_buffers, m_bufSizes,
+    int bufUsed = readFrame(m_fd, kNumBuffers, m_buffers,
                             image->buf(), image->bufSize());
     image->setBufUsed( bufUsed );
 

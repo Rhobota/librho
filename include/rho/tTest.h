@@ -75,8 +75,11 @@ class tTest : public bNonCopyable
 
         std::string m_name;
 
-        static const double kEpsilon = 1e-10;
+        static const double kEpsilon;
 };
+
+
+const double tTest::kEpsilon = 1e-10;
 
 
 tTest::tTest(std::string name, testfunc f)

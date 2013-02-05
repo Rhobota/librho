@@ -83,7 +83,7 @@ tFileReadable::~tFileReadable()
 
 i32 tFileReadable::read(u8* buffer, i32 length)
 {
-    return fread(buffer, 1, length, m_file);
+    return (i32) fread(buffer, 1, length, m_file);
 }
 
 i32 tFileReadable::readAll(u8* buffer, i32 length)

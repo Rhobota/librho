@@ -82,7 +82,7 @@ tFileWritable::~tFileWritable()
 
 i32 tFileWritable::write(const u8* buffer, i32 length)
 {
-    return fwrite(buffer, 1, length, m_file);
+    return (i32) fwrite(buffer, 1, length, m_file);
 }
 
 i32 tFileWritable::writeAll(const u8* buffer, i32 length)

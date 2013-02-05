@@ -42,10 +42,10 @@ std::vector<u8> tAddr::getAddress() const
         struct sockaddr_in* ip4sockAddr = (struct sockaddr_in*) m_sockaddr;
         struct in_addr* ip4addr = &(ip4sockAddr->sin_addr);
         u32 ipVal = ip4addr->s_addr;
-        rep.push_back((ipVal >> 0) & 0xFF);
-        rep.push_back((ipVal >> 8) & 0xFF);
-        rep.push_back((ipVal >> 16) & 0xFF);
-        rep.push_back((ipVal >> 24) & 0xFF);
+        rep.push_back((u8)((ipVal >> 0) & 0xFF));
+        rep.push_back((u8)((ipVal >> 8) & 0xFF));
+        rep.push_back((u8)((ipVal >> 16) & 0xFF));
+        rep.push_back((u8)((ipVal >> 24) & 0xFF));
     }
     else if (m_sockaddr->sa_family == AF_INET6)
     {
@@ -202,6 +202,7 @@ static int setSigPipeHandler()
     signal(SIGPIPE, SIG_IGN);
     return 1;
 }
+extern const int kSigPipeIgnoreKickoff;
 const int kSigPipeIgnoreKickoff = setSigPipeHandler();
 
 #elif __MINGW32__
@@ -219,6 +220,7 @@ static int initForWindows()
     }
     return 1;
 }
+extern const int kInitForWindowsKickoff;
 const int kInitForWindowsKickoff = initForWindows();
 
 #else

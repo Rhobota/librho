@@ -22,7 +22,7 @@ using std::vector;
 const int kTestIterations = 20;
 const int kMaxSendRecvIterations = 50;
 
-int gServerBindPort = 15001;
+u16 gServerBindPort = 15001;
 
 vector<u8> gServerWriteData;
 vector<u8> gClientWriteData;
@@ -35,7 +35,7 @@ void randomizeWriteData(vector<u8>& data)
     int writeDataSize = rand() % 100000 + 1;
     data = vector<u8>(writeDataSize);
     for (int i = 0; i < writeDataSize; i++)
-        data[i] = rand() % 256;
+        data[i] = (u8) (rand() % 256);
 }
 
 
