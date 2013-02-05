@@ -532,7 +532,7 @@ int main()
     tTest("Test 2", test2);
     tTest("Test 3", test3);
 
-    srand(time(0));
+    srand((u32)time(0));
     tTest("Randomized test 1", randomTest1, kMaxTests);
     tTest("Randomized test 2", randomTest2, kMaxTests);
 

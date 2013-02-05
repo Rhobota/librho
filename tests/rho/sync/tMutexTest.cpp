@@ -82,7 +82,7 @@ int main()
 {
     tCrashReporter::init();
 
-    srand(time(0));
+    srand((u32)time(0));
 
     tTest("tMutex test", test, kTestIterations);
 

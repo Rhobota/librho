@@ -8,7 +8,7 @@ STATIC_LIB_NAME := librho.a
 
 CC := $(TARGET)g++
 AR := $(TARGET)ar
-CC_FLAGS += -g -O2 -Wall -Wextra \
+CC_FLAGS += -g -O2 -Wall -Wextra -Wdouble-promotion \
 			-Wno-unused-parameter -Wno-long-long -Wswitch-default \
 			-Wcast-qual -Wcast-align -Wconversion -Werror -pedantic \
 			-I $(INCLUDE_DIR)  # consider: -Wold-style-cast -Wshadow -Wsign-conversion

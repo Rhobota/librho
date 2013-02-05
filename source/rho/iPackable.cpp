@@ -232,9 +232,9 @@ void pack(iWritable*  out, f64  x)
     else if (! std::isfinite(x))
     {
         // x must be infinity or -infinity.
-        if (x == INFINITY)
+        if (x == (f64)INFINITY)
             exp = 0x7FFFFFFE;
-        else if (x == -INFINITY)
+        else if (x == (f64)(-INFINITY))
             exp = 0x7FFFFFFD;
         else
             throw eImpossiblePath();
