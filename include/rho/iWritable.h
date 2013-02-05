@@ -63,6 +63,38 @@ class tBufferedWritable : public iWritable, public iFlushable
 };
 
 
+class tByteWritable : public iWritable
+{
+    public:
+
+        tByteWritable()
+            : m_buf()
+        {
+        }
+
+        i32 write(const u8* buf, i32 len)
+        {
+            return writeAll(buf, len);
+        }
+
+        i32 writeAll(const u8* buf, i32 len)
+        {
+            for (i32 i = 0; i < len; i++)
+                m_buf.push_back(buf[i]);
+            return len;
+        }
+
+        vector<u8> getBuf() const
+        {
+            return m_buf;
+        }
+
+    private:
+
+        vector<u8> m_buf;
+};
+
+
 }    // namespace rho
 
 

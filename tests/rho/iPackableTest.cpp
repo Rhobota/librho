@@ -16,69 +16,6 @@ using std::string;
 using std::vector;
 
 
-class tByteWritable : public iWritable
-{
-    public:
-
-        tByteWritable()
-            : m_buf()
-        {
-        }
-
-        i32 write(const u8* buf, i32 len)
-        {
-            return writeAll(buf, len);
-        }
-
-        i32 writeAll(const u8* buf, i32 len)
-        {
-            for (i32 i = 0; i < len; i++)
-                m_buf.push_back(buf[i]);
-            return len;
-        }
-
-        vector<u8> getBuf() const
-        {
-            return m_buf;
-        }
-
-    private:
-
-        vector<u8> m_buf;
-};
-
-
-class tByteReadable : public iReadable
-{
-    public:
-
-        tByteReadable(vector<u8> inputBuf)
-            : m_buf(inputBuf), m_pos(0)
-        {
-        }
-
-        i32 read(u8* buf, i32 len)
-        {
-            return readAll(buf, len);
-        }
-
-        i32 readAll(u8* buf, i32 len)
-        {
-            if (m_pos >= m_buf.size())
-                return -1;
-            i32 i;
-            for (i = 0; i < len && m_pos < m_buf.size(); i++)
-                buf[i] = m_buf[m_pos++];
-            return i;
-        }
-
-    private:
-
-        vector<u8> m_buf;
-        size_t m_pos;
-};
-
-
 class tMyPackable : public iPackable
 {
     public:
