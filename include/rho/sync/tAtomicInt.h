@@ -113,10 +113,10 @@ tAtomicInt<T>::tAtomicInt(T initialVal)
 }
 
 template <class T>
-void tAtomicInt<T>::operator= (T val)
+void tAtomicInt<T>::operator= (T newval)
 {
     tAutoSync as(m_mutex);
-    m_val = val;
+    m_val = newval;
 }
 
 template <class T>

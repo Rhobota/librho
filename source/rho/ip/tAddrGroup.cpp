@@ -196,7 +196,7 @@ tAddrGroup::~tAddrGroup()
 
 int tAddrGroup::size() const
 {
-    return m_valid_addrinfos.size();
+    return (int)m_valid_addrinfos.size();
 }
 
 tAddr tAddrGroup::operator[](int i) const

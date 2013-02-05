@@ -131,7 +131,7 @@ void tThread::usleep(u64 usecs)
     }
     if (usecs > 0)
     {
-        ::usleep(usecs);
+        ::usleep((u32)usecs);
     }
 }
 

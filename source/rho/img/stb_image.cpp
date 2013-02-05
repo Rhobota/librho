@@ -83,8 +83,8 @@ static void start_mem(stbi *s, uint8 const *buffer, int len)
 {
    s->io.read = NULL;
    s->read_from_callbacks = 0;
-   s->img_buffer = s->img_buffer_original = (uint8 *) buffer;
-   s->img_buffer_end = (uint8 *) buffer+len;
+   s->img_buffer = s->img_buffer_original = const_cast<uint8*>(buffer);
+   s->img_buffer_end = const_cast<uint8*>(buffer+len);
 }
 
 // initialize a callback-based context
@@ -251,7 +251,7 @@ unsigned char *stbi_load_from_memory(stbi_uc const *buffer, int len, int *x, int
 unsigned char *stbi_load_from_callbacks(stbi_io_callbacks const *clbk, void *user, int *x, int *y, int *comp, int req_comp)
 {
    stbi s;
-   start_callbacks(&s, (stbi_io_callbacks *) clbk, user);
+   start_callbacks(&s, const_cast<stbi_io_callbacks*>(clbk), user);
    return stbi_load_main(&s,x,y,comp,req_comp);
 }
 
@@ -280,7 +280,7 @@ float *stbi_loadf_from_memory(stbi_uc const *buffer, int len, int *x, int *y, in
 float *stbi_loadf_from_callbacks(stbi_io_callbacks const *clbk, void *user, int *x, int *y, int *comp, int req_comp)
 {
    stbi s;
-   start_callbacks(&s, (stbi_io_callbacks *) clbk, user);
+   start_callbacks(&s, const_cast<stbi_io_callbacks*>(clbk), user);
    return stbi_loadf_main(&s,x,y,comp,req_comp);
 }
 
@@ -350,7 +350,7 @@ extern int      stbi_is_hdr_from_callbacks(stbi_io_callbacks const *clbk, void *
 {
    #ifndef STBI_NO_HDR
    stbi s;
-   start_callbacks(&s, (stbi_io_callbacks *) clbk, user);
+   start_callbacks(&s, const_cast<stbi_io_callbacks*>(clbk), user);
    return stbi_hdr_test(&s);
    #else
    return 0;
@@ -426,7 +426,7 @@ stbi_inline static uint8 get8u(stbi *s)
 static void skip(stbi *s, int n)
 {
    if (s->io.read) {
-      int blen = s->img_buffer_end - s->img_buffer;
+      int blen = (int)(s->img_buffer_end - s->img_buffer);
       if (blen < n) {
          s->img_buffer = s->img_buffer_end;
          (s->io.skip)(s->io_user_data, n - blen);
@@ -439,7 +439,7 @@ static void skip(stbi *s, int n)
 static int getn(stbi *s, stbi_uc *buffer, int n)
 {
    if (s->io.read) {
-      int blen = s->img_buffer_end - s->img_buffer;
+      int blen = (int)(s->img_buffer_end - s->img_buffer);
       if (blen < n) {
          int res, count;
 
@@ -1152,6 +1152,9 @@ static int process_marker(jpeg *z, int m)
             L -= m;
          }
          return L==0;
+
+      default:
+         break;
    }
    // check for comment block or APP blocks
    if ((m >= 0xE0 && m <= 0xEF) || m == 0xFE) {
@@ -2137,11 +2140,12 @@ static int create_png_image_raw(png *a, uint8 *raw, uint32 raw_len, int out_n, u
          switch (filter) {
             case F_none       : cur[k] = raw[k]; break;
             case F_sub        : cur[k] = raw[k]; break;
-            case F_up         : cur[k] = raw[k] + prior[k]; break;
-            case F_avg        : cur[k] = raw[k] + (prior[k]>>1); break;
+            case F_up         : cur[k] = (uint8) (raw[k] + prior[k]); break;
+            case F_avg        : cur[k] = (uint8) (raw[k] + (prior[k]>>1)); break;
             case F_paeth      : cur[k] = (uint8) (raw[k] + paeth(0,prior[k],0)); break;
             case F_avg_first  : cur[k] = raw[k]; break;
             case F_paeth_first: cur[k] = raw[k]; break;
+            default           : break;
          }
       }
       if (img_n != out_n) cur[img_n] = 255;
@@ -2155,13 +2159,14 @@ static int create_png_image_raw(png *a, uint8 *raw, uint32 raw_len, int out_n, u
                 for (i=x-1; i >= 1; --i, raw+=img_n,cur+=img_n,prior+=img_n) \
                    for (k=0; k < img_n; ++k)
          switch (filter) {
-            CASE(F_none)  cur[k] = raw[k]; break;
-            CASE(F_sub)   cur[k] = raw[k] + cur[k-img_n]; break;
-            CASE(F_up)    cur[k] = raw[k] + prior[k]; break;
-            CASE(F_avg)   cur[k] = raw[k] + ((prior[k] + cur[k-img_n])>>1); break;
+            CASE(F_none)   cur[k] = raw[k]; break;
+            CASE(F_sub)    cur[k] = (uint8) (raw[k] + cur[k-img_n]); break;
+            CASE(F_up)     cur[k] = (uint8) (raw[k] + prior[k]); break;
+            CASE(F_avg)    cur[k] = (uint8) (raw[k] + ((prior[k] + cur[k-img_n])>>1)); break;
             CASE(F_paeth)  cur[k] = (uint8) (raw[k] + paeth(cur[k-img_n],prior[k],prior[k-img_n])); break;
-            CASE(F_avg_first)    cur[k] = raw[k] + (cur[k-img_n] >> 1); break;
+            CASE(F_avg_first)    cur[k] = (uint8) (raw[k] + (cur[k-img_n] >> 1)); break;
             CASE(F_paeth_first)  cur[k] = (uint8) (raw[k] + paeth(cur[k-img_n],0,0)); break;
+            default: break;
          }
          #undef CASE
       } else {
@@ -2171,13 +2176,14 @@ static int create_png_image_raw(png *a, uint8 *raw, uint32 raw_len, int out_n, u
                 for (i=x-1; i >= 1; --i, cur[img_n]=255,raw+=img_n,cur+=out_n,prior+=out_n) \
                    for (k=0; k < img_n; ++k)
          switch (filter) {
-            CASE(F_none)  cur[k] = raw[k]; break;
-            CASE(F_sub)   cur[k] = raw[k] + cur[k-out_n]; break;
-            CASE(F_up)    cur[k] = raw[k] + prior[k]; break;
-            CASE(F_avg)   cur[k] = raw[k] + ((prior[k] + cur[k-out_n])>>1); break;
+            CASE(F_none)   cur[k] = raw[k]; break;
+            CASE(F_sub)    cur[k] = (uint8) (raw[k] + cur[k-out_n]); break;
+            CASE(F_up)     cur[k] = (uint8) (raw[k] + prior[k]); break;
+            CASE(F_avg)    cur[k] = (uint8) (raw[k] + ((prior[k] + cur[k-out_n])>>1)); break;
             CASE(F_paeth)  cur[k] = (uint8) (raw[k] + paeth(cur[k-out_n],prior[k],prior[k-out_n])); break;
-            CASE(F_avg_first)    cur[k] = raw[k] + (cur[k-out_n] >> 1); break;
+            CASE(F_avg_first)    cur[k] = (uint8) (raw[k] + (cur[k-out_n] >> 1)); break;
             CASE(F_paeth_first)  cur[k] = (uint8) (raw[k] + paeth(cur[k-out_n],0,0)); break;
+            default: break;
          }
          #undef CASE
       }
@@ -2321,9 +2327,9 @@ static void stbi_de_iphone(png *z)
             uint8 a = p[3];
             uint8 t = p[0];
             if (a) {
-               p[0] = p[2] * 255 / a;
-               p[1] = p[1] * 255 / a;
-               p[2] =  t   * 255 / a;
+               p[0] = (uint8) (p[2] * 255 / a);
+               p[1] = (uint8) (p[1] * 255 / a);
+               p[2] = (uint8) (t    * 255 / a);
             } else {
                p[0] = p[2];
                p[2] = t;
@@ -3052,6 +3058,8 @@ static stbi_uc *tga_load(stbi *s, int *x, int *y, int *comp, int req_comp)
             trans_data[2] = raw_data[0];
             trans_data[3] = raw_data[3];
             break;
+         default:
+            break;
          }
          //   clear the reading flag for the next pixel
          read_next_pixel = 0;
@@ -3080,6 +3088,8 @@ static stbi_uc *tga_load(stbi *s, int *x, int *y, int *comp, int req_comp)
          tga_data[i*req_comp+1] = trans_data[1];
          tga_data[i*req_comp+2] = trans_data[2];
          tga_data[i*req_comp+3] = trans_data[3];
+         break;
+      default:
          break;
       }
       //   in case we're in RLE mode, keep counting down
@@ -3840,8 +3850,9 @@ static uint8 *stbi_gif_load_next(stbi *s, stbi_gif *g, int *comp, int req_comp)
 
 static stbi_uc *stbi_gif_load(stbi *s, int *x, int *y, int *comp, int req_comp)
 {
-   uint8 *u = 0;
-   stbi_gif g={0};
+   uint8* u = 0;
+   stbi_gif g;
+   memset(&g, 0, sizeof(stbi_gif));
 
    u = stbi_gif_load_next(s, &g, comp, req_comp);
    if (u == (void *) 1) u = 0;  // end of animated gif marker
@@ -3910,7 +3921,7 @@ static void hdr_convert(float *output, stbi_uc *input, int req_comp)
       // Exponent
       f1 = (float) ldexp(1.0f, input[3] - (int)(128 + 8));
       if (req_comp <= 2)
-         output[0] = (input[0] + input[1] + input[2]) * f1 / 3;
+         output[0] = ((float)(input[0] + input[1] + input[2]) * f1 / 3);
       else {
          output[0] = input[0] * f1;
          output[1] = input[1] * f1;
@@ -3925,6 +3936,8 @@ static void hdr_convert(float *output, stbi_uc *input, int req_comp)
                  break;
          case 2: output[1] = 1; /* fallthrough */
          case 1: output[0] = 0;
+                 break;
+         default:
                  break;
       }
    }
@@ -3961,11 +3974,11 @@ static float *hdr_load(stbi *s, int *x, int *y, int *comp, int req_comp)
    token = hdr_gettoken(s,buffer);
    if (strncmp(token, "-Y ", 3))  return epf("unsupported data layout", "Unsupported HDR format");
    token += 3;
-   height = strtol(token, &token, 10);
+   height = (int)strtol(token, &token, 10);
    while (*token == ' ') ++token;
    if (strncmp(token, "+X ", 3))  return epf("unsupported data layout", "Unsupported HDR format");
    token += 3;
-   width = strtol(token, NULL, 10);
+   width = (int)strtol(token, NULL, 10);
 
    *x = width;
    *y = height;
@@ -4022,7 +4035,7 @@ static float *hdr_load(stbi *s, int *x, int *y, int *comp, int req_comp)
                if (count > 128) {
                   // Run
                   value = get8u(s);
-                  count -= 128;
+                  count = (unsigned char)(count - 128);
                   for (z = 0; z < count; ++z)
                      scanline[i++ * 4 + k] = value;
                } else {
@@ -4073,14 +4086,14 @@ static int stbi_hdr_info(stbi *s, int *x, int *y, int *comp)
        return 0;
    }
    token += 3;
-   *y = strtol(token, &token, 10);
+   *y = (int) strtol(token, &token, 10);
    while (*token == ' ') ++token;
    if (strncmp(token, "+X ", 3)) {
        stbi_rewind( s );
        return 0;
    }
    token += 3;
-   *x = strtol(token, NULL, 10);
+   *x = (int) strtol(token, NULL, 10);
    *comp = 3;
    return 1;
 }
@@ -4247,7 +4260,7 @@ int stbi_info_from_memory(stbi_uc const *buffer, int len, int *x, int *y, int *c
 int stbi_info_from_callbacks(stbi_io_callbacks const *c, void *user, int *x, int *y, int *comp)
 {
    stbi s;
-   start_callbacks(&s, (stbi_io_callbacks *) c, user);
+   start_callbacks(&s, const_cast<stbi_io_callbacks*>(c), user);
    return stbi_info_main(&s,x,y,comp);
 }
 

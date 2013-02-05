@@ -165,7 +165,7 @@ void pack(iWritable*  out, f32  x)
         {
             fracF -= 0.5f;             // fracF is in [0.0, 0.5)
             fracF *= 2.0f;             // fracF is in [0.0, 1.0)
-            fracF *= 0x7FFFFFFF;       // fracF is in [0, 0x7FFFFFFF)
+            fracF *= (f32)0x7FFFFFFF;       // fracF is in [0, 0x7FFFFFFF)
             fracI = (u32)fracF;
         }
         else
@@ -210,7 +210,7 @@ void unpack(iReadable* in, f32& x)
         if (isneg) fracI ^= 0x80000000;
 
         f32 fracF = (f32)fracI;        // fracF is in [0, 0x7FFFFFFF)
-        fracF /= 0x7FFFFFFF;           // fracF is in [0.0, 1.0)
+        fracF /= (f32)0x7FFFFFFF;           // fracF is in [0.0, 1.0)
         fracF /= 2.0f;                 // fracF is in [0.0, 0.5)
         fracF += 0.5f;                 // fracF is in [0.5, 1.0)
         if (isneg) fracF = -fracF;
@@ -258,7 +258,7 @@ void pack(iWritable*  out, f64  x)
         {
             fracF -= 0.5;                // fracF is in [0.0, 0.5)
             fracF *= 2.0;                // fracF is in [0.0, 1.0)
-            fracF *= 0x7FFFFFFFFFFFFFFF; // fracF is in [0, 0x7FFFFFFF)
+            fracF *= (f64)0x7FFFFFFFFFFFFFFF; // fracF is in [0, 0x7FFFFFFF)
             fracI = (u64)fracF;
         }
         else
@@ -303,7 +303,7 @@ void unpack(iReadable* in, f64& x)
         if (isneg) fracI ^= 0x8000000000000000;
 
         f64 fracF = (f64)fracI;        // fracF is in [0, 0x7FFFFFFF)
-        fracF /= 0x7FFFFFFFFFFFFFFF;   // fracF is in [0.0, 1.0)
+        fracF /= (f64)0x7FFFFFFFFFFFFFFF;   // fracF is in [0.0, 1.0)
         fracF /= 2.0;                 // fracF is in [0.0, 0.5)
         fracF += 0.5;                 // fracF is in [0.5, 1.0)
         if (isneg) fracF = -fracF;

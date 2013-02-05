@@ -94,13 +94,13 @@ u16 readShort(istream& in)
 {
     char a, b;
     in.get(a); in.get(b);
-    u16 i = 0;
+    u32 i = 0;
     i |= (0xFF & b);
     i <<= 8;
     i |= (0xFF & a);
     if (!in)
         throw eWavefileReadError();
-    return i;
+    return (u16)i;
 }
 
 static
@@ -126,7 +126,7 @@ void makeWAV(ostream& out, u32 bitsPerSample, u32 sampleRate,
     u32 numChannels = 1;
     u32 byteRate = sampleRate * numChannels * bitsPerSample / 8;
     u32 blockAlign = numChannels * bitsPerSample / 8;
-    u32 subChunk2Size = sound.size() * numChannels * bitsPerSample / 8;
+    u32 subChunk2Size = (u32)(sound.size() * numChannels * bitsPerSample / 8);
     u32 chunkSize = 4 + (8 + subChunk1Size) + (8 + subChunk2Size);
 
     // See https://ccrma.stanford.edu/courses/422/projects/WaveFormat/
@@ -136,12 +136,12 @@ void makeWAV(ostream& out, u32 bitsPerSample, u32 sampleRate,
     writeStr(out, "WAVE");
     writeStr(out, "fmt ");
     writeInt(out, subChunk1Size);
-    writeShort(out, audioFormat);
-    writeShort(out, numChannels);
+    writeShort(out, (u16)audioFormat);
+    writeShort(out, (u16)numChannels);
     writeInt(out, sampleRate);
     writeInt(out, byteRate);
-    writeShort(out, blockAlign);
-    writeShort(out, bitsPerSample);
+    writeShort(out, (u16)blockAlign);
+    writeShort(out, (u16)bitsPerSample);
     writeStr(out, "data");
     writeInt(out, subChunk2Size);
     if (bitsPerSample == 8)
@@ -170,7 +170,7 @@ void makeWAV(ostream& out, u32 bitsPerSample, u32 sampleRate,
     u32 numChannels = 2;
     u32 byteRate = sampleRate * numChannels * bitsPerSample / 8;
     u32 blockAlign = numChannels * bitsPerSample / 8;
-    u32 subChunk2Size = left.size() * numChannels * bitsPerSample / 8;
+    u32 subChunk2Size = (u32) (left.size() * numChannels * bitsPerSample / 8);
     u32 chunkSize = 4 + (8 + subChunk1Size) + (8 + subChunk2Size);
 
     // See https://ccrma.stanford.edu/courses/422/projects/WaveFormat/
@@ -180,12 +180,12 @@ void makeWAV(ostream& out, u32 bitsPerSample, u32 sampleRate,
     writeStr(out, "WAVE");
     writeStr(out, "fmt ");
     writeInt(out, subChunk1Size);
-    writeShort(out, audioFormat);
-    writeShort(out, numChannels);
+    writeShort(out, (u16)audioFormat);
+    writeShort(out, (u16)numChannels);
     writeInt(out, sampleRate);
     writeInt(out, byteRate);
-    writeShort(out, blockAlign);
-    writeShort(out, bitsPerSample);
+    writeShort(out, (u16)blockAlign);
+    writeShort(out, (u16)bitsPerSample);
     writeStr(out, "data");
     writeInt(out, subChunk2Size);
     if (bitsPerSample == 8)
@@ -307,7 +307,7 @@ tWaveMaker::tWaveMaker(vector<double> samples, u32 sampleRate)
 {
     m_sampleRate = sampleRate;
     m_left = samples;
-    m_numSamples = samples.size();
+    m_numSamples = (u32)samples.size();
     m_stereo = false;
 }
 
@@ -322,7 +322,7 @@ tWaveMaker::tWaveMaker(vector<double> left, vector<double> right,
     m_sampleRate = sampleRate;
     m_left = left;
     m_right = right;
-    m_numSamples = left.size();
+    m_numSamples = (u32)left.size();
     m_stereo = true;
 }
 

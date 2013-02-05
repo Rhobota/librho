@@ -17,7 +17,7 @@ static
 bool gEnabled[kNumLights] = { false };
 
 
-int intToEnum(int i)
+GLenum intToEnum(int i)
 {
     switch (i)
     {

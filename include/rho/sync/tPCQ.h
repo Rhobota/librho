@@ -216,14 +216,14 @@ T tPCQ<T>::pop()
 template <class T>
 u32 tPCQ<T>::size() const
 {
-    tAutoLock al((tPCQ<T>*)this);
+    tAutoLock al(const_cast<tPCQ<T>*>(this));
     return m_size;
 }
 
 template <class T>
 u32 tPCQ<T>::capacity() const
 {
-    tAutoLock al((tPCQ<T>*)this);
+    tAutoLock al(const_cast<tPCQ<T>*>(this));
     return m_capacity;
 }
 

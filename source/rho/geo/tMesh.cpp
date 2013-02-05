@@ -254,9 +254,9 @@ vector<tMesh::tMeshMaterial> readMtlFile(string filename)
             f64 b = toDouble(parts[3], &errorFlag);
             if (errorFlag)
                 throwErrorOnLine("Double-format error!", filename, lineNum);
-            currMaterial.ka[0] = r;
-            currMaterial.ka[1] = g;
-            currMaterial.ka[2] = b;
+            currMaterial.ka[0] = (f32)r;
+            currMaterial.ka[1] = (f32)g;
+            currMaterial.ka[2] = (f32)b;
         }
 
         // Diffuse color...
@@ -272,9 +272,9 @@ vector<tMesh::tMeshMaterial> readMtlFile(string filename)
             f64 b = toDouble(parts[3], &errorFlag);
             if (errorFlag)
                 throwErrorOnLine("Double-format error!", filename, lineNum);
-            currMaterial.kd[0] = r;
-            currMaterial.kd[1] = g;
-            currMaterial.kd[2] = b;
+            currMaterial.kd[0] = (f32)r;
+            currMaterial.kd[1] = (f32)g;
+            currMaterial.kd[2] = (f32)b;
         }
 
         // Emission color...
@@ -290,9 +290,9 @@ vector<tMesh::tMeshMaterial> readMtlFile(string filename)
             f64 b = toDouble(parts[3], &errorFlag);
             if (errorFlag)
                 throwErrorOnLine("Double-format error!", filename, lineNum);
-            currMaterial.ke[0] = r;
-            currMaterial.ke[1] = g;
-            currMaterial.ke[2] = b;
+            currMaterial.ke[0] = (f32)r;
+            currMaterial.ke[1] = (f32)g;
+            currMaterial.ke[2] = (f32)b;
         }
 
         // Specular color...
@@ -308,9 +308,9 @@ vector<tMesh::tMeshMaterial> readMtlFile(string filename)
             f64 b = toDouble(parts[3], &errorFlag);
             if (errorFlag)
                 throwErrorOnLine("Double-format error!", filename, lineNum);
-            currMaterial.ks[0] = r;
-            currMaterial.ks[1] = g;
-            currMaterial.ks[2] = b;
+            currMaterial.ks[0] = (f32)r;
+            currMaterial.ks[1] = (f32)g;
+            currMaterial.ks[2] = (f32)b;
         }
 
         // Specular "shininess"...
@@ -324,7 +324,7 @@ vector<tMesh::tMeshMaterial> readMtlFile(string filename)
             f64 s = toDouble(parts[1], &errorFlag);
             if (errorFlag)
                 throwErrorOnLine("Double-format error!", filename, lineNum);
-            currMaterial.ns = s;
+            currMaterial.ns = (f32)s;
         }
 
         // Dissolved (transparency) ...
@@ -338,7 +338,7 @@ vector<tMesh::tMeshMaterial> readMtlFile(string filename)
             f64 d = toDouble(parts[1], &errorFlag);
             if (errorFlag)
                 throwErrorOnLine("Double-format error!", filename, lineNum);
-            currMaterial.d = d;
+            currMaterial.d = (f32)d;
         }
 
         // Ambient texture map...
@@ -479,7 +479,7 @@ tMesh::tMesh(string filename)
 
             for (size_t i = 1; i < parts.size(); i++)
             {
-                i32 vertexIndex, texcoordIndex, normalIndex;
+                i32 vertexIndex = -1, texcoordIndex = -1, normalIndex = -1;
                 readFacePart(parts[i], &errorFlag,
                         &vertexIndex, &texcoordIndex, &normalIndex);
 
@@ -525,7 +525,7 @@ tMesh::tMesh(string filename)
                     break;
             if (i == m_materials.size())
                 throwErrorOnLine("Unknown material name!", filename, lineNum);
-            currMaterialIndex = i;
+            currMaterialIndex = (i32)i;
         }
 
         // Named object...
@@ -576,7 +576,7 @@ tMesh::tMesh(string filename)
                                  m_vertices[vertexIndices[j+1]] :
                                  m_vertices[vertexIndices.front()];
             tVector normal = (c-b).cross(a-b).unit();
-            normalIndices[j] = m_normals.size();
+            normalIndices[j] = (i32)m_normals.size();
             m_normals.push_back(normal);
         }
     }

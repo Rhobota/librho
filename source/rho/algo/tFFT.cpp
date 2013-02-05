@@ -24,7 +24,7 @@ tFFT::tFFT(vector<double> input, int sampleRate)
     }
 
     // Map the input vector to what the FFT algorithm expects (an array).
-    int fftFrameSize = input.size();
+    int fftFrameSize = (int)input.size();
     double* fftBuffer = new double[2*fftFrameSize];
     for (int i = 0; i < fftFrameSize; i++)
     {
@@ -46,7 +46,7 @@ tFFT::tFFT(vector<double> input, int sampleRate)
     delete [] fftBuffer;
 
     // Calculate useful things.
-    int len = m_cosPart.size() / 2;
+    int len = (int) (m_cosPart.size() / 2);
     for (int i = 0; i < len; i++)
     {
         m_frequencies.push_back((double)i * sampleRate / fftFrameSize);
@@ -116,7 +116,7 @@ vector<double> tFFT::inverse(vector<double> realPart, vector<double> imgPart)
 
     // Map the input vectors to what the FFT algorithm wants
     // (which is an array).
-    int fftFrameSize = realPart.size();
+    int fftFrameSize = (int)realPart.size();
     double* fftBuffer = new double[2*fftFrameSize];
     for (int i = 0; i < fftFrameSize; i++)
     {
@@ -150,7 +150,7 @@ int tFFT::floorlog2(int n)
 }
 
 
-bool tFFT::isPowerOf2(int n)
+bool tFFT::isPowerOf2(u64 n)
 {
     return (n > 0) && ((n & (n-1)) == 0);
 }
@@ -163,7 +163,7 @@ tDFT::tDFT(vector<double> input, int sampleRate)
     double arg;
     int sign = -1;
 
-    int length = input.size();
+    int length = (int)input.size();
 
     for (bin = 0; bin < length; bin++)
     {
@@ -233,7 +233,7 @@ vector<double> tDFT::inverse(vector<double> realPart, vector<double> imgPart)
                                "same size.");
     }
 
-    int length = realPart.size();
+    int length = (int)realPart.size();
 
     int bin, k;
     double arg;
@@ -266,7 +266,7 @@ vector<double> tDFT::inverse(vector<double> realPart, vector<double> imgPart)
 tDST::tDST(vector<double> input, int sampleRate)
     : m_sampleRate(sampleRate)
 {
-    int length = input.size();
+    int length = (int)input.size();
 
     m_frequencies.push_back(0.0);
     m_amplitudes.push_back(input[0]);
@@ -314,7 +314,7 @@ vector<double> tDST::inverse(vector<double> amplitudes)
     vector<double> samples;
     samples.push_back(amplitudes[0]);
 
-    int length = amplitudes.size();
+    int length = (int)amplitudes.size();
 
     for (int bin = 1; bin < length; bin++)
     {

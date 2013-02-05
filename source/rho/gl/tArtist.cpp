@@ -147,7 +147,7 @@ void drawMesh(const geo::tMesh& m, nRenderMode rm, tArtist* artist)
     const vector<geo::tVector>&              mn = m.getNormals();
     const vector<geo::tMesh::tMeshFace>&     mf = m.getFaces();
 
-    int primativeType = (rm == kFilled) ? GL_POLYGON : GL_LINE_LOOP;
+    GLenum primativeType = (rm == kFilled) ? GL_POLYGON : GL_LINE_LOOP;
 
     int lastFm = -1;
 
@@ -234,7 +234,7 @@ void tArtist::setTexture(const string& textureFilePath)
         m_textureFileMap[textureFilePath] = (u32)texId;
         glBindTexture(GL_TEXTURE_2D, texId);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                image.width(), image.height(),
+                (GLsizei)image.width(), (GLsizei)image.height(),
                 0, GL_RGBA, GL_UNSIGNED_BYTE,
                 image.buf());
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

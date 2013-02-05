@@ -2,6 +2,8 @@
 #define __rho_algo_tFFT_h__
 
 
+#include <rho/types.h>
+
 #include <utility>
 #include <vector>
 
@@ -100,7 +102,7 @@ class tFFT
          * @return    true if 'n' is a power of two, false otherwise
          */
         static
-        bool isPowerOf2(int n);
+        bool isPowerOf2(u64 n);
 
     private:
 

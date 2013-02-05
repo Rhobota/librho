@@ -8,7 +8,10 @@ STATIC_LIB_NAME := librho.a
 
 CC := $(TARGET)g++
 AR := $(TARGET)ar
-CC_FLAGS += -g -Wall -Werror -I $(INCLUDE_DIR)
+CC_FLAGS += -g -O2 -Wall -Wextra \
+			-Wno-unused-parameter -Wno-long-long -Wswitch-default \
+			-Wcast-qual -Wcast-align -Wconversion -Werror -pedantic \
+			-I $(INCLUDE_DIR)  # consider: -Wold-style-cast -Wshadow -Wsign-conversion
 
 ifeq ($(shell uname),Linux)
 	# Linux stuff:
@@ -54,14 +57,14 @@ clean :
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
 	@echo "Compiling $< ..."
 	@mkdir -p $(@D)
-	$(CC) $(CC_FLAGS) -c $< -o $@
+	$(CC) $(CC_FLAGS) -c -o $@ $<
 	$(AR) crsv $(OBJ_DIR)/$(STATIC_LIB_NAME) $@
 	@echo
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.mm
 	@echo "Compiling $< ..."
 	@mkdir -p $(@D)
-	$(CC) $(CC_FLAGS) -c $< -o $@
+	$(CC) $(CC_FLAGS) -c -o $@ $<
 	$(AR) crsv $(OBJ_DIR)/$(STATIC_LIB_NAME) $@
 	@echo
 

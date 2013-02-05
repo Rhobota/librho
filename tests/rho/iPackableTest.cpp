@@ -55,12 +55,12 @@ class tMyPackable : public iPackable
 
         void randomize()
         {
-            a = rand() % (1<<8);
-            b = (rand() % (1<<8)) - (1<<7);
-            c = rand() % (1<<16);
-            d = (rand() % (1<<16)) - (1<<15);
-            e = rand() % (1LL<<32);
-            f = (rand() % (1LL<<32)) - (1<<31);
+            a = (u8)  (rand() % (1<<8));
+            b = (i8)  ((rand() % (1<<8)) - (1<<7));
+            c = (u16) (rand() % (1<<16));
+            d = (i16) ((rand() % (1<<16)) - (1<<15));
+            e = (u32) (rand() % (1LL<<32));
+            f = (i32) ((rand() % (1LL<<32)) - (1<<31));
 
             int len = rand() % 500;
             for (int i = 0; i < len; i++)
@@ -68,7 +68,7 @@ class tMyPackable : public iPackable
 
             len = rand() % 500;
             for (int i = 0; i < len; i++)
-                intVector.push_back((rand() % (1<<16)) - (1<<15));
+                intVector.push_back((i16) ((rand() % (1<<16)) - (1<<15)));
 
             len = rand() % 100;
             for (int i = 0; i < len; i++)
@@ -90,7 +90,7 @@ class tMyPackable : public iPackable
                     string s;
                     int len3 = rand() % 10;
                     for (int i = 0; i < len3; i++)
-                        s += ((rand() % 26) + 'a');
+                        s += (char) (((rand() % 26) + 'a'));
                     vs.push_back(s);
                 }
                 stringMatrix.push_back(vs);
@@ -450,7 +450,7 @@ void f32test(const tTest& t)
         f32 x;
         u8* p = (u8*)(&x);
         for (int i = 0; i < 4; i++)
-            p[i] = rand() % 256;
+            p[i] = (u8) (rand() % 256);
         if (std::isnan(x))
             continue;
         f32 y = NAN;
@@ -664,7 +664,7 @@ void f64test(const tTest& t)
         f64 x;
         u8* p = (u8*)(&x);
         for (int i = 0; i < 8; i++)
-            p[i] = rand() % 256;
+            p[i] = (u8) (rand() % 256);
         if (std::isnan(x))
             continue;
         f64 y = NAN;
