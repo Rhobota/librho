@@ -5,6 +5,10 @@
 #include <rho/iFlushable.h>
 #include <rho/types.h>
 
+#include <cstdio>
+#include <string>
+#include <vector>
+
 
 namespace rho
 {
@@ -63,6 +67,25 @@ class tBufferedWritable : public iWritable, public iFlushable
 };
 
 
+class tFileWritable : public iWritable, public iFlushable
+{
+    public:
+
+        tFileWritable(std::string filename);
+
+        ~tFileWritable();
+
+        i32 write(const u8* buffer, i32 length);
+        i32 writeAll(const u8* buffer, i32 length);
+
+        void flush();
+
+    private:
+
+        FILE* m_file;
+};
+
+
 class tByteWritable : public iWritable
 {
     public:
@@ -72,26 +95,26 @@ class tByteWritable : public iWritable
         {
         }
 
-        i32 write(const u8* buf, i32 len)
+        i32 write(const u8* buffer, i32 length)
         {
-            return writeAll(buf, len);
+            return writeAll(buffer, length);
         }
 
-        i32 writeAll(const u8* buf, i32 len)
+        i32 writeAll(const u8* buffer, i32 length)
         {
-            for (i32 i = 0; i < len; i++)
-                m_buf.push_back(buf[i]);
-            return len;
+            for (i32 i = 0; i < length; i++)
+                m_buf.push_back(buffer[i]);
+            return length;
         }
 
-        vector<u8> getBuf() const
+        std::vector<u8> getBuf() const
         {
             return m_buf;
         }
 
     private:
 
-        vector<u8> m_buf;
+        std::vector<u8> m_buf;
 };
 
 
