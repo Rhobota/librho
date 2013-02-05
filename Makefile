@@ -35,12 +35,14 @@ MM_OBJ_FILES = $(patsubst $(SRC_DIR)/%.mm,$(OBJ_DIR)/%.o,$(MM_SRC_FILES))
 
 all : $(PRE_STEP) $(CPP_OBJ_FILES) $(MM_OBJ_FILES) $(POST_STEP)
 
-install : ensure_root all
+install : ensure_root uninstall all
 	@echo
-	@(cd $(INCLUDE_DIR) && for i in *; do rm -rf /usr/local/include/$$i; done)
 	@cp -r $(INCLUDE_DIR)/* /usr/local/include
 	@cp $(OBJ_DIR)/$(STATIC_LIB_NAME) /usr/local/lib
 	@echo "Install successful."
+
+uninstall : ensure_root
+	@(cd $(INCLUDE_DIR) && for i in *; do rm -rf /usr/local/include/$$i; done)
 
 ensure_root :
 	$(if $(shell whoami | grep root),,\
@@ -76,4 +78,4 @@ osx_post_step :
 	@mv source/rho/img/tImageCapFactory.mm \
 		source/rho/img/tImageCapFactory.cpp
 
-.PHONY : all install ensure_root test clean osx_pre_step osx_post_step
+.PHONY : all install uninstall ensure_root test clean osx_pre_step osx_post_step
