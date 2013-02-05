@@ -61,6 +61,37 @@ class tBufferedReadable : public iReadable
 };
 
 
+class tByteReadable : public iReadable
+{
+    public:
+
+        tByteReadable(vector<u8> inputBuf)
+            : m_buf(inputBuf), m_pos(0)
+        {
+        }
+
+        i32 read(u8* buf, i32 len)
+        {
+            return readAll(buf, len);
+        }
+
+        i32 readAll(u8* buf, i32 len)
+        {
+            if (m_pos >= m_buf.size())
+                return -1;
+            i32 i;
+            for (i = 0; i < len && m_pos < m_buf.size(); i++)
+                buf[i] = m_buf[m_pos++];
+            return i;
+        }
+
+    private:
+
+        vector<u8> m_buf;
+        size_t m_pos;
+};
+
+
 }     // namespace rho
 
 
