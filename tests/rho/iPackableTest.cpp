@@ -387,7 +387,7 @@ void f32test(const tTest& t)
     // Nan test
     {
         f32 nan = NAN;
-        f32 nan2 = 0.0;
+        f32 nan2 = 0.0f;
         t.assert(std::isnan(nan));
         t.reject(std::isnan(nan2));
         packunpackf32test(t, nan, nan2);
@@ -398,7 +398,7 @@ void f32test(const tTest& t)
     // Infinity test
     {
         f32 inf = INFINITY;
-        f32 inf2 = 0.0;
+        f32 inf2 = 0.0f;
         t.reject(std::isfinite(inf));
         t.assert(std::isfinite(inf2));
         t.assert(inf == INFINITY);
@@ -413,7 +413,7 @@ void f32test(const tTest& t)
     // Negative infinity test
     {
         f32 ninf = -INFINITY;
-        f32 ninf2 = 0.0;
+        f32 ninf2 = 0.0f;
         t.reject(std::isfinite(ninf));
         t.assert(std::isfinite(ninf2));
         t.assert(ninf == -INFINITY);
@@ -427,19 +427,19 @@ void f32test(const tTest& t)
 
     // Zero test
     {
-        f32 zero = 0.0;
+        f32 zero = 0.0f;
         f32 zero2 = NAN;
         t.assert(std::isfinite(zero));
         t.reject(std::isfinite(zero2));
-        t.assert(zero == 0.0);
-        t.reject(zero2 == 0.0);
+        t.assert(zero == 0.0f);
+        t.reject(zero2 == 0.0f);
         t.reject(std::isnan(zero));
         t.assert(std::isnan(zero2));
         packunpackf32test(t, zero, zero2);
         t.assert(std::isfinite(zero));
         t.assert(std::isfinite(zero2));
-        t.assert(zero == 0.0);
-        t.assert(zero2 == 0.0);
+        t.assert(zero == 0.0f);
+        t.assert(zero2 == 0.0f);
         t.reject(std::isnan(zero));
         t.reject(std::isnan(zero2));
     }
@@ -494,16 +494,16 @@ void f32posinftest(const tTest& t)
 
     t.assert(inf*big == INFINITY);
     t.reject(std::isfinite(inf*big));
-    t.assert(inf*4.0 == INFINITY);
-    t.reject(std::isfinite(inf*4.0));
+    t.assert(inf*4.0f == INFINITY);
+    t.reject(std::isfinite(inf*4.0f));
     t.assert(inf+big == INFINITY);
     t.reject(std::isfinite(inf+big));
-    t.assert(inf+4.0 == INFINITY);
-    t.reject(std::isfinite(inf+4.0));
+    t.assert(inf+4.0f == INFINITY);
+    t.reject(std::isfinite(inf+4.0f));
     t.assert(inf-big == INFINITY);
     t.reject(std::isfinite(inf-big));
-    t.assert(inf-4.0 == INFINITY);
-    t.reject(std::isfinite(inf-4.0));
+    t.assert(inf-4.0f == INFINITY);
+    t.reject(std::isfinite(inf-4.0f));
 }
 
 void f32neginftest(const tTest& t)
@@ -547,16 +547,16 @@ void f32neginftest(const tTest& t)
 
     t.assert(ninf*big == -INFINITY);
     t.reject(std::isfinite(ninf*big));
-    t.assert(ninf*4.0 == -INFINITY);
-    t.reject(std::isfinite(ninf*4.0));
+    t.assert(ninf*4.0f == -INFINITY);
+    t.reject(std::isfinite(ninf*4.0f));
     t.assert(ninf+big == -INFINITY);
     t.reject(std::isfinite(ninf+big));
-    t.assert(ninf+4.0 == -INFINITY);
-    t.reject(std::isfinite(ninf+4.0));
+    t.assert(ninf+4.0f == -INFINITY);
+    t.reject(std::isfinite(ninf+4.0f));
     t.assert(ninf-big == -INFINITY);
     t.reject(std::isfinite(ninf-big));
-    t.assert(ninf-4.0 == -INFINITY);
-    t.reject(std::isfinite(ninf-4.0));
+    t.assert(ninf-4.0f == -INFINITY);
+    t.reject(std::isfinite(ninf-4.0f));
 }
 
 void f32nantest(const tTest& t)
@@ -615,13 +615,13 @@ void f64test(const tTest& t)
         f64 inf2 = 0.0;
         t.reject(std::isfinite(inf));
         t.assert(std::isfinite(inf2));
-        t.assert(inf == INFINITY);
-        t.reject(inf2 == INFINITY);
+        t.assert(inf == (f64)INFINITY);
+        t.reject(inf2 == (f64)INFINITY);
         packunpackf64test(t, inf, inf2);
         t.reject(std::isfinite(inf));
         t.reject(std::isfinite(inf2));
-        t.assert(inf == INFINITY);
-        t.assert(inf2 == INFINITY);
+        t.assert(inf == (f64)INFINITY);
+        t.assert(inf2 == (f64)INFINITY);
     }
 
     // Negative infinity test
@@ -630,13 +630,13 @@ void f64test(const tTest& t)
         f64 ninf2 = 0.0;
         t.reject(std::isfinite(ninf));
         t.assert(std::isfinite(ninf2));
-        t.assert(ninf == -INFINITY);
-        t.reject(ninf2 == -INFINITY);
+        t.assert(ninf == (f64)(-INFINITY));
+        t.reject(ninf2 == (f64)(-INFINITY));
         packunpackf64test(t, ninf, ninf2);
         t.reject(std::isfinite(ninf));
         t.reject(std::isfinite(ninf2));
-        t.assert(ninf == -INFINITY);
-        t.assert(ninf2 == -INFINITY);
+        t.assert(ninf == (f64)(-INFINITY));
+        t.assert(ninf2 == (f64)(-INFINITY));
     }
 
     // Zero test
@@ -677,7 +677,7 @@ void f64test(const tTest& t)
 void f64posinftest(const tTest& t)
 {
     f64 inf = INFINITY;
-    t.assert(inf == INFINITY);
+    t.assert(inf == (f64)INFINITY);
     t.reject(std::isfinite(inf));
 
     f64 big = 1e99;
@@ -706,32 +706,32 @@ void f64posinftest(const tTest& t)
     t.assert(inf >= inf);
     t.assert(inf <= inf);
 
-    t.assert(inf*big == INFINITY);
+    t.assert(inf*big == (f64)INFINITY);
     t.reject(std::isfinite(inf*big));
-    t.assert(inf*4.0 == INFINITY);
+    t.assert(inf*4.0 == (f64)INFINITY);
     t.reject(std::isfinite(inf*4.0));
-    t.assert(inf+big == INFINITY);
+    t.assert(inf+big == (f64)INFINITY);
     t.reject(std::isfinite(inf+big));
-    t.assert(inf+4.0 == INFINITY);
+    t.assert(inf+4.0 == (f64)INFINITY);
     t.reject(std::isfinite(inf+4.0));
-    t.assert(inf-big == INFINITY);
+    t.assert(inf-big == (f64)INFINITY);
     t.reject(std::isfinite(inf-big));
-    t.assert(inf-4.0 == INFINITY);
+    t.assert(inf-4.0 == (f64)INFINITY);
     t.reject(std::isfinite(inf-4.0));
 }
 
 void f64neginftest(const tTest& t)
 {
-    f64 ninf = -INFINITY;
-    t.assert(ninf == -INFINITY);
+    f64 ninf = (f64)(-INFINITY);
+    t.assert(ninf == (f64)(-INFINITY));
     t.reject(std::isfinite(ninf));
 
-    t.assert(ninf < INFINITY);
-    t.assert(ninf <= INFINITY);
-    t.assert(ninf != INFINITY);
-    t.reject(ninf > INFINITY);
-    t.reject(ninf >= INFINITY);
-    t.reject(ninf == INFINITY);
+    t.assert(ninf < (f64)(INFINITY));
+    t.assert(ninf <= (f64)(INFINITY));
+    t.assert(ninf != (f64)(INFINITY));
+    t.reject(ninf > (f64)(INFINITY));
+    t.reject(ninf >= (f64)(INFINITY));
+    t.reject(ninf == (f64)(INFINITY));
 
     f64 big = 1e99;
     f64 small = 1.0;
@@ -759,17 +759,17 @@ void f64neginftest(const tTest& t)
     t.assert(ninf >= ninf);
     t.assert(ninf <= ninf);
 
-    t.assert(ninf*big == -INFINITY);
+    t.assert(ninf*big == (f64)(-INFINITY));
     t.reject(std::isfinite(ninf*big));
-    t.assert(ninf*4.0 == -INFINITY);
+    t.assert(ninf*4.0 == (f64)(-INFINITY));
     t.reject(std::isfinite(ninf*4.0));
-    t.assert(ninf+big == -INFINITY);
+    t.assert(ninf+big == -(f64)(INFINITY));
     t.reject(std::isfinite(ninf+big));
-    t.assert(ninf+4.0 == -INFINITY);
+    t.assert(ninf+4.0 == (f64)(-INFINITY));
     t.reject(std::isfinite(ninf+4.0));
-    t.assert(ninf-big == -INFINITY);
+    t.assert(ninf-big == (f64)(-INFINITY));
     t.reject(std::isfinite(ninf-big));
-    t.assert(ninf-4.0 == -INFINITY);
+    t.assert(ninf-4.0 == (f64)(-INFINITY));
     t.reject(std::isfinite(ninf-4.0));
 }
 
@@ -786,10 +786,10 @@ void f64nantest(const tTest& t)
     t.reject(nan < nan);
     t.reject(nan >= nan);
     t.reject(nan <= nan);
-    t.reject(nan < INFINITY);
-    t.reject(nan > INFINITY);
-    t.reject(nan < -INFINITY);
-    t.reject(nan > -INFINITY);
+    t.reject(nan < (f64)INFINITY);
+    t.reject(nan > (f64)INFINITY);
+    t.reject(nan < (f64)(-INFINITY));
+    t.reject(nan > (f64)(-INFINITY));
 
     f64 big = 1e99;
     f64 small = 1.0;
@@ -851,7 +851,7 @@ void supertest(const tTest& t)
 int main()
 {
     tCrashReporter::init();
-    srand(time(0));
+    srand((u32)time(0));
 
     tTest("u8 test", u8test);
     tTest("i8 test", i8test);

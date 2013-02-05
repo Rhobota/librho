@@ -146,7 +146,7 @@ int main()
     tTest("Example 3", example3);
     tTest("Example 4", example4);
 
-    srand(time(0));
+    srand((u32)time(0));
     tTest("Randomized test", randomTest, gMaxRandTests);
 
     return 0;

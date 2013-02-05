@@ -41,7 +41,7 @@ void randomizeWriteData(vector<u8>& data)
 
 void writeHelper(ip::tcp::tSocket& socket, const vector<u8>& data)
 {
-    int length = data.size();
+    int length = (int)data.size();
     u8* buff = new u8[length];
     for (int i = 0; i < length; i++)
         buff[i] = data[i];
@@ -93,7 +93,7 @@ class tServerRunnable : public sync::iRunnable
 
             for (int i = 0; i < iterations; i++)
             {
-                vector<u8> read = readHelper(*socket, gClientWriteData.size());
+                vector<u8> read = readHelper(*socket, (int)gClientWriteData.size());
                 m_t.iseq(read, gClientWriteData);
                 randomizeWriteData(gClientWriteData);
                 writeHelper(*socket, gServerWriteData);
@@ -101,7 +101,7 @@ class tServerRunnable : public sync::iRunnable
 
             if (serverFirst)
             {
-                vector<u8> read = readHelper(*socket, gClientWriteData.size());
+                vector<u8> read = readHelper(*socket, (int)gClientWriteData.size());
                 m_t.iseq(read, gClientWriteData);
             }
         }
@@ -137,7 +137,7 @@ class tClientRunnable : public sync::iRunnable
 
             for (int i = 0; i < iterations; i++)
             {
-                vector<u8> read = readHelper(socket, gServerWriteData.size());
+                vector<u8> read = readHelper(socket, (int)gServerWriteData.size());
                 m_t.iseq(read, gServerWriteData);
                 randomizeWriteData(gServerWriteData);
                 writeHelper(socket, gClientWriteData);
@@ -145,7 +145,7 @@ class tClientRunnable : public sync::iRunnable
 
             if (!serverFirst)
             {
-                vector<u8> read = readHelper(socket, gServerWriteData.size());
+                vector<u8> read = readHelper(socket, (int)gServerWriteData.size());
                 m_t.iseq(read, gServerWriteData);
             }
         }
@@ -175,7 +175,7 @@ int main()
 {
     tCrashReporter::init();
 
-    srand(time(0));
+    srand((u32)time(0));
     tTest("Server/client test", test, kTestIterations);
 
     return 0;

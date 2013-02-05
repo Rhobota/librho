@@ -878,9 +878,9 @@ stbi_inline static uint8 clamp(int x)
    int t0,t1,t2,t3,p1,p2,p3,p4,p5,x0,x1,x2,x3; \
    p2 = s2;                                    \
    p3 = s6;                                    \
-   p1 = (p2+p3) * f2f(0.5411961f);             \
-   t2 = p1 + p3*f2f(-1.847759065f);            \
-   t3 = p1 + p2*f2f( 0.765366865f);            \
+   p1 = (p2+p3) * f2f(0.5411961);              \
+   t2 = p1 + p3*f2f(-1.847759065);             \
+   t3 = p1 + p2*f2f( 0.765366865);             \
    p2 = s0;                                    \
    p3 = s4;                                    \
    t0 = fsh(p2+p3);                            \
@@ -897,15 +897,15 @@ stbi_inline static uint8 clamp(int x)
    p4 = t1+t3;                                 \
    p1 = t0+t3;                                 \
    p2 = t1+t2;                                 \
-   p5 = (p3+p4)*f2f( 1.175875602f);            \
-   t0 = t0*f2f( 0.298631336f);                 \
-   t1 = t1*f2f( 2.053119869f);                 \
-   t2 = t2*f2f( 3.072711026f);                 \
-   t3 = t3*f2f( 1.501321110f);                 \
-   p1 = p5 + p1*f2f(-0.899976223f);            \
-   p2 = p5 + p2*f2f(-2.562915447f);            \
-   p3 = p3*f2f(-1.961570560f);                 \
-   p4 = p4*f2f(-0.390180644f);                 \
+   p5 = (p3+p4)*f2f( 1.175875602);             \
+   t0 = t0*f2f( 0.298631336);                  \
+   t1 = t1*f2f( 2.053119869);                  \
+   t2 = t2*f2f( 3.072711026);                  \
+   t3 = t3*f2f( 1.501321110);                  \
+   p1 = p5 + p1*f2f(-0.899976223);             \
+   p2 = p5 + p2*f2f(-2.562915447);             \
+   p3 = p3*f2f(-1.961570560);                  \
+   p4 = p4*f2f(-0.390180644);                  \
    t3 += p1+p4;                                \
    t2 += p2+p3;                                \
    t1 += p2+p4;                                \
@@ -1423,9 +1423,9 @@ static void YCbCr_to_RGB_row(uint8 *out, const uint8 *y, const uint8 *pcb, const
       int r,g,b;
       int cr = pcr[i] - 128;
       int cb = pcb[i] - 128;
-      r = y_fixed + cr*float2fixed(1.40200f);
-      g = y_fixed - cr*float2fixed(0.71414f) - cb*float2fixed(0.34414f);
-      b = y_fixed                            + cb*float2fixed(1.77200f);
+      r = y_fixed + cr*float2fixed(1.40200);
+      g = y_fixed - cr*float2fixed(0.71414) - cb*float2fixed(0.34414);
+      b = y_fixed                           + cb*float2fixed(1.77200);
       r >>= 16;
       g >>= 16;
       b >>= 16;
