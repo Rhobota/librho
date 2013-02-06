@@ -20,6 +20,11 @@ namespace rho
 {
 
 
+/**
+ * Use only in tests stored in the 'tests/' directory! Also, this
+ * class' implementation should be completely in this .h file so
+ * that it can be compiled into each test without having to link.
+ */
 class tTest : public bNonCopyable
 {
     public:

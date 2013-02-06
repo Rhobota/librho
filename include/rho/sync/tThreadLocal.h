@@ -83,6 +83,9 @@ T& tThreadLocal<T>::operator* ()
 template <class T>
 tThreadLocal<T>::~tThreadLocal()
 {
+    T* oldObj = get();
+    if (oldObj)
+        delete oldObj;
     if (pthread_key_delete(m_key) != 0)
         throw eRuntimeError("Can't delete tls key.");
 }

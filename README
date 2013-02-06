@@ -54,4 +54,24 @@ $CC_FLAGS equal to '-m32' just for the duration of the `make` command.
 for doing some sort of cross-compilation), you can set the $TARGET variable
 to the desired g++-prefix before running `make`. Do this in the same way as
 described by note #2. Sub-note: This is how compiling for Mingw within the
-Cygwin environment is done (as described previously in this document)!
+Cygwin environment is done (as described at the top of this document)!
+
+Usage notes:
+
+1. This library contains static data which gets initialized in some arbitrary
+order by the compiler. Within the library there are no dependencies between
+any of the static data, so it doesn't matter what order initialization happens.
+Users of the library should be careful about what they allocate in static space,
+however, because if that application-specific static data gets initialized
+before some required part of librho, then bad things could happen. For example,
+librho does some socket initialization stuff (like setting signals to be
+ignored) as a part of its static initialization; thus, if a user's application
+creates a socket in the static area, it may happen before librho gets a chance
+to do its own socket initialization stuff. The best thing to do is avoid using
+static allocations, and also read the next note.
+
+2. Users of librho must understand the refc templated class. It is awesome.
+Also, it is okay to create a NULL refc in static space (since a NULL refc does
+not depend on any static initialization within librho). Doing so is useful if
+you *really* need a global object. Simply set the NULL global refc equal to a
+real object as a part of main(), then use you global object happily.

@@ -202,7 +202,6 @@ static int setSigPipeHandler()
     signal(SIGPIPE, SIG_IGN);
     return 1;
 }
-extern const int kSigPipeIgnoreKickoff;
 const int kSigPipeIgnoreKickoff = setSigPipeHandler();
 
 #elif __MINGW32__
@@ -220,7 +219,6 @@ static int initForWindows()
     }
     return 1;
 }
-extern const int kInitForWindowsKickoff;
 const int kInitForWindowsKickoff = initForWindows();
 
 #else
