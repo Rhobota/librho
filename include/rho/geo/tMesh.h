@@ -24,6 +24,7 @@ class tMesh : public bDrawableByArtist
         {
             public:
 
+                tMeshFace();
                 tMeshFace(i32 materialIndex);
 
                 void add(i32 vertexIndex, i32 texcoordIndex, i32 normalIndex);
@@ -47,9 +48,7 @@ class tMesh : public bDrawableByArtist
 
             private:
 
-                tMeshFace() : m_materialIndex(-1) { }
                 friend void unpack(iReadable* in, tMeshFace&);
-                friend void unpack(iReadable* in, std::vector<tMeshFace>&);
         };
 
         class tMeshMaterial
