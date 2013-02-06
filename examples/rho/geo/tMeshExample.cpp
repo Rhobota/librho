@@ -1,7 +1,9 @@
+#include <rho/gl/tLight.h>
+#include <rho/gl/tArtist.h>
+#include <rho/gl/init.h>
 #include <rho/geo/tMesh.h>
 #include <rho/geo/tBox.h>
 #include <rho/geo/tVector.h>
-#include <rho/gl/tArtist.h>
 #include <rho/tCrashReporter.h>
 
 #include <GL/glfw.h>
@@ -35,9 +37,7 @@ const string kObjFilePath = "LegoMan.obj";
 void GLFWCALL windowsResized(int width, int height)
 {
     glViewport(0, 0, width, height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(kFOVY, ((double)width) / height, kNear, kFar);
+    rho::gl::perspectiveProjection(width, height, kFOVY, kNear, kFar);
 }
 
 void GLFWCALL keyCallback(int key, int state)
@@ -48,44 +48,6 @@ void GLFWCALL keyCallback(int key, int state)
     else if (state == GLFW_RELEASE)
     {
     }
-}
-
-void initGL()
-{
-    // Enable depth test.
-    glEnable(GL_DEPTH_TEST);
-
-    // Have OpenGL normalize all normal-vectors we give it.
-    glEnable(GL_NORMALIZE);
-
-    // Enable texturing.
-    glEnable(GL_TEXTURE_2D);
-
-    // Only draw the front of every polygon face.
-    if (kCullBack)
-    {
-        glFrontFace(GL_CCW);
-        glCullFace(GL_BACK);  // kill the back-facing polygons (at render time)
-        glEnable(GL_CULL_FACE);
-    }
-
-    // In case the back-facing polygons are not culled, we want to calculate lighting for them properly.
-    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);
-
-    // The specular component should be calculated correctly (instead of the weird -z axis only thing that is done by default).
-    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
-
-    // First enable lighting and light0.
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
-
-    // Set the light's colors.
-    float dColor[] = {1.0, 1.0, 1.0, 1.0};
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, dColor);
-    float sColor[] = {1.0, 1.0, 1.0, 1.0};
-    glLightfv(GL_LIGHT0, GL_SPECULAR, sColor);
-    float aColor[] = {0.4, 0.4, 0.4, 1.0};
-    glLightfv(GL_LIGHT0, GL_AMBIENT, aColor);
 }
 
 int main()
@@ -126,16 +88,15 @@ int main()
     glfwSwapInterval(1);                           // vsync on
 
     // Init the OpenGL state that we need.
-    initGL();
+    rho::gl::init3d(false, kCullBack);
 
     // Light and camera state.
-    rho::geo::tVector lightPos(rho::geo::tVector::origin());
     rho::geo::tVector cameraPos(rho::geo::tVector::point(10.0, 0.0, 0.0));
     rho::geo::tVector cameraDir(rho::geo::tVector(-1.0, 0.0, 0.0));
     int mouseX, mouseY;
     glfwGetMousePos(&mouseX, &mouseY);
 
-    // Drawables
+    // Drawables.
     rho::refc<rho::iArtist> artist(new rho::gl::tArtist(rho::gl::kFilled));
     rho::geo::tMesh mesh(kObjFilePath);
     mesh.setArtist(artist);
@@ -143,6 +104,11 @@ int main()
             rho::geo::tVector::point(-0.3, -0.3, -0.3),
             rho::geo::tVector::point(0.3, 0.3, 0.3));
     lightBox.setArtist(artist);
+
+    // The single light source.
+    rho::geo::tVector lightPos(rho::geo::tVector::origin());
+    rho::gl::tLight light;
+    light.enable();
 
     // Main loop.
     int running = GL_TRUE;
@@ -160,11 +126,12 @@ int main()
                   cameraPos.z+cameraDir.z,
                   0, 0, 1);
 
-        // Set the light's position and draw a cube at the light's position.
+        // Set the light's position.
+        light.setLocation(lightPos);
+
+        // Draw a cube at the light's position.
         glPushMatrix();
         glTranslated(lightPos.x, lightPos.y, lightPos.z);
-        float lightPosArray[] = {0.0, 0.0, 0.0, 1.0};  // will be transformed by the modelview matrix.
-        glLightfv(GL_LIGHT0, GL_POSITION, lightPosArray);
         glColor3d(0.0, 1.0, 0.0);
         lightBox.draw();
         glPopMatrix();

@@ -16,6 +16,7 @@ class tLight
     public:
 
         tLight();
+        ~tLight();
 
         void enable();
         void disable();

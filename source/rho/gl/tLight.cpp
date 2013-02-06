@@ -37,11 +37,17 @@ GLenum intToEnum(int i)
 
 tLight::tLight()
     : m_loc(geo::tVector::origin()),
-      m_ambient(geo::tVector(1.0, 1.0, 1.0, 1.0)),
+      m_ambient(geo::tVector(0.4, 0.4, 0.4, 1.0)),
       m_diffuse(geo::tVector(1.0, 1.0, 1.0, 1.0)),
       m_specular(geo::tVector(1.0, 1.0, 1.0, 1.0)),
       m_index(-1)
 {
+}
+
+tLight::~tLight()
+{
+    if (m_index != -1)
+        disable();
 }
 
 void tLight::enable()
