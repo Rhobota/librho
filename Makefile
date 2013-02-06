@@ -9,22 +9,23 @@ STATIC_LIB_NAME := librho.a
 CC := $(TARGET)g++
 AR := $(TARGET)ar
 CC_FLAGS_LOCAL := $(CC_FLAGS) \
-	-g -O2 -Wall -Wextra -Wdouble-promotion \
+	-g -O2 -Wall -Wextra \
 	-Wno-unused-parameter -Wno-long-long -Wswitch-default \
 	-Wcast-qual -Wcast-align -Wconversion -Werror -pedantic \
 	-I $(INCLUDE_DIR)  # consider: -Wold-style-cast -Wshadow -Wsign-conversion
 
 ifeq ($(shell uname),Linux)
 	# Linux stuff:
-	CC_FLAGS_LOCAL += -rdynamic
+	CC_FLAGS_LOCAL += -rdynamic -Wdouble-promotion
 else
 ifeq ($(shell uname),Darwin)
 	# OSX stuff:
-	CC_FLAGS_LOCAL  += -rdynamic
+	CC_FLAGS_LOCAL += -rdynamic
 	PRE_STEP  := osx_pre_step
 	POST_STEP := osx_post_step
 else
-	# Mingw stuff:
+	# Mingw and Cygwin stuff:
+	CC_FLAGS_LOCAL += -Wdouble-promotion
 endif
 endif
 
