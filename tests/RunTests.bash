@@ -6,23 +6,26 @@ LIBRHO_PATH="$TEST_DIR/../objects/librho.a"
 OUT_FILE="a.out"
 
 CC="$TARGET""g++"
-CC_FLAGS+=" -O0 -fno-inline -g -Wall -Werror -I $INCLUDE_DIR"
+CC_FLAGS_LOCAL="$CC_FLAGS \
+    -g -O0 -fno-inline -Wall -Wextra \
+    -Wno-unused-parameter -Wno-long-long -Werror -pedantic \
+    -I $INCLUDE_DIR"
 CC_LIB_FLAGS="$LIBRHO_PATH -lpthread $CC_LIB_FLAGS"
 
 if [ $(uname) == "Linux" ]
 then
-    CC_FLAGS+=" -rdynamic"
+    CC_FLAGS_LOCAL+=" -rdynamic"
     CC_LIB_FLAGS+=" "
 elif [ $(uname) == "Darwin" ]
 then
-    CC_FLAGS+=" -rdynamic"
+    CC_FLAGS_LOCAL+=" -rdynamic"
     CC_LIB_FLAGS+=" -framework Foundation -framework AVFoundation"
     CC_LIB_FLAGS+=" -framework CoreVideo -framework CoreMedia"
     CC_LIB_FLAGS+=" -framework OpenGL -framework IOKit"
     CC_LIB_FLAGS+=" -framework Cocoa -framework GLUT"
 else
     # Mingw
-    CC_FLAGS+=" "
+    CC_FLAGS_LOCAL+=" "
     CC_LIB_FLAGS+=" -lwsock32 -lws2_32"
 fi
 
@@ -57,7 +60,7 @@ for testPath in $(find "$TEST_DIR" -name '*.cpp' -o -name '*.mm')
 do
     somethingRun=1
     echo "---- $testPath ----"
-    $CC $CC_FLAGS $testPath $CC_LIB_FLAGS -o "$OUT_FILE"
+    $CC $CC_FLAGS_LOCAL $testPath $CC_LIB_FLAGS -o "$OUT_FILE"
     compileStatus=$?
     if [ $compileStatus -eq 0 ]
     then

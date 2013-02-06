@@ -8,18 +8,19 @@ STATIC_LIB_NAME := librho.a
 
 CC := $(TARGET)g++
 AR := $(TARGET)ar
-CC_FLAGS += -g -O2 -Wall -Wextra -Wdouble-promotion \
-			-Wno-unused-parameter -Wno-long-long -Wswitch-default \
-			-Wcast-qual -Wcast-align -Wconversion -Werror -pedantic \
-			-I $(INCLUDE_DIR)  # consider: -Wold-style-cast -Wshadow -Wsign-conversion
+CC_FLAGS_LOCAL := $(CC_FLAGS) \
+	-g -O2 -Wall -Wextra -Wdouble-promotion \
+	-Wno-unused-parameter -Wno-long-long -Wswitch-default \
+	-Wcast-qual -Wcast-align -Wconversion -Werror -pedantic \
+	-I $(INCLUDE_DIR)  # consider: -Wold-style-cast -Wshadow -Wsign-conversion
 
 ifeq ($(shell uname),Linux)
 	# Linux stuff:
-	CC_FLAGS += -rdynamic
+	CC_FLAGS_LOCAL += -rdynamic
 else
 ifeq ($(shell uname),Darwin)
 	# OSX stuff:
-	CC_FLAGS  += -rdynamic
+	CC_FLAGS_LOCAL  += -rdynamic
 	PRE_STEP  := osx_pre_step
 	POST_STEP := osx_post_step
 else
@@ -59,14 +60,14 @@ clean :
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
 	@echo "Compiling $< ..."
 	@mkdir -p $(@D)
-	$(CC) $(CC_FLAGS) -c -o $@ $<
+	$(CC) $(CC_FLAGS_LOCAL) -c -o $@ $<
 	$(AR) crsv $(OBJ_DIR)/$(STATIC_LIB_NAME) $@
 	@echo
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.mm
 	@echo "Compiling $< ..."
 	@mkdir -p $(@D)
-	$(CC) $(CC_FLAGS) -c -o $@ $<
+	$(CC) $(CC_FLAGS_LOCAL) -c -o $@ $<
 	$(AR) crsv $(OBJ_DIR)/$(STATIC_LIB_NAME) $@
 	@echo
 
