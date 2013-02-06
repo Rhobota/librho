@@ -157,6 +157,10 @@ void drawMesh(const geo::tMesh& m, nRenderMode rm, tArtist* artist)
     {
         const geo::tMesh::tMeshFace& f = mf[i];
         int fm = f.getMaterialIndex();
+        if (fm == -1)
+        {
+            throw eLogicError("tMeshFace objects should always have a material index specified.");
+        }
         if (lastFm != fm)
         {
             setMaterial(mm[fm], artist);

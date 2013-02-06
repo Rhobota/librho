@@ -26,6 +26,11 @@ namespace geo
 // tMeshFace implementation
 ///////////////////////////////////////////////////////////////////////////////
 
+tMesh::tMeshFace::tMeshFace()
+    : m_materialIndex(-1)
+{
+}
+
 tMesh::tMeshFace::tMeshFace(i32 materialIndex)
     : m_materialIndex(materialIndex)
 {
