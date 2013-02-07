@@ -25,7 +25,6 @@ ifeq ($(shell uname),Darwin)
 	POST_STEP := osx_post_step
 else
 	# Mingw and Cygwin stuff:
-	CC_FLAGS_LOCAL += -Wdouble-promotion
 endif
 endif
 
