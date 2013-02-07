@@ -190,15 +190,15 @@ void unpack(iReadable* in, f32& x)
 
     if (exp == 0x7FFFFFFF)       // nan indicator
     {
-        x = NAN;
+        x = (f32)NAN;
     }
     else if (exp == 0x7FFFFFFE)  // infinity indicator
     {
-        x = INFINITY;
+        x = (f32)INFINITY;
     }
     else if (exp == 0x7FFFFFFD)  // -infinity indicator
     {
-        x = -INFINITY;
+        x = (f32)(-INFINITY);
     }
     else if (exp == 0x7FFFFFFC)  // zero indicator
     {
