@@ -54,12 +54,12 @@ void tDispatcher::removeTarget(iTarget* target)
 
     // Remove all references to target from the code lists.
     {
-        std::map< iTarget*, std::set<tNotificationCode> >::iterator ttocitr
+        std::map< iTarget*, std::set<std::string> >::iterator ttocitr
             = m_targetToCodes.find(target);
         if (ttocitr != m_targetToCodes.end())
         {
-            std::set<tNotificationCode>& codes = ttocitr->second;
-            std::set<tNotificationCode>::iterator citr;
+            std::set<std::string>& codes = ttocitr->second;
+            std::set<std::string>::iterator citr;
             for (citr = codes.begin(); citr != codes.end(); ++citr)
             {
                 m_codeToTargets[*citr].erase(target);
@@ -168,8 +168,8 @@ void tDispatcher::removeTargetFromSourceCodePair(iTarget* target,
 {
     tSrcCodePair pair(source, code);
     m_pairToTargets[pair].erase(target);
-    if (m_pairToTargets[pairs].size() == 0)
-        m_pairToTargets.erase(pairs);
+    if (m_pairToTargets[pair].size() == 0)
+        m_pairToTargets.erase(pair);
     m_targetToPairs[target].erase(pair);
     if (m_targetToPairs[target].size() == 0)
         m_targetToPairs.erase(target);
@@ -194,7 +194,7 @@ void tDispatcher::notifyTargets(iSource* source,
 
     // Get targets from the code-only list.
     {
-        std::map< tNotificationCode, std::set<iTarget*> >::iterator citr
+        std::map< std::string, std::set<iTarget*> >::iterator citr
             = m_codeToTargets.find(code);
         if (citr != m_codeToTargets.end())
         {
@@ -219,7 +219,8 @@ void tDispatcher::notifyTargets(iSource* source,
     std::set<iTarget*>::iterator itr;
     for (itr = needNotify.begin(); itr != needNotify.end(); ++itr)
     {
-        itr->notify(source, code, payload);
+        iTarget* target = *itr;
+        target->notify(source, code, payload);
     }
 }
 
