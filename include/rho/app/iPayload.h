@@ -3,6 +3,7 @@
 
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -54,6 +55,22 @@ class tVectorPayload : public iPayload
     private:
 
         std::vector<T> m_vect;
+};
+
+
+template <class T>
+class tSetPayload : public iPayload
+{
+    public:
+
+        tSetPayload(std::set<T> s)
+            : m_s(s) { }
+
+        std::set<T> getSet() const            { return m_s; }
+
+    private:
+
+        std::set<T> m_s;
 };
 
 

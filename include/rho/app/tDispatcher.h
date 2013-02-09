@@ -21,24 +21,24 @@ class tDispatcher : public bNonCopyable
         tDispatcher();
 
         ///////////////////////////////////////////////////////////////
-        // Interface from targets:
+        // Interface for targets:
         ///////////////////////////////////////////////////////////////
 
         // Adding targets.
         void addTargetToSource(iTarget* target, iSource* source);
         void addTargetToCode(iTarget* target, tNotificationCode code);
-        void addTargetToSourceAndCode(iTarget* target,
+        void addTargetToSourceCodePair(iTarget* target,
                 iSource* source, tNotificationCode code);
 
         // Removing targets.
         void removeTarget(iTarget* target);
         void removeTargetFromSource(iTarget* target, iSource* source);
         void removeTargetFromCode(iTarget* target, tNotificationCode code);
-        void removeTargetFromSourceAndCode(iTarget* target,
+        void removeTargetFromSourceCodePair(iTarget* target,
                 iSource* source, tNotificationCode code);
 
         ///////////////////////////////////////////////////////////////
-        // Interface from sources:
+        // Interface for sources:
         ///////////////////////////////////////////////////////////////
 
         // Posting notifications.
@@ -48,13 +48,17 @@ class tDispatcher : public bNonCopyable
 
     private:
 
+        typedef std::pair<iSource*,tNotificationCode> tSrcCodePair;
+
         // Used for posting notification.
         std::map< iSource*, std::set<iTarget*> >          m_srcToTargets;
         std::map< tNotificationCode, std::set<iTarget*> > m_codeToTargets;
+        std::map< tSrcCodePair, std::set<iTarget*> >      m_pairToTargets;
 
         // Used for removing targets quickly.
         std::map< iTarget*, std::set<iSource*> >          m_targetToSrcs;
         std::map< iTarget*, std::set<tNotificationCode> > m_targetToCodes;
+        std::map< iTarget*, std::set<tSrcCodePair> >      m_targetToPairs;
 };
 
 
