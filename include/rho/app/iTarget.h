@@ -5,8 +5,6 @@
 #include <rho/app/iPayload.h>
 #include <rho/app/iSource.h>
 
-#include <string>
-
 
 namespace rho
 {
