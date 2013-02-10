@@ -12,7 +12,7 @@ namespace app
 {
 
 
-typedef const std::string& tNotificationCode;
+typedef std::string tNotificationCode;
 
 
 class iTarget

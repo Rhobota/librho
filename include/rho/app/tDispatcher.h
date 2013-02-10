@@ -6,6 +6,7 @@
 #include <rho/app/iSource.h>
 #include <rho/app/iTarget.h>
 #include <rho/bNonCopyable.h>
+#include <rho/types.h>
 
 
 namespace rho
@@ -48,17 +49,26 @@ class tDispatcher : public bNonCopyable
 
     private:
 
-        typedef std::pair<iSource*,std::string> tSrcCodePair;
+        typedef std::pair<iSource*,tNotificationCode> tSrcCodePair;
 
         // Used for posting notification.
         std::map< iSource*, std::set<iTarget*> >          m_srcToTargets;
-        std::map< std::string, std::set<iTarget*> >       m_codeToTargets;
+        std::map< tNotificationCode, std::set<iTarget*> > m_codeToTargets;
         std::map< tSrcCodePair, std::set<iTarget*> >      m_pairToTargets;
 
         // Used for removing targets quickly.
         std::map< iTarget*, std::set<iSource*> >          m_targetToSrcs;
-        std::map< iTarget*, std::set<std::string> >       m_targetToCodes;
+        std::map< iTarget*, std::set<tNotificationCode> > m_targetToCodes;
         std::map< iTarget*, std::set<tSrcCodePair> >      m_targetToPairs;
+
+    public:
+
+        ///////////////////////////////////////////////////////////////
+        // Debug stuff methods (used only for testing):
+        ///////////////////////////////////////////////////////////////
+
+        bool isConsistent() const;
+        i32 numRegistrations() const;
 };
 
 

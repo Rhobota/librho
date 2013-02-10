@@ -54,12 +54,12 @@ void tDispatcher::removeTarget(iTarget* target)
 
     // Remove all references to target from the code lists.
     {
-        std::map< iTarget*, std::set<std::string> >::iterator ttocitr
+        std::map< iTarget*, std::set<tNotificationCode> >::iterator ttocitr
             = m_targetToCodes.find(target);
         if (ttocitr != m_targetToCodes.end())
         {
-            std::set<std::string>& codes = ttocitr->second;
-            std::set<std::string>::iterator citr;
+            std::set<tNotificationCode>& codes = ttocitr->second;
+            std::set<tNotificationCode>::iterator citr;
             for (citr = codes.begin(); citr != codes.end(); ++citr)
             {
                 m_codeToTargets[*citr].erase(target);
@@ -194,7 +194,7 @@ void tDispatcher::notifyTargets(iSource* source,
 
     // Get targets from the code-only list.
     {
-        std::map< std::string, std::set<iTarget*> >::iterator citr
+        std::map< tNotificationCode, std::set<iTarget*> >::iterator citr
             = m_codeToTargets.find(code);
         if (citr != m_codeToTargets.end())
         {
@@ -222,6 +222,105 @@ void tDispatcher::notifyTargets(iSource* source,
         iTarget* target = *itr;
         target->notify(source, code, payload);
     }
+}
+
+template <class T>
+bool areSetsEqual(const std::set<T>& a, const std::set<T>& b)
+{
+    if (a.size() != b.size())
+        return false;
+
+    typename std::set<T>::const_iterator itr, itr2;
+
+    for (itr = a.begin(), itr2 = b.begin(); itr != a.end(); ++itr, ++itr2)
+    {
+        if (*itr != *itr2)
+            return false;
+    }
+
+    return true;
+}
+
+template <class T, class U>
+bool areMapsEqual(const std::map< T, std::set<U> >& a, const std::map< T, std::set<U> >& b)
+{
+    typename std::map< T, std::set<U> >::const_iterator itr, itr2;
+
+    std::set<T> aKeys;
+    for (itr = a.begin(); itr != a.end(); itr++)
+        aKeys.insert(itr->first);
+
+    std::set<T> bKeys;
+    for (itr = b.begin(); itr != b.end(); itr++)
+        bKeys.insert(itr->first);
+
+    if (! areSetsEqual(aKeys, bKeys))
+        return false;
+
+    for (itr = a.begin(), itr2 = b.begin(); itr != a.end(); ++itr, ++itr2)
+    {
+        if (! areSetsEqual(itr->second, itr2->second))
+            return false;
+    }
+
+    return true;
+}
+
+bool tDispatcher::isConsistent() const
+{
+    // Check source-only lists.
+    {
+        std::map< iTarget*, std::set<iSource*> > derivedMap;
+        std::map< iSource*, std::set<iTarget*> >::const_iterator sitr;
+        for (sitr = m_srcToTargets.begin(); sitr != m_srcToTargets.end(); ++sitr)
+        {
+            iSource* source = sitr->first;
+            std::set<iTarget*> targets = sitr->second;
+            for (std::set<iTarget*>::iterator itr = targets.begin(); itr != targets.end(); ++itr)
+                derivedMap[*itr].insert(source);
+        }
+        if (! areMapsEqual(m_targetToSrcs, derivedMap))
+            return false;
+    }
+
+    // Check code-only lists.
+    {
+        std::map< iTarget*, std::set<tNotificationCode> > derivedMap;
+        std::map< tNotificationCode, std::set<iTarget*> >::const_iterator citr;
+        for (citr = m_codeToTargets.begin(); citr != m_codeToTargets.end(); ++citr)
+        {
+            tNotificationCode code = citr->first;
+            std::set<iTarget*> targets = citr->second;
+            for (std::set<iTarget*>::iterator itr = targets.begin(); itr != targets.end(); ++itr)
+                derivedMap[*itr].insert(code);
+        }
+        if (! areMapsEqual(m_targetToCodes, derivedMap))
+            return false;
+    }
+
+    // Check pair lists.
+    {
+        std::map< iTarget*, std::set<tSrcCodePair> > derivedMap;
+        std::map< tSrcCodePair, std::set<iTarget*> >::const_iterator pitr;
+        for (pitr = m_pairToTargets.begin(); pitr != m_pairToTargets.end(); ++pitr)
+        {
+            tSrcCodePair pair = pitr->first;
+            std::set<iTarget*> targets = pitr->second;
+            for (std::set<iTarget*>::iterator itr = targets.begin(); itr != targets.end(); ++itr)
+                derivedMap[*itr].insert(pair);
+        }
+        if (! areMapsEqual(m_targetToPairs, derivedMap))
+            return false;
+    }
+
+    return true;
+}
+
+i32 tDispatcher::numRegistrations() const
+{
+    return (i32) (m_srcToTargets.size() + m_targetToSrcs.size() +
+                  m_codeToTargets.size() + m_targetToCodes.size() +
+                  m_pairToTargets.size() + m_targetToPairs.size());
 }
 
 
