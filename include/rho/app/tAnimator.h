@@ -16,7 +16,7 @@ class tAnimator : public bNonCopyable
 {
     public:
 
-        tAnimator();
+        tAnimator(u64 currtime);
 
         ///////////////////////////////////////////////////////////////
         // Registering new animations:
@@ -43,6 +43,15 @@ class tAnimator : public bNonCopyable
         ///////////////////////////////////////////////////////////////
 
         void stepAllAnimations(u64 currtime);
+
+    private:
+
+        typedef std::pair<iAnimatable*,i32>   tAnimation;
+        typedef std::pair<refc<iPayload>,u64> tAnimationPayload;
+
+        u64 m_currtime;
+        std::map< iAnimatable*, std::set<i32> >   m_activeAnimations;
+        std::map< tAnimation, tAnimationPayload > m_animationPayloadMap;
 };
 
 
