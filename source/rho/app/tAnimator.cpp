@@ -85,23 +85,43 @@ void tAnimator::cancelAndRollbackAllAnimationsOn(iAnimatable* animatable)
 
 void tAnimator::stepAllAnimations(u64 currtime)
 {
+    u64 prevtime = m_currtime;
+    m_currtime = currtime;
+
+    size_t numCalls = m_animationPayloadMap.size();
     std::map<tAnimation,tAnimationPayload>::iterator itr;
+    size_t currIndex = 0;
+
+    std::vector<iAnimatable*>     ans(numCalls);
+    std::vector<i32>              ids(numCalls);
+    std::vector< refc<iPayload> > pays(numCalls);
+    std::vector<u64>              starts(numCalls);
+
     for (itr = m_animationPayloadMap.begin(); itr != m_animationPayloadMap.end();
             ++itr)
     {
         const tAnimation& animation = itr->first;
-        tAnimationPayload& animationPayload = itr->second;
+        const tAnimationPayload& animationPayload = itr->second;
 
         iAnimatable* animatable = animation.first;
         i32 animationId = animation.second;
         refc<iPayload> payload = animationPayload.first;
         u64 starttime = animationPayload.second;
 
-        animatable->stepAnimation(animationId, payload,
-                starttime, m_currtime, currtime);
+        ans[currIndex] = animatable;
+        ids[currIndex] = animationId;
+        pays[currIndex] = payload;
+        starts[currIndex] = starttime;
+        ++currIndex;
     }
 
-    m_currtime = currtime;
+    for (size_t i = 0; i < numCalls; i++)
+    {
+        bool keepGoing = ans[i]->stepAnimation(ids[i], pays[i],
+                            starts[i], prevtime, currtime);
+        if (!keepGoing)
+            cancelAnimation(ans[i], ids[i]);
+    }
 }
 
 
