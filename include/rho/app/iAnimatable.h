@@ -36,6 +36,8 @@ class iAnimatable
          * Doing so causes the tAnimator to remove it from its list of active
          * animations, meaning that this method will not be called again for
          * the current animationId until it is re-registered.
+         *
+         * Think of the return value as "keep going?".
          */
         virtual bool stepAnimation(i32 animationId, refc<iPayload> payload,
                            u64 starttime, u64 prevtime, u64 currtime) = 0;
