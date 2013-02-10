@@ -10,7 +10,7 @@ using namespace rho;
 
 
 const int kNumRemoveTests = 10;
-const int kRemoveTestIterations = 10000;
+const int kRemoveTestIterations = 1000;
 
 
 class tSource : public app::iSource
