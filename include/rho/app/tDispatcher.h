@@ -64,7 +64,7 @@ class tDispatcher : public bNonCopyable
     public:
 
         ///////////////////////////////////////////////////////////////
-        // Debug stuff methods (used only for testing):
+        // Debugging methods (used only for testing):
         ///////////////////////////////////////////////////////////////
 
         bool isConsistent() const;

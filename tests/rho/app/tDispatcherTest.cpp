@@ -101,7 +101,7 @@ void addRemoveTest(const tTest& t)
     }
 
     t.assert(disp.isConsistent());
-    t.assert(disp.numRegistrations() > 0);
+    t.assert(disp.numRegistrations() > 0);   // <-- not guaranteed, but very very likely
 
     for (int i = 0; i < numTargets; i++)
         disp.removeTarget(targets[i]);

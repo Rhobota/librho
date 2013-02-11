@@ -29,6 +29,12 @@ void tAnimator::registerNewAnimation(iAnimatable* animatable, i32 animationId,
     m_activeAnimations[animatable].insert(animationId);
 }
 
+bool tAnimator::isRegistered(iAnimatable* animatable, i32 animationId) const
+{
+    tAnimation animation(animatable, animationId);
+    return m_animationPayloadMap.find(animation) != m_animationPayloadMap.end();
+}
+
 void tAnimator::cancelAnimation(iAnimatable* animatable, i32 animationId)
 {
     tAnimation animation(animatable, animationId);
@@ -97,8 +103,7 @@ void tAnimator::stepAllAnimations(u64 currtime)
     std::vector< refc<iPayload> > pays(numCalls);
     std::vector<u64>              starts(numCalls);
 
-    for (itr = m_animationPayloadMap.begin(); itr != m_animationPayloadMap.end();
-            ++itr)
+    for (itr = m_animationPayloadMap.begin(); itr != m_animationPayloadMap.end(); ++itr)
     {
         const tAnimation& animation = itr->first;
         const tAnimationPayload& animationPayload = itr->second;
@@ -122,6 +127,69 @@ void tAnimator::stepAllAnimations(u64 currtime)
         if (!keepGoing)
             cancelAnimation(ans[i], ids[i]);
     }
+}
+
+template <class T>
+bool areSetsEqual(const std::set<T>& a, const std::set<T>& b)
+{
+    if (a.size() != b.size())
+        return false;
+
+    typename std::set<T>::const_iterator itr, itr2;
+
+    for (itr = a.begin(), itr2 = b.begin(); itr != a.end(); ++itr, ++itr2)
+    {
+        if (*itr != *itr2)
+            return false;
+    }
+
+    return true;
+}
+
+template <class T, class U>
+bool areMapsEqual(const std::map< T, std::set<U> >& a, const std::map< T, std::set<U> >& b)
+{
+    typename std::map< T, std::set<U> >::const_iterator itr, itr2;
+
+    std::set<T> aKeys;
+    for (itr = a.begin(); itr != a.end(); itr++)
+        aKeys.insert(itr->first);
+
+    std::set<T> bKeys;
+    for (itr = b.begin(); itr != b.end(); itr++)
+        bKeys.insert(itr->first);
+
+    if (! areSetsEqual(aKeys, bKeys))
+        return false;
+
+    for (itr = a.begin(), itr2 = b.begin(); itr != a.end(); ++itr, ++itr2)
+    {
+        if (! areSetsEqual(itr->second, itr2->second))
+            return false;
+    }
+
+    return true;
+}
+
+bool tAnimator::isConsistent() const
+{
+    std::map< iAnimatable*, std::set<i32> > derived;
+
+    std::map<tAnimation,tAnimationPayload>::const_iterator itr;
+    for (itr = m_animationPayloadMap.begin(); itr != m_animationPayloadMap.end(); ++itr)
+    {
+        const tAnimation& animation = itr->first;
+        iAnimatable* animatable = animation.first;
+        i32 animationId = animation.second;
+        derived[animatable].insert(animationId);
+    }
+
+    return areMapsEqual(derived, m_activeAnimations);
+}
+
+i32 tAnimator::numRegistrations() const
+{
+    return (i32) (m_animationPayloadMap.size() + m_activeAnimations.size());
 }
 
 
