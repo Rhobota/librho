@@ -22,7 +22,10 @@ class tCoutingPayload : public app::iPayload
     public:
 
         tCoutingPayload() { gNumPayloads++; }
-        tCoutingPayload(const tCoutingPayload&) { gNumPayloads++; }
+
+        tCoutingPayload(const tCoutingPayload& other)
+            : app::iPayload(other) { gNumPayloads++; }
+
         ~tCoutingPayload() { gNumPayloads--; }
 };
 
