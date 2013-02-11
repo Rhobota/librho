@@ -25,6 +25,8 @@ class tAnimator : public bNonCopyable
         void registerNewAnimation(iAnimatable* animatable, i32 animationId,
                                       refc<iPayload> payload);
 
+        bool isRegistered(iAnimatable* animatable, i32 animationId) const;
+
         ///////////////////////////////////////////////////////////////
         // Cancelling existing animations:
         ///////////////////////////////////////////////////////////////
@@ -32,7 +34,7 @@ class tAnimator : public bNonCopyable
         void cancelAnimation(iAnimatable* animatable, i32 animationId);
         void cancelAllAnimationsOn(iAnimatable* animatable);
 
-        void cancelAndRollbackAnimation(iAnimatable* animatable,i32 animationId);
+        void cancelAndRollbackAnimation(iAnimatable* animatable, i32 animationId);
         void cancelAndRollbackAllAnimationsOn(iAnimatable* animatable);
 
         ///////////////////////////////////////////////////////////////
@@ -52,6 +54,15 @@ class tAnimator : public bNonCopyable
         u64 m_currtime;
         std::map< iAnimatable*, std::set<i32> >   m_activeAnimations;
         std::map< tAnimation, tAnimationPayload > m_animationPayloadMap;
+
+    public:
+
+        ///////////////////////////////////////////////////////////////
+        // Debugging methods (used only for testing):
+        ///////////////////////////////////////////////////////////////
+
+        bool isConsistent() const;
+        i32 numRegistrations() const;
 };
 
 
