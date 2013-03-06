@@ -80,8 +80,11 @@ class tFileWritable : public iWritable, public iFlushable
 
         void flush();
 
+        std::string getFilename() const;
+
     private:
 
+        std::string m_filename;
         FILE* m_file;
 };
 
