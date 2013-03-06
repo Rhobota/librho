@@ -27,7 +27,7 @@ class iReadable
         virtual i32 read(u8* buffer, i32 length) = 0;
 
         /**
-         * Returns the number of bytes read, or 0 when eof is reached,
+         * Returns 'length', or less than 'length' when eof is reached,
          * or -1 if the stream is closed.
          *
          * Will read exactly 'length' bytes unless eof is reached or
@@ -76,9 +76,13 @@ class tFileReadable : public iReadable
         i32 read(u8* buffer, i32 length);
         i32 readAll(u8* buffer, i32 length);
 
+        std::string getFilename() const;
+
     private:
 
+        std::string m_filename;
         FILE* m_file;
+        bool m_eof;
 };
 
 
@@ -87,7 +91,7 @@ class tByteReadable : public iReadable
     public:
 
         tByteReadable(std::vector<u8> inputBuf)
-            : m_buf(inputBuf), m_pos(0)
+            : m_buf(inputBuf), m_pos(0), m_eof(false)
         {
         }
 
@@ -99,7 +103,7 @@ class tByteReadable : public iReadable
         i32 readAll(u8* buffer, i32 length)
         {
             if (m_pos >= m_buf.size())
-                return -1;
+                return m_eof ? -1 : ((m_eof = true), 0);
             i32 i;
             for (i = 0; i < length && m_pos < m_buf.size(); i++)
                 buffer[i] = m_buf[m_pos++];
@@ -110,6 +114,7 @@ class tByteReadable : public iReadable
 
         std::vector<u8> m_buf;
         size_t m_pos;
+        bool m_eof;
 };
 
 
