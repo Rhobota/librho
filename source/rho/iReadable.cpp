@@ -25,12 +25,13 @@ tBufferedReadable::tBufferedReadable(
 tBufferedReadable::~tBufferedReadable()
 {
     delete [] m_buf;
+    m_buf = NULL;
 }
 
 i32 tBufferedReadable::read(u8* buffer, i32 length)
 {
     if (m_pos >= m_bufUsed)
-        if (! refill())
+        if (! refill())      // sets m_pos and m_bufUsed
             return -1;
     i32 i;
     for (i = 0; i < length && m_pos < m_bufUsed; i++)
@@ -64,7 +65,7 @@ bool tBufferedReadable::refill()
 
 
 tFileReadable::tFileReadable(std::string filename)
-    : m_file(NULL)
+    : m_filename(filename), m_file(NULL), m_eof(false)
 {
     m_file = fopen(filename.c_str(), "rb");
     if (m_file == NULL)
@@ -83,7 +84,28 @@ tFileReadable::~tFileReadable()
 
 i32 tFileReadable::read(u8* buffer, i32 length)
 {
-    return (i32) fread(buffer, 1, length, m_file);
+    size_t r = fread(buffer, 1, length, m_file);
+    if (r > 0)
+        return (i32)r;
+
+    // r must be 0 at this point and onward.
+
+    // If we've already seen the eof, return -1.
+    if (m_eof)
+        return -1;
+
+    // Else, we haven't seen the eof before this point.
+    if (feof(m_file))
+    {
+        m_eof = true;
+        return 0;
+    }
+    else
+    {
+        std::ostringstream out;
+        out << "Error reading [" << m_filename << "] (error: " << strerror(errno);
+        throw eRuntimeError(out.str());
+    }
 }
 
 i32 tFileReadable::readAll(u8* buffer, i32 length)
@@ -97,6 +119,11 @@ i32 tFileReadable::readAll(u8* buffer, i32 length)
         amountRead += n;
     }
     return amountRead;
+}
+
+std::string tFileReadable::getFilename() const
+{
+    return m_filename;
 }
 
 
