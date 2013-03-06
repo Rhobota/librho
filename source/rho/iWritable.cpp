@@ -24,13 +24,15 @@ tBufferedWritable::tBufferedWritable(
 
 tBufferedWritable::~tBufferedWritable()
 {
+    flush();
     delete [] m_buf;
+    m_buf = NULL;
 }
 
 i32 tBufferedWritable::write(const u8* buffer, i32 length)
 {
     if (m_bufUsed >= m_bufSize)
-        flush();
+        flush();                     // <-- resets m_bufUsed to 0
     i32 i;
     for (i = 0; i < length && m_bufUsed < m_bufSize; i++)
         m_buf[m_bufUsed++] = buffer[i];
@@ -52,6 +54,8 @@ i32 tBufferedWritable::writeAll(const u8* buffer, i32 length)
 
 void tBufferedWritable::flush()
 {
+    if (m_bufUsed == 0)
+        return;
     i32 r = m_stream->writeAll(m_buf, m_bufUsed);
     if (r < 0 || ((u32)r) != m_bufUsed)
         throw eRuntimeError("Could not flush the buffered output stream!");
@@ -63,7 +67,7 @@ void tBufferedWritable::flush()
 
 
 tFileWritable::tFileWritable(std::string filename)
-    : m_file(NULL)
+    : m_filename(filename), m_file(NULL)
 {
     m_file = fopen(filename.c_str(), "wb");
     if (m_file == NULL)
@@ -76,6 +80,7 @@ tFileWritable::tFileWritable(std::string filename)
 
 tFileWritable::~tFileWritable()
 {
+    fflush(m_file);
     fclose(m_file);
     m_file = NULL;
 }
@@ -100,7 +105,17 @@ i32 tFileWritable::writeAll(const u8* buffer, i32 length)
 
 void tFileWritable::flush()
 {
-    fflush(m_file);
+    if (fflush(m_file) != 0)
+    {
+        std::ostringstream out;
+        out << "Cannot flush writable file [" << m_filename << "] (error: " << strerror(errno);
+        throw eRuntimeError(out.str());
+    }
+}
+
+std::string tFileWritable::getFilename() const
+{
+    return m_filename;
 }
 
 
