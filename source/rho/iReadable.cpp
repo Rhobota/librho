@@ -24,8 +24,12 @@ tBufferedReadable::tBufferedReadable(
 
 tBufferedReadable::~tBufferedReadable()
 {
+    m_stream = NULL;
     delete [] m_buf;
     m_buf = NULL;
+    m_bufSize = 0;
+    m_bufUsed = 0;
+    m_pos = 0;
 }
 
 i32 tBufferedReadable::read(u8* buffer, i32 length)
@@ -84,17 +88,18 @@ tFileReadable::~tFileReadable()
 
 i32 tFileReadable::read(u8* buffer, i32 length)
 {
+    // If we've already seen the eof, return -1.
+    if (m_eof)
+        return -1;
+
+    // Not found eof yet, so keep reading.
     size_t r = fread(buffer, 1, length, m_file);
     if (r > 0)
         return (i32)r;
 
     // r must be 0 at this point and onward.
 
-    // If we've already seen the eof, return -1.
-    if (m_eof)
-        return -1;
-
-    // Else, we haven't seen the eof before this point.
+    // We haven't seen the eof before this point, so check for that.
     if (feof(m_file))
     {
         m_eof = true;

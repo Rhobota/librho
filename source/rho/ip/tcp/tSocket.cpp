@@ -122,13 +122,26 @@ void tSocket::setNagles(bool on)
 
 i32 tSocket::read(u8* buffer, i32 length)
 {
+    if (m_fd < 0)
+        return -1;
+
     #if __linux__ || __APPLE__ || __CYGWIN__
-    return (i32) ::read(m_fd, buffer, length);
+    i32 val = (i32) ::read(m_fd, buffer, length);
     #elif __MINGW32__
-    return (i32) ::recv(m_fd, (char*)buffer, length, 0);
+    i32 val = (i32) ::recv(m_fd, (char*)buffer, length, 0);
     #else
     #error What platform are you on!?
     #endif
+
+    if (val <= 0)
+    {
+        m_finalize();
+        return 0;
+    }
+    else
+    {
+        return val;
+    }
 }
 
 i32 tSocket::readAll(u8* buffer, i32 length)
