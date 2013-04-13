@@ -32,8 +32,7 @@ tSocket::tSocket(std::string hostStr, u16 port)
 }
 
 tSocket::tSocket(int fd, const tAddr& addr)
-    : m_fd(fd),
-      m_addr(addr), m_readEOF(false)
+    : m_fd(fd), m_addr(addr), m_readEOF(false)
 {
 }
 
@@ -197,6 +196,8 @@ void tSocket::close()
     {
         throw eRuntimeError(strerror(errno));
     }
+
+    // Open question: What will happen if close is called more than once?
 }
 
 void tSocket::closeRead()
@@ -212,6 +213,8 @@ void tSocket::closeRead()
     {
         throw eRuntimeError(strerror(errno));
     }
+
+    // Open question: What will happen if close is called more than once?
 }
 
 void tSocket::closeWrite()
@@ -226,6 +229,8 @@ void tSocket::closeWrite()
     {
         throw eRuntimeError(strerror(errno));
     }
+
+    // Open question: What will happen if close is called more than once?
 }
 
 

@@ -66,24 +66,13 @@ class tSocket :
         void setNagles(bool on);
 
         /**
-         * Reads up to 'length' bytes from the socket into 'buffer'.
-         *
-         * Returns the number of bytes read, or 0 when eof is reached,
-         * or -1 if the stream is closed.
-         *
-         * The 'all' version will read exactly 'length' bytes (unless
-         * eof is reached or the stream is closed).
+         * See iReadable interface.
          */
         i32 read(u8* buffer, i32 length);
         i32 readAll(u8* buffer, i32 length);
 
         /**
-         * Writes up to 'length' bytes from the socket into 'buffer'.
-         *
-         * Returns the number of bytes written, or -1 if the stream is closed.
-         *
-         * The 'all' version will write exactly 'length' bytes (unless
-         * eof is reached or the stream is closed).
+         * See iWritable interface.
          */
         i32 write(const u8* buffer, i32 length);
         i32 writeAll(const u8* buffer, i32 length);
