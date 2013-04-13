@@ -117,6 +117,7 @@ class tSocket :
 
         int   m_fd;       // posix file descriptor
         tAddr m_addr;
+        bool  m_readEOF;
 };
 
 

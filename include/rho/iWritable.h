@@ -19,25 +19,30 @@ class iWritable
     public:
 
         /**
-         * Writes from 'buffer' up to 'length' number of bytes.
-         * Returns the number of bytes actually written,
-         * or -1 if the stream is closed.
+         * Writes up to 'length' number of bytes from 'buffer'
+         * to the output stream.
          *
          * Writes only what will immediately fit into the output
-         * stream's buffer, but blocks if no bytes can be immediately
-         * written.
+         * stream's buffer unless no bytes will fit, in which
+         * case this method blocks.
+         *
+         * Returns the number of bytes actually written,
+         * or 0 if an error occurred and nothing was written.
+         * The stream is not guaranteed to be functional
+         * after an error occurs.
          */
         virtual i32 write(const u8* buffer, i32 length) = 0;
 
         /**
-         * Writes from 'buffer' up to 'length' number of bytes.
-         * Returns the number of bytes actually written,
-         * or -1 if the stream is closed.
+         * Writes up to 'length' number of bytes from 'buffer'
+         * to the output stream.
          *
-         * Will write exactly 'length' bytes to the stream,
-         * unless eof is reached or the stream is closed.
-         * That is, it will block until 'length' bytes can
-         * be written.
+         * Blocks until all of the 'length' bytes can be written.
+         *
+         * Returns 'length' if all bytes were written, or less
+         * then 'length' if an error occurred while writing.
+         * The stream is not guaranteed to be functional
+         * after an error occurs.
          */
         virtual i32 writeAll(const u8* buffer, i32 length) = 0;
 
