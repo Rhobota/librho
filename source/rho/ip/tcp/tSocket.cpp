@@ -13,19 +13,19 @@ namespace tcp
 
 
 tSocket::tSocket(const tAddr& addr, u16 port)
-    : m_fd(-1)
+    : m_fd(-1), m_readEOF(false)
 {
     m_init(addr, port);
 }
 
 tSocket::tSocket(const tAddrGroup& addrGroup, u16 port)
-    : m_fd(-1)
+    : m_fd(-1), m_readEOF(false)
 {
     m_init(addrGroup, port);
 }
 
 tSocket::tSocket(std::string hostStr, u16 port)
-    : m_fd(-1)
+    : m_fd(-1), m_readEOF(false)
 {
     tAddrGroup addrGroup(hostStr);
     m_init(addrGroup, port);
@@ -33,7 +33,7 @@ tSocket::tSocket(std::string hostStr, u16 port)
 
 tSocket::tSocket(int fd, const tAddr& addr)
     : m_fd(fd),
-      m_addr(addr)
+      m_addr(addr), m_readEOF(false)
 {
 }
 
@@ -122,7 +122,7 @@ void tSocket::setNagles(bool on)
 
 i32 tSocket::read(u8* buffer, i32 length)
 {
-    if (m_fd < 0)
+    if (m_readEOF)
         return -1;
 
     #if __linux__ || __APPLE__ || __CYGWIN__
@@ -135,7 +135,7 @@ i32 tSocket::read(u8* buffer, i32 length)
 
     if (val <= 0)
     {
-        m_finalize();
+        closeRead();
         return 0;
     }
     else
@@ -160,12 +160,16 @@ i32 tSocket::readAll(u8* buffer, i32 length)
 i32 tSocket::write(const u8* buffer, i32 length)
 {
     #if __linux__ || __APPLE__ || __CYGWIN__
-    return (i32) ::write(m_fd, buffer, length);
+    i32 val = (i32) ::write(m_fd, buffer, length);
     #elif __MINGW32__
-    return (i32) ::send(m_fd, (const char*)buffer, length, 0);
+    i32 val = (i32) ::send(m_fd, (const char*)buffer, length, 0);
     #else
     #error What platform are you on!?
     #endif
+
+    if (val < 0)
+        val = 0;
+    return val;
 }
 
 i32 tSocket::writeAll(const u8* buffer, i32 length)
@@ -197,6 +201,7 @@ void tSocket::close()
 
 void tSocket::closeRead()
 {
+    m_readEOF = true;
     #if __linux__ || __APPLE__ || __CYGWIN__
     if (::shutdown(m_fd, SHUT_RD) == -1)
     #elif __MINGW32__

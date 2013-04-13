@@ -25,8 +25,11 @@ tBufferedWritable::tBufferedWritable(
 tBufferedWritable::~tBufferedWritable()
 {
     flush();
+    m_stream = NULL;
     delete [] m_buf;
     m_buf = NULL;
+    m_bufSize = 0;
+    m_bufUsed = 0;
 }
 
 i32 tBufferedWritable::write(const u8* buffer, i32 length)
@@ -58,7 +61,11 @@ void tBufferedWritable::flush()
         return;
     i32 r = m_stream->writeAll(m_buf, m_bufUsed);
     if (r < 0 || ((u32)r) != m_bufUsed)
+    {
+        // This exception could be thrown through ~tBufferedWritable...
+        // ...so that could be bad if an exception is already in flight... :(
         throw eRuntimeError("Could not flush the buffered output stream!");
+    }
     m_bufUsed = 0;
     iFlushable* flushable = dynamic_cast<iFlushable*>(m_stream);
     if (flushable)
