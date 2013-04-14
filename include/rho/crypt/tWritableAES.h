@@ -20,6 +20,8 @@ class tWritableAES : public iWritable, public iFlushable
         tWritableAES(iWritable* internalStream,
                      const u8 key[], eKeyLengthAES keylen);
 
+        ~tWritableAES();
+
         i32 write(const u8* buffer, i32 length);
         i32 writeAll(const u8* buffer, i32 length);
 
@@ -28,6 +30,9 @@ class tWritableAES : public iWritable, public iFlushable
     private:
 
         iWritable* m_stream;
+        u8* m_buf;
+        u32 m_bufSize;   // <-- must be a multiple of the cypher block size
+        u32 m_bufUsed;
 };
 
 
