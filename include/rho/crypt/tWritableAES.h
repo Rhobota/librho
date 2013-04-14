@@ -29,10 +29,15 @@ class tWritableAES : public iWritable, public iFlushable
 
     private:
 
+        // Stuff:
         iWritable* m_stream;
         u8* m_buf;
         u32 m_bufSize;   // <-- must be a multiple of the cypher block size
         u32 m_bufUsed;
+
+        // Encryption state:
+        u32 m_rk[60];    // size is 4*(MAXNR+1)
+        int m_Nr;
 };
 
 
