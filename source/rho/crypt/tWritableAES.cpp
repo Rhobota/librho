@@ -18,12 +18,24 @@ tWritableAES::tWritableAES(iWritable* internalStream,
     : m_stream(internalStream), m_buf(NULL),
       m_bufSize(0), m_bufUsed(0)
 {
+    // Setup stuff...
     if (m_stream == NULL)
         throw eNullPointer("internalStream must not be NULL.");
     m_bufSize = AES_BLOCK_SIZE*512;
     m_buf = new u8[m_bufSize];
     m_bufUsed = 4;               // <-- the first four bytes are used to store
                                  //     the size of the chunk
+
+    // Setup encryption state...
+    int keybits;
+    switch (keylen)
+    {
+        case k128bit: keybits = 128; break;
+        case k192bit: keybits = 192; break;
+        case k256bit: keybits = 256; break;
+        default: throw eInvalidArgument("The keylen parameter is not valid!");
+    }
+    m_Nr = rijndaelKeySetupEnc(m_rk, key, keybits);
 }
 
 tWritableAES::~tWritableAES()
@@ -70,20 +82,32 @@ void tWritableAES::flush()
     m_buf[2] = (u8)((m_bufUsed >> 8)  & 0xFF);
     m_buf[3] = (u8)((m_bufUsed >> 0)  & 0xFF);
 
-    // Randomize the end of the chunk that is unused.
-    for (u32 i = m_bufUsed; i < m_bufSize; i++)
+    // Randomize the end of the last block.
+    // (Removes potential predicatable plain text.)
+    u32 extraBytes = (m_bufUsed % AES_BLOCK_SIZE);
+    u32 bytesToSend = (extraBytes > 0) ? (m_bufUsed + (AES_BLOCK_SIZE-extraBytes)) : (m_bufUsed);
+    for (u32 i = m_bufUsed; i < bytesToSend; i++)
         m_buf[i] = (u8)(rand() % 256);
 
     // Encrypt the whole chunk.
-
+    u8 pt[AES_BLOCK_SIZE];
+    u8 ct[AES_BLOCK_SIZE];
+    for (u32 i = 0; i < m_bufUsed; i += AES_BLOCK_SIZE)
+    {
+        for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
+            pt[j] = m_buf[i+j];
+        rijndaelEncrypt(m_rk, m_Nr, pt, ct);
+        for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
+            m_buf[i+j] = ct[j];
+    }
 
     // Send the chunk.
-    i32 r = m_stream->writeAll(m_buf, m_bufUsed);
-    if (r < 0 || ((u32)r) != m_bufUsed)
+    i32 r = m_stream->writeAll(m_buf, bytesToSend);
+    if (r < 0 || ((u32)r) != bytesToSend)
     {
-        // This exception could be thrown through ~tBufferedWritable...
+        // This exception could be thrown through ~tWritableAES...
         // ...so that could be bad if an exception is already in flight... :(
-        throw eRuntimeError("Could not flush the buffered output stream!");
+        throw eRuntimeError("Could not flush the AES output stream!");
     }
     m_bufUsed = 4;
 
