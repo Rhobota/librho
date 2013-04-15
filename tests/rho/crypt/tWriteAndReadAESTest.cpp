@@ -28,6 +28,18 @@ void print(const vector<u8>& v)
 }
 
 
+int numBytes(crypt::eKeyLengthAES keylen)
+{
+    switch (keylen)
+    {
+        case crypt::k128bit: return 16;
+        case crypt::k192bit: return 24;
+        case crypt::k256bit: return 32;
+        default: return 0;
+    }
+}
+
+
 void test(const tTest& t, u8* key, crypt::eKeyLengthAES keylen)
 {
     tByteWritable bw;
@@ -35,6 +47,8 @@ void test(const tTest& t, u8* key, crypt::eKeyLengthAES keylen)
 
     crypt::tWritableAES cw(&bw, key, keylen);
     crypt::tReadableAES cr(&br, key, keylen);
+
+    //print(vector<u8>(key, key+numBytes(keylen)));
 
     for (int i = 0; i < kNumItersPerKey; i++)
     {
