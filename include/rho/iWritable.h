@@ -120,6 +120,11 @@ class tByteWritable : public iWritable
             return m_buf;
         }
 
+        void reset()
+        {
+            m_buf.clear();
+        }
+
     private:
 
         std::vector<u8> m_buf;

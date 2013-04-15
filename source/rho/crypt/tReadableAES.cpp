@@ -1,10 +1,7 @@
 #include <rho/crypt/tReadableAES.h>
-
+#include <rho/eRho.h>
 
 #include "rijndael-alg-fst.h"
-#define AES_BLOCK_SIZE 16
-
-#include <rho/eRho.h>
 
 #include <algorithm>
 #include <cstdlib>
@@ -81,44 +78,39 @@ bool tReadableAES::refill()
     m_pos = 0;
     m_bufUsed = 0;
 
-    // Read a block or a block-plus-4-bytes into a temporary buffer.
-    i32 needToRead = (m_chunkBytesLeftToRead > 0) ? AES_BLOCK_SIZE : AES_BLOCK_SIZE+4;
-    u8  tempbuf[AES_BLOCK_SIZE+4];
-    i32 r = m_stream.readAll(tempbuf, needToRead);
-
-    // Ensure we read as much as we were supposed to read.
-    if (r != needToRead)
+    // Read an AES block from the stream.
+    u8  ct[AES_BLOCK_SIZE];
+    i32 r = m_stream.readAll(ct, AES_BLOCK_SIZE);
+    if (r != AES_BLOCK_SIZE)
         return false;
-
-    // Keep track of where in the chunk we are at, and copy the ct to another buffer.
-    u8 ct[AES_BLOCK_SIZE];
-    if (m_chunkBytesLeftToRead > 0)
-    {
-        for (int i = 0; i < AES_BLOCK_SIZE; i++)
-            ct[i] = tempbuf[i];
-    }
-    else
-    {
-        m_chunkBytesLeftToRead =
-            (tempbuf[0] << 24) |
-            (tempbuf[1] << 16) |
-            (tempbuf[2] <<  8) |
-            (tempbuf[3] <<  0);
-        if (m_chunkBytesLeftToRead <= 4)
-            throw eImpossiblePath();
-        m_chunkBytesLeftToRead -= 4;
-        for (int i = 0; i < AES_BLOCK_SIZE; i++)
-            ct[i] = tempbuf[i+4];
-    }
 
     // Decrypt the ct buffer into the pt buffer.
     u8 pt[AES_BLOCK_SIZE];
     rijndaelDecrypt(m_rk, m_Nr, ct, pt);
-    int numBytesToTake = std::min((u32)AES_BLOCK_SIZE, m_chunkBytesLeftToRead);
-    for (int i = 0; i < numBytesToTake; i++)
-        m_buf[i] = pt[i];
-    m_bufUsed = numBytesToTake;
-    m_chunkBytesLeftToRead -= numBytesToTake;
+
+    // Keep track of where in the chunk we are at.
+    if (m_chunkBytesLeftToRead == 0)
+    {
+        m_chunkBytesLeftToRead =
+            (pt[0] << 24) |
+            (pt[1] << 16) |
+            (pt[2] <<  8) |
+            (pt[3] <<  0);
+        if (m_chunkBytesLeftToRead <= 4)
+            throw eImpossiblePath();
+        m_bufUsed = std::min((u32)AES_BLOCK_SIZE, m_chunkBytesLeftToRead) - 4;
+        for (u32 i = 0; i < m_bufUsed; i++)
+            m_buf[i] = pt[i+4];
+        m_chunkBytesLeftToRead -= 4;
+        m_chunkBytesLeftToRead -= m_bufUsed;
+    }
+    else
+    {
+        m_bufUsed = std::min((u32)AES_BLOCK_SIZE, m_chunkBytesLeftToRead);
+        for (u32 i = 0; i < m_bufUsed; i++)
+            m_buf[i] = pt[i];
+        m_chunkBytesLeftToRead -= m_bufUsed;
+    }
 
     return true;
 }

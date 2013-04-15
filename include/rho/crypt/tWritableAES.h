@@ -6,6 +6,10 @@
 #include <rho/iWritable.h>
 #include <rho/crypt/eKeyLength.h>
 
+#ifndef AES_BLOCK_SIZE
+#define AES_BLOCK_SIZE 16
+#endif
+
 
 namespace rho
 {
