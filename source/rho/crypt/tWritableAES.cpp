@@ -3,7 +3,6 @@
 
 #include <rho/eRho.h>
 #include "rijndael-alg-fst.h"
-#define AES_BLOCK_SIZE 16
 #include <cstdlib>
 
 
@@ -86,7 +85,7 @@ void tWritableAES::flush()
     m_buf[3] = (u8)((m_bufUsed >> 0)  & 0xFF);
 
     // Randomize the end of the last block.
-    // (Removes potential predicatable plain text.)
+    // (Removes potential predictable plain text.)
     u32 extraBytes = (m_bufUsed % AES_BLOCK_SIZE);
     u32 bytesToSend = (extraBytes > 0) ? (m_bufUsed + (AES_BLOCK_SIZE-extraBytes)) : (m_bufUsed);
     for (u32 i = m_bufUsed; i < bytesToSend; i++)

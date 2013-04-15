@@ -122,6 +122,12 @@ class tByteReadable : public iReadable
             return i;
         }
 
+        void reset()
+        {
+            m_pos = 0;
+            m_eof = false;
+        }
+
     private:
 
         std::vector<u8> m_buf;
