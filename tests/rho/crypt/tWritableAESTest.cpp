@@ -82,9 +82,9 @@ int main()
 {
     tCrashReporter::init();
 
-    tTest("tWritable 128bit test", test128);
-    tTest("tWritable 192bit test", test192);
-    tTest("tWritable 256bit test", test256);
+    tTest("tWritableAES 128bit test", test128);
+    tTest("tWritableAES 192bit test", test192);
+    tTest("tWritableAES 256bit test", test256);
 
     return 0;
 }
