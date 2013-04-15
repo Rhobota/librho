@@ -6,6 +6,9 @@
 
 #include <rho/eRho.h>
 
+#include <algorithm>
+#include <cstdlib>
+
 
 namespace rho
 {
@@ -25,14 +28,17 @@ tReadableAES::tReadableAES(iReadable* internalStream,
 
     // Setup encryption state...
     int keybits;
+    int expectedNr;
     switch (keylen)
     {
-        case k128bit: keybits = 128; break;
-        case k192bit: keybits = 192; break;
-        case k256bit: keybits = 256; break;
+        case k128bit: keybits = 128; expectedNr = 10; break;
+        case k192bit: keybits = 192; expectedNr = 12; break;
+        case k256bit: keybits = 256; expectedNr = 14; break;
         default: throw eInvalidArgument("The keylen parameter is not valid!");
     }
     m_Nr = rijndaelKeySetupDec(m_rk, key, keybits);
+    if (m_Nr != expectedNr)
+        throw eImpossiblePath();
 }
 
 tReadableAES::~tReadableAES()
@@ -88,7 +94,6 @@ bool tReadableAES::refill()
     u8 ct[AES_BLOCK_SIZE];
     if (m_chunkBytesLeftToRead > 0)
     {
-        m_chunkBytesLeftToRead -= needToRead;
         for (int i = 0; i < AES_BLOCK_SIZE; i++)
             ct[i] = tempbuf[i];
     }
@@ -99,19 +104,9 @@ bool tReadableAES::refill()
             (tempbuf[1] << 16) |
             (tempbuf[2] <<  8) |
             (tempbuf[3] <<  0);
-        if (m_chunkBytesLeftToRead < ((u32)needToRead) ||
-              (m_chunkBytesLeftToRead % AES_BLOCK_SIZE) != 4)
-        {
+        if (m_chunkBytesLeftToRead <= 4)
             throw eImpossiblePath();
-        }
-
-        m_chunkBytesLeftToRead -= needToRead;
-
-        if ((m_chunkBytesLeftToRead % AES_BLOCK_SIZE) > 0)
-        {
-            throw eImpossiblePath();
-        }
-
+        m_chunkBytesLeftToRead -= 4;
         for (int i = 0; i < AES_BLOCK_SIZE; i++)
             ct[i] = tempbuf[i+4];
     }
@@ -119,9 +114,11 @@ bool tReadableAES::refill()
     // Decrypt the ct buffer into the pt buffer.
     u8 pt[AES_BLOCK_SIZE];
     rijndaelDecrypt(m_rk, m_Nr, ct, pt);
-    for (int i = 0; i < AES_BLOCK_SIZE; i++)
+    int numBytesToTake = std::min((u32)AES_BLOCK_SIZE, m_chunkBytesLeftToRead);
+    for (int i = 0; i < numBytesToTake; i++)
         m_buf[i] = pt[i];
-    m_bufUsed = AES_BLOCK_SIZE;
+    m_bufUsed = numBytesToTake;
+    m_chunkBytesLeftToRead -= numBytesToTake;
 
     return true;
 }
