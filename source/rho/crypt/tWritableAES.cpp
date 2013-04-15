@@ -28,14 +28,17 @@ tWritableAES::tWritableAES(iWritable* internalStream,
 
     // Setup encryption state...
     int keybits;
+    int expectedNr;
     switch (keylen)
     {
-        case k128bit: keybits = 128; break;
-        case k192bit: keybits = 192; break;
-        case k256bit: keybits = 256; break;
+        case k128bit: keybits = 128; expectedNr = 10; break;
+        case k192bit: keybits = 192; expectedNr = 12; break;
+        case k256bit: keybits = 256; expectedNr = 14; break;
         default: throw eInvalidArgument("The keylen parameter is not valid!");
     }
     m_Nr = rijndaelKeySetupEnc(m_rk, key, keybits);
+    if (m_Nr != expectedNr)
+        throw eImpossiblePath();
 }
 
 tWritableAES::~tWritableAES()
