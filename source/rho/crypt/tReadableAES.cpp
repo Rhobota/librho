@@ -115,6 +115,13 @@ bool tReadableAES::refill()
     return true;
 }
 
+void tReadableAES::reset()
+{
+    m_pos = 0;
+    m_bufUsed = 0;
+    m_chunkBytesLeftToRead = 0;
+}
+
 
 }    // namespace crypt
 }    // namespace rho
