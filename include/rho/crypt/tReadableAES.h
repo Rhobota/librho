@@ -28,6 +28,8 @@ class tReadableAES : public iReadable
         i32 read(u8* buffer, i32 length);
         i32 readAll(u8* buffer, i32 length);
 
+        void reset();
+
     private:
 
         bool refill();

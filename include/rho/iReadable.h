@@ -99,6 +99,9 @@ class tByteReadable : public iReadable
 {
     public:
 
+        tByteReadable()
+            : m_buf(), m_pos(0), m_eof(false) { }
+
         tByteReadable(const std::vector<u8>& inputBuf)
             : m_buf(inputBuf), m_pos(0), m_eof(false)
         {
@@ -122,8 +125,9 @@ class tByteReadable : public iReadable
             return i;
         }
 
-        void reset()
+        void reset(const std::vector<u8>& inputBuf)
         {
+            m_buf = inputBuf;
             m_pos = 0;
             m_eof = false;
         }
