@@ -4,6 +4,7 @@
 
 #include <rho/iReadable.h>
 #include <rho/crypt/eKeyLength.h>
+#include <rho/crypt/eOperationModeAES.h>
 
 #ifndef AES_BLOCK_SIZE
 #define AES_BLOCK_SIZE 16
@@ -20,7 +21,7 @@ class tReadableAES : public iReadable
 {
     public:
 
-        tReadableAES(iReadable* internalStream,
+        tReadableAES(iReadable* internalStream, eOperationModeAES opmode,
                      const u8 key[], eKeyLengthAES keylen);
 
         ~tReadableAES();
@@ -43,6 +44,11 @@ class tReadableAES : public iReadable
         u32 m_bufUsed;
         u32 m_pos;
         u32 m_chunkBytesLeftToRead;
+
+        // Operation mode stuff:
+        eOperationModeAES m_opmode;
+        u8 m_last_ct[AES_BLOCK_SIZE];        // <-- used only in kOpModeCBC
+        bool m_hasReadInitializationVector;  // <-- used only in kOpModeCBC
 
         // Encryption state:
         u32 m_rk[60];    // size is 4*(MAXNR+1)

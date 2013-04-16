@@ -13,11 +13,12 @@ namespace crypt
 {
 
 
-tReadableAES::tReadableAES(iReadable* internalStream,
+tReadableAES::tReadableAES(iReadable* internalStream, eOperationModeAES opmode,
              const u8 key[], eKeyLengthAES keylen)
     : m_stream(internalStream), m_buf(NULL),
       m_bufSize(0), m_bufUsed(0), m_pos(0),
-      m_chunkBytesLeftToRead(0)
+      m_chunkBytesLeftToRead(0),
+      m_opmode(opmode)
 {
     // Setup stuff...
     m_bufSize = AES_BLOCK_SIZE;
@@ -36,6 +37,19 @@ tReadableAES::tReadableAES(iReadable* internalStream,
     m_Nr = rijndaelKeySetupDec(m_rk, key, keybits);
     if (m_Nr != expectedNr)
         throw eImpossiblePath();
+
+    // Check the op mode.
+    switch (m_opmode)
+    {
+        case kOpModeECB:
+            break;
+
+        case kOpModeCBC:
+            m_hasReadInitializationVector = false;
+            break;
+
+        default: throw eInvalidArgument("opmode is not recognized!");
+    }
 }
 
 tReadableAES::~tReadableAES()
@@ -74,6 +88,19 @@ i32 tReadableAES::readAll(u8* buffer, i32 length)
 
 bool tReadableAES::refill()
 {
+    // If in cbc mode and this is the first time refill is called, read the
+    // initialization vector off the stream and decrypt it.
+    if (m_opmode == kOpModeCBC && !m_hasReadInitializationVector)
+    {
+        u8 initVectorCt[AES_BLOCK_SIZE];
+        i32 r = m_stream.readAll(initVectorCt, AES_BLOCK_SIZE);
+        if (r != AES_BLOCK_SIZE)
+            throw eRuntimeError("The AES reader could not read the CBC "
+                    "initialization vector!");
+        rijndaelDecrypt(m_rk, m_Nr, initVectorCt, m_last_ct);
+        m_hasReadInitializationVector = true;
+    }
+
     // Reset indices.
     m_pos = 0;
     m_bufUsed = 0;
@@ -87,6 +114,16 @@ bool tReadableAES::refill()
     // Decrypt the ct buffer into the pt buffer.
     u8 pt[AES_BLOCK_SIZE];
     rijndaelDecrypt(m_rk, m_Nr, ct, pt);
+
+    // If in CBC mode, deal with the xor chaining stuff.
+    if (m_opmode == kOpModeCBC)
+    {
+        for (int i = 0; i < AES_BLOCK_SIZE; i++)
+        {
+            pt[i] ^= m_last_ct[i];
+            m_last_ct[i] = ct[i];
+        }
+    }
 
     // Keep track of where in the chunk we are at.
     if (m_chunkBytesLeftToRead == 0)

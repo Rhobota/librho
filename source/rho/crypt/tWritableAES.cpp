@@ -12,10 +12,11 @@ namespace crypt
 {
 
 
-tWritableAES::tWritableAES(iWritable* internalStream,
+tWritableAES::tWritableAES(iWritable* internalStream, eOperationModeAES opmode,
              const u8 key[], eKeyLengthAES keylen)
     : m_stream(internalStream), m_buf(NULL),
-      m_bufSize(0), m_bufUsed(0)
+      m_bufSize(0), m_bufUsed(0),
+      m_opmode(opmode)
 {
     // Setup stuff...
     if (m_stream == NULL)
@@ -38,6 +39,21 @@ tWritableAES::tWritableAES(iWritable* internalStream,
     m_Nr = rijndaelKeySetupEnc(m_rk, key, keybits);
     if (m_Nr != expectedNr)
         throw eImpossiblePath();
+
+    // Check the op mode.
+    switch (m_opmode)
+    {
+        case kOpModeECB:
+            break;
+
+        case kOpModeCBC:
+            for (int i = 0; i < AES_BLOCK_SIZE; i++)
+                m_last_ct[i] = (u8)(rand() % 256);   // <-- randomize the initialization vector
+            m_hasSentInitializationVector = false;
+            break;
+
+        default: throw eInvalidArgument("opmode is not recognized!");
+    }
 }
 
 tWritableAES::~tWritableAES()
@@ -78,6 +94,19 @@ void tWritableAES::flush()
     if (m_bufUsed <= 4)
         return;
 
+    // If in cbc mode and this is the first flush, send the initialization
+    // vector to the reader.
+    if (m_opmode == kOpModeCBC && !m_hasSentInitializationVector)
+    {
+        u8 initVectorCt[AES_BLOCK_SIZE];
+        rijndaelEncrypt(m_rk, m_Nr, m_last_ct, initVectorCt);
+        i32 w = m_stream->writeAll(initVectorCt, AES_BLOCK_SIZE);
+        if (w != AES_BLOCK_SIZE)
+            throw eRuntimeError("The AES writer could not send the CBC "
+                    "initialization vector!");
+        m_hasSentInitializationVector = true;
+    }
+
     // Store the size of the chunk.
     m_buf[0] = (u8)((m_bufUsed >> 24) & 0xFF);
     m_buf[1] = (u8)((m_bufUsed >> 16) & 0xFF);
@@ -98,9 +127,19 @@ void tWritableAES::flush()
     {
         for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
             pt[j] = m_buf[i+j];
+
+        if (m_opmode == kOpModeCBC)
+            for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
+                pt[j] ^= m_last_ct[j];
+
         rijndaelEncrypt(m_rk, m_Nr, pt, ct);
+
         for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
             m_buf[i+j] = ct[j];
+
+        if (m_opmode == kOpModeCBC)
+            for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
+                m_last_ct[j] = ct[j];
     }
 
     // Send the chunk.

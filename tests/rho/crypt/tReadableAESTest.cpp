@@ -32,7 +32,7 @@ void test128(const tTest& t)
     t.assert(sizeof(key128) == 128/8);
 
     tByteReadable br;
-    crypt::tReadableAES cr(&br, key128, crypt::k128bit);
+    crypt::tReadableAES cr(&br, crypt::kOpModeECB, key128, crypt::k128bit);
     test(t, br, cr);
 }
 
@@ -44,7 +44,7 @@ void test192(const tTest& t)
     t.assert(sizeof(key192) == 192/8);
 
     tByteReadable br;
-    crypt::tReadableAES cr(&br, key192, crypt::k192bit);
+    crypt::tReadableAES cr(&br, crypt::kOpModeECB, key192, crypt::k192bit);
     test(t, br, cr);
 }
 
@@ -56,7 +56,7 @@ void test256(const tTest& t)
     t.assert(sizeof(key256) == 256/8);
 
     tByteReadable br;
-    crypt::tReadableAES cr(&br, key256, crypt::k256bit);
+    crypt::tReadableAES cr(&br, crypt::kOpModeECB, key256, crypt::k256bit);
     test(t, br, cr);
 }
 
