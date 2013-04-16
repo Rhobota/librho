@@ -131,7 +131,8 @@ tBigInteger::tBigInteger(vector<u8> bytes)
 
 string tBigInteger::toString(int radix) const
 {
-    throw eNotImplemented("This method requires that operator/ be implemented...");
+    // todo
+    return string();
 }
 
 vector<u8> tBigInteger::getBytes() const
@@ -239,6 +240,17 @@ void tBigInteger::operator-= (const tBigInteger& o)
 
 void tBigInteger::operator*= (const tBigInteger& o)
 {
+    // todo
+}
+
+void tBigInteger::operator/= (const tBigInteger& o)
+{
+    // todo
+}
+
+void tBigInteger::operator%= (const tBigInteger& o)
+{
+    // todo
 }
 
 tBigInteger tBigInteger::operator+  (const tBigInteger& o) const
@@ -262,6 +274,20 @@ tBigInteger tBigInteger::operator*  (const tBigInteger& o) const
     return n;
 }
 
+tBigInteger tBigInteger::operator/  (const tBigInteger& o) const
+{
+    tBigInteger n = *this;
+    n /= o;
+    return n;
+}
+
+tBigInteger tBigInteger::operator%  (const tBigInteger& o) const
+{
+    tBigInteger n = *this;
+    n %= o;
+    return n;
+}
+
 tBigInteger operator+ (i32 a, const tBigInteger& b)
 {
     return b + a;
@@ -279,11 +305,15 @@ tBigInteger operator* (i32 a, const tBigInteger& b)
 
 istream& operator>> (istream& in, tBigInteger& b)
 {
+    string str;
+    in >> str;
+    b = tBigInteger(str);
     return in;
 }
 
 ostream& operator<< (ostream& out, const tBigInteger& b)
 {
+    out << b.toString();
     return out;
 }
 

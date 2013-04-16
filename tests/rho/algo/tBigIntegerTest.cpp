@@ -19,7 +19,7 @@ void print(algo::tBigInteger bi)
 }
 
 
-bool verrifyEqual(const algo::tBigInteger& bi, i32 val)
+bool verrifyEqual32(const algo::tBigInteger& bi, i32 val)
 {
     vector<u8> correctBytes;
     u32 uval = val < 0 ? ((u32)(-val)) : ((u32)(val));
@@ -27,6 +27,25 @@ bool verrifyEqual(const algo::tBigInteger& bi, i32 val)
     correctBytes.push_back((uval >>  8) & 0xFF);
     correctBytes.push_back((uval >> 16) & 0xFF);
     correctBytes.push_back((uval >> 24) & 0xFF);
+    while (correctBytes.size() > 0 && correctBytes.back() == 0) correctBytes.pop_back();
+
+    return (bi.isNegative() == (val < 0)) &&
+           (bi.getBytes() == correctBytes);
+}
+
+
+bool verrifyEqual64(const algo::tBigInteger& bi, i64 val)
+{
+    vector<u8> correctBytes;
+    u64 uval = val < 0 ? ((u64)(-val)) : ((u64)(val));
+    correctBytes.push_back((uval >>  0) & 0xFF);
+    correctBytes.push_back((uval >>  8) & 0xFF);
+    correctBytes.push_back((uval >> 16) & 0xFF);
+    correctBytes.push_back((uval >> 24) & 0xFF);
+    correctBytes.push_back((uval >> 32) & 0xFF);
+    correctBytes.push_back((uval >> 40) & 0xFF);
+    correctBytes.push_back((uval >> 48) & 0xFF);
+    correctBytes.push_back((uval >> 56) & 0xFF);
     while (correctBytes.size() > 0 && correctBytes.back() == 0) correctBytes.pop_back();
 
     return (bi.isNegative() == (val < 0)) &&
@@ -60,13 +79,38 @@ void i32constructortest(const tTest& t)
     for (size_t i = 0; i < v.size(); i++)
     {
         algo::tBigInteger bi(v[i]);
-        t.assert(verrifyEqual(bi, v[i]));
+        t.assert(verrifyEqual32(bi, v[i]));
     }
 }
 
 
 void stringconstructortest(const tTest& t)
 {
+    // todo
+}
+
+
+void plustest(const tTest& t)
+{
+    // todo
+}
+
+
+void minustest(const tTest& t)
+{
+    // todo
+}
+
+
+void multtest(const tTest& t)
+{
+    // todo
+}
+
+
+void divtest(const tTest& t)
+{
+    // todo
 }
 
 
@@ -76,6 +120,10 @@ int main()
 
     tTest("tBigInteger i32 constructor test", i32constructortest);
     tTest("tBigInteger string constructor test", stringconstructortest);
+    tTest("tBigInteger plus test", plustest);
+    tTest("tBigInteger minus test", minustest);
+    tTest("tBigInteger mult test", multtest);
+    tTest("tBigInteger div test", divtest);
 
     return 0;
 }
