@@ -49,7 +49,7 @@ void test128(const tTest& t)
     t.assert(sizeof(key128) == 128/8);
 
     tByteWritable bw;
-    crypt::tWritableAES cw(&bw, key128, crypt::k128bit);
+    crypt::tWritableAES cw(&bw, crypt::kOpModeECB, key128, crypt::k128bit);
     test(t, bw, cw);
 }
 
@@ -61,7 +61,7 @@ void test192(const tTest& t)
     t.assert(sizeof(key192) == 192/8);
 
     tByteWritable bw;
-    crypt::tWritableAES cw(&bw, key192, crypt::k192bit);
+    crypt::tWritableAES cw(&bw, crypt::kOpModeECB, key192, crypt::k192bit);
     test(t, bw, cw);
 }
 
@@ -73,7 +73,7 @@ void test256(const tTest& t)
     t.assert(sizeof(key256) == 256/8);
 
     tByteWritable bw;
-    crypt::tWritableAES cw(&bw, key256, crypt::k256bit);
+    crypt::tWritableAES cw(&bw, crypt::kOpModeECB, key256, crypt::k256bit);
     test(t, bw, cw);
 }
 

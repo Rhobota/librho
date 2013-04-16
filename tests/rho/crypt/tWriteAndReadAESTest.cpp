@@ -40,13 +40,13 @@ int numBytes(crypt::eKeyLengthAES keylen)
 }
 
 
-void test(const tTest& t, u8* key, crypt::eKeyLengthAES keylen)
+void test(const tTest& t, crypt::eOperationModeAES opmode, u8* key, crypt::eKeyLengthAES keylen)
 {
     tByteWritable bw;
     tByteReadable br;
 
-    crypt::tWritableAES cw(&bw, key, keylen);
-    crypt::tReadableAES cr(&br, key, keylen);
+    crypt::tWritableAES cw(&bw, opmode, key, keylen);
+    crypt::tReadableAES cr(&br, opmode, key, keylen);
 
     //print(vector<u8>(key, key+numBytes(keylen)));
 
@@ -84,7 +84,8 @@ void test128(const tTest& t)
     for (size_t i = 0; i < sizeof(key128); i++)
         key128[i] = rand() % 256;
 
-    test(t, key128, crypt::k128bit);
+    test(t, crypt::kOpModeECB, key128, crypt::k128bit);
+    test(t, crypt::kOpModeCBC, key128, crypt::k128bit);
 }
 
 
@@ -97,7 +98,8 @@ void test192(const tTest& t)
     for (size_t i = 0; i < sizeof(key192); i++)
         key192[i] = rand() % 256;
 
-    test(t, key192, crypt::k192bit);
+    test(t, crypt::kOpModeECB, key192, crypt::k192bit);
+    test(t, crypt::kOpModeCBC, key192, crypt::k192bit);
 }
 
 
@@ -110,7 +112,8 @@ void test256(const tTest& t)
     for (size_t i = 0; i < sizeof(key256); i++)
         key256[i] = rand() % 256;
 
-    test(t, key256, crypt::k256bit);
+    test(t, crypt::kOpModeECB, key256, crypt::k256bit);
+    test(t, crypt::kOpModeCBC, key256, crypt::k256bit);
 }
 
 
