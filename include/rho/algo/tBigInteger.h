@@ -5,6 +5,7 @@
 #include <rho/types.h>
 #include <rho/eRho.h>
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -26,6 +27,8 @@ class tBigInteger
         std::string     toString(int radix=10) const;
         std::vector<u8> getBytes()             const;
         bool            isNegative()           const;
+        bool            isOdd()                const;
+        bool            isEven()               const;
 
         tBigInteger operator- () const;
 
@@ -49,6 +52,9 @@ class tBigInteger
 tBigInteger operator+ (i32 a, const tBigInteger& b);
 tBigInteger operator- (i32 a, const tBigInteger& b);
 tBigInteger operator* (i32 a, const tBigInteger& b);
+
+std::istream& operator>> (std::istream& in, tBigInteger& b);
+std::ostream& operator<< (std::ostream& out, const tBigInteger& b);
 
 
 }   // namespace algo

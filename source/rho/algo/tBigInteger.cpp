@@ -42,7 +42,7 @@ tBigInteger::tBigInteger(string val, int radix)
         {
             for (size_t i = 0; i < val.size(); i++)
             {
-                if (val[i] == '-')
+                if (i == 0 && val[i] == '-')
                 {
                     neg = true;
                     continue;
@@ -58,7 +58,7 @@ tBigInteger::tBigInteger(string val, int radix)
         {
             for (size_t i = 0; i < val.size(); i++)
             {
-                if (val[i] == '-')
+                if (i == 0 && val[i] == '-')
                 {
                     neg = true;
                     continue;
@@ -74,7 +74,7 @@ tBigInteger::tBigInteger(string val, int radix)
         {
             for (size_t i = 0; i < val.size(); i++)
             {
-                if (val[i] == '-')
+                if (i == 0 && val[i] == '-')
                 {
                     neg = true;
                     continue;
@@ -90,7 +90,7 @@ tBigInteger::tBigInteger(string val, int radix)
         {
             for (size_t i = 0; i < val.size(); i++)
             {
-                if (val[i] == '-')
+                if (i == 0 && val[i] == '-')
                 {
                     neg = true;
                     continue;
@@ -129,6 +129,11 @@ tBigInteger::tBigInteger(vector<u8> bytes)
 {
 }
 
+string tBigInteger::toString(int radix) const
+{
+    throw eNotImplemented("This method requires that operator/ be implemented...");
+}
+
 vector<u8> tBigInteger::getBytes() const
 {
     return b;
@@ -139,9 +144,14 @@ bool tBigInteger::isNegative() const
     return neg;
 }
 
-string tBigInteger::toString(int radix) const
+bool tBigInteger::isOdd() const
 {
-    throw eNotImplemented("This method requires that operator/ be implemented...");
+    return (b.size() > 0) && ((b[0] & 1) > 0);
+}
+
+bool tBigInteger::isEven() const
+{
+    return !isOdd();
 }
 
 tBigInteger tBigInteger::operator- () const
@@ -265,6 +275,16 @@ tBigInteger operator- (i32 a, const tBigInteger& b)
 tBigInteger operator* (i32 a, const tBigInteger& b)
 {
     return b * a;
+}
+
+istream& operator>> (istream& in, tBigInteger& b)
+{
+    return in;
+}
+
+ostream& operator<< (ostream& out, const tBigInteger& b)
+{
+    return out;
 }
 
 

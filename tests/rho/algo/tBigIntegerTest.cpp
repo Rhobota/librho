@@ -19,28 +19,54 @@ void print(algo::tBigInteger bi)
 }
 
 
-void test(const tTest& t)
+bool verrifyEqual(const algo::tBigInteger& bi, i32 val)
 {
-    {
-        i32 val = 0x7FFFFFFF;
-        cout << "val  = " << val << endl;
-        cout << "-val = " << -val << endl;
-        algo::tBigInteger bi(val);
-        print(bi);
-    }
+    vector<u8> correctBytes;
+    u32 uval = val < 0 ? ((u32)(-val)) : ((u32)(val));
+    correctBytes.push_back((uval >>  0) & 0xFF);
+    correctBytes.push_back((uval >>  8) & 0xFF);
+    correctBytes.push_back((uval >> 16) & 0xFF);
+    correctBytes.push_back((uval >> 24) & 0xFF);
+    while (correctBytes.size() > 0 && correctBytes.back() == 0) correctBytes.pop_back();
 
-    {
-        i32 val = 0x80000000;
-        cout << "val  = " << val << endl;
-        cout << "-val = " << -val << endl;
-        algo::tBigInteger bi(val);
-        print(bi);
-    }
+    return (bi.isNegative() == (val < 0)) &&
+           (bi.getBytes() == correctBytes);
+}
 
+
+void i32constructortest(const tTest& t)
+{
+    vector<i32> v;
+    v.push_back(0x7FFFFFFF);  // <-- largest positive int
+    v.push_back(0x80000000);  // <-- largest negative int
+    v.push_back(0);
+    v.push_back(1);
+    v.push_back(-1);
+    v.push_back(2);
+    v.push_back(-2);
+    v.push_back(924);
+    v.push_back(-520);
+    v.push_back(2242924);
+    v.push_back(-2284520);
+    v.push_back(1182242924);
+    v.push_back(-1922284520);
+
+    t.assert(v[0] != -v[0]);    // The largest positive int works as expected.
+    t.assert(v[1] == -v[1]);    // The largest negative int is weird, but the
+                                // code below relies on this behavior, though
+                                // I'm not sure what other behavior could
+                                // possibly happen.
+
+    for (size_t i = 0; i < v.size(); i++)
     {
-        algo::tBigInteger bi("2147483647");
-        print(bi);
+        algo::tBigInteger bi(v[i]);
+        t.assert(verrifyEqual(bi, v[i]));
     }
+}
+
+
+void stringconstructortest(const tTest& t)
+{
 }
 
 
@@ -48,7 +74,8 @@ int main()
 {
     tCrashReporter::init();
 
-    tTest("tBigInteger test", test);
+    tTest("tBigInteger i32 constructor test", i32constructortest);
+    tTest("tBigInteger string constructor test", stringconstructortest);
 
     return 0;
 }
