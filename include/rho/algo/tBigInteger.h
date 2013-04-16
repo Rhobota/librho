@@ -47,6 +47,13 @@ class tBigInteger
         void        operator%= (const tBigInteger& o);
         tBigInteger operator%  (const tBigInteger& o) const;
 
+        bool        operator== (const tBigInteger& o) const;
+        bool        operator!= (const tBigInteger& o) const;
+        bool        operator<  (const tBigInteger& o) const;
+        bool        operator>  (const tBigInteger& o) const;
+        bool        operator<= (const tBigInteger& o) const;
+        bool        operator>= (const tBigInteger& o) const;
+
     private:
 
         std::vector<u8> b;   // <-- stored little endian

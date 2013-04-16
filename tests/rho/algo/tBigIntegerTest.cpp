@@ -93,12 +93,16 @@ void stringconstructortest(const tTest& t)
 void plustest(const tTest& t)
 {
     // todo
+    // count up from -20000 to 20000 (adds small numbers to big numbers)
+    // add big numbers to small numbers
 }
 
 
 void minustest(const tTest& t)
 {
     // todo
+    // count down from 20000 to -20000 (subtracts small numbers from big numbers)
+    // subtract big numbers from small numbers
 }
 
 

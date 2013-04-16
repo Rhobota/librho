@@ -112,14 +112,17 @@ tBigInteger::tBigInteger(string val, int radix)
         break;
 
         default:
-            throw eInvalidArgument(string() + "Unsupported radix");
+            throw eInvalidArgument(string() + "Unsupported radix (must be 2, 8, 10, or 16)");
     }
 
     tBigInteger mult(1);
     for (int i = (int)ints.size()-1; i >= 0; i--)
     {
-        tBigInteger add = mult * ints[i];
-        *this += add;
+        if (ints[i] != 0)
+        {
+            tBigInteger add = mult * ints[i];
+            *this += add;
+        }
         mult *= radix;
     }
 }
@@ -127,12 +130,51 @@ tBigInteger::tBigInteger(string val, int radix)
 tBigInteger::tBigInteger(vector<u8> bytes)
     : b(bytes), neg(false)
 {
+    while (b.size() > 0 && b.back() == 0) b.pop_back();
+}
+
+char toChar(const tBigInteger& bi)
+{
+    vector<u8> bytes = bi.getBytes();
+    if (bytes.size() == 0)
+        return '0';
+    if (bytes.size() > 1)
+        return '?';
+    u8 b = bytes[0];
+    if (b <= 9)
+        return (char)('0' + b);
+    if (b <= 15)
+        return (char)('A' + b);
+    return '?';
 }
 
 string tBigInteger::toString(int radix) const
 {
-    // todo
-    return string();
+    switch (radix)
+    {
+        case 2:
+        case 8:
+        case 10:
+        case 16:
+            break;
+        default:
+            throw eInvalidArgument(string() + "Unsupported radix (must be 2, 8, 10, or 16)");
+    }
+
+    string str;
+
+    tBigInteger n = neg ? -(*this) : *this;
+    while (n != 0)
+    {
+        tBigInteger m = n % radix;
+        n /= radix;
+        str += toChar(m);
+    }
+
+    if (str == "") str = "0";
+    else if (neg) str += "-";
+
+    return string(str.rbegin(), str.rend());
 }
 
 vector<u8> tBigInteger::getBytes() const
@@ -142,7 +184,7 @@ vector<u8> tBigInteger::getBytes() const
 
 bool tBigInteger::isNegative() const
 {
-    return neg;
+    return (b.size() > 0) && neg;   // (b.size() == 0)  <==>  (*this == 0)
 }
 
 bool tBigInteger::isOdd() const
@@ -208,7 +250,7 @@ void tBigInteger::operator-= (const tBigInteger& o)
 {
     if (neg && !o.neg)
     {
-        *this = o + (-(*this));
+        *this += -o;
         return;
     }
 
@@ -218,8 +260,19 @@ void tBigInteger::operator-= (const tBigInteger& o)
         return;
     }
 
-    while (o.b.size() > b.size())
-        b.push_back(0);
+    if (neg && o.neg)
+    {
+        *this = -o - -(*this);
+        return;
+    }
+
+    if (*this < o)
+    {
+        *this = -(o - *this);
+        return;
+    }
+
+    // At this point, *this and o are both non-negative and (*this >= o).
 
     for (size_t i = 0; i < b.size() && i < o.b.size(); i++)
     {
@@ -227,11 +280,8 @@ void tBigInteger::operator-= (const tBigInteger& o)
         if (b[i] < o.b[i])     // <-- if need to borrow
         {
             size_t j = i+1;
-            while (j < b.size() && b[j] == 0) b[j++] = 255;
-            if (j == b.size())
-                neg = true;
-            else
-                b[j]--;
+            while (b[j] == 0) b[j++] = 255;
+            b[j]--;
             top = (u16)(top + 256);
         }
         b[i] = (u8)(top - o.b[i]);
@@ -286,6 +336,44 @@ tBigInteger tBigInteger::operator%  (const tBigInteger& o) const
     tBigInteger n = *this;
     n %= o;
     return n;
+}
+
+bool tBigInteger::operator== (const tBigInteger& o) const
+{
+    return (b == o.b) && (isNegative() == o.isNegative());
+}
+
+bool tBigInteger::operator!= (const tBigInteger& o) const
+{
+    return !(*this == o);
+}
+
+bool tBigInteger::operator<  (const tBigInteger& o) const
+{
+    if (isNegative() && !o.isNegative())
+        return true;
+    if (!isNegative() && o.isNegative())
+        return false;
+    bool mag = (b.size() < o.b.size()) || (b.size() == o.b.size() && b.back() < o.b.back());
+    if (isNegative())
+        return !mag;
+    else
+        return mag;
+}
+
+bool tBigInteger::operator>  (const tBigInteger& o) const
+{
+    return (o < *this);
+}
+
+bool tBigInteger::operator<= (const tBigInteger& o) const
+{
+    return (*this < o) || (*this == o);
+}
+
+bool tBigInteger::operator>= (const tBigInteger& o) const
+{
+    return (*this > o) || (*this == o);
 }
 
 tBigInteger operator+ (i32 a, const tBigInteger& b)
