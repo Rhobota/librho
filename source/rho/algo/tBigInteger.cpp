@@ -163,7 +163,7 @@ string tBigInteger::toString(int radix) const
 
     string str;
 
-    tBigInteger n = neg ? -(*this) : *this;
+    tBigInteger n = isNegative() ? -(*this) : *this;
     while (n != 0)
     {
         tBigInteger m = n % radix;
@@ -171,8 +171,8 @@ string tBigInteger::toString(int radix) const
         str += toChar(m);
     }
 
-    if (str == "") str = "0";
-    else if (neg) str += "-";
+    if (str == "")    str = "0";
+    if (isNegative()) str += "-";
 
     return string(str.rbegin(), str.rend());
 }
@@ -286,6 +286,8 @@ void tBigInteger::operator-= (const tBigInteger& o)
         }
         b[i] = (u8)(top - o.b[i]);
     }
+
+    while (b.size() > 0 && b.back() == 0) b.pop_back();
 }
 
 void tBigInteger::operator*= (const tBigInteger& o)
