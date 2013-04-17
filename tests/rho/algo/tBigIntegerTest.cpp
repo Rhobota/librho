@@ -8,6 +8,9 @@ using std::endl;
 using std::vector;
 
 
+static const int kRandIters = 1000000;
+
+
 void print(algo::tBigInteger bi)
 {
     if (bi.isNegative())
@@ -53,6 +56,20 @@ bool verrifyEqual64(const algo::tBigInteger& bi, i64 val)
 }
 
 
+i32 bigRand()
+{
+    i32 val = 0;
+    val |= rand() % 256;
+    val <<= 8;
+    val |= rand() % 256;
+    val <<= 8;
+    val |= rand() % 256;
+    val <<= 8;
+    val |= rand() % 256;
+    return val;
+}
+
+
 void i32constructortest(const tTest& t)
 {
     vector<i32> v;
@@ -90,19 +107,101 @@ void stringconstructortest(const tTest& t)
 }
 
 
-void plustest(const tTest& t)
+void tostringtest(const tTest& t)
 {
     // todo
-    // count up from -20000 to 20000 (adds small numbers to big numbers)
-    // add big numbers to small numbers
+}
+
+
+void plustest(const tTest& t)
+{
+    {
+        i32 val = -9000;
+        algo::tBigInteger bi(val);
+        while (val < 9000)
+        {
+            t.assert(verrifyEqual32(bi, val));
+            val++;
+            bi += 1;
+        }
+    }
+
+    {
+        i32 val = 9000;
+        algo::tBigInteger bi(val);
+        while (val > -9000)
+        {
+            t.assert(verrifyEqual32(bi, val));
+            val--;
+            bi += -1;
+        }
+    }
+
+    for (int i = 0; i < kRandIters; i++)
+    {
+        i32 val = (rand() % 9000) - 4500;
+        algo::tBigInteger bi(val);
+        t.assert(verrifyEqual32(bi, val));
+
+        i32 val2 = bigRand();               // <-- could be pos or neg any value
+        if ((val > 0 && val2 > 0 && val + val2 <= 0) ||
+            (val < 0 && val2 < 0 && val + val2 >= 0))
+        {
+            // Overflow happened, so we cannot do any testing
+            // on this iteration.
+            continue;
+        }
+
+        val += val2;
+        bi += val2;
+        t.assert(verrifyEqual32(bi, val));
+    }
 }
 
 
 void minustest(const tTest& t)
 {
-    // todo
-    // count down from 20000 to -20000 (subtracts small numbers from big numbers)
-    // subtract big numbers from small numbers
+    {
+        i32 val = -9000;
+        algo::tBigInteger bi(val);
+        while (val < 9000)
+        {
+            t.assert(verrifyEqual32(bi, val));
+            val++;
+            bi -= -1;
+        }
+    }
+
+    {
+        i32 val = 9000;
+        algo::tBigInteger bi(val);
+        while (val > -9000)
+        {
+            t.assert(verrifyEqual32(bi, val));
+            val--;
+            bi -= 1;
+        }
+    }
+
+    for (int i = 0; i < kRandIters; i++)
+    {
+        i32 val = (rand() % 9000) - 4500;
+        algo::tBigInteger bi(val);
+        t.assert(verrifyEqual32(bi, val));
+
+        i32 val2 = bigRand();               // <-- could be pos or neg any value
+        if ((val > 0 && val2 > 0 && val + val2 <= 0) ||
+            (val < 0 && val2 < 0 && val + val2 >= 0))
+        {
+            // Overflow happened, so we cannot do any testing
+            // on this iteration.
+            continue;
+        }
+
+        val += val2;
+        bi -= -val2;
+        t.assert(verrifyEqual32(bi, val));
+    }
 }
 
 
@@ -118,16 +217,39 @@ void divtest(const tTest& t)
 }
 
 
+void modtest(const tTest& t)
+{
+    // todo
+}
+
+
+void equaltest(const tTest& t)
+{
+    // todo
+}
+
+
+void lesstest(const tTest& t)
+{
+    // todo
+}
+
+
 int main()
 {
     tCrashReporter::init();
+    srand(time(0));
 
     tTest("tBigInteger i32 constructor test", i32constructortest);
     tTest("tBigInteger string constructor test", stringconstructortest);
+    tTest("tBigInteger toString test", tostringtest);
     tTest("tBigInteger plus test", plustest);
     tTest("tBigInteger minus test", minustest);
     tTest("tBigInteger mult test", multtest);
     tTest("tBigInteger div test", divtest);
+    tTest("tBigInteger mod test", modtest);
+    tTest("tBigInteger equal test", equaltest);
+    tTest("tBigInteger less test", lesstest);
 
     return 0;
 }
