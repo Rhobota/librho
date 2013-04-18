@@ -12,6 +12,7 @@ using std::endl;
 using std::vector;
 
 
+static const int kNumTests = 1000;
 static const int kRandBufSize = 16;
 
 
@@ -45,7 +46,7 @@ int main()
 {
     tCrashReporter::init();
 
-    tTest("tSecureRandom test", test);
+    tTest("tSecureRandom test", test, kNumTests);
 
     return 0;
 }
