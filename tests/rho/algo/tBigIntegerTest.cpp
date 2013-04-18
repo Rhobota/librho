@@ -3,13 +3,17 @@
 #include <rho/tCrashReporter.h>
 #include <rho/eRho.h>
 
+#include <sstream>
+#include <string>
+
 using namespace rho;
 using std::cout;
 using std::endl;
 using std::vector;
+using std::string;
 
 
-static const int kRandIters = 1000000;
+static const int kRandIters = 10000;
 
 
 void print(algo::tBigInteger bi)
@@ -71,6 +75,50 @@ i32 bigRand()
 }
 
 
+string toString(i32 val)
+{
+    std::ostringstream out;
+    out << val;
+    return out.str();
+}
+
+
+int numBits(u64 a)
+{
+    int i = 0;
+    while (a != 0) { a >>= 1; i++; }
+    return i;
+}
+
+
+bool willOverflowPlus(i64 a, i64 b)
+{
+    if (a > 0 && b > 0 && a + b <= 0)
+        return true;
+    if (a < 0 && b < 0 && a + b >= 0)
+        return true;
+    return false;
+}
+
+
+bool willOverflowMinus(i64 a, i64 b)
+{
+    if (a > 0 && b < 0 && a - b <= 0)
+        return true;
+    if (a < 0 && b > 0 && a - b >= 0)
+        return true;
+    return false;
+}
+
+
+bool willOverflowMult(i64 a, i64 b)
+{
+    int abits = numBits(a);
+    int bbits = numBits(b);
+    return abits + bbits > 63;
+}
+
+
 void i32constructortest(const tTest& t)
 {
     vector<i32> v;
@@ -104,13 +152,69 @@ void i32constructortest(const tTest& t)
 
 void stringconstructortest(const tTest& t)
 {
-    // todo
+    vector<i32> v;
+    v.push_back(0x7FFFFFFF);  // <-- largest positive int
+    v.push_back(0x80000000);  // <-- largest negative int
+    v.push_back(0);
+    v.push_back(1);
+    v.push_back(-1);
+    v.push_back(2);
+    v.push_back(-2);
+    v.push_back(924);
+    v.push_back(-520);
+    v.push_back(2242924);
+    v.push_back(-2284520);
+    v.push_back(1182242924);
+    v.push_back(-1922284520);
+
+    for (size_t i = 0; i < v.size(); i++)
+    {
+        string str = toString(v[i]);
+        algo::tBigInteger bi(str);
+        t.assert(verrifyEqual32(bi, v[i]));
+    }
+
+    for (int i = 0; i < kRandIters/2; i++)
+    {
+        i32 val = bigRand();
+        string str = toString(val);
+        algo::tBigInteger bi(str);
+        t.assert(verrifyEqual32(bi, val));
+    }
 }
 
 
 void tostringtest(const tTest& t)
 {
-    // todo
+    vector<i32> v;
+    v.push_back(0x7FFFFFFF);  // <-- largest positive int
+    v.push_back(0x80000000);  // <-- largest negative int
+    v.push_back(0);
+    v.push_back(1);
+    v.push_back(-1);
+    v.push_back(2);
+    v.push_back(-2);
+    v.push_back(924);
+    v.push_back(-520);
+    v.push_back(2242924);
+    v.push_back(-2284520);
+    v.push_back(1182242924);
+    v.push_back(-1922284520);
+
+    for (size_t i = 0; i < v.size(); i++)
+    {
+        string str = toString(v[i]);
+        algo::tBigInteger bi(str);
+        t.assert(str == bi.toString());
+    }
+
+    for (int i = 0; i < kRandIters; i++)
+    {
+        i32 val = bigRand();
+        string str = toString(val);
+        algo::tBigInteger bi(str);
+        t.assert(str == bi.toString());
+    }
 }
 
 
@@ -157,6 +261,19 @@ void plustest(const tTest& t)
         bi += val2;
         t.assert(verrifyEqual32(bi, val));
     }
+
+    for (int i = 0; i < kRandIters; i++)
+    {
+        i32 val = bigRand();
+        algo::tBigInteger bi(val);
+        t.assert(verrifyEqual32(bi, val));
+
+        i32 val2 = bigRand();               // <-- could be pos or neg any value
+
+        i64 val3 = ((i64)val) + ((i64)val2);
+        bi += val2;
+        t.assert(verrifyEqual64(bi, val3));
+    }
 }
 
 
@@ -202,6 +319,19 @@ void minustest(const tTest& t)
         val += val2;
         bi -= -val2;
         t.assert(verrifyEqual32(bi, val));
+    }
+
+    for (int i = 0; i < kRandIters; i++)
+    {
+        i32 val = bigRand();
+        algo::tBigInteger bi(val);
+        t.assert(verrifyEqual32(bi, val));
+
+        i32 val2 = bigRand();               // <-- could be pos or neg any value
+
+        i64 val3 = ((i64)val) - ((i64)val2);
+        bi -= val2;
+        t.assert(verrifyEqual64(bi, val3));
     }
 }
 
@@ -338,13 +468,93 @@ void modtest(const tTest& t)
 
 void equaltest(const tTest& t)
 {
-    // todo
+    for (i32 i = -4000; i <= 4000; i++)
+    {
+        algo::tBigInteger a(i);
+        for (i32 j = -1000; j <= 1000; j++)
+        {
+            algo::tBigInteger b(j);
+            bool biEqual = a == b;
+            bool i32Equal = i == j;
+            t.assert(biEqual == i32Equal);
+        }
+    }
 }
 
 
 void lesstest(const tTest& t)
 {
-    // todo
+    for (i32 i = -4000; i <= 4000; i++)
+    {
+        algo::tBigInteger a(i);
+        for (i32 j = -1000; j <= 1000; j++)
+        {
+            algo::tBigInteger b(j);
+            bool biLess = a < b;
+            bool i32Less = i < j;
+            t.assert(biLess == i32Less);
+        }
+    }
+}
+
+
+void bigtest(const tTest& t)
+{
+    algo::tBigInteger bi(0);
+    i64 correct = 0;
+
+    for (int i = 0; i < kRandIters; i++)
+    {
+        i32 val = bigRand();
+
+        switch (rand() % 5)
+        {
+            case 0:  // plus
+                if (!willOverflowPlus(correct, val))
+                {
+                    bi += val;
+                    correct += val;
+                }
+                break;
+
+            case 1:  // minus
+                if (!willOverflowMinus(correct, val))
+                {
+                    bi -= val;
+                    correct -= val;
+                }
+                break;
+
+            case 2:  // mult
+                if (!willOverflowMult(correct, val))
+                {
+                    bi *= val;
+                    correct *= val;
+                }
+                break;
+
+            case 3:  // divide
+                if (val != 0)
+                {
+                    bi /= val;
+                    correct /= val;
+                }
+                break;
+
+            case 4:  // mod
+                if (val != 0)
+                {
+                    bi %= val;
+                    correct %= val;
+                }
+                break;
+
+            default:
+                throw "bad!";
+        }
+
+        t.assert(verrifyEqual64(bi, correct));
+    }
 }
 
 
@@ -363,6 +573,7 @@ int main()
     tTest("tBigInteger mod test", modtest);
     tTest("tBigInteger equal test", equaltest);
     tTest("tBigInteger less test", lesstest);
+    tTest("tBigInteger final big test", bigtest, 25);
 
     return 0;
 }

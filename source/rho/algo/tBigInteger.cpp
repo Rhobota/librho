@@ -115,6 +115,8 @@ tBigInteger::tBigInteger(string val, int radix)
             throw eInvalidArgument(string() + "Unsupported radix (must be 2, 8, 10, or 16)");
     }
 
+    bool savedNeg = neg;   // it will be clobbered by the first '+=' below.
+
     tBigInteger mult(1);
     for (int i = (int)ints.size()-1; i >= 0; i--)
     {
@@ -125,6 +127,8 @@ tBigInteger::tBigInteger(string val, int radix)
         }
         mult *= radix;
     }
+
+    neg = savedNeg;
 }
 
 tBigInteger::tBigInteger(vector<u8> bytes)
