@@ -40,7 +40,7 @@ int numBytes(crypt::eKeyLengthAES keylen)
 }
 
 
-void test(const tTest& t, crypt::eOperationModeAES opmode, u8* key, crypt::eKeyLengthAES keylen)
+void simpleTest(const tTest& t, crypt::eOperationModeAES opmode, u8* key, crypt::eKeyLengthAES keylen)
 {
     tByteWritable bw;
     tByteReadable br;
@@ -76,6 +76,52 @@ void test(const tTest& t, crypt::eOperationModeAES opmode, u8* key, crypt::eKeyL
 }
 
 
+void randomFlushTest(const tTest& t, crypt::eOperationModeAES opmode, u8* key, crypt::eKeyLengthAES keylen)
+{
+    tByteWritable bw;
+    tByteReadable br;
+
+    crypt::tWritableAES cw(&bw, opmode, key, keylen);
+    crypt::tReadableAES cr(&br, opmode, key, keylen);
+
+    //print(vector<u8>(key, key+numBytes(keylen)));
+
+    for (int i = 0; i < kNumItersPerKey; i++)
+    {
+        // Gen a random message.
+        int messagelen = rand() % kMaxMessageLength;
+        vector<u8> pt1(messagelen);
+        for (size_t j = 0; j < pt1.size(); j++)
+            pt1[j] = rand() % 256;
+
+        // Write the message to the AES writer (encryption).
+        bw.reset();
+        size_t w = 0;
+        while (w < pt1.size())
+        {
+            if ((rand() % 3) == 0)
+                cw.flush();
+            size_t len = (rand() % 200) + 1;
+            i32 w_here = cw.write(&pt1[w], std::min(len, pt1.size()-w));
+            if (w_here <= 0)
+                t.fail();
+            w += w_here;
+        }
+        cw.flush();
+
+        // Read the message through the AES reader (decryption).
+        vector<u8> ct = bw.getBuf();
+        br.reset(ct);
+        cr.reset();
+        vector<u8> pt2(messagelen);
+        cr.readAll(&pt2[0], pt2.size());
+
+        // See if the original plain text matches the deciphered plain text.
+        t.assert(pt1 == pt2);
+    }
+}
+
+
 void test128(const tTest& t)
 {
     u8 key128[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
@@ -84,8 +130,10 @@ void test128(const tTest& t)
     for (size_t i = 0; i < sizeof(key128); i++)
         key128[i] = rand() % 256;
 
-    test(t, crypt::kOpModeECB, key128, crypt::k128bit);
-    test(t, crypt::kOpModeCBC, key128, crypt::k128bit);
+    simpleTest(t, crypt::kOpModeECB, key128, crypt::k128bit);
+    simpleTest(t, crypt::kOpModeCBC, key128, crypt::k128bit);
+    randomFlushTest(t, crypt::kOpModeECB, key128, crypt::k128bit);
+    randomFlushTest(t, crypt::kOpModeCBC, key128, crypt::k128bit);
 }
 
 
@@ -98,8 +146,10 @@ void test192(const tTest& t)
     for (size_t i = 0; i < sizeof(key192); i++)
         key192[i] = rand() % 256;
 
-    test(t, crypt::kOpModeECB, key192, crypt::k192bit);
-    test(t, crypt::kOpModeCBC, key192, crypt::k192bit);
+    simpleTest(t, crypt::kOpModeECB, key192, crypt::k192bit);
+    simpleTest(t, crypt::kOpModeCBC, key192, crypt::k192bit);
+    randomFlushTest(t, crypt::kOpModeECB, key192, crypt::k192bit);
+    randomFlushTest(t, crypt::kOpModeCBC, key192, crypt::k192bit);
 }
 
 
@@ -112,8 +162,10 @@ void test256(const tTest& t)
     for (size_t i = 0; i < sizeof(key256); i++)
         key256[i] = rand() % 256;
 
-    test(t, crypt::kOpModeECB, key256, crypt::k256bit);
-    test(t, crypt::kOpModeCBC, key256, crypt::k256bit);
+    simpleTest(t, crypt::kOpModeECB, key256, crypt::k256bit);
+    simpleTest(t, crypt::kOpModeCBC, key256, crypt::k256bit);
+    randomFlushTest(t, crypt::kOpModeECB, key256, crypt::k256bit);
+    randomFlushTest(t, crypt::kOpModeCBC, key256, crypt::k256bit);
 }
 
 
