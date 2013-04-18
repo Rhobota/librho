@@ -184,17 +184,36 @@ vector<u8> tBigInteger::getBytes() const
 
 bool tBigInteger::isNegative() const
 {
-    return (b.size() > 0) && neg;   // (b.size() == 0)  <==>  (*this == 0)
+    return !isZero() && neg;
+}
+
+tBigInteger& tBigInteger::setIsNegative(bool n)
+{
+    neg = n;
+    return *this;
+}
+
+bool tBigInteger::isZero() const
+{
+    return (b.size() == 0);   // (b.size() == 0)  <==>  (*this == 0)
 }
 
 bool tBigInteger::isOdd() const
 {
-    return (b.size() > 0) && ((b[0] & 1) > 0);
+    return !isZero() && ((b[0] & 1) > 0);
 }
 
 bool tBigInteger::isEven() const
 {
     return !isOdd();
+}
+
+tBigInteger tBigInteger::abs() const
+{
+    if (isNegative())
+        return -(*this);
+    else
+        return (*this);
 }
 
 tBigInteger tBigInteger::operator- () const
@@ -297,11 +316,11 @@ void tBigInteger::operator*= (const tBigInteger& o)
     bool isneg = (isNegative() && !o.isNegative()) || (!isNegative() && o.isNegative());
 
     // If *this is zero, the result will be zero, so nothing needs to be done.
-    if (b.size() == 0)
+    if (isZero())
         return;
 
     // If o is zero, set this to zero and return.
-    if (o.b.size() == 0)
+    if (o.isZero())
     {
         b.clear();
         return;
@@ -328,14 +347,71 @@ void tBigInteger::operator*= (const tBigInteger& o)
     neg = isneg;
 }
 
+pair<tBigInteger,tBigInteger> divide(tBigInteger a, tBigInteger b)
+{
+    bool isaneg = a.isNegative();
+
+    // Determine what the negative state of the result will be:
+    // (The following is an xor, but doing bitwise stuff with bool types is dangerous...)
+    bool isneg = (a.isNegative() && !b.isNegative()) || (!a.isNegative() && b.isNegative());
+    a = a.abs();
+    b = b.abs();
+
+    // If a is less than b, the result is zero.
+    if (a < b)
+        return make_pair(tBigInteger(0), a.setIsNegative(isaneg));
+
+    // If b is zero, that is bad.
+    if (b.isZero())
+        throw eInvalidArgument("You may not divide by zero!");
+
+    // Else, do long division.
+    tBigInteger remainder(0);
+    vector<u8> result;
+    for (int i = (int)a.b.size()-1; i >= 0; i--)
+    {
+        remainder *= 256;
+        remainder += a.b[i];
+        if (remainder < b)
+        {
+            result.push_back(0);
+            continue;
+        }
+
+        i32 left = 0, right = 255, mid;
+        tBigInteger sub(0);
+        while (true)
+        {
+            mid = (left + right) / 2;
+            tBigInteger mult = b * mid;
+            sub = remainder - mult;
+            if (sub.isNegative())
+                right = mid - 1;
+            else if (sub >= b)
+                left = mid + 1;
+            else
+                break;
+        }
+
+        result.push_back((u8)mid);
+        remainder = sub;
+    }
+
+    // Return the result.
+    result = vector<u8>(result.rbegin(), result.rend());
+    tBigInteger resultInt(result);
+    resultInt.neg = isneg;
+    return make_pair(resultInt, remainder.setIsNegative(isaneg));
+}
+
 void tBigInteger::operator/= (const tBigInteger& o)
 {
-    // todo
+    *this = divide(*this, o).first;
 }
 
 void tBigInteger::operator%= (const tBigInteger& o)
 {
-    // todo
+    *this = divide(*this, o).second;
 }
 
 tBigInteger tBigInteger::operator+  (const tBigInteger& o) const
@@ -389,11 +465,22 @@ bool tBigInteger::operator<  (const tBigInteger& o) const
         return true;
     if (!isNegative() && o.isNegative())
         return false;
-    bool mag = (b.size() < o.b.size()) || (b.size() == o.b.size() && b.back() < o.b.back());
-    if (isNegative())
-        return !mag;
+
+    // The sign of the two vals must be the same.
+
+    if (b.size() != o.b.size())
+    {
+        bool less = b.size() < o.b.size();
+        return isNegative() ? !less : less;
+    }
     else
-        return mag;
+    {
+        for (int i = (int)b.size()-1; i >=0; i--)
+            if (b[i] != o.b[i])
+                return isNegative() ? o.b[i] < b[i] : b[i] < o.b[i];
+
+        return false;  // they must be equal
+    }
 }
 
 bool tBigInteger::operator>  (const tBigInteger& o) const
