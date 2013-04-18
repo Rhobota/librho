@@ -207,7 +207,33 @@ void minustest(const tTest& t)
 
 void multtest(const tTest& t)
 {
-    // todo
+    i32 hardcodedA[] = { 1000, 1000, 1000, 1000, 1000, 0,    1,    -1,   2,    -2   };
+    i32 hardcodedB[] = { 0,    1,    -1,   2,   -2,    1234, 1234, 1234, 1234, 1234 };
+
+    for (size_t i = 0; i < sizeof(hardcodedA)/sizeof(i32); i++)
+    {
+        algo::tBigInteger a(hardcodedA[i]);
+        algo::tBigInteger b(hardcodedB[i]);
+        algo::tBigInteger c = a * b;
+        t.assert(verrifyEqual32(a, hardcodedA[i]));
+        t.assert(verrifyEqual32(b, hardcodedB[i]));
+        t.assert(verrifyEqual32(c, hardcodedA[i] * hardcodedB[i]));
+    }
+
+    for (int i = 0; i < kRandIters; i++)
+    {
+        i32 val1 = bigRand();
+        algo::tBigInteger bi1(val1);
+        t.assert(verrifyEqual32(bi1, val1));
+
+        i32 val2 = bigRand();
+        algo::tBigInteger bi2(val2);
+        t.assert(verrifyEqual32(bi2, val2));
+
+        algo::tBigInteger mult = bi1 * bi2;
+        i64 correct = ((i64)val1) * ((i64)val2);
+        t.assert(verrifyEqual64(mult, correct));
+    }
 }
 
 

@@ -292,7 +292,40 @@ void tBigInteger::operator-= (const tBigInteger& o)
 
 void tBigInteger::operator*= (const tBigInteger& o)
 {
-    // todo
+    // Determine what the negative state of the result will be:
+    // (The following is an xor, but doing bitwise stuff with bool types is dangerous...)
+    bool isneg = (isNegative() && !o.isNegative()) || (!isNegative() && o.isNegative());
+
+    // If *this is zero, the result will be zero, so nothing needs to be done.
+    if (b.size() == 0)
+        return;
+
+    // If o is zero, set this to zero and return.
+    if (o.b.size() == 0)
+    {
+        b.clear();
+        return;
+    }
+
+    // Else, do normal multiplication.
+    tBigInteger sum(0);
+    for (size_t i = 0; i < b.size(); i++)
+    {
+        vector<u8> v(i, 0);
+        u8 carry = 0;
+        for (size_t j = 0; j < o.b.size(); j++)
+        {
+            u16 mult = (u16)(b[i] * o.b[j] + carry);
+            v.push_back((u8) (mult & 0xFF));
+            carry = (u8) ((mult >> 8) & 0xFF);
+        }
+        if (carry > 0)
+            v.push_back(carry);
+        tBigInteger n(v);
+        sum += n;
+    }
+    *this = sum;
+    neg = isneg;
 }
 
 void tBigInteger::operator/= (const tBigInteger& o)
