@@ -16,7 +16,7 @@ using std::vector;
 
 
 static const int kNumKeys = 10;
-static const int kNumItersPerKey = 100;
+static const int kNumItersPerKey = 10;
 static const int kMaxMessageLength = 100000;
 
 
