@@ -1,6 +1,7 @@
 #include <rho/algo/tBigInteger.h>
 #include <rho/tTest.h>
 #include <rho/tCrashReporter.h>
+#include <rho/eRho.h>
 
 using namespace rho;
 using std::cout;
@@ -239,13 +240,99 @@ void multtest(const tTest& t)
 
 void divtest(const tTest& t)
 {
-    // todo
+    i32 hardcodedA[] = { 1001, 1001, 1001, 1001, 0,    1,    -1,   2,    -2   };
+    i32 hardcodedB[] = { 1,    -1,   2,   -2,    1234, 1234, 1234, 1234, 1234 };
+
+    for (size_t i = 0; i < sizeof(hardcodedA)/sizeof(i32); i++)
+    {
+        algo::tBigInteger a(hardcodedA[i]);
+        algo::tBigInteger b(hardcodedB[i]);
+        algo::tBigInteger c = a / b;
+        t.assert(verrifyEqual32(a, hardcodedA[i]));
+        t.assert(verrifyEqual32(b, hardcodedB[i]));
+        t.assert(verrifyEqual32(c, hardcodedA[i] / hardcodedB[i]));
+    }
+
+    {
+        algo::tBigInteger a(102424);
+        algo::tBigInteger b(0);
+        try
+        {
+            algo::tBigInteger c = a / b;
+            t.fail();
+        }
+        catch (eInvalidArgument& e)
+        {
+            // Yay.
+        }
+    }
+
+    for (int i = 0; i < kRandIters; i++)
+    {
+        i32 val1 = bigRand();
+        algo::tBigInteger bi1(val1);
+        t.assert(verrifyEqual32(bi1, val1));
+
+        i32 val2 = bigRand();
+        algo::tBigInteger bi2(val2);
+        t.assert(verrifyEqual32(bi2, val2));
+
+        if (val2 == 0)
+            continue;
+
+        algo::tBigInteger mult = bi1 / bi2;
+        i32 correct = val1 / val2;
+        t.assert(verrifyEqual64(mult, correct));
+    }
 }
 
 
 void modtest(const tTest& t)
 {
-    // todo
+    i32 hardcodedA[] = { 1001, 1001, 1001, 1001, -1001, -1001, 0,    1,    -1,   2,    -2   };
+    i32 hardcodedB[] = { 1,    -1,   2,   -2,    2,     -2,    1234, 1234, 1234, 1234, 1234 };
+
+    for (size_t i = 0; i < sizeof(hardcodedA)/sizeof(i32); i++)
+    {
+        algo::tBigInteger a(hardcodedA[i]);
+        algo::tBigInteger b(hardcodedB[i]);
+        algo::tBigInteger c = a % b;
+        t.assert(verrifyEqual32(a, hardcodedA[i]));
+        t.assert(verrifyEqual32(b, hardcodedB[i]));
+        t.assert(verrifyEqual32(c, hardcodedA[i] % hardcodedB[i]));
+    }
+
+    {
+        algo::tBigInteger a(102424);
+        algo::tBigInteger b(0);
+        try
+        {
+            algo::tBigInteger c = a % b;
+            t.fail();
+        }
+        catch (eInvalidArgument& e)
+        {
+            // Yay.
+        }
+    }
+
+    for (int i = 0; i < kRandIters; i++)
+    {
+        i32 val1 = bigRand();
+        algo::tBigInteger bi1(val1);
+        t.assert(verrifyEqual32(bi1, val1));
+
+        i32 val2 = bigRand();
+        algo::tBigInteger bi2(val2);
+        t.assert(verrifyEqual32(bi2, val2));
+
+        if (val2 == 0)
+            continue;
+
+        algo::tBigInteger mult = bi1 % bi2;
+        i32 correct = val1 % val2;
+        t.assert(verrifyEqual64(mult, correct));
+    }
 }
 
 
