@@ -418,6 +418,37 @@ void tBigInteger::operator%= (const tBigInteger& o)
     *this = divide(*this, o).second;
 }
 
+tBigInteger tBigInteger::modPow(const tBigInteger& e, const tBigInteger& m) const
+{
+    tBigInteger a = *this;
+    tBigInteger res(1);
+
+    vector<u8> ex = e.getBytes();
+
+    for (size_t i = 0; i < ex.size(); i++)
+    {
+        u8 byte = ex[i];
+
+        for (int j = 0; j < 8; j++)
+        {
+            if (byte & 1)
+            {
+                res *= a;
+                res %= m;
+            }
+            byte = (u8)(byte >> 1);
+
+            if (byte == 0 && i == ex.size()-1)
+                break;
+
+            a *= a;   // a = a^^2
+            a %= m;
+        }
+    }
+
+    return res;
+}
+
 tBigInteger tBigInteger::operator+  (const tBigInteger& o) const
 {
     tBigInteger n = *this;
