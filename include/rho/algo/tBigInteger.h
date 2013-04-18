@@ -52,6 +52,9 @@ class tBigInteger
         void        operator%= (const tBigInteger& o);
         tBigInteger operator%  (const tBigInteger& o) const;
 
+        tBigInteger modPow(const tBigInteger& e, const tBigInteger& m) const;
+                                        // returns ((*this ^ e) % m)
+
         bool        operator== (const tBigInteger& o) const;
         bool        operator!= (const tBigInteger& o) const;
         bool        operator<  (const tBigInteger& o) const;
