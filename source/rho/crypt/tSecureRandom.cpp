@@ -19,9 +19,9 @@ namespace crypt
 tSecureRandom::tSecureRandom()
 {
     #if __linux__ || __APPLE__ || __CYGWIN__
-    FILE* fp = fopen("/dev/random", "r");
+    FILE* fp = fopen("/dev/urandom", "r");
     if (!fp)
-        throw eResourceAcquisitionError("Cannot open /dev/random");
+        throw eResourceAcquisitionError("Cannot open /dev/urandom");
     m_internal = fp;
     #elif __MINGW32__
     HCRYPTPROV hProvider = NULL;
