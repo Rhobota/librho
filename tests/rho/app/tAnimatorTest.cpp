@@ -119,7 +119,14 @@ void addRemoveTest(const tTest& t)
         }
 
         t.assert(animator.isConsistent());
-        t.assert(animator.numRegistrations() > 0);   // <-- not guaranteed, but very very likely
+
+        // The following is very likely to pass, but it is not guaranteed.
+        // (I had it uncommented for a while, but after a few months of
+        //  working on this library I encountered a case where this
+        //  caused the test to fail.)
+        // I'm leaving in here just for documentation reasons. Do you see
+        // why it is very very likely to be true?
+        //t.assert(animator.numRegistrations() > 0);
 
         for (int i = 0; i < numAnimatables; i++)
             animator.cancelAllAnimationsOn(animatables[i]);

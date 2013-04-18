@@ -81,6 +81,7 @@ void test256(const tTest& t)
 int main()
 {
     tCrashReporter::init();
+    srand(time(0));
 
     tTest("tWritableAES 128bit test", test128);
     tTest("tWritableAES 192bit test", test192);
