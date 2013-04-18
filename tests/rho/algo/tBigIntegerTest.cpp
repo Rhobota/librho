@@ -174,7 +174,7 @@ void stringconstructortest(const tTest& t)
         t.assert(verrifyEqual32(bi, v[i]));
     }
 
-    for (int i = 0; i < kRandIters/2; i++)
+    for (int i = 0; i < kRandIters; i++)
     {
         i32 val = bigRand();
         string str = toString(val);
@@ -208,7 +208,7 @@ void tostringtest(const tTest& t)
         t.assert(str == bi.toString());
     }
 
-    for (int i = 0; i < kRandIters; i++)
+    for (int i = 0; i < kRandIters/2; i++)
     {
         i32 val = bigRand();
         string str = toString(val);
@@ -466,38 +466,6 @@ void modtest(const tTest& t)
 }
 
 
-void equaltest(const tTest& t)
-{
-    for (i32 i = -4000; i <= 4000; i++)
-    {
-        algo::tBigInteger a(i);
-        for (i32 j = -1000; j <= 1000; j++)
-        {
-            algo::tBigInteger b(j);
-            bool biEqual = a == b;
-            bool i32Equal = i == j;
-            t.assert(biEqual == i32Equal);
-        }
-    }
-}
-
-
-void lesstest(const tTest& t)
-{
-    for (i32 i = -4000; i <= 4000; i++)
-    {
-        algo::tBigInteger a(i);
-        for (i32 j = -1000; j <= 1000; j++)
-        {
-            algo::tBigInteger b(j);
-            bool biLess = a < b;
-            bool i32Less = i < j;
-            t.assert(biLess == i32Less);
-        }
-    }
-}
-
-
 void bigtest(const tTest& t)
 {
     algo::tBigInteger bi(0);
@@ -558,6 +526,38 @@ void bigtest(const tTest& t)
 }
 
 
+void equaltest(const tTest& t)
+{
+    for (i32 i = -4000; i <= 4000; i++)
+    {
+        algo::tBigInteger a(i);
+        for (i32 j = -1000; j <= 1000; j++)
+        {
+            algo::tBigInteger b(j);
+            bool biEqual = a == b;
+            bool i32Equal = i == j;
+            t.assert(biEqual == i32Equal);
+        }
+    }
+}
+
+
+void lesstest(const tTest& t)
+{
+    for (i32 i = -4000; i <= 4000; i++)
+    {
+        algo::tBigInteger a(i);
+        for (i32 j = -1000; j <= 1000; j++)
+        {
+            algo::tBigInteger b(j);
+            bool biLess = a < b;
+            bool i32Less = i < j;
+            t.assert(biLess == i32Less);
+        }
+    }
+}
+
+
 int main()
 {
     tCrashReporter::init();
@@ -571,9 +571,11 @@ int main()
     tTest("tBigInteger mult test", multtest);
     tTest("tBigInteger div test", divtest);
     tTest("tBigInteger mod test", modtest);
-    tTest("tBigInteger equal test", equaltest);
-    tTest("tBigInteger less test", lesstest);
     tTest("tBigInteger final big test", bigtest, 25);
+
+    // Commented-out because they take too long to execute:
+    //tTest("tBigInteger equal test", equaltest);
+    //tTest("tBigInteger less test", lesstest);
 
     return 0;
 }
