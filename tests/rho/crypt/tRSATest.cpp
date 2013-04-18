@@ -25,7 +25,7 @@ void print(const vector<u8>& bytes)
 
 void test(const tTest& t)
 {
-    crypt::tRSA rsa("rho/crypt/rsakeys.txt");
+    crypt::tRSA rsa("tests/rho/crypt/rsakeys.txt");
 
     for (int k = 0; k < kNumIters; k++)
     {
