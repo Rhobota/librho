@@ -34,7 +34,7 @@ class tBigInteger
         bool                   isOdd()                const;
         bool                   isEven()               const;
 
-        tBigInteger abs() const;
+        tBigInteger abs()        const;
         tBigInteger operator- () const;
 
         void        operator+= (const tBigInteger& o);
@@ -53,7 +53,7 @@ class tBigInteger
         tBigInteger operator%  (const tBigInteger& o) const;
 
         tBigInteger modPow(const tBigInteger& e, const tBigInteger& m) const;
-                                        // returns ((*this ^ e) % m)
+                                        // returns ((*this ^^ e) % m)
 
         bool        operator== (const tBigInteger& o) const;
         bool        operator!= (const tBigInteger& o) const;
