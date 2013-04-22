@@ -13,7 +13,7 @@ using std::vector;
 using std::string;
 
 
-static const int kRandIters = 10000;
+static const int kRandIters = 100000;
 
 
 void print(algo::tBigInteger bi)

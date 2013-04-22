@@ -11,6 +11,227 @@ namespace algo
 {
 
 
+///////////////////////////////////////////////////////////////////////////////
+// Util function
+///////////////////////////////////////////////////////////////////////////////
+
+static
+void throwInvalidValStringException(char c, int radix)
+{
+    ostringstream o;
+    o << "Invalid 'val' string character: " << c
+      << " for radix: " + radix;
+    throw eInvalidArgument(o.str());
+}
+
+static
+char toChar(u8 b)
+{
+    if (b <= 9)
+        return (char)('0' + b);
+    if (b <= 15)
+        return (char)('A' + b);
+    return '?';
+}
+
+static
+bool less(const vector<u8>& a, const vector<u8>& b)
+{
+    if (a.size() != b.size()) return a.size() < b.size();
+    for (int i = (int)a.size()-1; i >= 0; i--)
+        if (a[i] != b[i])
+            return a[i] < b[i];
+    return false;
+}
+
+static
+void add(vector<u8>& a, const vector<u8>& b, size_t bShift = 0)
+{
+    while (a.size() < b.size()+bShift)
+        a.push_back(0);
+
+    u8 carry = 0;
+    size_t i;
+    for (i = bShift; i < a.size() && (i-bShift) < b.size(); i++)
+    {
+        u16 sum = (u16) (a[i] + b[(i-bShift)] + carry);
+        a[i] = (u8)(sum & 0xFF);
+        carry = (u8)((sum >> 8) & 0xFF);
+    }
+
+    for (; carry > 0; i++)
+    {
+        if (i == a.size())
+        {
+            a.push_back(carry);
+            carry = 0;
+        }
+        else
+        {
+            u16 sum = (u16) (a[i] + carry);
+            a[i] = (u8)(sum & 0xFF);
+            carry = (u8)((sum >> 8) & 0xFF);
+        }
+    }
+}
+
+static
+void addbyte(vector<u8>& a, u8 b, size_t bShift = 0)
+{
+    while (a.size() < 1+bShift)
+        a.push_back(0);
+
+    u8 carry = 0;
+    size_t i;
+    for (i = bShift; i < a.size() && (i-bShift) < 1; i++)
+    {
+        u16 sum = (u16) (a[i] + b + carry);
+        a[i] = (u8)(sum & 0xFF);
+        carry = (u8)((sum >> 8) & 0xFF);
+    }
+
+    for (; carry > 0; i++)
+    {
+        if (i == a.size())
+        {
+            a.push_back(carry);
+            carry = 0;
+        }
+        else
+        {
+            u16 sum = (u16) (a[i] + carry);
+            a[i] = (u8)(sum & 0xFF);
+            carry = (u8)((sum >> 8) & 0xFF);
+        }
+    }
+}
+
+static
+void subtract(vector<u8>& a, const vector<u8>& b)
+{
+    if (less(a, b))
+        throw eLogicError("Do not call subtract with a<b.");
+
+    for (size_t i = 0; i < a.size() && i < b.size(); i++)
+    {
+        u16 top = (u16) a[i];
+        if (a[i] < b[i])     // <-- if need to borrow
+        {
+            size_t j = i+1;
+            while (a[j] == 0) a[j++] = 255;
+            a[j]--;
+            top = (u16)(top + 256);
+        }
+        a[i] = (u8)(top - b[i]);
+    }
+
+    while (a.size() > 0 && a.back() == 0) a.pop_back();
+}
+
+static
+void multiply(const vector<u8>& a, const vector<u8>& b,
+              vector<u8>& result)
+{
+    result.clear();
+
+    if (a.size() == 0 || b.size() == 0)
+        return;
+
+    for (size_t i = 0; i < a.size(); i++)
+    {
+        u8 carry = 0;
+        for (size_t j = 0; j < b.size(); j++)
+        {
+            u16 mult = (u16)(a[i] * b[j] + carry);
+            u8 val = (u8) (mult & 0xFF);
+            addbyte(result, val, i+j);
+            carry = (u8) ((mult >> 8) & 0xFF);
+        }
+        if (carry > 0)
+            addbyte(result, carry, i+b.size());
+    }
+}
+
+static
+void multiplybyte(vector<u8>& a, u8 b)
+{
+    if (a.size() == 0)
+        return;
+
+    if (b == 0)
+    {
+        a.clear();
+        return;
+    }
+
+    u8 carry = 0;
+    for (size_t i = 0; i < a.size(); i++)
+    {
+        u16 mult = (u16)(a[i] * b + carry);
+        u8 val = (u8) (mult & 0xFF);
+        carry = (u8) ((mult >> 8) & 0xFF);
+        a[i] = val;
+    }
+    if (carry > 0)
+        a.push_back(carry);
+}
+
+static
+void divide(const vector<u8>& a, const vector<u8>& b,
+            vector<u8>& quotient, vector<u8>& remainder)
+{
+    quotient.clear();
+    remainder.clear();
+
+    // If b is zero, that is bad.
+    if (b.size() == 0)
+        throw eInvalidArgument("You may not divide by zero!");
+
+    // Long division:
+    vector<u8> mult;
+    vector<u8> sub;
+    for (int i = (int)a.size()-1; i >= 0; i--)
+    {
+        if (remainder.size() > 0 || a[i] != 0)
+            remainder.insert(remainder.begin(), a[i]);
+        if (less(remainder, b))
+        {
+            quotient.push_back(0);
+            continue;
+        }
+
+        i32 left = 0, right = 255, mid;
+        while (true)
+        {
+            mid = (left + right) / 2;
+            mult = b;
+            multiplybyte(mult, (u8)mid);
+            if (less(remainder, mult))
+                right = mid - 1;
+            else
+            {
+                sub = remainder;
+                subtract(sub, mult);
+                if (less(b, sub) || b == sub)
+                    left = mid + 1;
+                else
+                    break;
+            }
+        }
+
+        quotient.push_back((u8)mid);
+        subtract(remainder, mult);
+    }
+
+    quotient = vector<u8>(quotient.rbegin(), quotient.rend());
+    while (quotient.size() > 0 && quotient.back() == 0) quotient.pop_back();
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Methods
+///////////////////////////////////////////////////////////////////////////////
+
 tBigInteger::tBigInteger(i32 val)
 {
     neg = val < 0;
@@ -21,14 +242,6 @@ tBigInteger::tBigInteger(i32 val)
         uval >>= 8;
         b.push_back(byte);
     }
-}
-
-void throwInvalidValStringException(char c, int radix)
-{
-    ostringstream o;
-    o << "Invalid 'val' string character: " << c
-      << " for radix: " + radix;
-    throw eInvalidArgument(o.str());
 }
 
 tBigInteger::tBigInteger(string val, int radix)
@@ -137,21 +350,6 @@ tBigInteger::tBigInteger(vector<u8> bytes)
     while (b.size() > 0 && b.back() == 0) b.pop_back();
 }
 
-char toChar(const tBigInteger& bi)
-{
-    vector<u8> bytes = bi.getBytes();
-    if (bytes.size() == 0)
-        return '0';
-    if (bytes.size() > 1)
-        return '?';
-    u8 b = bytes[0];
-    if (b <= 9)
-        return (char)('0' + b);
-    if (b <= 15)
-        return (char)('A' + b);
-    return '?';
-}
-
 string tBigInteger::toString(int radix) const
 {
     switch (radix)
@@ -172,7 +370,7 @@ string tBigInteger::toString(int radix) const
     {
         tBigInteger m = n % radix;
         n /= radix;
-        str += toChar(m);
+        str += m.isZero() ? '0' : toChar(m.b[0]);
     }
 
     if (str == "")    str = "0";
@@ -181,7 +379,7 @@ string tBigInteger::toString(int radix) const
     return string(str.rbegin(), str.rend());
 }
 
-vector<u8> tBigInteger::getBytes() const
+const vector<u8>& tBigInteger::getBytes() const
 {
     return b;
 }
@@ -241,32 +439,9 @@ void tBigInteger::operator+= (const tBigInteger& o)
         return;
     }
 
-    while (o.b.size() > b.size())
-        b.push_back(0);
+    // At this point, *this and o have the same sign.
 
-    u8 carry = 0;
-    size_t i;
-    for (i = 0; i < b.size() && i < o.b.size(); i++)
-    {
-        u16 sum = (u16) (b[i] + o.b[i] + carry);
-        b[i] = (u8)(sum & 0xFF);
-        carry = (u8)((sum >> 8) & 0xFF);
-    }
-
-    for (; carry > 0; i++)
-    {
-        if (i == b.size())
-        {
-            b.push_back(carry);
-            carry = 0;
-        }
-        else
-        {
-            u16 sum = (u16) (b[i] + carry);
-            b[i] = (u8)(sum & 0xFF);
-            carry = (u8)((sum >> 8) & 0xFF);
-        }
-    }
+    add(b, o.b);
 }
 
 void tBigInteger::operator-= (const tBigInteger& o)
@@ -297,125 +472,32 @@ void tBigInteger::operator-= (const tBigInteger& o)
 
     // At this point, *this and o are both non-negative and (*this >= o).
 
-    for (size_t i = 0; i < b.size() && i < o.b.size(); i++)
-    {
-        u16 top = (u16) b[i];
-        if (b[i] < o.b[i])     // <-- if need to borrow
-        {
-            size_t j = i+1;
-            while (b[j] == 0) b[j++] = 255;
-            b[j]--;
-            top = (u16)(top + 256);
-        }
-        b[i] = (u8)(top - o.b[i]);
-    }
-
-    while (b.size() > 0 && b.back() == 0) b.pop_back();
+    subtract(b, o.b);
 }
 
 void tBigInteger::operator*= (const tBigInteger& o)
 {
-    // Determine what the negative state of the result will be:
-    // (The following is an xor, but doing bitwise stuff with bool types is dangerous...)
-    bool isneg = (isNegative() && !o.isNegative()) || (!isNegative() && o.isNegative());
-
-    // If *this is zero, the result will be zero, so nothing needs to be done.
-    if (isZero())
-        return;
-
-    // If o is zero, set this to zero and return.
-    if (o.isZero())
-    {
-        b.clear();
-        return;
-    }
-
-    // Else, do normal multiplication.
-    tBigInteger sum(0);
-    for (size_t i = 0; i < b.size(); i++)
-    {
-        vector<u8> v(i, 0);
-        u8 carry = 0;
-        for (size_t j = 0; j < o.b.size(); j++)
-        {
-            u16 mult = (u16)(b[i] * o.b[j] + carry);
-            v.push_back((u8) (mult & 0xFF));
-            carry = (u8) ((mult >> 8) & 0xFF);
-        }
-        if (carry > 0)
-            v.push_back(carry);
-        tBigInteger n(v);
-        sum += n;
-    }
-    *this = sum;
-    neg = isneg;
-}
-
-pair<tBigInteger,tBigInteger> divide(tBigInteger a, tBigInteger b)
-{
-    bool isaneg = a.isNegative();
-
-    // Determine what the negative state of the result will be:
-    // (The following is an xor, but doing bitwise stuff with bool types is dangerous...)
-    bool isneg = (a.isNegative() && !b.isNegative()) || (!a.isNegative() && b.isNegative());
-    a = a.abs();
-    b = b.abs();
-
-    // If a is less than b, the result is zero.
-    if (a < b)
-        return make_pair(tBigInteger(0), a.setIsNegative(isaneg));
-
-    // If b is zero, that is bad.
-    if (b.isZero())
-        throw eInvalidArgument("You may not divide by zero!");
-
-    // Else, do long division.
-    tBigInteger remainder(0);
     vector<u8> result;
-    for (int i = (int)a.b.size()-1; i >= 0; i--)
-    {
-        remainder *= 256;
-        remainder += a.b[i];
-        if (remainder < b)
-        {
-            result.push_back(0);
-            continue;
-        }
-
-        i32 left = 0, right = 255, mid;
-        tBigInteger sub(0);
-        while (true)
-        {
-            mid = (left + right) / 2;
-            tBigInteger mult = b * mid;
-            sub = remainder - mult;
-            if (sub.isNegative())
-                right = mid - 1;
-            else if (sub >= b)
-                left = mid + 1;
-            else
-                break;
-        }
-
-        result.push_back((u8)mid);
-        remainder = sub;
-    }
-
-    // Return the result.
-    result = vector<u8>(result.rbegin(), result.rend());
-    tBigInteger resultInt(result);
-    resultInt.neg = isneg;
-    return make_pair(resultInt, remainder.setIsNegative(isaneg));
+    multiply(b, o.b, result);
+    b = result;
+    neg = (isNegative() && !o.isNegative()) || (!isNegative() && o.isNegative());
 }
 
 void tBigInteger::operator/= (const tBigInteger& o)
 {
-    *this = divide(*this, o).first;
+    vector<u8> quotient;
+    vector<u8> remainder;
+    divide(b, o.b, quotient, remainder);
+    b = quotient;
+    neg = (isNegative() && !o.isNegative()) || (!isNegative() && o.isNegative());
 }
 
 void tBigInteger::operator%= (const tBigInteger& o)
 {
-    *this = divide(*this, o).second;
+    vector<u8> quotient;
+    vector<u8> remainder;
+    divide(b, o.b, quotient, remainder);
+    b = remainder;
 }
 
 tBigInteger tBigInteger::modPow(const tBigInteger& e, const tBigInteger& m) const
@@ -423,11 +505,9 @@ tBigInteger tBigInteger::modPow(const tBigInteger& e, const tBigInteger& m) cons
     tBigInteger a = *this;
     tBigInteger res(1);
 
-    vector<u8> ex = e.getBytes();
-
-    for (size_t i = 0; i < ex.size(); i++)
+    for (size_t i = 0; i < e.b.size(); i++)
     {
-        u8 byte = ex[i];
+        u8 byte = e.b[i];
 
         for (int j = 0; j < 8; j++)
         {
@@ -438,7 +518,7 @@ tBigInteger tBigInteger::modPow(const tBigInteger& e, const tBigInteger& m) cons
             }
             byte = (u8)(byte >> 1);
 
-            if (byte == 0 && i == ex.size()-1)
+            if (byte == 0 && i == e.b.size()-1)
                 break;
 
             a *= a;   // a = a^^2
