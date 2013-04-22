@@ -20,6 +20,12 @@ class tRSA
 
         tRSA(std::string keyfilepath);
 
+        tRSA(std::vector<u8> modulus, std::vector<u8> publicKey);
+        tRSA(std::vector<u8> modulus, std::vector<u8> publicKey, std::vector<u8> privateKey);
+
+        tRSA(std::string modulus, std::string publicKey);
+        tRSA(std::string modulus, std::string publicKey, std::string privateKey);
+
         bool hasPrivateKey()    const;
         u32  maxMessageLength() const;
 

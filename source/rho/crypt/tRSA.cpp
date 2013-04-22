@@ -24,6 +24,26 @@ tRSA::tRSA(string keyfilepath)
         throw eInvalidArgument("Neither the modulus nor the public key may be zero.");
 }
 
+tRSA::tRSA(vector<u8> modulus, vector<u8> publicKey)
+    : n(modulus), e(publicKey), d(0)
+{
+}
+
+tRSA::tRSA(vector<u8> modulus, vector<u8> publicKey, vector<u8> privateKey)
+    : n(modulus), e(publicKey), d(privateKey)
+{
+}
+
+tRSA::tRSA(string modulus, string publicKey)
+    : n(modulus), e(publicKey), d(0)
+{
+}
+
+tRSA::tRSA(string modulus, string publicKey, string privateKey)
+    : n(modulus), e(publicKey), d(privateKey)
+{
+}
+
 bool tRSA::hasPrivateKey() const
 {
     return !d.isZero();
@@ -34,6 +54,7 @@ u32  tRSA::maxMessageLength() const
     return (u32) (n.getBytes().size() - 2);
 }
 
+static
 vector<u8> pad(const vector<u8>& bytes)
 {
     vector<u8> padded = bytes;
@@ -42,6 +63,7 @@ vector<u8> pad(const vector<u8>& bytes)
     return padded;
 }
 
+static
 vector<u8> unpad(const vector<u8>& bytes)
 {
     vector<u8> unpadded = bytes;
