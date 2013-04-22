@@ -78,6 +78,9 @@ void add(vector<u8>& a, const vector<u8>& b, size_t bShift = 0)
 static
 void addbyte(vector<u8>& a, u8 b, size_t bShift = 0)
 {
+    if (b == 0)
+        return;
+
     while (a.size() < 1+bShift)
         a.push_back(0);
 
@@ -227,6 +230,47 @@ void divide(const vector<u8>& a, const vector<u8>& b,
     while (quotient.size() > 0 && quotient.back() == 0) quotient.pop_back();
 }
 
+static
+void modPow(const vector<u8>& a, const vector<u8>& e, const vector<u8>& m,
+            vector<u8>& result)
+{
+    result.clear();
+    result.push_back(1);
+
+    vector<u8> temp;
+    vector<u8> trash;
+
+    vector<u8> aa = a;
+
+    for (size_t i = 0; i < e.size(); i++)
+    {
+        u8 byte = e[i];
+
+        for (int j = 0; j < 8; j++)
+        {
+            if (byte & 1)
+            {
+                temp = result;                    //
+                multiply(temp, aa, result);       // result *= aa
+
+                temp = result;                    //
+                divide(temp, m, trash, result);   // result %= m
+            }
+
+            byte = (u8)(byte >> 1);
+
+            if (byte == 0 && i == e.size()-1)
+                break;
+
+            multiply(aa, aa, temp);           //
+            aa = temp;                        // aa = aa^^2
+
+            divide(aa, m, trash, temp);       //
+            aa = temp;                        // aa %= m
+        }
+    }
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Methods
@@ -252,39 +296,10 @@ tBigInteger::tBigInteger(string val, int radix)
     switch (radix)
     {
         case 2:
-        {
-            for (size_t i = 0; i < val.size(); i++)
-            {
-                if (i == 0 && val[i] == '-')
-                {
-                    neg = true;
-                    continue;
-                }
-                if (val[i] < '0' || val[i] > '1')
-                    throwInvalidValStringException(val[i], radix);
-                ints.push_back(val[i] - '0');
-            }
-        }
-        break;
-
         case 8:
-        {
-            for (size_t i = 0; i < val.size(); i++)
-            {
-                if (i == 0 && val[i] == '-')
-                {
-                    neg = true;
-                    continue;
-                }
-                if (val[i] < '0' || val[i] > '7')
-                    throwInvalidValStringException(val[i], radix);
-                ints.push_back(val[i] - '0');
-            }
-        }
-        break;
-
         case 10:
         {
+            char upperBound = (char) ((radix-1) + '0');
             for (size_t i = 0; i < val.size(); i++)
             {
                 if (i == 0 && val[i] == '-')
@@ -292,7 +307,7 @@ tBigInteger::tBigInteger(string val, int radix)
                     neg = true;
                     continue;
                 }
-                if (val[i] < '0' || val[i] > '9')
+                if (val[i] < '0' || val[i] > upperBound)
                     throwInvalidValStringException(val[i], radix);
                 ints.push_back(val[i] - '0');
             }
@@ -328,20 +343,18 @@ tBigInteger::tBigInteger(string val, int radix)
             throw eInvalidArgument(string() + "Unsupported radix (must be 2, 8, 10, or 16)");
     }
 
-    bool savedNeg = neg;   // it will be clobbered by the first '+=' below.
-
-    tBigInteger mult(1);
+    vector<u8> mult(1, 1);
+    vector<u8> toadd;
     for (int i = (int)ints.size()-1; i >= 0; i--)
     {
         if (ints[i] != 0)
         {
-            tBigInteger add = mult * ints[i];
-            *this += add;
+            toadd = mult;
+            multiplybyte(toadd, (u8)ints[i]);
+            add(b, toadd);
         }
-        mult *= radix;
+        multiplybyte(mult, (u8)radix);
     }
-
-    neg = savedNeg;
 }
 
 tBigInteger::tBigInteger(vector<u8> bytes)
@@ -365,12 +378,14 @@ string tBigInteger::toString(int radix) const
 
     string str;
 
-    tBigInteger n = isNegative() ? -(*this) : *this;
-    while (n != 0)
+    vector<u8> n = b;
+    vector<u8> quo, rem;
+    vector<u8> radixVect(1, (u8)radix);
+    while (n.size() > 0)
     {
-        tBigInteger m = n % radix;
-        n /= radix;
-        str += m.isZero() ? '0' : toChar(m.b[0]);
+        divide(n, radixVect, quo, rem);
+        n = quo;
+        str += (rem.size() == 0) ? '0' : toChar(rem[0]);
     }
 
     if (str == "")    str = "0";
@@ -502,31 +517,9 @@ void tBigInteger::operator%= (const tBigInteger& o)
 
 tBigInteger tBigInteger::modPow(const tBigInteger& e, const tBigInteger& m) const
 {
-    tBigInteger a = *this;
-    tBigInteger res(1);
-
-    for (size_t i = 0; i < e.b.size(); i++)
-    {
-        u8 byte = e.b[i];
-
-        for (int j = 0; j < 8; j++)
-        {
-            if (byte & 1)
-            {
-                res *= a;
-                res %= m;
-            }
-            byte = (u8)(byte >> 1);
-
-            if (byte == 0 && i == e.b.size()-1)
-                break;
-
-            a *= a;   // a = a^^2
-            a %= m;
-        }
-    }
-
-    return res;
+    vector<u8> result;
+    rho::algo::modPow(b, e.b, m.b, result);
+    return tBigInteger(result);
 }
 
 tBigInteger tBigInteger::operator+  (const tBigInteger& o) const
