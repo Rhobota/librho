@@ -5,6 +5,9 @@
 using namespace std;
 
 
+#define KARATSUBA_CUTOFF 50
+
+
 namespace rho
 {
 namespace algo
@@ -14,6 +17,15 @@ namespace algo
 ///////////////////////////////////////////////////////////////////////////////
 // Util function
 ///////////////////////////////////////////////////////////////////////////////
+
+void print(const vector<u8>& v)
+{
+    if (v.size() == 0)
+        cout << " 0";
+    for (int i = (int)v.size()-1; i >= 0; i--)
+        cout << " " << (u32)(v[i]);
+    cout << endl;
+}
 
 static
 void throwInvalidValStringException(char c, int radix)
@@ -132,8 +144,8 @@ void subtract(vector<u8>& a, const vector<u8>& b)
 }
 
 static
-void multiply(const vector<u8>& a, const vector<u8>& b,
-              vector<u8>& result)
+void multiplyNaive(const vector<u8>& a, const vector<u8>& b,
+                   vector<u8>& result)                          // does "grade school multiplication"
 {
     result.clear();
 
@@ -180,8 +192,196 @@ void multiplybyte(vector<u8>& a, u8 b)
 }
 
 static
+void cleanup(vector<u8>& v)
+{
+    while (v.size() > 0 && v.back() == 0) v.pop_back();
+}
+
+static
+size_t numbits(const vector<u8>& v)
+{
+    if (v.size() == 0)
+        return 0;
+
+    u8 b = v.back();
+    size_t i = 0;
+    while (b != 0) { b /= 2; i++; }
+
+    return (v.size()-1)*8 + i;
+}
+
+static
+void shiftRight(vector<u8>& v, size_t n)
+{
+    size_t byteOff = n / 8;
+    size_t bitOff = n % 8;
+
+    u8 mask = 0;
+    switch (bitOff)
+    {
+        case 0: break;
+        case 1: mask = 1;   break;
+        case 2: mask = 3;   break;
+        case 3: mask = 7;   break;
+        case 4: mask = 15;  break;
+        case 5: mask = 31;  break;
+        case 6: mask = 63;  break;
+        case 7: mask = 127; break;
+        default: throw eImpossiblePath();
+    }
+
+    for (size_t i = 0; i < v.size(); i++)
+    {
+        if (i + byteOff >= v.size())
+        {
+            v[i] = 0;
+            continue;
+        }
+
+        v[i] = v[i+byteOff];
+
+        if (i > 0)
+        {
+            u8 r = mask & v[i];
+            r = (u8)(r << (8 - bitOff));
+            v[i-1] |= r;
+        }
+
+        v[i] = (u8)(v[i] >> bitOff);
+    }
+
+    cleanup(v);
+}
+
+static
+void shiftLeft(vector<u8>& v, size_t n)
+{
+    size_t byteOff = n / 8;
+    size_t bitOff = n % 8;
+
+    u8 mask = 0;
+    switch (bitOff)
+    {
+        case 0: break;
+        case 1: mask = 128;   break;
+        case 2: mask = 192;   break;
+        case 3: mask = 224;   break;
+        case 4: mask = 240;  break;
+        case 5: mask = 248;  break;
+        case 6: mask = 252;  break;
+        case 7: mask = 254; break;
+        default: throw eImpossiblePath();
+    }
+
+    for (size_t i = 0; i < byteOff+3; i++)
+        v.push_back(0);
+
+    for (int i = (int)v.size()-1; i >= 0; i--)
+    {
+        if ((size_t)i < byteOff)
+        {
+            v[i] = 0;
+            continue;
+        }
+
+        v[i] = v[i-byteOff];
+
+        if (i < (int)v.size()-1)
+        {
+            u8 r = mask & v[i];
+            r = (u8)(r >> (8 - bitOff));
+            v[i+1] |= r;
+        }
+
+        v[i] = (u8)(v[i] << bitOff);
+    }
+
+    cleanup(v);
+}
+
+static
+void keepOnly(vector<u8>& v, size_t n)
+{
+    size_t byteOff = n / 8;
+    size_t bitOff = n % 8;
+
+    if (byteOff >= v.size())
+        return;
+
+    u8 mask = 0;
+    switch (bitOff)
+    {
+        case 0: break;
+        case 1: mask = 1;   break;
+        case 2: mask = 3;   break;
+        case 3: mask = 7;   break;
+        case 4: mask = 15;  break;
+        case 5: mask = 31;  break;
+        case 6: mask = 63;  break;
+        case 7: mask = 127; break;
+        default: throw eImpossiblePath();
+    }
+
+    v[byteOff] = v[byteOff] & mask;
+
+    for (size_t i = byteOff+1; i < v.size(); i++)
+        v[i] = 0;
+
+    cleanup(v);
+}
+
+static
+void karatsubaMultiply(const vector<u8>& x, const vector<u8>& y,
+                      vector<u8>& result)
+{
+    if (x.size() <= KARATSUBA_CUTOFF || y.size() <= KARATSUBA_CUTOFF)
+    {
+        multiplyNaive(x, y, result);
+        return;
+    }
+
+    size_t n = std::max(numbits(x), numbits(y));
+    n = (n / 2) + (n % 2);   // rounds up
+
+    // x = 2^n b + a
+    vector<u8> a = x; keepOnly(a, n);
+    vector<u8> b = x; shiftRight(b, n);
+
+    // y = 2^n d + c
+    vector<u8> c = y; keepOnly(c, n);
+    vector<u8> d = y; shiftRight(d, n);
+
+
+    // Recurse!
+    vector<u8> ac;   karatsubaMultiply(a, c, ac);
+    vector<u8> bd;   karatsubaMultiply(b, d, bd);
+    add(a, b);
+    add(c, d);
+    vector<u8> abcd; karatsubaMultiply(a, c, abcd);
+
+    // K... For convenience
+    vector<u8> k = abcd;
+    subtract(k, ac);
+    subtract(k, bd);
+
+    // Build results.
+    result = bd;
+    shiftLeft(result, n);
+    add(result, k);
+    shiftLeft(result, n);
+    add(result, ac);
+}
+
+static
+void multiply(const vector<u8>& a, const vector<u8>& b,
+              vector<u8>& result)
+{
+    karatsubaMultiply(a, b, result);
+}
+
+static
 void divide(const vector<u8>& a, const vector<u8>& b,
-            vector<u8>& quotient, vector<u8>& remainder)
+            vector<u8>& quotient, vector<u8>& remainder)      // "long division"
 {
     quotient.clear();
     remainder.clear();
