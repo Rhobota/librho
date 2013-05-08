@@ -1,7 +1,5 @@
 #include <rho/algo/tBigInteger.h>
-
 #include <sstream>
-
 using namespace std;
 
 
@@ -47,148 +45,13 @@ char toChar(u8 b)
 }
 
 static
-bool less(const vector<u8>& a, const vector<u8>& b)
+bool isLess(const vector<u8>& a, const vector<u8>& b)
 {
     if (a.size() != b.size()) return a.size() < b.size();
     for (int i = (int)a.size()-1; i >= 0; i--)
         if (a[i] != b[i])
             return a[i] < b[i];
     return false;
-}
-
-static
-void add(vector<u8>& a, const vector<u8>& b, size_t bShift = 0)
-{
-    while (a.size() < b.size()+bShift)
-        a.push_back(0);
-
-    u8 carry = 0;
-    size_t i;
-    for (i = bShift; i < a.size() && (i-bShift) < b.size(); i++)
-    {
-        u16 sum = (u16) (a[i] + b[(i-bShift)] + carry);
-        a[i] = (u8)(sum & 0xFF);
-        carry = (u8)((sum >> 8) & 0xFF);
-    }
-
-    for (; carry > 0; i++)
-    {
-        if (i == a.size())
-        {
-            a.push_back(carry);
-            carry = 0;
-        }
-        else
-        {
-            u16 sum = (u16) (a[i] + carry);
-            a[i] = (u8)(sum & 0xFF);
-            carry = (u8)((sum >> 8) & 0xFF);
-        }
-    }
-}
-
-static
-void addbyte(vector<u8>& a, u8 b, size_t bShift = 0)
-{
-    if (b == 0)
-        return;
-
-    while (a.size() < 1+bShift)
-        a.push_back(0);
-
-    u8 carry = 0;
-    size_t i;
-    for (i = bShift; i < a.size() && (i-bShift) < 1; i++)
-    {
-        u16 sum = (u16) (a[i] + b + carry);
-        a[i] = (u8)(sum & 0xFF);
-        carry = (u8)((sum >> 8) & 0xFF);
-    }
-
-    for (; carry > 0; i++)
-    {
-        if (i == a.size())
-        {
-            a.push_back(carry);
-            carry = 0;
-        }
-        else
-        {
-            u16 sum = (u16) (a[i] + carry);
-            a[i] = (u8)(sum & 0xFF);
-            carry = (u8)((sum >> 8) & 0xFF);
-        }
-    }
-}
-
-static
-void subtract(vector<u8>& a, const vector<u8>& b)
-{
-    if (less(a, b))
-        throw eLogicError("Do not call subtract with a<b.");
-
-    for (size_t i = 0; i < a.size() && i < b.size(); i++)
-    {
-        u16 top = (u16) a[i];
-        if (a[i] < b[i])     // <-- if need to borrow
-        {
-            size_t j = i+1;
-            while (a[j] == 0) a[j++] = 255;
-            a[j]--;
-            top = (u16)(top + 256);
-        }
-        a[i] = (u8)(top - b[i]);
-    }
-
-    while (a.size() > 0 && a.back() == 0) a.pop_back();
-}
-
-static
-void multiplyNaive(const vector<u8>& a, const vector<u8>& b,
-                   vector<u8>& result)                          // does "grade school multiplication"
-{
-    result.clear();
-
-    if (a.size() == 0 || b.size() == 0)
-        return;
-
-    for (size_t i = 0; i < a.size(); i++)
-    {
-        u8 carry = 0;
-        for (size_t j = 0; j < b.size(); j++)
-        {
-            u16 mult = (u16)(a[i] * b[j] + carry);
-            u8 val = (u8) (mult & 0xFF);
-            addbyte(result, val, i+j);
-            carry = (u8) ((mult >> 8) & 0xFF);
-        }
-        if (carry > 0)
-            addbyte(result, carry, i+b.size());
-    }
-}
-
-static
-void multiplybyte(vector<u8>& a, u8 b)
-{
-    if (a.size() == 0)
-        return;
-
-    if (b == 0)
-    {
-        a.clear();
-        return;
-    }
-
-    u8 carry = 0;
-    for (size_t i = 0; i < a.size(); i++)
-    {
-        u16 mult = (u16)(a[i] * b + carry);
-        u8 val = (u8) (mult & 0xFF);
-        carry = (u8) ((mult >> 8) & 0xFF);
-        a[i] = val;
-    }
-    if (carry > 0)
-        a.push_back(carry);
 }
 
 static
@@ -331,7 +194,142 @@ void keepOnly(vector<u8>& v, size_t n)
 }
 
 static
-void karatsubaMultiply(const vector<u8>& x, const vector<u8>& y,
+void add(vector<u8>& a, const vector<u8>& b, size_t bShift = 0)
+{
+    while (a.size() < b.size()+bShift)
+        a.push_back(0);
+
+    u8 carry = 0;
+    size_t i;
+    for (i = bShift; i < a.size() && (i-bShift) < b.size(); i++)
+    {
+        u16 sum = (u16) (a[i] + b[(i-bShift)] + carry);
+        a[i] = (u8)(sum & 0xFF);
+        carry = (u8)((sum >> 8) & 0xFF);
+    }
+
+    for (; carry > 0; i++)
+    {
+        if (i == a.size())
+        {
+            a.push_back(carry);
+            carry = 0;
+        }
+        else
+        {
+            u16 sum = (u16) (a[i] + carry);
+            a[i] = (u8)(sum & 0xFF);
+            carry = (u8)((sum >> 8) & 0xFF);
+        }
+    }
+}
+
+static
+void addByte(vector<u8>& a, u8 b, size_t bShift = 0)
+{
+    if (b == 0)
+        return;
+
+    while (a.size() < 1+bShift)
+        a.push_back(0);
+
+    u8 carry = 0;
+    size_t i;
+    for (i = bShift; i < a.size() && (i-bShift) < 1; i++)
+    {
+        u16 sum = (u16) (a[i] + b + carry);
+        a[i] = (u8)(sum & 0xFF);
+        carry = (u8)((sum >> 8) & 0xFF);
+    }
+
+    for (; carry > 0; i++)
+    {
+        if (i == a.size())
+        {
+            a.push_back(carry);
+            carry = 0;
+        }
+        else
+        {
+            u16 sum = (u16) (a[i] + carry);
+            a[i] = (u8)(sum & 0xFF);
+            carry = (u8)((sum >> 8) & 0xFF);
+        }
+    }
+}
+
+static
+void subtract(vector<u8>& a, const vector<u8>& b)
+{
+    if (isLess(a, b))
+        throw eLogicError("Do not call subtract with a<b.");
+
+    for (size_t i = 0; i < a.size() && i < b.size(); i++)
+    {
+        u16 top = (u16) a[i];
+        if (a[i] < b[i])     // <-- if need to borrow
+        {
+            size_t j = i+1;
+            while (a[j] == 0) a[j++] = 255;
+            a[j]--;
+            top = (u16)(top + 256);
+        }
+        a[i] = (u8)(top - b[i]);
+    }
+
+    while (a.size() > 0 && a.back() == 0) a.pop_back();
+}
+
+static
+void multiplyNaive(const vector<u8>& a, const vector<u8>& b,
+                   vector<u8>& result)                          // does "grade school multiplication"
+{
+    result.clear();
+
+    if (a.size() == 0 || b.size() == 0)
+        return;
+
+    for (size_t i = 0; i < a.size(); i++)
+    {
+        u8 carry = 0;
+        for (size_t j = 0; j < b.size(); j++)
+        {
+            u16 mult = (u16)(a[i] * b[j] + carry);
+            u8 val = (u8) (mult & 0xFF);
+            addByte(result, val, i+j);
+            carry = (u8) ((mult >> 8) & 0xFF);
+        }
+        if (carry > 0)
+            addByte(result, carry, i+b.size());
+    }
+}
+
+static
+void multiplyByte(vector<u8>& a, u8 b)
+{
+    if (a.size() == 0)
+        return;
+
+    if (b == 0)
+    {
+        a.clear();
+        return;
+    }
+
+    u8 carry = 0;
+    for (size_t i = 0; i < a.size(); i++)
+    {
+        u16 mult = (u16)(a[i] * b + carry);
+        u8 val = (u8) (mult & 0xFF);
+        carry = (u8) ((mult >> 8) & 0xFF);
+        a[i] = val;
+    }
+    if (carry > 0)
+        a.push_back(carry);
+}
+
+static
+void multiplyKaratsuba(const vector<u8>& x, const vector<u8>& y,
                       vector<u8>& result)
 {
     if (x.size() <= KARATSUBA_CUTOFF || y.size() <= KARATSUBA_CUTOFF)
@@ -353,11 +351,11 @@ void karatsubaMultiply(const vector<u8>& x, const vector<u8>& y,
 
 
     // Recurse!
-    vector<u8> ac;   karatsubaMultiply(a, c, ac);
-    vector<u8> bd;   karatsubaMultiply(b, d, bd);
+    vector<u8> ac;   multiplyKaratsuba(a, c, ac);
+    vector<u8> bd;   multiplyKaratsuba(b, d, bd);
     add(a, b);
     add(c, d);
-    vector<u8> abcd; karatsubaMultiply(a, c, abcd);
+    vector<u8> abcd; multiplyKaratsuba(a, c, abcd);
 
     // K... For convenience
     vector<u8> k = abcd;
@@ -376,7 +374,7 @@ static
 void multiply(const vector<u8>& a, const vector<u8>& b,
               vector<u8>& result)
 {
-    karatsubaMultiply(a, b, result);
+    multiplyKaratsuba(a, b, result);
 }
 
 static
@@ -397,7 +395,7 @@ void divide(const vector<u8>& a, const vector<u8>& b,
     {
         if (remainder.size() > 0 || a[i] != 0)
             remainder.insert(remainder.begin(), a[i]);
-        if (less(remainder, b))
+        if (isLess(remainder, b))
         {
             quotient.push_back(0);
             continue;
@@ -408,14 +406,14 @@ void divide(const vector<u8>& a, const vector<u8>& b,
         {
             mid = (left + right) / 2;
             mult = b;
-            multiplybyte(mult, (u8)mid);
-            if (less(remainder, mult))
+            multiplyByte(mult, (u8)mid);
+            if (isLess(remainder, mult))
                 right = mid - 1;
             else
             {
                 sub = remainder;
                 subtract(sub, mult);
-                if (less(b, sub) || b == sub)
+                if (isLess(b, sub) || b == sub)
                     left = mid + 1;
                 else
                     break;
@@ -550,10 +548,10 @@ tBigInteger::tBigInteger(string val, int radix)
         if (ints[i] != 0)
         {
             toadd = mult;
-            multiplybyte(toadd, (u8)ints[i]);
+            multiplyByte(toadd, (u8)ints[i]);
             add(b, toadd);
         }
-        multiplybyte(mult, (u8)radix);
+        multiplyByte(mult, (u8)radix);
     }
 }
 
