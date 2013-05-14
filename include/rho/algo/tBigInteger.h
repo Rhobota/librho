@@ -2,6 +2,7 @@
 #define __rho_algo_tBigInteger_h__
 
 
+#include <rho/algo/tArray.h>
 #include <rho/types.h>
 #include <rho/eRho.h>
 
@@ -24,15 +25,15 @@ class tBigInteger
         tBigInteger(std::string val, int radix=10);
         tBigInteger(std::vector<u8> bytes);            // <-- assumes positive
 
-        std::string            toString(int radix=10) const;
-        const std::vector<u8>& getBytes()             const;
+        std::string     toString(int radix=10) const;
+        std::vector<u8> getBytes()             const;
 
-        bool                   isNegative()           const;
-        tBigInteger&           setIsNegative(bool n);  // <-- returns *this
+        bool            isNegative()           const;
+        tBigInteger&    setIsNegative(bool n);         // <-- returns *this
 
-        bool                   isZero()               const;
-        bool                   isOdd()                const;
-        bool                   isEven()               const;
+        bool            isZero()               const;
+        bool            isOdd()                const;
+        bool            isEven()               const;
 
         tBigInteger abs()        const;
         tBigInteger operator- () const;
@@ -64,8 +65,10 @@ class tBigInteger
 
     private:
 
-        std::vector<u8> b;   // <-- stored little endian
-                             // (aka, b[0] is the least significant byte)
+        tArray b;           // <-- stored little endian
+                            // (aka, b[0] is the least significant byte)
+        tArray m_aux1, m_aux2;
+
         bool neg;
 };
 

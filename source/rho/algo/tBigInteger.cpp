@@ -16,14 +16,15 @@ namespace algo
 // Util function
 ///////////////////////////////////////////////////////////////////////////////
 
-void print(const vector<u8>& v)
-{
-    if (v.size() == 0)
-        cout << " 0";
-    for (int i = (int)v.size()-1; i >= 0; i--)
-        cout << " " << (u32)(v[i]);
-    cout << endl;
-}
+// static
+// void print(const tArray& v)
+// {
+//     if (v.size() == 0)
+//         cout << " 0";
+//     for (int i = (int)v.size()-1; i >= 0; i--)
+//         cout << " " << (u32)(v[i]);
+//     cout << endl;
+// }
 
 static
 void throwInvalidValStringException(char c, int radix)
@@ -45,7 +46,7 @@ char toChar(u8 b)
 }
 
 static
-bool isLess(const vector<u8>& a, const vector<u8>& b)
+bool isLess(const tArray& a, const tArray& b)
 {
     if (a.size() != b.size()) return a.size() < b.size();
     for (int i = (int)a.size()-1; i >= 0; i--)
@@ -55,13 +56,13 @@ bool isLess(const vector<u8>& a, const vector<u8>& b)
 }
 
 static
-void cleanup(vector<u8>& v)
+void cleanup(tArray& v)
 {
     while (v.size() > 0 && v.back() == 0) v.pop_back();
 }
 
 static
-size_t numbits(const vector<u8>& v)
+size_t numbits(const tArray& v)
 {
     if (v.size() == 0)
         return 0;
@@ -74,7 +75,7 @@ size_t numbits(const vector<u8>& v)
 }
 
 static
-void shiftRight(vector<u8>& v, size_t n)
+void shiftRight(tArray& v, size_t n)
 {
     size_t byteOff = n / 8;
     size_t bitOff = n % 8;
@@ -117,7 +118,7 @@ void shiftRight(vector<u8>& v, size_t n)
 }
 
 static
-void shiftLeft(vector<u8>& v, size_t n)
+void shiftLeft(tArray& v, size_t n)
 {
     size_t byteOff = n / 8;
     size_t bitOff = n % 8;
@@ -163,7 +164,7 @@ void shiftLeft(vector<u8>& v, size_t n)
 }
 
 static
-void keepOnly(vector<u8>& v, size_t n)
+void keepOnly(tArray& v, size_t n)
 {
     size_t byteOff = n / 8;
     size_t bitOff = n % 8;
@@ -194,7 +195,7 @@ void keepOnly(vector<u8>& v, size_t n)
 }
 
 static
-void add(vector<u8>& a, const vector<u8>& b, size_t bShift = 0)
+void add(tArray& a, const tArray& b, size_t bShift = 0)
 {
     while (a.size() < b.size()+bShift)
         a.push_back(0);
@@ -225,7 +226,7 @@ void add(vector<u8>& a, const vector<u8>& b, size_t bShift = 0)
 }
 
 static
-void addByte(vector<u8>& a, u8 b, size_t bShift = 0)
+void addByte(tArray& a, u8 b, size_t bShift = 0)
 {
     if (b == 0)
         return;
@@ -259,7 +260,7 @@ void addByte(vector<u8>& a, u8 b, size_t bShift = 0)
 }
 
 static
-void subtract(vector<u8>& a, const vector<u8>& b)
+void subtract(tArray& a, const tArray& b)
 {
     if (isLess(a, b))
         throw eLogicError("Do not call subtract with a<b.");
@@ -281,8 +282,8 @@ void subtract(vector<u8>& a, const vector<u8>& b)
 }
 
 static
-void multiplyNaive(const vector<u8>& a, const vector<u8>& b,
-                   vector<u8>& result)                          // does "grade school multiplication"
+void multiplyNaive(const tArray& a, const tArray& b,
+                   tArray& result)                          // does "grade school multiplication"
 {
     result.clear();
 
@@ -305,7 +306,7 @@ void multiplyNaive(const vector<u8>& a, const vector<u8>& b,
 }
 
 static
-void multiplyByte(vector<u8>& a, u8 b)
+void multiplyByte(tArray& a, u8 b)
 {
     if (a.size() == 0)
         return;
@@ -329,8 +330,8 @@ void multiplyByte(vector<u8>& a, u8 b)
 }
 
 static
-void multiplyKaratsuba(const vector<u8>& x, const vector<u8>& y,
-                      vector<u8>& result)
+void multiplyKaratsuba(const tArray& x, const tArray& y,
+                       tArray& result)
 {
     if (x.size() <= KARATSUBA_CUTOFF || y.size() <= KARATSUBA_CUTOFF)
     {
@@ -342,23 +343,23 @@ void multiplyKaratsuba(const vector<u8>& x, const vector<u8>& y,
     n = (n / 2) + (n % 2);   // rounds up
 
     // x = 2^n b + a
-    vector<u8> a = x; keepOnly(a, n);
-    vector<u8> b = x; shiftRight(b, n);
+    tArray a = x; keepOnly(a, n);
+    tArray b = x; shiftRight(b, n);
 
     // y = 2^n d + c
-    vector<u8> c = y; keepOnly(c, n);
-    vector<u8> d = y; shiftRight(d, n);
+    tArray c = y; keepOnly(c, n);
+    tArray d = y; shiftRight(d, n);
 
 
     // Recurse!
-    vector<u8> ac;   multiplyKaratsuba(a, c, ac);
-    vector<u8> bd;   multiplyKaratsuba(b, d, bd);
+    tArray ac;   multiplyKaratsuba(a, c, ac);
+    tArray bd;   multiplyKaratsuba(b, d, bd);
     add(a, b);
     add(c, d);
-    vector<u8> abcd; multiplyKaratsuba(a, c, abcd);
+    tArray abcd; multiplyKaratsuba(a, c, abcd);
 
     // K... For convenience
-    vector<u8> k = abcd;
+    tArray k = abcd;
     subtract(k, ac);
     subtract(k, bd);
 
@@ -371,15 +372,16 @@ void multiplyKaratsuba(const vector<u8>& x, const vector<u8>& y,
 }
 
 static
-void multiply(const vector<u8>& a, const vector<u8>& b,
-              vector<u8>& result)
+void multiply(const tArray& a, const tArray& b,
+              tArray& result)
 {
     multiplyKaratsuba(a, b, result);
 }
 
 static
-void divide(const vector<u8>& a, const vector<u8>& b,
-            vector<u8>& quotient, vector<u8>& remainder)      // "long division"
+void divideNaive(const tArray& a, const tArray& b,      // "long division"
+            tArray& quotient, tArray& remainder,
+            tArray& aux1, tArray& aux2)
 {
     quotient.clear();
     remainder.clear();
@@ -389,12 +391,18 @@ void divide(const vector<u8>& a, const vector<u8>& b,
         throw eInvalidArgument("You may not divide by zero!");
 
     // Long division:
-    vector<u8> mult;
-    vector<u8> sub;
+    tArray& mult = aux1;
+    tArray& sub = aux2;
     for (int i = (int)a.size()-1; i >= 0; i--)
     {
         if (remainder.size() > 0 || a[i] != 0)
-            remainder.insert(remainder.begin(), a[i]);
+        {
+            remainder.push_back(0);
+            for (size_t k = remainder.size()-1; k > 0; k--)
+                remainder[k] = remainder[k-1];
+            remainder[0] = a[i];
+        }
+
         if (isLess(remainder, b))
         {
             quotient.push_back(0);
@@ -424,21 +432,31 @@ void divide(const vector<u8>& a, const vector<u8>& b,
         subtract(remainder, mult);
     }
 
-    quotient = vector<u8>(quotient.rbegin(), quotient.rend());
+    quotient.reverse();
     while (quotient.size() > 0 && quotient.back() == 0) quotient.pop_back();
 }
 
 static
-void modPow(const vector<u8>& a, const vector<u8>& e, const vector<u8>& m,
-            vector<u8>& result)
+void divide(const tArray& a, const tArray& b,
+            tArray& quotient, tArray& remainder,
+            tArray& aux1, tArray& aux2)
+{
+    divideNaive(a, b, quotient, remainder, aux1, aux2);
+}
+
+static
+void modPow(const tArray& a, const tArray& e, const tArray& m,
+            tArray& result)
 {
     result.clear();
     result.push_back(1);
 
-    vector<u8> temp;
-    vector<u8> trash;
+    tArray temp;
+    tArray trash;
 
-    vector<u8> aa = a;
+    tArray aa = a;
+
+    tArray aux1, aux2;
 
     for (size_t i = 0; i < e.size(); i++)
     {
@@ -448,11 +466,13 @@ void modPow(const vector<u8>& a, const vector<u8>& e, const vector<u8>& m,
         {
             if (byte & 1)
             {
-                temp = result;                    //
-                multiply(temp, aa, result);       // result *= aa
+                // result *= aa
+                temp = result;
+                multiply(temp, aa, result);
 
-                temp = result;                    //
-                divide(temp, m, trash, result);   // result %= m
+                // result %= m
+                temp = result;
+                divide(temp, m, trash, result, aux1, aux2);
             }
 
             byte = (u8)(byte >> 1);
@@ -460,11 +480,13 @@ void modPow(const vector<u8>& a, const vector<u8>& e, const vector<u8>& m,
             if (byte == 0 && i == e.size()-1)
                 break;
 
-            multiply(aa, aa, temp);           //
-            aa = temp;                        // aa = aa^^2
+            // aa = aa^^2
+            multiply(aa, aa, temp);
+            aa = temp;
 
-            divide(aa, m, trash, temp);       //
-            aa = temp;                        // aa %= m
+            // aa %= m
+            divide(aa, m, trash, temp, aux1, aux2);
+            aa = temp;
         }
     }
 }
@@ -541,8 +563,8 @@ tBigInteger::tBigInteger(string val, int radix)
             throw eInvalidArgument(string() + "Unsupported radix (must be 2, 8, 10, or 16)");
     }
 
-    vector<u8> mult(1, 1);
-    vector<u8> toadd;
+    tArray mult(1, 1);
+    tArray toadd;
     for (int i = (int)ints.size()-1; i >= 0; i--)
     {
         if (ints[i] != 0)
@@ -556,8 +578,10 @@ tBigInteger::tBigInteger(string val, int radix)
 }
 
 tBigInteger::tBigInteger(vector<u8> bytes)
-    : b(bytes), neg(false)
+    : b(), neg(false)
 {
+    for (size_t i = 0; i < bytes.size(); i++)
+        b.push_back(bytes[i]);
     while (b.size() > 0 && b.back() == 0) b.pop_back();
 }
 
@@ -576,12 +600,13 @@ string tBigInteger::toString(int radix) const
 
     string str;
 
-    vector<u8> n = b;
-    vector<u8> quo, rem;
-    vector<u8> radixVect(1, (u8)radix);
+    tArray n = b;
+    tArray quo, rem;
+    tArray radixVect(1, (u8)radix);
+    tArray aux1, aux2;
     while (n.size() > 0)
     {
-        divide(n, radixVect, quo, rem);
+        divide(n, radixVect, quo, rem, aux1, aux2);
         n = quo;
         str += (rem.size() == 0) ? '0' : toChar(rem[0]);
     }
@@ -592,9 +617,9 @@ string tBigInteger::toString(int radix) const
     return string(str.rbegin(), str.rend());
 }
 
-const vector<u8>& tBigInteger::getBytes() const
+vector<u8> tBigInteger::getBytes() const
 {
-    return b;
+    return vector<u8>(&b[0], &b[b.size()]);
 }
 
 bool tBigInteger::isNegative() const
@@ -690,7 +715,7 @@ void tBigInteger::operator-= (const tBigInteger& o)
 
 void tBigInteger::operator*= (const tBigInteger& o)
 {
-    vector<u8> result;
+    tArray result;
     multiply(b, o.b, result);
     b = result;
     neg = (isNegative() && !o.isNegative()) || (!isNegative() && o.isNegative());
@@ -698,26 +723,28 @@ void tBigInteger::operator*= (const tBigInteger& o)
 
 void tBigInteger::operator/= (const tBigInteger& o)
 {
-    vector<u8> quotient;
-    vector<u8> remainder;
-    divide(b, o.b, quotient, remainder);
+    tArray quotient;
+    tArray remainder;
+    divide(b, o.b, quotient, remainder, m_aux1, m_aux2);
     b = quotient;
     neg = (isNegative() && !o.isNegative()) || (!isNegative() && o.isNegative());
 }
 
 void tBigInteger::operator%= (const tBigInteger& o)
 {
-    vector<u8> quotient;
-    vector<u8> remainder;
-    divide(b, o.b, quotient, remainder);
+    tArray quotient;
+    tArray remainder;
+    divide(b, o.b, quotient, remainder, m_aux1, m_aux2);
     b = remainder;
 }
 
 tBigInteger tBigInteger::modPow(const tBigInteger& e, const tBigInteger& m) const
 {
-    vector<u8> result;
+    tArray result;
     rho::algo::modPow(b, e.b, m.b, result);
-    return tBigInteger(result);
+    tBigInteger bi(0);
+    bi.b = result;
+    return bi;
 }
 
 tBigInteger tBigInteger::operator+  (const tBigInteger& o) const
