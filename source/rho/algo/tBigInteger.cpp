@@ -3,7 +3,22 @@
 using namespace std;
 
 
-#define KARATSUBA_CUTOFF 50
+#ifndef KARATSUBA_CUTOFF
+#define KARATSUBA_CUTOFF 50      // must be >0
+#endif
+
+#ifndef USE_OPENSSL
+#define USE_OPENSSL 0            // 0 for off, 1 for on
+#endif
+
+#ifndef OPENSSL_CUTOFF
+#define OPENSSL_CUTOFF 50        // only applicable when USE_OPENSSL == 1
+#endif
+
+
+#if USE_OPENSSL
+#include <openssl/bn.h>
+#endif
 
 
 namespace rho
@@ -283,7 +298,7 @@ void subtract(tArray& a, const tArray& b)
 
 static
 void multiplyNaive(const tArray& a, const tArray& b,
-                   tArray& result)                          // does "grade school multiplication"
+                   tArray& result)          // does "grade school multiplication"
 {
     result.clear();
 
@@ -436,16 +451,70 @@ void divideNaive(const tArray& a, const tArray& b,      // "long division"
     while (quotient.size() > 0 && quotient.back() == 0) quotient.pop_back();
 }
 
+#if USE_OPENSSL
+static
+void divideOpenSSL(const tArray& a, const tArray& b,
+            tArray& quotient, tArray& remainder,
+            tArray& aux1, tArray& aux2)
+{
+    BIGNUM* bn_a = BN_new(); BN_init(bn_a);
+    BIGNUM* bn_b = BN_new(); BN_init(bn_b);
+    BIGNUM* bn_quo = BN_new(); BN_init(bn_quo);
+    BIGNUM* bn_rem = BN_new(); BN_init(bn_rem);
+    BN_CTX* ctx = BN_CTX_new(); BN_CTX_init(ctx);
+
+    aux1 = a;
+    aux1.reverse();
+    BN_bin2bn(&aux1[0], (int)aux1.size(), bn_a);
+    aux1 = b;
+    aux1.reverse();
+    BN_bin2bn(&aux1[0], (int)aux1.size(), bn_b);
+
+    BN_div(bn_quo, bn_rem, bn_a, bn_b, ctx);
+
+    {
+        u8 quo_bf[10000];
+        int quo_sz = BN_bn2bin(bn_quo, quo_bf);
+        quotient.clear();
+        for (int i = 0; i < quo_sz; i++)
+            quotient.push_back(quo_bf[i]);
+        quotient.reverse();
+    }
+
+    {
+        u8 rem_bf[10000];
+        int rem_sz = BN_bn2bin(bn_rem, rem_bf);
+        remainder.clear();
+        for (int i = 0; i < rem_sz; i++)
+            remainder.push_back(rem_bf[i]);
+        remainder.reverse();
+    }
+
+    BN_CTX_free(ctx);
+    BN_free(bn_a);
+    BN_free(bn_b);
+    BN_free(bn_quo);
+    BN_free(bn_rem);
+}
+#endif
+
 static
 void divide(const tArray& a, const tArray& b,
             tArray& quotient, tArray& remainder,
             tArray& aux1, tArray& aux2)
 {
+#if USE_OPENSSL
+    if (a.size() >= OPENSSL_CUTOFF || b.size() >= OPENSSL_CUTOFF)
+        divideOpenSSL(a, b, quotient, remainder, aux1, aux2);
+    else
+        divideNaive(a, b, quotient, remainder, aux1, aux2);
+#else
     divideNaive(a, b, quotient, remainder, aux1, aux2);
+#endif
 }
 
 static
-void modPow(const tArray& a, const tArray& e, const tArray& m,
+void modPowNaive(const tArray& a, const tArray& e, const tArray& m,
             tArray& result)
 {
     result.clear();
@@ -489,6 +558,61 @@ void modPow(const tArray& a, const tArray& e, const tArray& m,
             aa = temp;
         }
     }
+}
+
+#if USE_OPENSSL
+static
+void modPowOpenSSL(const tArray& a, const tArray& e, const tArray& m,
+            tArray& result)
+{
+    BIGNUM* bn_a = BN_new(); BN_init(bn_a);
+    BIGNUM* bn_e = BN_new(); BN_init(bn_e);
+    BIGNUM* bn_m = BN_new(); BN_init(bn_m);
+    BIGNUM* bn_res = BN_new(); BN_init(bn_res);
+    BN_CTX* ctx = BN_CTX_new(); BN_CTX_init(ctx);
+
+    tArray aux;
+    aux = a;
+    aux.reverse();
+    BN_bin2bn(&aux[0], (int)aux.size(), bn_a);
+    aux = e;
+    aux.reverse();
+    BN_bin2bn(&aux[0], (int)aux.size(), bn_e);
+    aux = m;
+    aux.reverse();
+    BN_bin2bn(&aux[0], (int)aux.size(), bn_m);
+
+    BN_mod_exp(bn_res, bn_a, bn_e, bn_m, ctx);
+
+    {
+        u8 res_bf[10000];
+        int res_sz = BN_bn2bin(bn_res, res_bf);
+        result.clear();
+        for (int i = 0; i < res_sz; i++)
+            result.push_back(res_bf[i]);
+        result.reverse();
+    }
+
+    BN_CTX_free(ctx);
+    BN_free(bn_a);
+    BN_free(bn_e);
+    BN_free(bn_m);
+    BN_free(bn_res);
+}
+#endif
+
+static
+void modPow(const tArray& a, const tArray& e, const tArray& m,
+            tArray& result)
+{
+#if USE_OPENSSL
+    if (e.size() >= OPENSSL_CUTOFF || m.size() >= OPENSSL_CUTOFF)
+        modPowOpenSSL(a, e, m, result);
+    else
+        modPowNaive(a, e, m, result);
+#else
+    modPowNaive(a, e, m, result);
+#endif
 }
 
 

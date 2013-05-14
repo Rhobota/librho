@@ -39,7 +39,7 @@ Here are a few things I'd like the library to have soon:
     - graph library
 
 
-Random notes:
+Compilation notes:
 
 1. On OSX, the OpenGL and GLU headers live in a different place. To fix OSX to
 be like the rest of the world, create two files: /usr/include/GL/gl.h and
@@ -55,6 +55,14 @@ for doing some sort of cross-compilation), you can set the $TARGET variable
 to the desired g++-prefix before running `make`. Do this in the same way as
 described by note #2. Sub-note: This is how compiling for Mingw within the
 Cygwin environment is done (as described at the top of this document)!
+
+4. Currently, rho::algo::tBigInteger has slow implementations of divide() and
+modPow(). However, this can be fixed by telling librho to compile against
+OpenSSL. Doing so will allow tBigInteger to call into OpenSSL's implementation
+of BIGNUM to do divide() and modPow(). To achieve this, add '-DUSE_OPENSSL=1'
+to $CC_FLAGS before calling `make`. Again, like in notes #2 and #3, this can
+be done with one command: `CC_FLAGS=-DUSE_OPENSSL=1 make`
+
 
 Usage notes:
 
