@@ -148,6 +148,13 @@ class tArray
             return m_size;
         }
 
+        void setSize(size_t size)
+        {
+            while (size >= m_capacity)
+                grow();
+            m_size = size;
+        }
+
         void clear()
         {
             m_size = 0;
