@@ -4,7 +4,7 @@ using namespace std;
 
 
 #ifndef KARATSUBA_CUTOFF
-#define KARATSUBA_CUTOFF 50      // must be >0
+#define KARATSUBA_CUTOFF 200     // must be >0
 #endif
 
 #ifndef USE_OPENSSL
@@ -238,41 +238,41 @@ void add(tArray& a, const tArray& b, size_t bShift = 0)
             carry = (u8)((sum >> 8) & 0xFF);
         }
     }
+
+    cleanup(a);
 }
 
-static
-void addByte(tArray& a, u8 b, size_t bShift = 0)
-{
-    if (b == 0)
-        return;
-
-    while (a.size() < 1+bShift)
-        a.push_back(0);
-
-    u8 carry = 0;
-    size_t i;
-    for (i = bShift; i < a.size() && (i-bShift) < 1; i++)
-    {
-        u16 sum = (u16) (a[i] + b + carry);
-        a[i] = (u8)(sum & 0xFF);
-        carry = (u8)((sum >> 8) & 0xFF);
-    }
-
-    for (; carry > 0; i++)
-    {
-        if (i == a.size())
-        {
-            a.push_back(carry);
-            carry = 0;
-        }
-        else
-        {
-            u16 sum = (u16) (a[i] + carry);
-            a[i] = (u8)(sum & 0xFF);
-            carry = (u8)((sum >> 8) & 0xFF);
-        }
-    }
-}
+// static
+// void addByte(tArray& a, u8 b, size_t bShift = 0)
+// {
+//     if (b == 0)
+//         return;
+//
+//     while (a.size() < 1+bShift)
+//         a.push_back(0);
+//
+//     u16 sum = (u16) (a[bShift] + b);
+//     a[bShift] = (u8)(sum & 0xFF);
+//     u8 carry = (u8)((sum >> 8) & 0xFF);
+//
+//     while (carry > 0)
+//     {
+//         ++bShift;
+//         if (bShift == a.size())
+//         {
+//             a.push_back(carry);
+//             break;
+//         }
+//         else
+//         {
+//             u16 sum = (u16) (a[bShift] + carry);
+//             a[bShift] = (u8)(sum & 0xFF);
+//             carry = (u8)((sum >> 8) & 0xFF);
+//         }
+//     }
+//
+//     cleanup(a);
+// }
 
 static
 void subtract(tArray& a, const tArray& b)
@@ -293,17 +293,19 @@ void subtract(tArray& a, const tArray& b)
         a[i] = (u8)(top - b[i]);
     }
 
-    while (a.size() > 0 && a.back() == 0) a.pop_back();
+    cleanup(a);
 }
 
 static
-void multiplyNaive(const tArray& a, const tArray& b,
-                   tArray& result)          // does "grade school multiplication"
+void multiplyNaive(const tArray& a, const tArray& b,   // does "grade school multiplication"
+                   tArray& result, tArray& aux1, tArray& aux2)
 {
     result.clear();
 
     if (a.size() == 0 || b.size() == 0)
         return;
+
+    aux1.setSize(b.size()+1);
 
     for (size_t i = 0; i < a.size(); i++)
     {
@@ -311,12 +313,11 @@ void multiplyNaive(const tArray& a, const tArray& b,
         for (size_t j = 0; j < b.size(); j++)
         {
             u16 mult = (u16)(a[i] * b[j] + carry);
-            u8 val = (u8) (mult & 0xFF);
-            addByte(result, val, i+j);
+            aux1[j] = (u8) (mult & 0xFF);
             carry = (u8) ((mult >> 8) & 0xFF);
         }
-        if (carry > 0)
-            addByte(result, carry, i+b.size());
+        aux1[b.size()] = carry;
+        add(result, aux1, i);
     }
 }
 
@@ -346,11 +347,11 @@ void multiplyByte(tArray& a, u8 b)
 
 static
 void multiplyKaratsuba(const tArray& x, const tArray& y,
-                       tArray& result)
+                       tArray& result, tArray& aux1, tArray& aux2)
 {
     if (x.size() <= KARATSUBA_CUTOFF || y.size() <= KARATSUBA_CUTOFF)
     {
-        multiplyNaive(x, y, result);
+        multiplyNaive(x, y, result, aux1, aux2);
         return;
     }
 
@@ -367,11 +368,11 @@ void multiplyKaratsuba(const tArray& x, const tArray& y,
 
 
     // Recurse!
-    tArray ac;   multiplyKaratsuba(a, c, ac);
-    tArray bd;   multiplyKaratsuba(b, d, bd);
+    tArray ac;   multiplyKaratsuba(a, c, ac, aux1, aux2);
+    tArray bd;   multiplyKaratsuba(b, d, bd, aux1, aux2);
     add(a, b);
     add(c, d);
-    tArray abcd; multiplyKaratsuba(a, c, abcd);
+    tArray abcd; multiplyKaratsuba(a, c, abcd, aux1, aux2);
 
     // K... For convenience
     tArray k = abcd;
@@ -388,9 +389,9 @@ void multiplyKaratsuba(const tArray& x, const tArray& y,
 
 static
 void multiply(const tArray& a, const tArray& b,
-              tArray& result)
+              tArray& result, tArray& aux1, tArray& aux2)
 {
-    multiplyKaratsuba(a, b, result);
+    multiplyKaratsuba(a, b, result, aux1, aux2);
 }
 
 static
@@ -448,7 +449,7 @@ void divideNaive(const tArray& a, const tArray& b,      // "long division"
     }
 
     quotient.reverse();
-    while (quotient.size() > 0 && quotient.back() == 0) quotient.pop_back();
+    cleanup(quotient);
 }
 
 #if USE_OPENSSL
@@ -529,14 +530,14 @@ void gcd(tArray a, tArray b, tArray& result)
     result = a;
 }
 
-static
-void modMultiplyNaive(const tArray& a, const tArray& b, const tArray& m,
-                      tArray& result,
-                      tArray& aux1, tArray& aux2, tArray& aux3, tArray& aux4)
-{
-    multiply(a, b, aux1);
-    divide(aux1, m, aux2, result, aux3, aux4);
-}
+// static
+// void modMultiplyNaive(const tArray& a, const tArray& b, const tArray& m,
+//                       tArray& result,
+//                       tArray& aux1, tArray& aux2, tArray& aux3, tArray& aux4)
+// {
+//     multiply(a, b, aux1, aux2, aux3);
+//     divide(aux1, m, aux2, result, aux3, aux4);
+// }
 
 static
 void modMultiplyBlakley(const tArray& a, const tArray& b, const tArray& m,
@@ -570,8 +571,6 @@ void modMultiply(const tArray& a, const tArray& b, const tArray& m,
                  tArray& result,
                  tArray& aux1, tArray& aux2, tArray& aux3, tArray& aux4)
 {
-    if (false)
-        modMultiplyNaive(a, b, m, result, aux1, aux2, aux3, aux4);
     modMultiplyBlakley(a, b, m, result, aux1, aux2, aux3, aux4);
 }
 
@@ -718,17 +717,18 @@ static
 void montgomeryProduct(const tArray& a_hat, const tArray& b_hat,
                        const tArray& n, const tArray& nPrim,
                        const tArray& r,
-                       tArray& result, tArray& aux1, tArray& aux2)
+                       tArray& result,
+                       tArray& aux1, tArray& aux2, tArray& aux3, tArray& aux4)
 {
     tArray& t = aux1;
-    multiply(a_hat, b_hat, t);
+    multiply(a_hat, b_hat, t, aux3, aux4);
 
     tArray& m = aux2;
-    multiply(t, nPrim, m);
+    multiply(t, nPrim, m, aux3, aux4);
     keepOnly(m, numbits(r)-1);
 
     tArray& u = result;
-    multiply(m, n, u);
+    multiply(m, n, u, aux3, aux4);
     add(u, t);
     shiftRight(u, numbits(r)-1);
 
@@ -764,15 +764,18 @@ void modPowMontgomery(const tArray& M, const tArray& e, const tArray& n,
             bool bit = (byte & 0x80) > 0;
             byte = (u8) (byte << 1);
 
-            montgomeryProduct(x_hat, x_hat, n, nPrim, r, x_hat, aux1, aux2);
+            montgomeryProduct(x_hat, x_hat, n, nPrim, r, x_hat,
+                              aux1, aux2, aux3, aux4);
 
             if (bit)
-                montgomeryProduct(M_hat, x_hat, n, nPrim, r, x_hat, aux1, aux2);
+                montgomeryProduct(M_hat, x_hat, n, nPrim, r, x_hat,
+                                  aux1, aux2, aux3, aux4);
         }
     }
 
     tArray one; one.push_back(1);
-    montgomeryProduct(x_hat, one, n, nPrim, r, result, aux1, aux2);
+    montgomeryProduct(x_hat, one, n, nPrim, r, result,
+                      aux1, aux2, aux3, aux4);
 }
 
 #if USE_OPENSSL
@@ -928,7 +931,7 @@ tBigInteger::tBigInteger(vector<u8> bytes)
 {
     for (size_t i = 0; i < bytes.size(); i++)
         m_array.push_back(bytes[i]);
-    while (m_array.size() > 0 && m_array.back() == 0) m_array.pop_back();
+    cleanup(m_array);
 }
 
 string tBigInteger::toString(int radix) const
@@ -1062,7 +1065,8 @@ void tBigInteger::operator-= (const tBigInteger& o)
 void tBigInteger::operator*= (const tBigInteger& o)
 {
     tArray result;
-    multiply(m_array, o.m_array, result);
+    tArray aux1, aux2;
+    multiply(m_array, o.m_array, result, aux1, aux2);
     m_array = result;
     m_neg = (isNegative() && !o.isNegative()) || (!isNegative() && o.isNegative());
 }
