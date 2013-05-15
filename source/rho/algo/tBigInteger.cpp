@@ -514,18 +514,60 @@ void divide(const tArray& a, const tArray& b,
 }
 
 static
+void modMultiplyNaive(const tArray& a, const tArray& b, const tArray& m,
+                      tArray& result,
+                      tArray& aux1, tArray& aux2, tArray& aux3, tArray& aux4)
+{
+    multiply(a, b, aux1);
+    divide(aux1, m, aux2, result, aux3, aux4);
+}
+
+static
+void modMultiplyBlakley(const tArray& a, const tArray& b, const tArray& m,
+                      tArray& result,
+                      tArray& aux1, tArray& aux2, tArray& aux3, tArray& aux4)
+{
+    aux1.clear();
+
+    for (int i = (int)a.size()-1; i >= 0; i--)
+    {
+        u8 byte  = a[i];
+
+        for (int j = 0; j < 8; j++)
+        {
+            multiplyByte(aux1, 2);
+
+            if (byte & 0x80)
+                add(aux1, b);
+
+            while (!isLess(aux1, m)) subtract(aux1, m);
+
+            byte = (u8)(byte << 1);
+        }
+    }
+
+    result = aux1;
+}
+
+static
+void modMultiply(const tArray& a, const tArray& b, const tArray& m,
+                 tArray& result,
+                 tArray& aux1, tArray& aux2, tArray& aux3, tArray& aux4)
+{
+    if (false)
+        modMultiplyNaive(a, b, m, result, aux1, aux2, aux3, aux4);
+    modMultiplyBlakley(a, b, m, result, aux1, aux2, aux3, aux4);
+}
+
+static
 void modPowNaive(const tArray& a, const tArray& e, const tArray& m,
             tArray& result)
 {
     result.clear();
     result.push_back(1);
 
-    tArray temp;
-    tArray trash;
-
+    tArray aux1, aux2, aux3, aux4;
     tArray aa = a;
-
-    tArray aux1, aux2;
 
     for (size_t i = 0; i < e.size(); i++)
     {
@@ -534,29 +576,102 @@ void modPowNaive(const tArray& a, const tArray& e, const tArray& m,
         for (int j = 0; j < 8; j++)
         {
             if (byte & 1)
-            {
-                // result *= aa
-                temp = result;
-                multiply(temp, aa, result);
-
-                // result %= m
-                temp = result;
-                divide(temp, m, trash, result, aux1, aux2);
-            }
-
+                modMultiply(result, aa, m, result, aux1, aux2, aux3, aux4);
             byte = (u8)(byte >> 1);
-
-            if (byte == 0 && i == e.size()-1)
-                break;
-
-            // aa = aa^^2
-            multiply(aa, aa, temp);
-            aa = temp;
-
-            // aa %= m
-            divide(aa, m, trash, temp, aux1, aux2);
-            aa = temp;
+            modMultiply(aa, aa, m, aa, aux1, aux2, aux3, aux4);
         }
+    }
+}
+
+static
+void modPowMary(const tArray& a, const tArray& e, const tArray& m,
+            tArray& result)   // "m-ary method" (here m=4)
+{
+    result.clear();
+    result.push_back(1);
+
+    tArray aux1, aux2, aux3, aux4;
+
+    tArray tab[16];
+    tab[0].push_back(1);
+    for (int i = 1; i < 16; i++)
+        modMultiply(tab[i-1], a, m, tab[i], aux1, aux2, aux3, aux4);
+
+    for (int i = (int)e.size()-1; i >= 0; i--)
+    {
+        u8 byte  = e[i];
+
+        u32 high = (byte & 0xF0) >> 4;
+        modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
+        modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
+        modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
+        modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
+        modMultiply(result, tab[high], m, result, aux1, aux2, aux3, aux4);
+
+        u32 low  = byte & 0x0F;
+        modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
+        modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
+        modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
+        modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
+        modMultiply(result, tab[low], m, result, aux1, aux2, aux3, aux4);
+    }
+}
+
+static
+void modPowCLNW(const tArray& a, const tArray& e, const tArray& m,
+            tArray& result)   // "Constant Length Nonzero Windows"
+{
+    static const u32 kWindowSize = 4;
+
+    result.clear();
+    result.push_back(1);
+
+    tArray aux1, aux2, aux3, aux4;
+
+    tArray tab[16];                       // <--- 2^kWindowSize
+    tab[0].push_back(1);
+    for (int i = 1; i < 16; i++)          // <--- 2^kWindowSize
+        modMultiply(tab[i-1], a, m, tab[i], aux1, aux2, aux3, aux4);
+
+    bool zw = true;  // in "zero window"?
+    u32 d = 0;       // the number of bits collected from a nonzero-window
+    u32 col = 0;     // the d collected bits
+
+    for (int i = (int)e.size()-1; i >= 0; i--)
+    {
+        u8 byte  = e[i];
+
+        for (int i = 0; i < 8; i++)
+        {
+            u32 bit = ((byte & 0x80) >> 7);
+            byte = (u8)(byte << 1);
+
+            modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
+
+            if (bit == 0 && zw)
+                continue;
+
+            col <<= 1;
+            col |= bit;
+            ++d;
+            zw = false;
+
+            if (d == kWindowSize)
+            {
+                modMultiply(result, tab[col], m, result, aux1, aux2, aux3, aux4);
+                d = 0;
+                col = 0;
+                zw = true;
+            }
+        }
+    }
+
+    if (!zw)
+    {
+        modMultiply(result, tab[col], m, result, aux1, aux2, aux3, aux4);
+        d = 0;
+        col = 0;
+        zw = true;
     }
 }
 
@@ -611,7 +726,12 @@ void modPow(const tArray& a, const tArray& e, const tArray& m,
     else
         modPowNaive(a, e, m, result);
 #else
-    modPowNaive(a, e, m, result);
+    if (e.size() < 5)
+        modPowNaive(a, e, m, result);
+    else if (e.size() < 10)
+        modPowMary(a, e, m, result);
+    else
+        modPowCLNW(a, e, m, result);
 #endif
 }
 
