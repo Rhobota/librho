@@ -53,6 +53,8 @@ class tBigInteger
         void        operator%= (const tBigInteger& o);
         tBigInteger operator%  (const tBigInteger& o) const;
 
+        void div(const tBigInteger& o, tBigInteger& quotient, tBigInteger& remainder) const;
+
         tBigInteger modPow(const tBigInteger& e, const tBigInteger& m) const;
                                         // returns ((*this ^^ e) % m)
 
@@ -70,6 +72,10 @@ class tBigInteger
         tArray m_aux1, m_aux2;
 
         bool neg;
+
+    private:
+
+        friend tBigInteger GCD(const tBigInteger& a, const tBigInteger& b);
 };
 
 
@@ -79,6 +85,17 @@ tBigInteger operator* (i32 a, const tBigInteger& b);
 
 std::istream& operator>> (std::istream& in, tBigInteger& b);
 std::ostream& operator<< (std::ostream& out, const tBigInteger& b);
+
+/**
+ * Returns the greatest common denominator of a and b.
+ */
+tBigInteger GCD(const tBigInteger& a, const tBigInteger& b);
+
+/**
+ * Calculates x and y such that: ax + by = gcd(a, b)
+ */
+void extendedGCD(const tBigInteger& a, const tBigInteger& b,
+                 tBigInteger& x, tBigInteger& y);
 
 
 }   // namespace algo
