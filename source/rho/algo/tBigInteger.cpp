@@ -514,6 +514,22 @@ void divide(const tArray& a, const tArray& b,
 }
 
 static
+void gcd(tArray a, tArray b, tArray& result)
+{
+    tArray aQuo, aRem;
+    tArray aux1, aux2;
+
+    while (b.size() > 0)     // while (b != 0)
+    {
+        divide(a, b, aQuo, aRem, aux1, aux2);
+        a = b;
+        b = aRem;
+    }
+
+    result = a;
+}
+
+static
 void modMultiplyNaive(const tArray& a, const tArray& b, const tArray& m,
                       tArray& result,
                       tArray& aux1, tArray& aux2, tArray& aux3, tArray& aux4)
@@ -982,6 +998,18 @@ void tBigInteger::operator%= (const tBigInteger& o)
     b = remainder;
 }
 
+void tBigInteger::div(const tBigInteger& o, tBigInteger& quotient, tBigInteger& remainder) const
+{
+    tArray quotientArray;
+    tArray remainderArray;
+    tArray aux1, aux2;
+    divide(b, o.b, quotientArray, remainderArray, aux1, aux2);
+    quotient.neg = (isNegative() && !o.isNegative()) || (!isNegative() && o.isNegative());
+    quotient.b = quotientArray;
+    remainder.neg = self->neg;
+    remainder.b = remainderArray;
+}
+
 tBigInteger tBigInteger::modPow(const tBigInteger& e, const tBigInteger& m) const
 {
     tArray result;
@@ -1102,6 +1130,59 @@ ostream& operator<< (ostream& out, const tBigInteger& b)
 {
     out << b.toString();
     return out;
+}
+
+tBigInteger GCD(const tBigInteger& a, const tBigInteger& b)
+{
+    if (a.isNegative() || b.isNegative())
+        throw eInvalidArgument("At this point, neither a nor b may be negative in a call "
+                "to GCD()");
+
+    tBigInteger result(0);
+    gcd(a.b, b.b, result.b);
+    return result;
+}
+
+void extendedGCD(const tBigInteger& a, const tBigInteger& b, tBigInteger& x, tBigInteger& y)
+{
+    if (a.isNegative() || b.isNegative())
+        throw eInvalidArgument("At this point, neither a nor b may be negative in a call "
+                "to extendedGCD()");
+
+    x = tBigInteger(0);
+    tBigInteger lastX(1);
+
+    y = tBigInteger(1);
+    tBigInteger lastY(0);
+
+    tBigInteger aa = a;
+    tBigInteger bb = b;
+
+    tBigInteger aQuo(0);
+    tBigInteger aRem(0);
+    tBigInteger temp(0);
+
+    while (!bb.isZero())
+    {
+        aa.div(bb, aQuo, aRem);
+        aa = bb;
+        bb = aRem;
+
+        temp = x;
+        x = lastX - aQuo * x;
+        lastX = temp;
+
+        temp = y;
+        y = lastY - aQuo * y;
+        lastY = temp;
+    }
+
+    x = lastX;
+    y = lastY;
+
+    // Verrify
+    if ((a*x + b*y) != GCD(a, b))
+        throw eImpossiblePath();
 }
 
 
