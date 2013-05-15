@@ -691,6 +691,90 @@ void modPowCLNW(const tArray& a, const tArray& e, const tArray& m,
     }
 }
 
+static
+void montgomeryCalculateNprim(const tArray& n, tArray& nPrim, tArray& r)
+{
+    size_t k = numbits(n);
+    r.clear(); r.push_back(1); shiftLeft(r, k);   // r = 2^k
+
+    tBigInteger nBI(vector<u8>(&n[0], &n[n.size()]));
+    tBigInteger rBI(vector<u8>(&r[0], &r[r.size()]));
+    tBigInteger nPrimBI(0);
+    tBigInteger rInvBI(0);
+    extendedGCD(nBI, rBI, nPrimBI, rInvBI);
+    while (rInvBI.isNegative())
+    {
+        rInvBI += nBI;
+        nPrimBI -= rBI;
+    }
+
+    nPrim.clear();
+    vector<u8> bytes = nPrimBI.getBytes();
+    for (size_t i = 0; i < bytes.size(); i++)
+        nPrim.push_back(bytes[i]);
+}
+
+static
+void montgomeryProduct(const tArray& a_hat, const tArray& b_hat,
+                       const tArray& n, const tArray& nPrim,
+                       const tArray& r,
+                       tArray& result, tArray& aux1, tArray& aux2)
+{
+    tArray& t = aux1;
+    multiply(a_hat, b_hat, t);
+
+    tArray& m = aux2;
+    multiply(t, nPrim, m);
+    keepOnly(m, numbits(r)-1);
+
+    tArray& u = result;
+    multiply(m, n, u);
+    add(u, t);
+    shiftRight(u, numbits(r)-1);
+
+    if (!isLess(u, n))    // if (u >= n)
+        subtract(u, n);
+}
+
+static
+void modPowMontgomery(const tArray& M, const tArray& e, const tArray& n,
+            tArray& result)
+{
+    if (n.size() == 0 || (n[0] & 1) == 0)
+        throw eInvalidArgument("The modulus may not be even in Montgomery modPow.");
+
+    tArray aux1, aux2, aux3, aux4;
+
+    tArray nPrim;
+    tArray r;
+    montgomeryCalculateNprim(n, nPrim, r);
+
+    tArray M_hat;
+    modMultiply(M, r, n, M_hat, aux1, aux2, aux3, aux4);
+
+    tArray x_hat;
+    divide(r, n, aux1, x_hat, aux2, aux3);
+
+    for (int i = (int)e.size()-1; i >= 0; i--)
+    {
+        u8 byte = e[i];
+
+        for (int i = 0; i < 8; i++)
+        {
+            bool bit = (byte & 0x80) > 0;
+            byte = (u8) (byte << 1);
+
+            montgomeryProduct(x_hat, x_hat, n, nPrim, r, x_hat, aux1, aux2);
+
+            if (bit)
+                montgomeryProduct(M_hat, x_hat, n, nPrim, r, x_hat, aux1, aux2);
+        }
+    }
+
+    tArray one; one.push_back(1);
+    montgomeryProduct(x_hat, one, n, nPrim, r, result, aux1, aux2);
+}
+
 #if USE_OPENSSL
 static
 void modPowOpenSSL(const tArray& a, const tArray& e, const tArray& m,
@@ -746,8 +830,10 @@ void modPow(const tArray& a, const tArray& e, const tArray& m,
         modPowNaive(a, e, m, result);
     else if (e.size() < 10)
         modPowMary(a, e, m, result);
-    else
+    else if (e.size() < 15)
         modPowCLNW(a, e, m, result);
+    else
+        modPowMontgomery(a, e, m, result);
 #endif
 }
 
@@ -1181,10 +1267,6 @@ void extendedGCD(const tBigInteger& a, const tBigInteger& b, tBigInteger& x, tBi
 
     x = lastX;
     y = lastY;
-
-    // Verrify
-    if ((a*x + b*y) != GCD(a, b))
-        throw eImpossiblePath();
 }
 
 
