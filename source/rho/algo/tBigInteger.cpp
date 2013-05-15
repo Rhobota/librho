@@ -758,18 +758,18 @@ void modPow(const tArray& a, const tArray& e, const tArray& m,
 
 tBigInteger::tBigInteger(i32 val)
 {
-    neg = val < 0;
-    u32 uval = neg ? (u32)(-val) : (u32)val;
+    m_neg = val < 0;
+    u32 uval = m_neg ? (u32)(-val) : (u32)val;
     while (uval > 0)
     {
         u8 byte = (u8)(uval & 0xFF);
         uval >>= 8;
-        b.push_back(byte);
+        m_array.push_back(byte);
     }
 }
 
 tBigInteger::tBigInteger(string val, int radix)
-    : neg(false)
+    : m_neg(false)
 {
     vector<i32> ints;
 
@@ -784,7 +784,7 @@ tBigInteger::tBigInteger(string val, int radix)
             {
                 if (i == 0 && val[i] == '-')
                 {
-                    neg = true;
+                    m_neg = true;
                     continue;
                 }
                 if (val[i] < '0' || val[i] > upperBound)
@@ -800,7 +800,7 @@ tBigInteger::tBigInteger(string val, int radix)
             {
                 if (i == 0 && val[i] == '-')
                 {
-                    neg = true;
+                    m_neg = true;
                     continue;
                 }
                 if ((val[i] < '0' || val[i] > '9') &&
@@ -831,18 +831,18 @@ tBigInteger::tBigInteger(string val, int radix)
         {
             toadd = mult;
             multiplyByte(toadd, (u8)ints[i]);
-            add(b, toadd);
+            add(m_array, toadd);
         }
         multiplyByte(mult, (u8)radix);
     }
 }
 
 tBigInteger::tBigInteger(vector<u8> bytes)
-    : b(), neg(false)
+    : m_array(), m_neg(false)
 {
     for (size_t i = 0; i < bytes.size(); i++)
-        b.push_back(bytes[i]);
-    while (b.size() > 0 && b.back() == 0) b.pop_back();
+        m_array.push_back(bytes[i]);
+    while (m_array.size() > 0 && m_array.back() == 0) m_array.pop_back();
 }
 
 string tBigInteger::toString(int radix) const
@@ -860,7 +860,7 @@ string tBigInteger::toString(int radix) const
 
     string str;
 
-    tArray n = b;
+    tArray n = m_array;
     tArray quo, rem;
     tArray radixVect(1, (u8)radix);
     tArray aux1, aux2;
@@ -879,28 +879,28 @@ string tBigInteger::toString(int radix) const
 
 vector<u8> tBigInteger::getBytes() const
 {
-    return vector<u8>(&b[0], &b[b.size()]);
+    return vector<u8>(&m_array[0], &m_array[m_array.size()]);
 }
 
 bool tBigInteger::isNegative() const
 {
-    return !isZero() && neg;
+    return !isZero() && m_neg;
 }
 
 tBigInteger& tBigInteger::setIsNegative(bool n)
 {
-    neg = n;
+    m_neg = n;
     return *this;
 }
 
 bool tBigInteger::isZero() const
 {
-    return (b.size() == 0);   // (b.size() == 0)  <==>  (*this == 0)
+    return (m_array.size() == 0);   // (m_array.size() == 0)  <==>  (*this == 0)
 }
 
 bool tBigInteger::isOdd() const
 {
-    return !isZero() && ((b[0] & 1) > 0);
+    return !isZero() && ((m_array[0] & 1) > 0);
 }
 
 bool tBigInteger::isEven() const
@@ -919,19 +919,19 @@ tBigInteger tBigInteger::abs() const
 tBigInteger tBigInteger::operator- () const
 {
     tBigInteger o = *this;
-    o.neg = !o.neg;
+    o.m_neg = !o.m_neg;
     return o;
 }
 
 void tBigInteger::operator+= (const tBigInteger& o)
 {
-    if (neg && !o.neg)
+    if (m_neg && !o.m_neg)
     {
         *this = o - (-(*this));
         return;
     }
 
-    if (!neg && o.neg)
+    if (!m_neg && o.m_neg)
     {
         *this -= -o;
         return;
@@ -939,24 +939,24 @@ void tBigInteger::operator+= (const tBigInteger& o)
 
     // At this point, *this and o have the same sign.
 
-    add(b, o.b);
+    add(m_array, o.m_array);
 }
 
 void tBigInteger::operator-= (const tBigInteger& o)
 {
-    if (neg && !o.neg)
+    if (m_neg && !o.m_neg)
     {
         *this += -o;
         return;
     }
 
-    if (!neg && o.neg)
+    if (!m_neg && o.m_neg)
     {
         *this += -o;
         return;
     }
 
-    if (neg && o.neg)
+    if (m_neg && o.m_neg)
     {
         *this = -o - -(*this);
         return;
@@ -970,32 +970,34 @@ void tBigInteger::operator-= (const tBigInteger& o)
 
     // At this point, *this and o are both non-negative and (*this >= o).
 
-    subtract(b, o.b);
+    subtract(m_array, o.m_array);
 }
 
 void tBigInteger::operator*= (const tBigInteger& o)
 {
     tArray result;
-    multiply(b, o.b, result);
-    b = result;
-    neg = (isNegative() && !o.isNegative()) || (!isNegative() && o.isNegative());
+    multiply(m_array, o.m_array, result);
+    m_array = result;
+    m_neg = (isNegative() && !o.isNegative()) || (!isNegative() && o.isNegative());
 }
 
 void tBigInteger::operator/= (const tBigInteger& o)
 {
     tArray quotient;
     tArray remainder;
-    divide(b, o.b, quotient, remainder, m_aux1, m_aux2);
-    b = quotient;
-    neg = (isNegative() && !o.isNegative()) || (!isNegative() && o.isNegative());
+    tArray aux1, aux2;
+    divide(m_array, o.m_array, quotient, remainder, aux1, aux2);
+    m_array = quotient;
+    m_neg = (isNegative() && !o.isNegative()) || (!isNegative() && o.isNegative());
 }
 
 void tBigInteger::operator%= (const tBigInteger& o)
 {
     tArray quotient;
     tArray remainder;
-    divide(b, o.b, quotient, remainder, m_aux1, m_aux2);
-    b = remainder;
+    tArray aux1, aux2;
+    divide(m_array, o.m_array, quotient, remainder, aux1, aux2);
+    m_array = remainder;
 }
 
 void tBigInteger::div(const tBigInteger& o, tBigInteger& quotient, tBigInteger& remainder) const
@@ -1003,19 +1005,19 @@ void tBigInteger::div(const tBigInteger& o, tBigInteger& quotient, tBigInteger& 
     tArray quotientArray;
     tArray remainderArray;
     tArray aux1, aux2;
-    divide(b, o.b, quotientArray, remainderArray, aux1, aux2);
-    quotient.neg = (isNegative() && !o.isNegative()) || (!isNegative() && o.isNegative());
-    quotient.b = quotientArray;
-    remainder.neg = self->neg;
-    remainder.b = remainderArray;
+    divide(m_array, o.m_array, quotientArray, remainderArray, aux1, aux2);
+    quotient.m_neg = (isNegative() && !o.isNegative()) || (!isNegative() && o.isNegative());
+    quotient.m_array = quotientArray;
+    remainder.m_neg = this->m_neg;
+    remainder.m_array = remainderArray;
 }
 
 tBigInteger tBigInteger::modPow(const tBigInteger& e, const tBigInteger& m) const
 {
     tArray result;
-    rho::algo::modPow(b, e.b, m.b, result);
+    rho::algo::modPow(m_array, e.m_array, m.m_array, result);
     tBigInteger bi(0);
-    bi.b = result;
+    bi.m_array = result;
     return bi;
 }
 
@@ -1056,7 +1058,7 @@ tBigInteger tBigInteger::operator%  (const tBigInteger& o) const
 
 bool tBigInteger::operator== (const tBigInteger& o) const
 {
-    return (b == o.b) && (isNegative() == o.isNegative());
+    return (m_array == o.m_array) && (isNegative() == o.isNegative());
 }
 
 bool tBigInteger::operator!= (const tBigInteger& o) const
@@ -1073,16 +1075,16 @@ bool tBigInteger::operator<  (const tBigInteger& o) const
 
     // The sign of the two vals must be the same.
 
-    if (b.size() != o.b.size())
+    if (m_array.size() != o.m_array.size())
     {
-        bool less = b.size() < o.b.size();
+        bool less = m_array.size() < o.m_array.size();
         return isNegative() ? !less : less;
     }
     else
     {
-        for (int i = (int)b.size()-1; i >=0; i--)
-            if (b[i] != o.b[i])
-                return isNegative() ? o.b[i] < b[i] : b[i] < o.b[i];
+        for (int i = (int)m_array.size()-1; i >=0; i--)
+            if (m_array[i] != o.m_array[i])
+                return isNegative() ? o.m_array[i] < m_array[i] : m_array[i] < o.m_array[i];
 
         return false;  // they must be equal
     }
@@ -1139,7 +1141,7 @@ tBigInteger GCD(const tBigInteger& a, const tBigInteger& b)
                 "to GCD()");
 
     tBigInteger result(0);
-    gcd(a.b, b.b, result.b);
+    gcd(a.m_array, b.m_array, result.m_array);
     return result;
 }
 

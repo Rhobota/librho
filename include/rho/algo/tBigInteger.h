@@ -67,11 +67,9 @@ class tBigInteger
 
     private:
 
-        tArray b;           // <-- stored little endian
-                            // (aka, b[0] is the least significant byte)
-        tArray m_aux1, m_aux2;
-
-        bool neg;
+        tArray m_array;   // <-- stored little endian
+                          // (aka, m_array[0] is the least significant byte)
+        bool m_neg;
 
     private:
 
