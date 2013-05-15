@@ -42,25 +42,6 @@ namespace algo
 // }
 
 static
-void throwInvalidValStringException(char c, int radix)
-{
-    ostringstream o;
-    o << "Invalid 'val' string character: " << c
-      << " for radix: " + radix;
-    throw eInvalidArgument(o.str());
-}
-
-static
-char toChar(u8 b)
-{
-    if (b <= 9)
-        return (char)('0' + b);
-    if (b <= 15)
-        return (char)('A' + b);
-    return '?';
-}
-
-static
 bool isLess(const tArray& a, const tArray& b)
 {
     if (a.size() != b.size()) return a.size() < b.size();
@@ -458,6 +439,10 @@ void divideOpenSSL(const tArray& a, const tArray& b,
             tArray& quotient, tArray& remainder,
             tArray& aux1, tArray& aux2)
 {
+    // If b is zero, that is bad.
+    if (b.size() == 0)
+        throw eInvalidArgument("You may not divide by zero!");
+
     BIGNUM* bn_a = BN_new(); BN_init(bn_a);
     BIGNUM* bn_b = BN_new(); BN_init(bn_b);
     BIGNUM* bn_quo = BN_new(); BN_init(bn_quo);
@@ -506,12 +491,12 @@ void divide(const tArray& a, const tArray& b,
 {
 #if USE_OPENSSL
     if (a.size() >= OPENSSL_CUTOFF || b.size() >= OPENSSL_CUTOFF)
+    {
         divideOpenSSL(a, b, quotient, remainder, aux1, aux2);
-    else
-        divideNaive(a, b, quotient, remainder, aux1, aux2);
-#else
-    divideNaive(a, b, quotient, remainder, aux1, aux2);
+        return;
+    }
 #endif
+    divideNaive(a, b, quotient, remainder, aux1, aux2);
 }
 
 static
@@ -825,19 +810,21 @@ void modPow(const tArray& a, const tArray& e, const tArray& m,
 {
 #if USE_OPENSSL
     if (e.size() >= OPENSSL_CUTOFF || m.size() >= OPENSSL_CUTOFF)
+    {
         modPowOpenSSL(a, e, m, result);
-    else
-        modPowNaive(a, e, m, result);
-#else
+        return;
+    }
+#endif
     if (e.size() < 5)
         modPowNaive(a, e, m, result);
     else if (e.size() < 10)
         modPowMary(a, e, m, result);
     else if (e.size() < 15)
         modPowCLNW(a, e, m, result);
+    else if (m.size() > 0 && (m[0] & 1) == 1)
+        modPowMontgomery(a, e, m, result);      // <-- m must be odd for this method
     else
-        modPowMontgomery(a, e, m, result);
-#endif
+        modPowCLNW(a, e, m, result);
 }
 
 
@@ -855,6 +842,15 @@ tBigInteger::tBigInteger(i32 val)
         uval >>= 8;
         m_array.push_back(byte);
     }
+}
+
+static
+void throwInvalidValStringException(char c, int radix)
+{
+    ostringstream o;
+    o << "Invalid 'val' string character: " << c
+      << " for radix: " + radix;
+    throw eInvalidArgument(o.str());
 }
 
 tBigInteger::tBigInteger(string val, int radix)
@@ -932,6 +928,16 @@ tBigInteger::tBigInteger(vector<u8> bytes)
     for (size_t i = 0; i < bytes.size(); i++)
         m_array.push_back(bytes[i]);
     cleanup(m_array);
+}
+
+static
+char toChar(u8 b)
+{
+    if (b <= 9)
+        return (char)('0' + b);
+    if (b <= 15)
+        return (char)('A' + b);
+    return '?';
 }
 
 string tBigInteger::toString(int radix) const
