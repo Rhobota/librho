@@ -67,8 +67,8 @@ class tBigInteger
 
     private:
 
-        tArray m_array;   // <-- stored little endian
-                          // (aka, m_array[0] is the least significant byte)
+        tArray<u32> m_array;   // <-- stored little endian
+                               // (aka, m_array[0] is the least significant word)
         bool m_neg;
 
     private:

@@ -13,6 +13,7 @@ namespace algo
 {
 
 
+template <class T>
 class tArray
 {
     public:
@@ -20,7 +21,7 @@ class tArray
         tArray()
             : m_size(0),
               m_capacity(8),
-              m_buf(new u8[8])
+              m_buf(new T[8])
         {
         }
 
@@ -28,14 +29,14 @@ class tArray
         tArray(size_t capacity)
             : m_size(0),
               m_capacity(capacity),
-              m_buf(new u8[capacity])
+              m_buf(new T[capacity])
         {
         }
 
-        tArray(size_t size, u8 initval)
+        tArray(size_t size, T initval)
             : m_size(size),
               m_capacity(size*2),
-              m_buf(new u8[size*2])
+              m_buf(new T[size*2])
         {
             for (size_t i = 0; i < m_size; i++)
                 m_buf[i] = initval;
@@ -45,7 +46,7 @@ class tArray
         {
             m_size = o.m_size;
             m_capacity = o.m_capacity;
-            m_buf = new u8[m_capacity];
+            m_buf = new T[m_capacity];
             for (size_t i = 0; i < m_size; i++)
                 m_buf[i] = o.m_buf[i];
         }
@@ -68,7 +69,7 @@ class tArray
                 m_size = o.m_size;
                 m_capacity = o.m_capacity;
                 delete [] m_buf;
-                m_buf = new u8[m_capacity];
+                m_buf = new T[m_capacity];
             }
             else
             {
@@ -91,7 +92,7 @@ class tArray
             return true;
         }
 
-        void push_back(u8 val)
+        void push_back(T val)
         {
             if (m_size >= m_capacity)
                 grow();
@@ -105,24 +106,24 @@ class tArray
             --m_size;
         }
 
-        u8& operator[] (size_t i)
+        T& operator[] (size_t i)
         {
             return m_buf[i];
         }
 
-        const u8& operator[] (size_t i) const
+        const T& operator[] (size_t i) const
         {
             return m_buf[i];
         }
 
-        u8& back()
+        T& back()
         {
             if (m_size == 0)
                 throw eLogicError("Cannot get back element when size is zero.");
             return m_buf[m_size-1];
         }
 
-        const u8& back() const
+        const T& back() const
         {
             if (m_size == 0)
                 throw eLogicError("Cannot get back element when size is zero.");
@@ -167,7 +168,7 @@ class tArray
             if (m_capacity == 0)
                 m_capacity = 1;
             m_capacity *= 2;
-            u8* buf = new u8[m_capacity];
+            T* buf = new T[m_capacity];
             for (size_t i = 0; i < m_size; i++)
                 buf[i] = m_buf[i];
             delete [] m_buf;
@@ -178,7 +179,7 @@ class tArray
 
         size_t m_size;
         size_t m_capacity;
-        u8* m_buf;
+        T* m_buf;
 };
 
 
