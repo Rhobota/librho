@@ -7,19 +7,6 @@ using namespace std;
 #define KARATSUBA_CUTOFF 200     // must be >0
 #endif
 
-#ifndef USE_OPENSSL
-#define USE_OPENSSL 0            // 0 for off, 1 for on
-#endif
-
-#ifndef OPENSSL_CUTOFF
-#define OPENSSL_CUTOFF 50        // only applicable when USE_OPENSSL == 1
-#endif
-
-
-#if USE_OPENSSL
-#include <openssl/bn.h>
-#endif
-
 
 namespace rho
 {
@@ -31,18 +18,9 @@ namespace algo
 // Util function
 ///////////////////////////////////////////////////////////////////////////////
 
-// static
-// void print(const tArray& v)
-// {
-//     if (v.size() == 0)
-//         cout << " 0";
-//     for (int i = (int)v.size()-1; i >= 0; i--)
-//         cout << " " << (u32)(v[i]);
-//     cout << endl;
-// }
-
+template <class T>
 static
-bool isLess(const tArray& a, const tArray& b)
+bool isLess(const tArray<T>& a, const tArray<T>& b)
 {
     if (a.size() != b.size()) return a.size() < b.size();
     for (int i = (int)a.size()-1; i >= 0; i--)
@@ -51,158 +29,273 @@ bool isLess(const tArray& a, const tArray& b)
     return false;
 }
 
+template <class T>
 static
-void cleanup(tArray& v)
+void cleanup(tArray<T>& v)
 {
     while (v.size() > 0 && v.back() == 0) v.pop_back();
 }
 
 static
-size_t numbits(const tArray& v)
+void u8to32(const tArray<u8>& from, tArray<u32>& to)
+{
+    to.clear();
+    for (size_t i = 0; i < from.size(); i += 4)
+    {
+        u32 val = 0;
+        size_t remaining = from.size() - i;
+        switch (remaining)
+        {
+            case 1:
+                val = from[i];
+                break;
+            case 2:
+                val = (from[i+1] << 8) | (from[i]);
+                break;
+            case 3:
+                val = (from[i+2] << 16) | (from[i+1] << 8) | (from[i]);
+                break;
+            default:
+                val = (from[i+3] << 24) | (from[i+2] << 16) | (from[i+1] << 8) | (from[i]);
+                break;
+        }
+        to.push_back(val);
+    }
+}
+
+static
+void u32to8(const tArray<u32>& from, tArray<u8>& to)
+{
+    to.clear();
+    for (size_t i = 0; i < from.size(); i++)
+    {
+        u32 val = from[i];
+        to.push_back((u8)(val & 0xFF)); val >>= 8;
+        to.push_back((u8)(val & 0xFF)); val >>= 8;
+        to.push_back((u8)(val & 0xFF)); val >>= 8;
+        to.push_back((u8)(val & 0xFF));
+    }
+    cleanup(to);
+}
+
+static
+size_t numbits(const tArray<u32>& v)
 {
     if (v.size() == 0)
         return 0;
 
-    u8 b = v.back();
+    u32 b = v.back();
     size_t i = 0;
     while (b != 0) { b /= 2; i++; }
 
-    return (v.size()-1)*8 + i;
+    return (v.size()-1)*32 + i;
 }
 
 static
-void shiftRight(tArray& v, size_t n)
+void shiftRight(tArray<u32>& v, size_t n)
 {
-    size_t byteOff = n / 8;
-    size_t bitOff = n % 8;
+    size_t wordOff = n / 32;
+    size_t bitOff = n % 32;
 
-    u8 mask = 0;
+    u32 mask = 0;
     switch (bitOff)
     {
         case 0: break;
-        case 1: mask = 1;   break;
-        case 2: mask = 3;   break;
-        case 3: mask = 7;   break;
-        case 4: mask = 15;  break;
-        case 5: mask = 31;  break;
-        case 6: mask = 63;  break;
-        case 7: mask = 127; break;
-        default: throw eImpossiblePath();
+        case 1: mask = 0x1; break;
+        case 2: mask = 0x3; break;
+        case 3: mask = 0x7; break;
+        case 4: mask = 0xF; break;
+        case 5: mask = 0x1F; break;
+        case 6: mask = 0x3F; break;
+        case 7: mask = 0x7F; break;
+        case 8: mask = 0xFF; break;
+        case 9: mask = 0x1FF; break;
+        case 10: mask = 0x3FF; break;
+        case 11: mask = 0x7FF; break;
+        case 12: mask = 0xFFF; break;
+        case 13: mask = 0x1FFF; break;
+        case 14: mask = 0x3FFF; break;
+        case 15: mask = 0x7FFF; break;
+        case 16: mask = 0xFFFF; break;
+        case 17: mask = 0x1FFFF; break;
+        case 18: mask = 0x3FFFF; break;
+        case 19: mask = 0x7FFFF; break;
+        case 20: mask = 0xFFFFF; break;
+        case 21: mask = 0x1FFFFF; break;
+        case 22: mask = 0x3FFFFF; break;
+        case 23: mask = 0x7FFFFF; break;
+        case 24: mask = 0xFFFFFF; break;
+        case 25: mask = 0x1FFFFFF; break;
+        case 26: mask = 0x3FFFFFF; break;
+        case 27: mask = 0x7FFFFFF; break;
+        case 28: mask = 0xFFFFFFF; break;
+        case 29: mask = 0x1FFFFFFF; break;
+        case 30: mask = 0x3FFFFFFF; break;
+        case 31: mask = 0x7FFFFFFF; break;
+        default: break;
     }
 
     for (size_t i = 0; i < v.size(); i++)
     {
-        if (i + byteOff >= v.size())
+        if (i + wordOff >= v.size())
         {
             v[i] = 0;
             continue;
         }
 
-        v[i] = v[i+byteOff];
+        v[i] = v[i+wordOff];
 
         if (i > 0)
         {
-            u8 r = mask & v[i];
-            r = (u8)(r << (8 - bitOff));
+            u32 r = mask & v[i];
+            r <<= 32-bitOff;
             v[i-1] |= r;
         }
 
-        v[i] = (u8)(v[i] >> bitOff);
+        v[i] >>= bitOff;
     }
 
     cleanup(v);
 }
 
 static
-void shiftLeft(tArray& v, size_t n)
+void shiftLeft(tArray<u32>& v, size_t n)
 {
-    size_t byteOff = n / 8;
-    size_t bitOff = n % 8;
+    size_t wordOff = n / 32;
+    size_t bitOff = n % 32;
 
-    u8 mask = 0;
+    u32 mask = 0;
     switch (bitOff)
     {
         case 0: break;
-        case 1: mask = 128;   break;
-        case 2: mask = 192;   break;
-        case 3: mask = 224;   break;
-        case 4: mask = 240;  break;
-        case 5: mask = 248;  break;
-        case 6: mask = 252;  break;
-        case 7: mask = 254; break;
-        default: throw eImpossiblePath();
+        case 1: mask = 0x80000000; break;
+        case 2: mask = 0xC0000000; break;
+        case 3: mask = 0xE0000000; break;
+        case 4: mask = 0xF0000000; break;
+        case 5: mask = 0xF8000000; break;
+        case 6: mask = 0xFC000000; break;
+        case 7: mask = 0xFE000000; break;
+        case 8: mask = 0xFF000000; break;
+        case 9: mask = 0xFF800000; break;
+        case 10: mask = 0xFFC00000; break;
+        case 11: mask = 0xFFE00000; break;
+        case 12: mask = 0xFFF00000; break;
+        case 13: mask = 0xFFF80000; break;
+        case 14: mask = 0xFFFC0000; break;
+        case 15: mask = 0xFFFE0000; break;
+        case 16: mask = 0xFFFF0000; break;
+        case 17: mask = 0xFFFF8000; break;
+        case 18: mask = 0xFFFFC000; break;
+        case 19: mask = 0xFFFFE000; break;
+        case 20: mask = 0xFFFFF000; break;
+        case 21: mask = 0xFFFFF800; break;
+        case 22: mask = 0xFFFFFC00; break;
+        case 23: mask = 0xFFFFFE00; break;
+        case 24: mask = 0xFFFFFF00; break;
+        case 25: mask = 0xFFFFFF80; break;
+        case 26: mask = 0xFFFFFFC0; break;
+        case 27: mask = 0xFFFFFFE0; break;
+        case 28: mask = 0xFFFFFFF0; break;
+        case 29: mask = 0xFFFFFFF8; break;
+        case 30: mask = 0xFFFFFFFC; break;
+        case 31: mask = 0xFFFFFFFE; break;
+        default: break;
     }
 
-    for (size_t i = 0; i < byteOff+3; i++)
+    for (size_t i = 0; i < wordOff+1; i++)
         v.push_back(0);
 
     for (int i = (int)v.size()-1; i >= 0; i--)
     {
-        if ((size_t)i < byteOff)
+        if ((size_t)i < wordOff)
         {
             v[i] = 0;
             continue;
         }
 
-        v[i] = v[i-byteOff];
+        v[i] = v[i-wordOff];
 
         if (i < (int)v.size()-1)
         {
-            u8 r = mask & v[i];
-            r = (u8)(r >> (8 - bitOff));
+            u32 r = mask & v[i];
+            r >>= 32-bitOff;
             v[i+1] |= r;
         }
 
-        v[i] = (u8)(v[i] << bitOff);
+        v[i] <<= bitOff;
     }
 
     cleanup(v);
 }
 
 static
-void keepOnly(tArray& v, size_t n)
+void keepOnly(tArray<u32>& v, size_t n)
 {
-    size_t byteOff = n / 8;
-    size_t bitOff = n % 8;
+    size_t wordOff = n / 32;
+    size_t bitOff = n % 32;
 
-    if (byteOff >= v.size())
+    if (wordOff >= v.size())
         return;
 
-    u8 mask = 0;
+    u32 mask = 0;
     switch (bitOff)
     {
         case 0: break;
-        case 1: mask = 1;   break;
-        case 2: mask = 3;   break;
-        case 3: mask = 7;   break;
-        case 4: mask = 15;  break;
-        case 5: mask = 31;  break;
-        case 6: mask = 63;  break;
-        case 7: mask = 127; break;
-        default: throw eImpossiblePath();
+        case 1: mask = 0x1; break;
+        case 2: mask = 0x3; break;
+        case 3: mask = 0x7; break;
+        case 4: mask = 0xF; break;
+        case 5: mask = 0x1F; break;
+        case 6: mask = 0x3F; break;
+        case 7: mask = 0x7F; break;
+        case 8: mask = 0xFF; break;
+        case 9: mask = 0x1FF; break;
+        case 10: mask = 0x3FF; break;
+        case 11: mask = 0x7FF; break;
+        case 12: mask = 0xFFF; break;
+        case 13: mask = 0x1FFF; break;
+        case 14: mask = 0x3FFF; break;
+        case 15: mask = 0x7FFF; break;
+        case 16: mask = 0xFFFF; break;
+        case 17: mask = 0x1FFFF; break;
+        case 18: mask = 0x3FFFF; break;
+        case 19: mask = 0x7FFFF; break;
+        case 20: mask = 0xFFFFF; break;
+        case 21: mask = 0x1FFFFF; break;
+        case 22: mask = 0x3FFFFF; break;
+        case 23: mask = 0x7FFFFF; break;
+        case 24: mask = 0xFFFFFF; break;
+        case 25: mask = 0x1FFFFFF; break;
+        case 26: mask = 0x3FFFFFF; break;
+        case 27: mask = 0x7FFFFFF; break;
+        case 28: mask = 0xFFFFFFF; break;
+        case 29: mask = 0x1FFFFFFF; break;
+        case 30: mask = 0x3FFFFFFF; break;
+        case 31: mask = 0x7FFFFFFF; break;
+        default: break;
     }
 
-    v[byteOff] = v[byteOff] & mask;
+    v[wordOff] = v[wordOff] & mask;
 
-    for (size_t i = byteOff+1; i < v.size(); i++)
+    for (size_t i = wordOff+1; i < v.size(); i++)
         v[i] = 0;
 
     cleanup(v);
 }
 
 static
-void add(tArray& a, const tArray& b, size_t bShift = 0)
+void add(tArray<u32>& a, const tArray<u32>& b, size_t bShift = 0)  // bShift is in u32 chunks
 {
     while (a.size() < b.size()+bShift)
         a.push_back(0);
 
-    u8 carry = 0;
+    u32 carry = 0;
     size_t i;
     for (i = bShift; i < a.size() && (i-bShift) < b.size(); i++)
     {
-        u16 sum = (u16) (a[i] + b[(i-bShift)] + carry);
-        a[i] = (u8)(sum & 0xFF);
-        carry = (u8)((sum >> 8) & 0xFF);
+        u64 sum = ((u64)a[i]) + b[(i-bShift)] + carry;
+        a[i] = (u32)(sum & 0xFFFFFFFF);
+        carry = (u32)((sum >> 32) & 0xFFFFFFFF);
     }
 
     for (; carry > 0; i++)
@@ -210,76 +303,45 @@ void add(tArray& a, const tArray& b, size_t bShift = 0)
         if (i == a.size())
         {
             a.push_back(carry);
-            carry = 0;
+            break;
         }
         else
         {
-            u16 sum = (u16) (a[i] + carry);
-            a[i] = (u8)(sum & 0xFF);
-            carry = (u8)((sum >> 8) & 0xFF);
+            u64 sum = ((u64)a[i]) + carry;
+            a[i] = (u32)(sum & 0xFFFFFFFF);
+            carry = (u32)((sum >> 32) & 0xFFFFFFFF);
         }
     }
 
     cleanup(a);
 }
 
-// static
-// void addByte(tArray& a, u8 b, size_t bShift = 0)
-// {
-//     if (b == 0)
-//         return;
-//
-//     while (a.size() < 1+bShift)
-//         a.push_back(0);
-//
-//     u16 sum = (u16) (a[bShift] + b);
-//     a[bShift] = (u8)(sum & 0xFF);
-//     u8 carry = (u8)((sum >> 8) & 0xFF);
-//
-//     while (carry > 0)
-//     {
-//         ++bShift;
-//         if (bShift == a.size())
-//         {
-//             a.push_back(carry);
-//             break;
-//         }
-//         else
-//         {
-//             u16 sum = (u16) (a[bShift] + carry);
-//             a[bShift] = (u8)(sum & 0xFF);
-//             carry = (u8)((sum >> 8) & 0xFF);
-//         }
-//     }
-//
-//     cleanup(a);
-// }
-
 static
-void subtract(tArray& a, const tArray& b)
+void subtract(tArray<u32>& a, const tArray<u32>& b)
 {
     if (isLess(a, b))
         throw eLogicError("Do not call subtract with a<b.");
 
     for (size_t i = 0; i < a.size() && i < b.size(); i++)
     {
-        u16 top = (u16) a[i];
+        u64 top = (u64) a[i];
         if (a[i] < b[i])     // <-- if need to borrow
         {
             size_t j = i+1;
-            while (a[j] == 0) a[j++] = 255;
+            while (a[j] == 0) a[j++] = 0xFFFFFFFF;
             a[j]--;
-            top = (u16)(top + 256);
+            top = (u64)(top + 0x100000000);
         }
-        a[i] = (u8)(top - b[i]);
+        a[i] = (u32)(top - b[i]);
     }
 
     cleanup(a);
 }
 
 static
-void multiplyNaive(const tArray& a, const tArray& b,   // does "grade school multiplication"
-                   tArray& result, tArray& aux1, tArray& aux2)
+void multiplyNaive(const tArray<u32>& a, const tArray<u32>& b,  // does "grade school multiplication"
+                   tArray<u32>& result,
+                   tArray<u32>& aux1, tArray<u32>& aux2)
 {
     result.clear();
 
@@ -290,12 +352,12 @@ void multiplyNaive(const tArray& a, const tArray& b,   // does "grade school mul
 
     for (size_t i = 0; i < a.size(); i++)
     {
-        u8 carry = 0;
+        u32 carry = 0;
         for (size_t j = 0; j < b.size(); j++)
         {
-            u16 mult = (u16)(a[i] * b[j] + carry);
-            aux1[j] = (u8) (mult & 0xFF);
-            carry = (u8) ((mult >> 8) & 0xFF);
+            u64 mult = ((u64)a[i]) * b[j] + carry;
+            aux1[j] = (u32) (mult & 0xFFFFFFFF);
+            carry = (u32) ((mult >> 32) & 0xFFFFFFFF);
         }
         aux1[b.size()] = carry;
         add(result, aux1, i);
@@ -303,7 +365,7 @@ void multiplyNaive(const tArray& a, const tArray& b,   // does "grade school mul
 }
 
 static
-void multiplyByte(tArray& a, u8 b)
+void multiplyWord(tArray<u32>& a, u32 b)
 {
     if (a.size() == 0)
         return;
@@ -314,21 +376,20 @@ void multiplyByte(tArray& a, u8 b)
         return;
     }
 
-    u8 carry = 0;
+    u32 carry = 0;
     for (size_t i = 0; i < a.size(); i++)
     {
-        u16 mult = (u16)(a[i] * b + carry);
-        u8 val = (u8) (mult & 0xFF);
-        carry = (u8) ((mult >> 8) & 0xFF);
-        a[i] = val;
+        u64 mult = ((u64)a[i]) * b + carry;
+        a[i] = (u32) (mult & 0xFFFFFFFF);
+        carry = (u32) ((mult >> 32) & 0xFFFFFFFF);
     }
     if (carry > 0)
         a.push_back(carry);
 }
 
 static
-void multiplyKaratsuba(const tArray& x, const tArray& y,
-                       tArray& result, tArray& aux1, tArray& aux2)
+void multiplyKaratsuba(const tArray<u32>& x, const tArray<u32>& y,
+                       tArray<u32>& result, tArray<u32>& aux1, tArray<u32>& aux2)
 {
     if (x.size() <= KARATSUBA_CUTOFF || y.size() <= KARATSUBA_CUTOFF)
     {
@@ -340,23 +401,22 @@ void multiplyKaratsuba(const tArray& x, const tArray& y,
     n = (n / 2) + (n % 2);   // rounds up
 
     // x = 2^n b + a
-    tArray a = x; keepOnly(a, n);
-    tArray b = x; shiftRight(b, n);
+    tArray<u32> a = x; keepOnly(a, n);
+    tArray<u32> b = x; shiftRight(b, n);
 
     // y = 2^n d + c
-    tArray c = y; keepOnly(c, n);
-    tArray d = y; shiftRight(d, n);
-
+    tArray<u32> c = y; keepOnly(c, n);
+    tArray<u32> d = y; shiftRight(d, n);
 
     // Recurse!
-    tArray ac;   multiplyKaratsuba(a, c, ac, aux1, aux2);
-    tArray bd;   multiplyKaratsuba(b, d, bd, aux1, aux2);
+    tArray<u32> ac;   multiplyKaratsuba(a, c, ac, aux1, aux2);
+    tArray<u32> bd;   multiplyKaratsuba(b, d, bd, aux1, aux2);
     add(a, b);
     add(c, d);
-    tArray abcd; multiplyKaratsuba(a, c, abcd, aux1, aux2);
+    tArray<u32> abcd; multiplyKaratsuba(a, c, abcd, aux1, aux2);
 
     // K... For convenience
-    tArray k = abcd;
+    tArray<u32> k = abcd;
     subtract(k, ac);
     subtract(k, bd);
 
@@ -369,16 +429,16 @@ void multiplyKaratsuba(const tArray& x, const tArray& y,
 }
 
 static
-void multiply(const tArray& a, const tArray& b,
-              tArray& result, tArray& aux1, tArray& aux2)
+void multiply(const tArray<u32>& a, const tArray<u32>& b,
+              tArray<u32>& result, tArray<u32>& aux1, tArray<u32>& aux2)
 {
     multiplyKaratsuba(a, b, result, aux1, aux2);
 }
 
 static
-void divideNaive(const tArray& a, const tArray& b,      // "long division"
-            tArray& quotient, tArray& remainder,
-            tArray& aux1, tArray& aux2)
+void divideNaive(const tArray<u32>& a, const tArray<u32>& b,      // "long division"
+            tArray<u32>& quotient, tArray<u32>& remainder,
+            tArray<u32>& aux1, tArray<u32>& aux2)
 {
     quotient.clear();
     remainder.clear();
@@ -388,8 +448,8 @@ void divideNaive(const tArray& a, const tArray& b,      // "long division"
         throw eInvalidArgument("You may not divide by zero!");
 
     // Long division:
-    tArray& mult = aux1;
-    tArray& sub = aux2;
+    tArray<u32>& mult = aux1;
+    tArray<u32>& sub = aux2;
     for (int i = (int)a.size()-1; i >= 0; i--)
     {
         if (remainder.size() > 0 || a[i] != 0)
@@ -406,12 +466,12 @@ void divideNaive(const tArray& a, const tArray& b,      // "long division"
             continue;
         }
 
-        i32 left = 0, right = 255, mid;
+        u64 left = 0, right = 0xFFFFFFFF, mid;
         while (true)
         {
             mid = (left + right) / 2;
             mult = b;
-            multiplyByte(mult, (u8)mid);
+            multiplyWord(mult, (u32)mid);
             if (isLess(remainder, mult))
                 right = mid - 1;
             else
@@ -425,7 +485,7 @@ void divideNaive(const tArray& a, const tArray& b,      // "long division"
             }
         }
 
-        quotient.push_back((u8)mid);
+        quotient.push_back((u32)mid);
         subtract(remainder, mult);
     }
 
@@ -433,77 +493,19 @@ void divideNaive(const tArray& a, const tArray& b,      // "long division"
     cleanup(quotient);
 }
 
-#if USE_OPENSSL
 static
-void divideOpenSSL(const tArray& a, const tArray& b,
-            tArray& quotient, tArray& remainder,
-            tArray& aux1, tArray& aux2)
+void divide(const tArray<u32>& a, const tArray<u32>& b,
+            tArray<u32>& quotient, tArray<u32>& remainder,
+            tArray<u32>& aux1, tArray<u32>& aux2)
 {
-    // If b is zero, that is bad.
-    if (b.size() == 0)
-        throw eInvalidArgument("You may not divide by zero!");
-
-    BIGNUM* bn_a = BN_new(); BN_init(bn_a);
-    BIGNUM* bn_b = BN_new(); BN_init(bn_b);
-    BIGNUM* bn_quo = BN_new(); BN_init(bn_quo);
-    BIGNUM* bn_rem = BN_new(); BN_init(bn_rem);
-    BN_CTX* ctx = BN_CTX_new(); BN_CTX_init(ctx);
-
-    aux1 = a;
-    aux1.reverse();
-    BN_bin2bn(&aux1[0], (int)aux1.size(), bn_a);
-    aux1 = b;
-    aux1.reverse();
-    BN_bin2bn(&aux1[0], (int)aux1.size(), bn_b);
-
-    BN_div(bn_quo, bn_rem, bn_a, bn_b, ctx);
-
-    {
-        u8 quo_bf[10000];
-        int quo_sz = BN_bn2bin(bn_quo, quo_bf);
-        quotient.clear();
-        for (int i = 0; i < quo_sz; i++)
-            quotient.push_back(quo_bf[i]);
-        quotient.reverse();
-    }
-
-    {
-        u8 rem_bf[10000];
-        int rem_sz = BN_bn2bin(bn_rem, rem_bf);
-        remainder.clear();
-        for (int i = 0; i < rem_sz; i++)
-            remainder.push_back(rem_bf[i]);
-        remainder.reverse();
-    }
-
-    BN_CTX_free(ctx);
-    BN_free(bn_a);
-    BN_free(bn_b);
-    BN_free(bn_quo);
-    BN_free(bn_rem);
-}
-#endif
-
-static
-void divide(const tArray& a, const tArray& b,
-            tArray& quotient, tArray& remainder,
-            tArray& aux1, tArray& aux2)
-{
-#if USE_OPENSSL
-    if (a.size() >= OPENSSL_CUTOFF || b.size() >= OPENSSL_CUTOFF)
-    {
-        divideOpenSSL(a, b, quotient, remainder, aux1, aux2);
-        return;
-    }
-#endif
     divideNaive(a, b, quotient, remainder, aux1, aux2);
 }
 
 static
-void gcd(tArray a, tArray b, tArray& result)
+void gcd(tArray<u32> a, tArray<u32> b, tArray<u32>& result)
 {
-    tArray aQuo, aRem;
-    tArray aux1, aux2;
+    tArray<u32> aQuo, aRem;
+    tArray<u32> aux1, aux2;
 
     while (b.size() > 0)     // while (b != 0)
     {
@@ -515,36 +517,37 @@ void gcd(tArray a, tArray b, tArray& result)
     result = a;
 }
 
-// static
-// void modMultiplyNaive(const tArray& a, const tArray& b, const tArray& m,
-//                       tArray& result,
-//                       tArray& aux1, tArray& aux2, tArray& aux3, tArray& aux4)
-// {
-//     multiply(a, b, aux1, aux2, aux3);
-//     divide(aux1, m, aux2, result, aux3, aux4);
-// }
+static
+void modMultiplyNaive(const tArray<u32>& a, const tArray<u32>& b, const tArray<u32>& m,
+                      tArray<u32>& result,
+                      tArray<u32>& aux1, tArray<u32>& aux2, tArray<u32>& aux3, tArray<u32>& aux4)
+{
+    multiply(a, b, aux1, aux2, aux3);
+    divide(aux1, m, aux2, result, aux3, aux4);
+}
 
 static
-void modMultiplyBlakley(const tArray& a, const tArray& b, const tArray& m,
-                      tArray& result,
-                      tArray& aux1, tArray& aux2, tArray& aux3, tArray& aux4)
+void modMultiplyBlakley(const tArray<u32>& a, const tArray<u32>& b, const tArray<u32>& m,
+                      tArray<u32>& result,
+                      tArray<u32>& aux1, tArray<u32>& aux2, tArray<u32>& aux3, tArray<u32>& aux4)
 {
     aux1.clear();
 
     for (int i = (int)a.size()-1; i >= 0; i--)
     {
-        u8 byte  = a[i];
+        u32 word = a[i];
 
-        for (int j = 0; j < 8; j++)
+        for (int j = 0; j < 32; j++)
         {
-            multiplyByte(aux1, 2);
+            multiplyWord(aux1, 2);
 
-            if (byte & 0x80)
+            if (word & 0x80000000)
                 add(aux1, b);
 
-            while (!isLess(aux1, m)) subtract(aux1, m);
+            while (!isLess(aux1, m))
+                subtract(aux1, m);
 
-            byte = (u8)(byte << 1);
+            word <<= 1;
         }
     }
 
@@ -552,83 +555,83 @@ void modMultiplyBlakley(const tArray& a, const tArray& b, const tArray& m,
 }
 
 static
-void modMultiply(const tArray& a, const tArray& b, const tArray& m,
-                 tArray& result,
-                 tArray& aux1, tArray& aux2, tArray& aux3, tArray& aux4)
+void modMultiply(const tArray<u32>& a, const tArray<u32>& b, const tArray<u32>& m,
+                 tArray<u32>& result,
+                 tArray<u32>& aux1, tArray<u32>& aux2, tArray<u32>& aux3, tArray<u32>& aux4)
 {
-    modMultiplyBlakley(a, b, m, result, aux1, aux2, aux3, aux4);
+    if (false)
+        modMultiplyBlakley(a, b, m, result, aux1, aux2, aux3, aux4);
+    else
+        modMultiplyNaive(a, b, m, result, aux1, aux2, aux3, aux4);
 }
 
 static
-void modPowNaive(const tArray& a, const tArray& e, const tArray& m,
-            tArray& result)
+void modPowNaive(const tArray<u32>& a, const tArray<u32>& e, const tArray<u32>& m,
+            tArray<u32>& result)
 {
     result.clear();
     result.push_back(1);
 
-    tArray aux1, aux2, aux3, aux4;
-    tArray aa = a;
+    tArray<u32> aux1, aux2, aux3, aux4;
+    tArray<u32> aa = a;
 
     for (size_t i = 0; i < e.size(); i++)
     {
-        u8 byte = e[i];
+        u32 word = e[i];
 
-        for (int j = 0; j < 8; j++)
+        for (int j = 0; j < 32; j++)
         {
-            if (byte & 1)
+            if (word & 1)
                 modMultiply(result, aa, m, result, aux1, aux2, aux3, aux4);
-            byte = (u8)(byte >> 1);
+            word >>= 1;
             modMultiply(aa, aa, m, aa, aux1, aux2, aux3, aux4);
         }
     }
 }
 
 static
-void modPowMary(const tArray& a, const tArray& e, const tArray& m,
-            tArray& result)   // "m-ary method" (here m=4)
+void modPowMary(const tArray<u32>& a, const tArray<u32>& e, const tArray<u32>& m,
+            tArray<u32>& result)   // "m-ary method" (here m=4)
 {
     result.clear();
     result.push_back(1);
 
-    tArray aux1, aux2, aux3, aux4;
+    tArray<u32> aux1, aux2, aux3, aux4;
 
-    tArray tab[16];
+    tArray<u32> tab[16];
     tab[0].push_back(1);
     for (int i = 1; i < 16; i++)
         modMultiply(tab[i-1], a, m, tab[i], aux1, aux2, aux3, aux4);
 
     for (int i = (int)e.size()-1; i >= 0; i--)
     {
-        u8 byte  = e[i];
+        u32 word = e[i];
 
-        u32 high = (byte & 0xF0) >> 4;
-        modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
-        modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
-        modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
-        modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
-        modMultiply(result, tab[high], m, result, aux1, aux2, aux3, aux4);
-
-        u32 low  = byte & 0x0F;
-        modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
-        modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
-        modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
-        modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
-        modMultiply(result, tab[low], m, result, aux1, aux2, aux3, aux4);
+        for (int i = 0; i < 8; i++)
+        {
+            u32 high = (word & 0xF0000000) >> 28;
+            word <<= 4;
+            modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
+            modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
+            modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
+            modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
+            modMultiply(result, tab[high], m, result, aux1, aux2, aux3, aux4);
+        }
     }
 }
 
 static
-void modPowCLNW(const tArray& a, const tArray& e, const tArray& m,
-            tArray& result)   // "Constant Length Nonzero Windows"
+void modPowCLNW(const tArray<u32>& a, const tArray<u32>& e, const tArray<u32>& m,
+            tArray<u32>& result)   // "Constant Length Nonzero Windows"
 {
     static const u32 kWindowSize = 4;
 
     result.clear();
     result.push_back(1);
 
-    tArray aux1, aux2, aux3, aux4;
+    tArray<u32> aux1, aux2, aux3, aux4;
 
-    tArray tab[16];                       // <--- 2^kWindowSize
+    tArray<u32> tab[16];                  // <--- 2^kWindowSize
     tab[0].push_back(1);
     for (int i = 1; i < 16; i++)          // <--- 2^kWindowSize
         modMultiply(tab[i-1], a, m, tab[i], aux1, aux2, aux3, aux4);
@@ -639,12 +642,12 @@ void modPowCLNW(const tArray& a, const tArray& e, const tArray& m,
 
     for (int i = (int)e.size()-1; i >= 0; i--)
     {
-        u8 byte  = e[i];
+        u32 word = e[i];
 
-        for (int i = 0; i < 8; i++)
+        for (int i = 0; i < 32; i++)
         {
-            u32 bit = ((byte & 0x80) >> 7);
-            byte = (u8)(byte << 1);
+            u32 bit = ((word & 0x80000000) >> 31);
+            word <<= 1;
 
             modMultiply(result, result, m, result, aux1, aux2, aux3, aux4);
 
@@ -676,13 +679,15 @@ void modPowCLNW(const tArray& a, const tArray& e, const tArray& m,
 }
 
 static
-void montgomeryCalculateNprim(const tArray& n, tArray& nPrim, tArray& r)
+void montgomeryCalculateNprim(const tArray<u32>& n, tArray<u32>& nPrim, tArray<u32>& r)
 {
     size_t k = numbits(n);
     r.clear(); r.push_back(1); shiftLeft(r, k);   // r = 2^k
 
-    tBigInteger nBI(vector<u8>(&n[0], &n[n.size()]));
-    tBigInteger rBI(vector<u8>(&r[0], &r[r.size()]));
+    tArray<u8> n8; u32to8(n, n8);
+    tArray<u8> r8; u32to8(r, r8);
+    tBigInteger nBI(vector<u8>(&n8[0], &n8[n8.size()]));
+    tBigInteger rBI(vector<u8>(&r8[0], &r8[r8.size()]));
     tBigInteger nPrimBI(0);
     tBigInteger rInvBI(0);
     extendedGCD(nBI, rBI, nPrimBI, rInvBI);
@@ -692,27 +697,28 @@ void montgomeryCalculateNprim(const tArray& n, tArray& nPrim, tArray& r)
         nPrimBI -= rBI;
     }
 
-    nPrim.clear();
+    tArray<u8> nPrim8;
     vector<u8> bytes = nPrimBI.getBytes();
     for (size_t i = 0; i < bytes.size(); i++)
-        nPrim.push_back(bytes[i]);
+        nPrim8.push_back(bytes[i]);
+    u8to32(nPrim8, nPrim);
 }
 
 static
-void montgomeryProduct(const tArray& a_hat, const tArray& b_hat,
-                       const tArray& n, const tArray& nPrim,
-                       const tArray& r,
-                       tArray& result,
-                       tArray& aux1, tArray& aux2, tArray& aux3, tArray& aux4)
+void montgomeryProduct(const tArray<u32>& a_hat, const tArray<u32>& b_hat,
+                       const tArray<u32>& n, const tArray<u32>& nPrim,
+                       const tArray<u32>& r,
+                       tArray<u32>& result,
+                       tArray<u32>& aux1, tArray<u32>& aux2, tArray<u32>& aux3, tArray<u32>& aux4)
 {
-    tArray& t = aux1;
+    tArray<u32>& t = aux1;
     multiply(a_hat, b_hat, t, aux3, aux4);
 
-    tArray& m = aux2;
+    tArray<u32>& m = aux2;
     multiply(t, nPrim, m, aux3, aux4);
     keepOnly(m, numbits(r)-1);
 
-    tArray& u = result;
+    tArray<u32>& u = result;
     multiply(m, n, u, aux3, aux4);
     add(u, t);
     shiftRight(u, numbits(r)-1);
@@ -722,99 +728,53 @@ void montgomeryProduct(const tArray& a_hat, const tArray& b_hat,
 }
 
 static
-void modPowMontgomery(const tArray& M, const tArray& e, const tArray& n,
-            tArray& result)
+void modPowMontgomery(const tArray<u32>& M, const tArray<u32>& e, const tArray<u32>& n,
+            tArray<u32>& result)
 {
     if (n.size() == 0 || (n[0] & 1) == 0)
-        throw eInvalidArgument("The modulus may not be even in Montgomery modPow.");
+        throw eInvalidArgument("The modulus may not be even in Montgomery modPow at this time.");
 
-    tArray aux1, aux2, aux3, aux4;
+    tArray<u32> aux1, aux2, aux3, aux4;
 
-    tArray nPrim;
-    tArray r;
+    tArray<u32> nPrim;
+    tArray<u32> r;
     montgomeryCalculateNprim(n, nPrim, r);
 
-    tArray M_hat;
+    tArray<u32> M_hat;
     modMultiply(M, r, n, M_hat, aux1, aux2, aux3, aux4);
 
-    tArray x_hat;
+    tArray<u32> x_hat;
     divide(r, n, aux1, x_hat, aux2, aux3);
 
     for (int i = (int)e.size()-1; i >= 0; i--)
     {
-        u8 byte = e[i];
+        u32 word = e[i];
 
-        for (int i = 0; i < 8; i++)
+        for (int i = 0; i < 32; i++)
         {
-            bool bit = (byte & 0x80) > 0;
-            byte = (u8) (byte << 1);
+            bool bit = (word & 0x80000000) > 0;
+            word <<= 1;
 
             montgomeryProduct(x_hat, x_hat, n, nPrim, r, x_hat,
                               aux1, aux2, aux3, aux4);
 
             if (bit)
+            {
                 montgomeryProduct(M_hat, x_hat, n, nPrim, r, x_hat,
                                   aux1, aux2, aux3, aux4);
+            }
         }
     }
 
-    tArray one; one.push_back(1);
+    tArray<u32> one; one.push_back(1);
     montgomeryProduct(x_hat, one, n, nPrim, r, result,
                       aux1, aux2, aux3, aux4);
 }
 
-#if USE_OPENSSL
 static
-void modPowOpenSSL(const tArray& a, const tArray& e, const tArray& m,
-            tArray& result)
+void modPow(const tArray<u32>& a, const tArray<u32>& e, const tArray<u32>& m,
+            tArray<u32>& result)
 {
-    BIGNUM* bn_a = BN_new(); BN_init(bn_a);
-    BIGNUM* bn_e = BN_new(); BN_init(bn_e);
-    BIGNUM* bn_m = BN_new(); BN_init(bn_m);
-    BIGNUM* bn_res = BN_new(); BN_init(bn_res);
-    BN_CTX* ctx = BN_CTX_new(); BN_CTX_init(ctx);
-
-    tArray aux;
-    aux = a;
-    aux.reverse();
-    BN_bin2bn(&aux[0], (int)aux.size(), bn_a);
-    aux = e;
-    aux.reverse();
-    BN_bin2bn(&aux[0], (int)aux.size(), bn_e);
-    aux = m;
-    aux.reverse();
-    BN_bin2bn(&aux[0], (int)aux.size(), bn_m);
-
-    BN_mod_exp(bn_res, bn_a, bn_e, bn_m, ctx);
-
-    {
-        u8 res_bf[10000];
-        int res_sz = BN_bn2bin(bn_res, res_bf);
-        result.clear();
-        for (int i = 0; i < res_sz; i++)
-            result.push_back(res_bf[i]);
-        result.reverse();
-    }
-
-    BN_CTX_free(ctx);
-    BN_free(bn_a);
-    BN_free(bn_e);
-    BN_free(bn_m);
-    BN_free(bn_res);
-}
-#endif
-
-static
-void modPow(const tArray& a, const tArray& e, const tArray& m,
-            tArray& result)
-{
-#if USE_OPENSSL
-    if (e.size() >= OPENSSL_CUTOFF || m.size() >= OPENSSL_CUTOFF)
-    {
-        modPowOpenSSL(a, e, m, result);
-        return;
-    }
-#endif
     if (e.size() < 5)
         modPowNaive(a, e, m, result);
     else if (e.size() < 10)
@@ -836,12 +796,8 @@ tBigInteger::tBigInteger(i32 val)
 {
     m_neg = val < 0;
     u32 uval = m_neg ? (u32)(-val) : (u32)val;
-    while (uval > 0)
-    {
-        u8 byte = (u8)(uval & 0xFF);
-        uval >>= 8;
-        m_array.push_back(byte);
-    }
+    if (uval > 0)
+        m_array.push_back(uval);
 }
 
 static
@@ -856,7 +812,7 @@ void throwInvalidValStringException(char c, int radix)
 tBigInteger::tBigInteger(string val, int radix)
     : m_neg(false)
 {
-    vector<i32> ints;
+    vector<u32> ints;
 
     switch (radix)
     {
@@ -908,30 +864,32 @@ tBigInteger::tBigInteger(string val, int radix)
             throw eInvalidArgument(string() + "Unsupported radix (must be 2, 8, 10, or 16)");
     }
 
-    tArray mult(1, 1);
-    tArray toadd;
+    tArray<u32> mult(1, 1);
+    tArray<u32> toadd;
     for (int i = (int)ints.size()-1; i >= 0; i--)
     {
         if (ints[i] != 0)
         {
             toadd = mult;
-            multiplyByte(toadd, (u8)ints[i]);
+            multiplyWord(toadd, ints[i]);
             add(m_array, toadd);
         }
-        multiplyByte(mult, (u8)radix);
+        multiplyWord(mult, (u32)radix);
     }
 }
 
 tBigInteger::tBigInteger(vector<u8> bytes)
-    : m_array(), m_neg(false)
+    : m_neg(false)
 {
+    tArray<u8> array8;
     for (size_t i = 0; i < bytes.size(); i++)
-        m_array.push_back(bytes[i]);
-    cleanup(m_array);
+        array8.push_back(bytes[i]);
+    cleanup(array8);
+    u8to32(array8, m_array);
 }
 
 static
-char toChar(u8 b)
+char toChar(u32 b)
 {
     if (b <= 9)
         return (char)('0' + b);
@@ -955,10 +913,10 @@ string tBigInteger::toString(int radix) const
 
     string str;
 
-    tArray n = m_array;
-    tArray quo, rem;
-    tArray radixVect(1, (u8)radix);
-    tArray aux1, aux2;
+    tArray<u32> n = m_array;
+    tArray<u32> quo, rem;
+    tArray<u32> radixVect(1, (u32)radix);
+    tArray<u32> aux1, aux2;
     while (n.size() > 0)
     {
         divide(n, radixVect, quo, rem, aux1, aux2);
@@ -974,7 +932,8 @@ string tBigInteger::toString(int radix) const
 
 vector<u8> tBigInteger::getBytes() const
 {
-    return vector<u8>(&m_array[0], &m_array[m_array.size()]);
+    tArray<u8> array8; u32to8(m_array, array8);
+    return vector<u8>(&array8[0], &array8[array8.size()]);
 }
 
 bool tBigInteger::isNegative() const
@@ -1070,8 +1029,8 @@ void tBigInteger::operator-= (const tBigInteger& o)
 
 void tBigInteger::operator*= (const tBigInteger& o)
 {
-    tArray result;
-    tArray aux1, aux2;
+    tArray<u32> result;
+    tArray<u32> aux1, aux2;
     multiply(m_array, o.m_array, result, aux1, aux2);
     m_array = result;
     m_neg = (isNegative() && !o.isNegative()) || (!isNegative() && o.isNegative());
@@ -1079,9 +1038,9 @@ void tBigInteger::operator*= (const tBigInteger& o)
 
 void tBigInteger::operator/= (const tBigInteger& o)
 {
-    tArray quotient;
-    tArray remainder;
-    tArray aux1, aux2;
+    tArray<u32> quotient;
+    tArray<u32> remainder;
+    tArray<u32> aux1, aux2;
     divide(m_array, o.m_array, quotient, remainder, aux1, aux2);
     m_array = quotient;
     m_neg = (isNegative() && !o.isNegative()) || (!isNegative() && o.isNegative());
@@ -1089,18 +1048,18 @@ void tBigInteger::operator/= (const tBigInteger& o)
 
 void tBigInteger::operator%= (const tBigInteger& o)
 {
-    tArray quotient;
-    tArray remainder;
-    tArray aux1, aux2;
+    tArray<u32> quotient;
+    tArray<u32> remainder;
+    tArray<u32> aux1, aux2;
     divide(m_array, o.m_array, quotient, remainder, aux1, aux2);
     m_array = remainder;
 }
 
 void tBigInteger::div(const tBigInteger& o, tBigInteger& quotient, tBigInteger& remainder) const
 {
-    tArray quotientArray;
-    tArray remainderArray;
-    tArray aux1, aux2;
+    tArray<u32> quotientArray;
+    tArray<u32> remainderArray;
+    tArray<u32> aux1, aux2;
     divide(m_array, o.m_array, quotientArray, remainderArray, aux1, aux2);
     quotient.m_neg = (isNegative() && !o.isNegative()) || (!isNegative() && o.isNegative());
     quotient.m_array = quotientArray;
@@ -1110,7 +1069,9 @@ void tBigInteger::div(const tBigInteger& o, tBigInteger& quotient, tBigInteger& 
 
 tBigInteger tBigInteger::modPow(const tBigInteger& e, const tBigInteger& m) const
 {
-    tArray result;
+    if (isNegative())
+        throw eInvalidArgument("Cannot handle modPow() on a negative integer at this time.");
+    tArray<u32> result;
     rho::algo::modPow(m_array, e.m_array, m.m_array, result);
     tBigInteger bi(0);
     bi.m_array = result;
@@ -1233,8 +1194,10 @@ ostream& operator<< (ostream& out, const tBigInteger& b)
 tBigInteger GCD(const tBigInteger& a, const tBigInteger& b)
 {
     if (a.isNegative() || b.isNegative())
+    {
         throw eInvalidArgument("At this point, neither a nor b may be negative in a call "
                 "to GCD()");
+    }
 
     tBigInteger result(0);
     gcd(a.m_array, b.m_array, result.m_array);
@@ -1244,8 +1207,10 @@ tBigInteger GCD(const tBigInteger& a, const tBigInteger& b)
 void extendedGCD(const tBigInteger& a, const tBigInteger& b, tBigInteger& x, tBigInteger& y)
 {
     if (a.isNegative() || b.isNegative())
+    {
         throw eInvalidArgument("At this point, neither a nor b may be negative in a call "
                 "to extendedGCD()");
+    }
 
     x = tBigInteger(0);
     tBigInteger lastX(1);
