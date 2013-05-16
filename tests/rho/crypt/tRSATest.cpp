@@ -12,7 +12,7 @@ using std::endl;
 using std::vector;
 
 
-static const int kNumIters = 10;
+static const int kNumIters = 100;
 
 
 void print(const vector<u8>& bytes)
