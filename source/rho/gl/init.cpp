@@ -1,3 +1,9 @@
+#ifdef __APPLE__
+#include "TargetConditionals.h"
+#endif
+#if !TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
+
+
 #include <rho/gl/init.h>
 #include <rho/eRho.h>
 
@@ -90,3 +96,6 @@ void perspectiveProjection(
 
 }  // namespace gl
 }  // namespace rho
+
+
+#endif
