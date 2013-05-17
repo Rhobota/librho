@@ -31,6 +31,7 @@ enum nPlatform
 {
     kLinux,
     kOSX,
+    kIOS,
     kCygwin,
     kWindows
 };

@@ -5,7 +5,6 @@ EXECUTABLES = $(patsubst %.cpp,%.exec,$(SOURCE_FILES))
 
 ifeq ($(shell uname),Darwin)
 	LIB_FLAGS = \
-		-lrho \
 		-framework GLUT \
 		-framework OpenGL \
 		-framework Foundation \
@@ -14,7 +13,6 @@ ifeq ($(shell uname),Darwin)
 		-framework CoreMedia
 else
 	LIB_FLAGS = \
-		-lrho \
 		-lglut \
 		-lGLU
 endif
@@ -23,7 +21,7 @@ endif
 all : $(EXECUTABLES)
 
 %.exec : %.cpp
-	@g++ -Wall -Werror $^ -o $@ $(LIB_FLAGS)
+	$(TARGET)g++ -Wall -Werror -I../../../include $^ ../../../objects/librho.a $(LIB_FLAGS) -o $@
 
 clean :
 	@rm -f *.exec
