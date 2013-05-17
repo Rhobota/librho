@@ -6,7 +6,6 @@ EXECUTABLES = $(patsubst %.cpp,%.exec,$(SOURCE_FILES))
 ifeq ($(shell uname),Linux)
 	# Linux stuff:
 	LIB_FLAGS = \
-		-lrho \
 		-lglfw \
 		-lpthread \
 		-lGLU \
@@ -15,7 +14,6 @@ else
 ifeq ($(shell uname),Darwin)
 	# OSX stuff:
 	LIB_FLAGS = \
-		-lrho \
 		-lglfw \
 		-lpthread \
 		-framework Foundation \
@@ -25,7 +23,6 @@ ifeq ($(shell uname),Darwin)
 else
 	# Mingw stuff:
 	LIB_FLAGS = \
-		-lrho \
 		-lglfw \
 		-lpthread \
 		-lglu32 \
@@ -39,7 +36,7 @@ endif
 all : $(EXECUTABLES)
 
 %.exec : %.cpp
-	$(TARGET)g++ -Wall -Werror $^ $(LIB_FLAGS) -o $@
+	$(TARGET)g++ -Wall -Werror -I../../../include $^ ../../../objects/librho.a $(LIB_FLAGS) -o $@
 
 clean :
 	@rm -f *.exec
