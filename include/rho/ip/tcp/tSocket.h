@@ -92,6 +92,11 @@ class tSocket :
          */
         void closeWrite();
 
+        /**
+         * Returns the underlying unix socket file descriptor.
+         */
+        int getFileDescriptor() { return m_fd; }
+
     private:
 
         tSocket(int fd, const tAddr& addr);

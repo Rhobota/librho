@@ -1,9 +1,14 @@
 #if __linux__
-#include "linuxImpl.ipp"
+    #include "linuxImpl.ipp"
 #elif __APPLE__
-#include "osxImpl.ipp"
+    #include "TargetConditionals.h"
+    #if !TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
+        #include "osxImpl.ipp"
+    #else
+        #include "iosImpl.ipp"
+    #endif
 #else
-#include "notImpl.ipp"
+    #include "notImpl.ipp"
 #endif
 
 

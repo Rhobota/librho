@@ -1,3 +1,9 @@
+#ifdef __APPLE__
+#include "TargetConditionals.h"
+#endif
+#if !TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
+
+
 #include <rho/gl/tLight.h>
 #include <rho/eRho.h>
 
@@ -141,3 +147,6 @@ void tLight::setSpecularColor(geo::tVector c)
 
 }     // namespace gl
 }     // namespace rho
+
+
+#endif

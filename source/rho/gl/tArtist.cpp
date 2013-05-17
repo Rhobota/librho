@@ -1,3 +1,9 @@
+#ifdef __APPLE__
+#include "TargetConditionals.h"
+#endif
+#if !TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
+
+
 #include <rho/gl/tArtist.h>
 
 #include <rho/geo/tBox.h>
@@ -271,3 +277,6 @@ tArtist::~tArtist()
 
 }    // namespace gl
 }    // namespace rho
+
+
+#endif

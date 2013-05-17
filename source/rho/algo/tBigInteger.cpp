@@ -805,7 +805,7 @@ void throwInvalidValStringException(char c, int radix)
 {
     ostringstream o;
     o << "Invalid 'val' string character: " << c
-      << " for radix: " + radix;
+      << " for radix: " << radix;
     throw eInvalidArgument(o.str());
 }
 
