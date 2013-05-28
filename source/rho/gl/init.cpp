@@ -6,6 +6,7 @@
 
 #include <rho/gl/init.h>
 #include <rho/eRho.h>
+#include <rho/geo/units.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -19,7 +20,71 @@ namespace gl
 
 void init2d(int width, int height)
 {
-    throw eNotImplemented("not implemented!");
+    /*
+     * This makes OpenGL emulate "normal" window coordinates
+     * where 0,0 is at the top-left, and positive-y is down.
+     */
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glScaled(1.0, -1.0, 1.0);
+    gluOrtho2D(0, width, 0, height);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    /*
+     * This causes glDrawPixels() to draw downward
+     * from the top-left, like a "normal" window,
+     * and also like a webcam captures images.
+     */
+    glPixelZoom(1.0, -1.0);
+
+    /*
+     * By default, glDrawPixels() will assume that each row
+     * of the image buffer is aligned on 4-byte boundaries.
+     * The image buffers in this application are byte-aligned,
+     * however. That is, each row follows the previous one
+     * immediately.
+     */
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    /**
+     * Misc
+     */
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+
+void drawImage2d(int x, int y, rho::img::tImage* image)
+{
+    glRasterPos2i(x, y);
+    glDrawPixels(image->width(), image->height(),
+                 GL_RGB, GL_UNSIGNED_BYTE, image->buf());
+}
+
+
+void drawCircle2d(int x, int y, int radius, bool filled)
+{
+    const int kNumLines = 100;
+
+    glPushMatrix();
+    glTranslated(x, y, 0.0);
+
+    if (filled)
+        glBegin(GL_POLYGON);
+    else
+        glBegin(GL_LINE_LOOP);
+
+    for (int i = 0; i < kNumLines; i++)
+    {
+        double x = cos(2.0*rho::geo::kPI*i/kNumLines) * radius;
+        double y = sin(2.0*rho::geo::kPI*i/kNumLines) * radius;
+        glVertex2d(x, y);
+    }
+
+    glEnd();
+
+    glPopMatrix();
 }
 
 

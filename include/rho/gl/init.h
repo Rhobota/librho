@@ -2,6 +2,9 @@
 #define __rho_gl_init_h__
 
 
+#include <rho/img/tImage.h>
+
+
 namespace rho
 {
 namespace gl
@@ -13,6 +16,10 @@ namespace gl
 ///////////////////////////////////////////////////////////////////////////////
 
 void init2d(int width, int height);   // also sets up projection
+
+void drawImage2d(int x, int y, rho::img::tImage* image);
+
+void drawCircle2d(int x, int y, int radius, bool filled);
 
 ///////////////////////////////////////////////////////////////////////////////
 // 3d stuff
