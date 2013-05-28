@@ -134,7 +134,8 @@ class tImageCap : public iImageCap
     public:
 
         tImageCap(const tImageCapParams& params)
-            : m_inQueue(4, sync::kBlock),
+            : m_session(nil), m_delegate(nil),
+              m_inQueue(4, sync::kBlock),
               m_outQueue(4, sync::kBlock),
               destructed(false)
         {
@@ -229,7 +230,7 @@ class tImageCap : public iImageCap
             output.videoSettings = videoSettings;
             output.alwaysDiscardsLateVideoFrames = YES;
 
-            MyVideoCaptureDelegate* m_delegate =
+            m_delegate =
                 [[MyVideoCaptureDelegate alloc] initWithImageCap:this];
             tAutoObjcRelease ar3(m_delegate);
 
