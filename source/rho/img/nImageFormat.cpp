@@ -252,8 +252,37 @@ static
 int rgb24_to_grey(u8* source, int sourceSize,
                   u8* dest, int destSize)
 {
-    throw eNotImplemented("This function will be lazy-implemented.");
-    return 0;
+    if ((sourceSize % 3) > 0)
+    {
+        throw eColorspaceConversionError("The source buffer does not seem "
+                "to be an rgb24 image.");
+    }
+
+    int numPix = sourceSize / 3;
+
+    if (destSize < numPix)
+    {
+        throw eBufferOverflow(
+                "The supplied grey buffer cannot hold the image described by "
+                "the supplied rgb24 buffer.");
+    }
+
+    for (int i = 0; i < numPix; ++i)
+    {
+        i32 r = *source++;
+        i32 g = *source++;
+        i32 b = *source++;
+
+        u8 avg = (u8) ((r + g + b) / 3);
+
+        // Also try:
+        //u8 avg = (std::max(std::max(r,g),b) + std::min(std::min(r,g),b)) / 2.0;
+        //u8 avg = 0.21*r + 0.71*g + 0.07*b;
+
+        *dest++ = avg;
+    }
+
+    return numPix;
 }
 
 static
@@ -342,6 +371,56 @@ int yuyv_to_grey(u8* source, int sourceSize,
     return 0;
 }
 
+static
+int grey_to_rgb16(u8* source, int sourceSize,
+                  u8* dest, int destSize)
+{
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
+}
+
+static
+int grey_to_rgb24(u8* source, int sourceSize,
+                  u8* dest, int destSize)
+{
+    if (sourceSize * 3 > destSize)
+        throw eBufferOverflow("Not enough space in the destination buffer.");
+
+    for (int i = 0; i < sourceSize; ++i)
+    {
+        u8 pix = *source++;
+        *dest++ = pix;
+        *dest++ = pix;
+        *dest++ = pix;
+    }
+
+    return sourceSize;
+}
+
+static
+int grey_to_rgba(u8* source, int sourceSize,
+                  u8* dest, int destSize)
+{
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
+}
+
+static
+int grey_to_bgra(u8* source, int sourceSize,
+                  u8* dest, int destSize)
+{
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
+}
+
+static
+int grey_to_yuyv(u8* source, int sourceSize,
+                  u8* dest, int destSize)
+{
+    throw eNotImplemented("This function will be lazy-implemented.");
+    return 0;
+}
+
 
 typedef int (*converstion_func)(u8* source, int sourceSize, u8* dest, int destSize);
 
@@ -386,6 +465,12 @@ converstion_func** buildFuncMatrix()
     matrix[kYUYV][kRGBA]   = yuyv_to_rgba;
     matrix[kYUYV][kBGRA]   = yuyv_to_bgra;
     matrix[kYUYV][kGrey]   = yuyv_to_grey;
+
+    matrix[kGrey][kRGB16]  = grey_to_rgb16;
+    matrix[kGrey][kRGB24]  = grey_to_rgb24;
+    matrix[kGrey][kRGBA]   = grey_to_rgba;
+    matrix[kGrey][kBGRA]   = grey_to_bgra;
+    matrix[kGrey][kYUYV]   = grey_to_yuyv;
 
     return matrix;
 }

@@ -58,8 +58,21 @@ void init2d(int width, int height)
 void drawImage2d(int x, int y, rho::img::tImage* image)
 {
     glRasterPos2i(x, y);
-    glDrawPixels(image->width(), image->height(),
-                 GL_RGB, GL_UNSIGNED_BYTE, image->buf());
+
+    switch (image->format())
+    {
+        case rho::img::kRGB24:
+            glDrawPixels(image->width(), image->height(),
+                         GL_RGB, GL_UNSIGNED_BYTE, image->buf());
+            break;
+
+        default:
+            rho::img::tImage alt;
+            image->convertToFormat(rho::img::kRGB24, &alt);
+            glDrawPixels(alt.width(), alt.height(),
+                         GL_RGB, GL_UNSIGNED_BYTE, alt.buf());
+            break;
+    }
 }
 
 
