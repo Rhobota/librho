@@ -99,6 +99,8 @@ tImage::~tImage()
 
 void tImage::copyTo(tImage* other) const
 {
+    if (this == other)
+        return;
     other->setBufSize(m_bufSize);
     other->setBufUsed(m_bufUsed);
     other->setWidth(m_width);
@@ -228,6 +230,9 @@ void s_horizontalFlip(tImage* image)
 static
 void s_crop(const tImage* image, geo::tRect rect, tImage* dest)
 {
+    if (image == dest)
+        throw eInvalidArgument("s_crop(): source and destination must be different objects");
+
     if (rect.x < 0.0)
         rect.x = 0.0;
 
@@ -294,6 +299,9 @@ void s_crop(const tImage* image, geo::tRect rect, tImage* dest)
 static
 void s_scale(const tImage* from, double scaleFactor, tImage* to)
 {
+    if (from == to)
+        throw eInvalidArgument("s_scale(): source and destination must be different objects");
+
     u32 width  = (u32) (from->width() * scaleFactor);
     u32 height = (u32) (from->height() * scaleFactor);
 
@@ -358,6 +366,9 @@ void tImage::scale(double scaleFactor, tImage* dest)  const
 
 void tImage::convertToFormat(nImageFormat format, tImage* dest) const
 {
+    if (this == dest)
+        throw eInvalidArgument("convertToFormat(): source and destination must be different objects");
+
     dest->setBufSize(1024);
     while (true)
     {
