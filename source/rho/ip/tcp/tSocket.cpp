@@ -194,10 +194,8 @@ void tSocket::close()
     #error What platform are you on!?
     #endif
     {
-        throw eRuntimeError(strerror(errno));
+        //throw eRuntimeError(strerror(errno));
     }
-
-    // Open question: What will happen if close is called more than once?
 }
 
 void tSocket::closeRead()
@@ -211,10 +209,11 @@ void tSocket::closeRead()
     #error What platform are you on!?
     #endif
     {
-        throw eRuntimeError(strerror(errno));
-    }
+        // We are not throwing below, because it is causing problems
+        // when this method is called from read().
 
-    // Open question: What will happen if close is called more than once?
+        //throw eRuntimeError(strerror(errno));
+    }
 }
 
 void tSocket::closeWrite()
@@ -227,10 +226,8 @@ void tSocket::closeWrite()
     #error What platform are you on!?
     #endif
     {
-        throw eRuntimeError(strerror(errno));
+        //throw eRuntimeError(strerror(errno));
     }
-
-    // Open question: What will happen if close is called more than once?
 }
 
 
