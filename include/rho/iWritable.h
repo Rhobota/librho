@@ -2,6 +2,7 @@
 #define __rho_iWritable_h__
 
 
+#include <rho/bNonCopyable.h>
 #include <rho/iFlushable.h>
 #include <rho/types.h>
 
@@ -50,7 +51,8 @@ class iWritable
 };
 
 
-class tBufferedWritable : public iWritable, public iFlushable
+class tBufferedWritable : public iWritable, public iFlushable,
+                          public bNonCopyable
 {
     public:
 
@@ -72,7 +74,8 @@ class tBufferedWritable : public iWritable, public iFlushable
 };
 
 
-class tFileWritable : public iWritable, public iFlushable
+class tFileWritable : public iWritable, public iFlushable,
+                      public bNonCopyable
 {
     public:
 
@@ -94,7 +97,7 @@ class tFileWritable : public iWritable, public iFlushable
 };
 
 
-class tByteWritable : public iWritable
+class tByteWritable : public iWritable, public bNonCopyable
 {
     public:
 
