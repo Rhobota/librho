@@ -3,6 +3,7 @@
 
 
 #include <rho/img/tImage.h>
+#include <rho/geo/tRect.h>
 
 
 namespace rho
@@ -20,6 +21,9 @@ void init2d(int width, int height);   // also sets up projection
 void drawImage2d(int x, int y, rho::img::tImage* image);
 
 void drawCircle2d(int x, int y, int radius, bool filled);
+
+void drawRect2d(geo::tRect r, bool filled);
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // 3d stuff

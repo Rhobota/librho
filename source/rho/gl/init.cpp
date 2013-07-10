@@ -101,6 +101,27 @@ void drawCircle2d(int x, int y, int radius, bool filled)
 }
 
 
+void drawRect2d(geo::tRect r, bool filled)
+{
+    // Begin.
+    if (filled)
+        glBegin(GL_QUADS);
+    else
+        glBegin(GL_LINE_STRIP);
+
+    // One one face...
+    glVertex2d(r.x, r.y);
+    glVertex2d(r.x+r.width, r.y);
+    glVertex2d(r.x+r.width, r.y+r.height);
+    glVertex2d(r.x, r.y+r.height);
+    if (!filled)
+        glVertex2d(r.x, r.y);
+
+    // End.
+    glEnd();
+}
+
+
 void init3d(bool cullFront, bool cullBack)
 {
     // For 3d applications, all functions/methods should leave
