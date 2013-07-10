@@ -30,17 +30,17 @@ class refc
 
         T& operator* ();
         T* operator-> ();
+        operator T* ();
 
         const T& operator* () const;
         const T* operator-> () const;
+        operator const T* () const;
 
         bool operator== (const refc& other) const;
         bool operator!= (const refc& other) const;
         bool operator<  (const refc& other) const;
 
         u32 count() const;
-
-        operator T* ();
 
         ~refc();
 
@@ -225,6 +225,12 @@ u32 refc<T>::count() const
 
 template <class T>
 refc<T>::operator T* ()
+{
+    return m_object;
+}
+
+template <class T>
+refc<T>::operator const T* () const
 {
     return m_object;
 }
