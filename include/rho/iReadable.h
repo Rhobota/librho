@@ -2,6 +2,7 @@
 #define __rho_iReadable_h__
 
 
+#include <rho/bNonCopyable.h>
 #include <rho/types.h>
 
 #include <cstdio>
@@ -49,7 +50,7 @@ class iReadable
 };
 
 
-class tBufferedReadable : public iReadable
+class tBufferedReadable : public iReadable, public bNonCopyable
 {
     public:
 
@@ -74,7 +75,7 @@ class tBufferedReadable : public iReadable
 };
 
 
-class tFileReadable : public iReadable
+class tFileReadable : public iReadable, public bNonCopyable
 {
     public:
 
@@ -95,7 +96,7 @@ class tFileReadable : public iReadable
 };
 
 
-class tByteReadable : public iReadable
+class tByteReadable : public iReadable, public bNonCopyable
 {
     public:
 
