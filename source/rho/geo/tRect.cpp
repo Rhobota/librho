@@ -18,6 +18,16 @@ tRect::tRect(f64 x,     f64 y,
 {
 }
 
+tRect tRect::inset(f64 dx, f64 dy) const
+{
+    tRect o = *this;
+    o.x += dx;
+    o.width -= 2*dx;
+    o.y += dy;
+    o.height -= 2*dy;
+    return o;
+}
+
 tBox tRect::toBox() const
 {
     return tBox(x, y, x+width, y+height);

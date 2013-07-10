@@ -405,7 +405,10 @@ void tImage::pack(iWritable* out) const
 void tImage::unpack(iReadable* in)
 {
     if (m_buf)
+    {
         delete [] m_buf;
+        m_buf = NULL;
+    }
     rho::unpack(in, m_bufUsed);
     m_bufSize = m_bufUsed;
     m_buf = new u8[m_bufSize];

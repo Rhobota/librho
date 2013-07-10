@@ -425,64 +425,66 @@ int grey_to_yuyv(u8* source, int sourceSize,
 typedef int (*converstion_func)(u8* source, int sourceSize, u8* dest, int destSize);
 
 
-converstion_func** buildFuncMatrix()
+struct tConversionFunctionMatrixBuilder
 {
-    int numFormats = (int) kMaxImageFormat;
+    tConversionFunctionMatrixBuilder()
+    {
+        int numFormats = (int) kMaxImageFormat;
 
-    converstion_func** matrix = new converstion_func*[numFormats];
-    for (int i = 0; i < numFormats; i++)
-        matrix[i] = new converstion_func[numFormats];
+        matrix = new converstion_func*[numFormats];
+        for (int i = 0; i < numFormats; i++)
+            matrix[i] = new converstion_func[numFormats];
 
-    for (int i = 0; i < numFormats; i++)
-        matrix[i][i] = no_conversion;
+        for (int i = 0; i < numFormats; i++)
+            matrix[i][i] = no_conversion;
 
-    matrix[kRGB16][kRGB24] = rgb16_to_rgb24;
-    matrix[kRGB16][kRGBA]  = rgb16_to_rgba;
-    matrix[kRGB16][kBGRA]  = rgb16_to_bgra;
-    matrix[kRGB16][kYUYV]  = rgb16_to_yuyv;
-    matrix[kRGB16][kGrey]  = rgb16_to_grey;
+        matrix[kRGB16][kRGB24] = rgb16_to_rgb24;
+        matrix[kRGB16][kRGBA]  = rgb16_to_rgba;
+        matrix[kRGB16][kBGRA]  = rgb16_to_bgra;
+        matrix[kRGB16][kYUYV]  = rgb16_to_yuyv;
+        matrix[kRGB16][kGrey]  = rgb16_to_grey;
 
-    matrix[kRGB24][kRGB16] = rgb24_to_rgb16;
-    matrix[kRGB24][kRGBA]  = rgb24_to_rgba;
-    matrix[kRGB24][kBGRA]  = rgb24_to_bgra;
-    matrix[kRGB24][kYUYV]  = rgb24_to_yuyv;
-    matrix[kRGB24][kGrey]  = rgb24_to_grey;
+        matrix[kRGB24][kRGB16] = rgb24_to_rgb16;
+        matrix[kRGB24][kRGBA]  = rgb24_to_rgba;
+        matrix[kRGB24][kBGRA]  = rgb24_to_bgra;
+        matrix[kRGB24][kYUYV]  = rgb24_to_yuyv;
+        matrix[kRGB24][kGrey]  = rgb24_to_grey;
 
-    matrix[kRGBA][kRGB16]  = rgba_to_rgb16;
-    matrix[kRGBA][kRGB24]  = rgba_to_rgb24;
-    matrix[kRGBA][kBGRA]   = rgba_to_bgra;
-    matrix[kRGBA][kYUYV]   = rgba_to_yuyv;
-    matrix[kRGBA][kGrey]   = rgba_to_grey;
+        matrix[kRGBA][kRGB16]  = rgba_to_rgb16;
+        matrix[kRGBA][kRGB24]  = rgba_to_rgb24;
+        matrix[kRGBA][kBGRA]   = rgba_to_bgra;
+        matrix[kRGBA][kYUYV]   = rgba_to_yuyv;
+        matrix[kRGBA][kGrey]   = rgba_to_grey;
 
-    matrix[kBGRA][kRGB16]  = bgra_to_rgb16;
-    matrix[kBGRA][kRGB24]  = bgra_to_rgb24;
-    matrix[kBGRA][kRGBA]   = bgra_to_rgba;
-    matrix[kBGRA][kYUYV]   = bgra_to_yuyv;
-    matrix[kBGRA][kGrey]   = bgra_to_grey;
+        matrix[kBGRA][kRGB16]  = bgra_to_rgb16;
+        matrix[kBGRA][kRGB24]  = bgra_to_rgb24;
+        matrix[kBGRA][kRGBA]   = bgra_to_rgba;
+        matrix[kBGRA][kYUYV]   = bgra_to_yuyv;
+        matrix[kBGRA][kGrey]   = bgra_to_grey;
 
-    matrix[kYUYV][kRGB16]  = yuyv_to_rgb16;
-    matrix[kYUYV][kRGB24]  = yuyv_to_rgb24;
-    matrix[kYUYV][kRGBA]   = yuyv_to_rgba;
-    matrix[kYUYV][kBGRA]   = yuyv_to_bgra;
-    matrix[kYUYV][kGrey]   = yuyv_to_grey;
+        matrix[kYUYV][kRGB16]  = yuyv_to_rgb16;
+        matrix[kYUYV][kRGB24]  = yuyv_to_rgb24;
+        matrix[kYUYV][kRGBA]   = yuyv_to_rgba;
+        matrix[kYUYV][kBGRA]   = yuyv_to_bgra;
+        matrix[kYUYV][kGrey]   = yuyv_to_grey;
 
-    matrix[kGrey][kRGB16]  = grey_to_rgb16;
-    matrix[kGrey][kRGB24]  = grey_to_rgb24;
-    matrix[kGrey][kRGBA]   = grey_to_rgba;
-    matrix[kGrey][kBGRA]   = grey_to_bgra;
-    matrix[kGrey][kYUYV]   = grey_to_yuyv;
+        matrix[kGrey][kRGB16]  = grey_to_rgb16;
+        matrix[kGrey][kRGB24]  = grey_to_rgb24;
+        matrix[kGrey][kRGBA]   = grey_to_rgba;
+        matrix[kGrey][kBGRA]   = grey_to_bgra;
+        matrix[kGrey][kYUYV]   = grey_to_yuyv;
+    }
 
-    return matrix;
-}
+    ~tConversionFunctionMatrixBuilder()
+    {
+        int numFormats = (int) kMaxImageFormat;
+        for (int i = 0; i < numFormats; i++)
+            delete [] matrix[i];
+        delete [] matrix;
+    }
 
-
-void freeFuncMatrix(converstion_func** matrix)
-{
-    int numFormats = (int) kMaxImageFormat;
-    for (int i = 0; i < numFormats; i++)
-        delete [] matrix[i];
-    delete [] matrix;
-}
+    converstion_func** matrix;
+};
 
 
 int colorspace_conversion(nImageFormat from, nImageFormat to,
@@ -493,11 +495,9 @@ int colorspace_conversion(nImageFormat from, nImageFormat to,
     if (from >= numFormats || to >= numFormats || from < 0 || to < 0)
         throw eInvalidArgument("'from' or 'to' format is invalid");
 
-    converstion_func** conversionFuncMatrix = buildFuncMatrix();
-    int res = conversionFuncMatrix[from][to](source, sourceSize, dest, destSize);
-    freeFuncMatrix(conversionFuncMatrix);
+    tConversionFunctionMatrixBuilder convFunc;
 
-    return res;
+    return convFunc.matrix[from][to](source, sourceSize, dest, destSize);
 }
 
 
