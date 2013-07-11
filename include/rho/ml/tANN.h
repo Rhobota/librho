@@ -7,6 +7,7 @@
 #include <rho/iPackable.h>
 #include <rho/img/tImage.h>
 #include <rho/ml/common.h>
+#include <rho/sync/tThreadPool.h>
 
 #include <cmath>
 #include <iostream>
@@ -64,6 +65,12 @@ class tANN : public rho::iPackable, public rho::bNonCopyable
         tANN(iReadable* in);
 
         /**
+         * The ANN's calculations can be parallelized in a thread pool, if you
+         * provide it a thread pool. Use this method to set the thread pool.
+         */
+        void setThreadPool(refc<sync::tThreadPool> pool);
+
+        /**
          * Shows the ANN one example. The ANN will calculate error rates at
          * each node, then add those rates to the accumulated error at each
          * node.
@@ -90,7 +97,7 @@ class tANN : public rho::iPackable, public rho::bNonCopyable
         /**
          * Uses the current inter-node weights to evaluate the given input.
          */
-        void evaluate(const std::vector<f64>& input, std::vector<f64>& output) const;
+        void evaluate(const std::vector<f64>& input, std::vector<f64>& output);
 
         /**
          * Returns the number of layers in the network. This will be one less than
@@ -163,6 +170,8 @@ class tANN : public rho::iPackable, public rho::bNonCopyable
         f64 m_alphaMultiplier;
 
         u8 m_normalizeLayerInput;
+
+        refc<sync::tThreadPool> m_pool;
 };
 
 
