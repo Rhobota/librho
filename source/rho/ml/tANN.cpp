@@ -4,17 +4,185 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <utility>
 
 
 using std::vector;
 using std::cout;
 using std::endl;
+using std::pair;
+using std::make_pair;
 
 
 namespace rho
 {
 namespace ml
 {
+
+
+class tInputWorker : public sync::iRunnable
+{
+    public:
+
+        tInputWorker(u32 off,
+                     u32 size,
+                     vector<f64>& a,
+                     vector<f64>& A,
+                     const vector<f64>& input,
+                     const vector< vector<f64> >& w,
+                     u8 normalizeLayerInput)
+            : off(off), size(size), a(a), A(A), input(input),
+              w(w), normalizeLayerInput(normalizeLayerInput)
+        {
+        }
+
+        void run()
+        {
+            for (u32 i = off; i < off+size; i++)
+                A[i] = 0.0;
+
+            for (u32 s = 0; s < input.size(); s++)
+            {
+                for (u32 i = off; i < off+size; i++)
+                    A[i] += w[s][i] * input[s];
+            }
+
+            for (u32 i = off; i < off+size; i++)
+                A[i] += w.back()[i] * 1.0;
+
+            if (normalizeLayerInput)
+            {
+                for (u32 i = off; i < off+size; i++)
+                    A[i] /= (f64) input.size();
+            }
+
+            for (u32 i = off; i < off+size; i++)
+                a[i] = logistic_function(A[i]);
+        }
+
+    private:
+
+        u32 off;
+        u32 size;
+        vector<f64>& a;
+        vector<f64>& A;
+        const vector<f64>& input;
+        const vector< vector<f64> >& w;
+        u8 normalizeLayerInput;
+};
+
+
+class tAccumWorker : public sync::iRunnable
+{
+    public:
+
+        tAccumWorker(u32 off,
+                     u32 size,
+                     const vector<f64>& A,
+                     const vector<f64>& da,
+                     vector<f64>& dA,
+                     const vector<f64>& prev_a,
+                     vector< vector<f64> >& dw_accum)
+            : off(off), size(size), A(A), da(da), dA(dA), prev_a(prev_a), dw_accum(dw_accum)
+        {
+        }
+
+        void run()
+        {
+            for (u32 i = off; i < off+size; i++)
+            {
+                dA[i] = da[i] * derivative_of_logistic_function(A[i]);
+            }
+
+            for (u32 s = 0; s < prev_a.size(); s++)
+            {
+                for (u32 i = off; i < off+size; i++)
+                    dw_accum[s][i] += dA[i] * prev_a[s];
+            }
+
+            for (u32 i = off; i < off+size; i++)
+                dw_accum.back()[i] += dA[i] * 1.0;
+        }
+
+    private:
+
+        u32 off;
+        u32 size;
+        const vector<f64>& A;
+        const vector<f64>& da;
+        vector<f64>& dA;
+        const vector<f64>& prev_a;
+        vector< vector<f64> >& dw_accum;
+};
+
+
+class tBackpropWorker : public sync::iRunnable
+{
+    public:
+
+        tBackpropWorker(u32 off,
+                        u32 size,
+                        vector<f64>& prev_da,
+                        const vector<f64>& dA,
+                        const vector< vector<f64> >& w)
+            : off(off), size(size), prev_da(prev_da), dA(dA), w(w)
+        {
+        }
+
+        void run()
+        {
+            for (u32 s = off; s < off+size; s++)
+            {
+                prev_da[s] = 0.0;
+
+                for (u32 i = 0; i < dA.size(); i++)
+                    prev_da[s] += w[s][i] * dA[i];
+            }
+        }
+
+    private:
+
+        u32 off;
+        u32 size;
+        vector<f64>& prev_da;
+        const vector<f64>& dA;
+        const vector< vector<f64> >& w;
+};
+
+
+class tUpdateWorker : public sync::iRunnable
+{
+    public:
+
+        tUpdateWorker(u32 off,
+                      u32 size,
+                      f64 alpha,
+                      vector< vector<f64> >& dw_accum,
+                      vector< vector<f64> >& w)
+            : off(off), size(size), alpha(alpha), dw_accum(dw_accum), w(w)
+        {
+        }
+
+        void run()
+        {
+            for (u32 s = off; s < off+size; s++)
+            {
+                for (u32 i = 0; i < w[s].size(); i++)
+                {
+                    w[s][i] -= alpha * dw_accum[s][i];
+                    dw_accum[s][i] = 0.0;
+                }
+            }
+        }
+
+    private:
+
+        u32 off;
+        u32 size;
+        f64 alpha;
+        vector< vector<f64> >& dw_accum;
+        vector< vector<f64> >& w;
+};
 
 
 struct tLayer
@@ -29,6 +197,21 @@ struct tLayer
                                //                       (i.e. the previous layer)
 
     vector< vector<f64> > dw_accum;
+
+    void assertState(size_t prevLayerSize) const
+    {
+        assert(prevLayerSize+1 == w.size());
+        assert(w.size() == dw_accum.size());
+        assert(a.size() == A.size());
+        assert(a.size() == da.size());
+        assert(a.size() == dA.size());
+
+        for (size_t s = 0; s < prevLayerSize+1; s++)
+        {
+            assert(A.size() == w[s].size());
+            assert(w[s].size() == dw_accum[s].size());
+        }
+    }
 
     void setSizes(u32 prevSize, u32 mySize)
     {
@@ -55,109 +238,107 @@ struct tLayer
         }
     }
 
-    void takeInput(const vector<f64>& input, u8 normalizeLayerInput)
+    vector< pair<u32,u32> > splitForWorkers(u32 size, sync::tThreadPool* pool) const
     {
-        assert(input.size()+1 == w.size());
-        assert(w.size() == dw_accum.size());
-        assert(a.size() == A.size());
-        assert(a.size() == da.size());
-        assert(a.size() == dA.size());
-
-        for (u32 i = 0; i < A.size(); i++)
-            A[i] = 0.0;
-
-        for (u32 s = 0; s < input.size(); s++)
+        vector< pair<u32,u32> > sched;
+        if (pool == NULL)
         {
-            assert(A.size() == w[s].size());
-            assert(w[s].size() == dw_accum[s].size());
-
-            for (u32 i = 0; i < A.size(); i++)
-                A[i] += w[s][i] * input[s];
+            sched.push_back(make_pair(0, size));
         }
-
-        assert(A.size() == w.back().size());
-        assert(w.back().size() == dw_accum.back().size());
-
-        for (u32 i = 0; i < A.size(); i++)
-            A[i] += w.back()[i] * 1.0;
-
-        if (normalizeLayerInput)
+        else
         {
-            for (u32 i = 0; i < A.size(); i++)
-                A[i] /= (f64) input.size();
-        }
-
-        for (u32 i = 0; i < a.size(); i++)
-            a[i] = logistic_function(A[i]);
-    }
-
-    void accumError(const vector<f64>& prev_a)
-    {
-        assert(prev_a.size()+1 == w.size());
-        assert(w.size() == dw_accum.size());
-        assert(a.size() == A.size());
-        assert(a.size() == da.size());
-        assert(a.size() == dA.size());
-
-        for (u32 i = 0; i < da.size(); i++)
-        {
-            dA[i] = da[i] * derivative_of_logistic_function(A[i]);
-        }
-
-        for (u32 s = 0; s < prev_a.size(); s++)
-        {
-            assert(dA.size() == w[s].size());
-            assert(w[s].size() == dw_accum[s].size());
-
-            for (u32 i = 0; i < dA.size(); i++)
-                dw_accum[s][i] += dA[i] * prev_a[s];
-        }
-
-        assert(dA.size() == w.back().size());
-        assert(w.back().size() == dw_accum.back().size());
-
-        for (u32 i = 0; i < dA.size(); i++)
-            dw_accum.back()[i] += dA[i] * 1.0;
-    }
-
-    void backpropagate(vector<f64>& prev_da) const
-    {
-        assert(prev_da.size()+1 == w.size());
-        assert(w.size() == dw_accum.size());
-        assert(a.size() == A.size());
-        assert(a.size() == da.size());
-        assert(a.size() == dA.size());
-
-        for (u32 s = 0; s < prev_da.size(); s++)
-        {
-            assert(dA.size() == w[s].size());
-            assert(w[s].size() == dw_accum[s].size());
-
-            prev_da[s] = 0.0;
-
-            for (u32 i = 0; i < dA.size(); i++)
-                prev_da[s] += w[s][i] * dA[i];
-        }
-    }
-
-    void updateWeights(f64 alpha)
-    {
-        assert(w.size() == dw_accum.size());
-        assert(a.size() == A.size());
-        assert(a.size() == da.size());
-        assert(a.size() == dA.size());
-
-        for (u32 s = 0; s < w.size(); s++)
-        {
-            assert(a.size() == w[s].size());
-            assert(w[s].size() == dw_accum[s].size());
-
-            for (u32 i = 0; i < w[s].size(); i++)
+            u32 nt = pool->getNumThreads();
+            u32 div = size / nt;
+            u32 rem = size % nt;
+            u32 count = 0;
+            for (u32 i = 0; i < nt; i++)
             {
-                w[s][i] -= alpha * dw_accum[s][i];
-                dw_accum[s][i] = 0.0;
+                u32 sizeHere = div;
+                if (i < rem)
+                    sizeHere++;
+                sched.push_back(make_pair(count, sizeHere));
+                count += sizeHere;
             }
+            assert(count == size);
         }
+        return sched;
+    }
+
+    void scheduleWorkers(vector< refc<sync::iRunnable> >& workers, sync::tThreadPool* pool) const
+    {
+        assert(workers.size() > 0);
+
+        if (workers.size() == 1)
+        {
+            workers[0]->run();
+        }
+
+        else
+        {
+            assert(pool != NULL);
+
+            vector<sync::tThreadPool::tTaskKey> keys(workers.size());
+
+            for (size_t i = 0; i < workers.size(); i++)
+                keys[i] = pool->push(workers[i]);
+
+            for (size_t i = 0; i < keys.size(); i++)
+                pool->wait(keys[i]);
+        }
+    }
+
+    void takeInput(const vector<f64>& input, u8 normalizeLayerInput, sync::tThreadPool* pool)
+    {
+        assertState(input.size());
+
+        vector< pair<u32,u32> > sched = splitForWorkers((u32)A.size(), pool);
+        vector< refc<sync::iRunnable> > workers(sched.size());
+        for (size_t i = 0; i < sched.size(); i++)
+        {
+            workers[i] = new tInputWorker(sched[i].first, sched[i].second, a, A, input,
+                                          w, normalizeLayerInput);
+        }
+        scheduleWorkers(workers, pool);
+    }
+
+    void accumError(const vector<f64>& prev_a, sync::tThreadPool* pool)
+    {
+        assertState(prev_a.size());
+
+        vector< pair<u32,u32> > sched = splitForWorkers((u32)dA.size(), pool);
+        vector< refc<sync::iRunnable> > workers(sched.size());
+        for (size_t i = 0; i < sched.size(); i++)
+        {
+            workers[i] = new tAccumWorker(sched[i].first, sched[i].second, A, da, dA,
+                                          prev_a, dw_accum);
+        }
+        scheduleWorkers(workers, pool);
+    }
+
+    void backpropagate(vector<f64>& prev_da, sync::tThreadPool* pool) const
+    {
+        assertState(prev_da.size());
+
+        vector< pair<u32,u32> > sched = splitForWorkers((u32)prev_da.size(), pool);
+        vector< refc<sync::iRunnable> > workers(sched.size());
+        for (size_t i = 0; i < sched.size(); i++)
+        {
+            workers[i] = new tBackpropWorker(sched[i].first, sched[i].second, prev_da, dA, w);
+        }
+        scheduleWorkers(workers, pool);
+    }
+
+    void updateWeights(f64 alpha, sync::tThreadPool* pool)
+    {
+        assertState(w.size()-1);
+
+        vector< pair<u32,u32> > sched = splitForWorkers((u32)w.size(), pool);
+        vector< refc<sync::iRunnable> > workers(sched.size());
+        for (size_t i = 0; i < sched.size(); i++)
+        {
+            workers[i] = new tUpdateWorker(sched[i].first, sched[i].second, alpha, dw_accum, w);
+        }
+        scheduleWorkers(workers, pool);
     }
 
     void pack(iWritable* out)
@@ -232,6 +413,11 @@ tANN::~tANN()
     m_numLayers = 0;
 }
 
+void tANN::setThreadPool(refc<sync::tThreadPool> pool)
+{
+    m_pool = pool;
+}
+
 void tANN::addExample(const vector<f64>& input, const vector<f64>& target,
                       vector<f64>& actualOutput)
 {
@@ -251,11 +437,11 @@ void tANN::addExample(const vector<f64>& input, const vector<f64>& target,
 
     for (u32 i = m_numLayers-1; i > 0; i--)
     {
-        m_layers[i].accumError(m_layers[i-1].a);
-        m_layers[i].backpropagate(m_layers[i-1].da);
+        m_layers[i].accumError(m_layers[i-1].a, m_pool);
+        m_layers[i].backpropagate(m_layers[i-1].da, m_pool);
     }
 
-    m_layers[0].accumError(input);
+    m_layers[0].accumError(input, m_pool);
 }
 
 void tANN::printNodeInfo(std::ostream& out) const
@@ -282,11 +468,11 @@ void tANN::updateWeights()
     {
         f64 distFromTop = m_numLayers-1-i;
         f64 alphaHere = m_alpha * std::pow(m_alphaMultiplier, distFromTop);
-        m_layers[i].updateWeights(alphaHere);
+        m_layers[i].updateWeights(alphaHere, m_pool);
     }
 }
 
-void tANN::evaluate(const vector<f64>& input, vector<f64>& output) const
+void tANN::evaluate(const vector<f64>& input, vector<f64>& output)
 {
     if (input.size()+1 != m_layers[0].w.size())
         throw eInvalidArgument("The input vector must be the same size as the ANN's input.");
@@ -295,10 +481,10 @@ void tANN::evaluate(const vector<f64>& input, vector<f64>& output) const
         if (input[i] < logistic_function_min() || input[i] > logistic_function_max())
             throw eInvalidArgument("The input vector must be in the range of the logistic function.");
 
-    m_layers[0].takeInput(input, m_normalizeLayerInput);
+    m_layers[0].takeInput(input, m_normalizeLayerInput, m_pool);
 
     for (u32 i = 1; i < m_numLayers; i++)
-        m_layers[i].takeInput(m_layers[i-1].a, m_normalizeLayerInput);
+        m_layers[i].takeInput(m_layers[i-1].a, m_normalizeLayerInput, m_pool);
 
     output = m_layers[m_numLayers-1].a;
 }
