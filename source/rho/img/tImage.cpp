@@ -297,13 +297,42 @@ void s_crop(const tImage* image, geo::tRect rect, tImage* dest)
 }
 
 static
-void s_scale(const tImage* from, double scaleFactor, tImage* to)
+u8 s_avg(const tImage* image, geo::tRect rect, u32 pixOffset, u32 bpp)
+{
+    u32 x = (u32) rect.x;
+    u32 y = (u32) rect.y;
+    u32 xend = (u32) std::ceil(rect.x + rect.width);
+    u32 yend = (u32) std::ceil(rect.y + rect.height);
+
+    const u8* buf = image->buf() + (y*image->width() + x) * bpp + pixOffset;
+
+    u32 numpix = (xend-x) * (yend-y);
+
+    u8 avg = 0;
+    u32 count = 0;
+    for (u32 r = y; r < yend; r++)
+    {
+        for (u32 c = x; c < xend; c++)
+        {
+            count += *buf;
+            while (count >= numpix)
+            {
+                avg++;
+                count -= numpix;
+            }
+            buf += bpp;
+        }
+        buf += (image->width() - xend+x) * bpp;
+    }
+
+    return avg;
+}
+
+static
+void s_scale(const tImage* from, u32 width, u32 height, tImage* to)
 {
     if (from == to)
         throw eInvalidArgument("s_scale(): source and destination must be different objects");
-
-    u32 width  = (u32) (from->width() * scaleFactor);
-    u32 height = (u32) (from->height() * scaleFactor);
 
     to->setBufUsed(0);
     to->setWidth(width);
@@ -323,24 +352,25 @@ void s_scale(const tImage* from, double scaleFactor, tImage* to)
     if (to->bufSize() < to->bufUsed())
         to->setBufSize(to->bufUsed());
 
-    u32 stride = (u32) floor(1.0 / scaleFactor);
-    u32 xstride = (u32) (stride * bpp);
-    u32 ystride = (u32) ((stride * from->width() * bpp) - (width * xstride));
-
-    const u8* fbuf = from->buf();
     u8* tbuf = to->buf();
 
-    for (u32 y = 0; y < height; y++)
+    f64 wStretch = ((f64)from->width()) / to->width();
+    f64 hStretch = ((f64)from->height()) / to->height();
+
+    geo::tRect rect(0.0, 0.0, wStretch, hStretch);
+
+    for (u32 h = 0; h < height; h++)
     {
-        for (u32 x = 0; x < width; x++)
+        rect.x = 0.0;
+        for (u32 w = 0; w < width; w++)
         {
-            for (u32 k = 0; k < bpp; k++)
+            for (u32 i = 0; i < bpp; i++)
             {
-                *tbuf++ = fbuf[k];
+                *tbuf++ = s_avg(from, rect, i, bpp);
             }
-            fbuf += xstride;
+            rect.x += wStretch;
         }
-        fbuf += ystride;
+        rect.y += hStretch;
     }
 }
 
@@ -359,9 +389,9 @@ void tImage::crop(geo::tRect rect, tImage* dest)  const
     s_crop(this, rect, dest);
 }
 
-void tImage::scale(double scaleFactor, tImage* dest)  const
+void tImage::scale(u32 width, u32 height, tImage* dest)  const
 {
-    s_scale(this, scaleFactor, dest);
+    s_scale(this, width, height, dest);
 }
 
 void tImage::convertToFormat(nImageFormat format, tImage* dest) const

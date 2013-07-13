@@ -49,8 +49,8 @@ class tImage : public bNonCopyable, public iPackable
         void verticalFlip();
         void horizontalFlip();
 
-        void crop (geo::tRect rect,    tImage* dest)  const;
-        void scale(double scaleFactor, tImage* dest)  const;
+        void crop (geo::tRect rect,       tImage* dest)  const;
+        void scale(u32 width, u32 height, tImage* dest)  const;
 
         template <int N>
         struct tPixel { u8 data[N]; };
