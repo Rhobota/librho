@@ -22,15 +22,15 @@ class tImage : public bNonCopyable, public iPackable
     public:
 
         tImage();
-        tImage(u32 bufSize);               // allocates a buffer of that size
-
-        tImage(std::string filepath, nImageFormat format);
-
+        tImage(u32 bufSize);               // <-- allocates a buffer of that size
+        tImage(std::string filepath,
+               nImageFormat format);
         ~tImage();
 
-        void copyTo(tImage* other) const;  // copies should be explicit
+        void copyTo(tImage* other) const;  // <-- copies must be explicit
+        void convertToFormat(nImageFormat format, tImage* dest) const;
 
-        void setBufSize(u32 bufSize);      // allocates a buffer of that size
+        void setBufSize(u32 bufSize);      // <-- allocates a buffer of that size
         void setBufUsed(u32 bufUsed);
         void setWidth(u32 width);
         void setHeight(u32 height);
@@ -44,28 +44,30 @@ class tImage : public bNonCopyable, public iPackable
         u32          height()   const;
         nImageFormat format()   const;
 
-        void convertToFormat(nImageFormat format, tImage* dest) const;
-
         void verticalFlip();
         void horizontalFlip();
 
         void crop (geo::tRect rect,       tImage* dest)  const;
         void scale(u32 width, u32 height, tImage* dest)  const;
 
-        template <int N>
-        struct tPixel { u8 data[N]; };
+    public:
 
-        template <int N>
-        tPixel<N> getpix(u32 x, u32 y) const;
+        struct tRow
+        {
+            u8* m_rowbuf;
+            u32 m_bpp;
+            u8* operator[] (size_t index) { return m_rowbuf+index*m_bpp; }
+        };
 
-        template <int N>
-        void setpix(u32 x, u32 y, tPixel<N> pixel);
+        tRow operator[] (size_t index);
+
+    public:
 
         // iPackable interface
         void pack(iWritable* out) const;
         void unpack(iReadable* in);
 
-    public:
+    private:
 
         u8*          m_buf;
         u32          m_bufSize;
@@ -74,23 +76,6 @@ class tImage : public bNonCopyable, public iPackable
         u32          m_height;
         nImageFormat m_format;
 };
-
-
-template <int N>
-tImage::tPixel<N> tImage::getpix(u32 x, u32 y) const
-{
-    tImage::tPixel<N> pixel;
-    for (int i = 0; i < N; i++)
-        pixel.data[i] = m_buf[y*m_width*N + x*N + i];
-    return pixel;
-}
-
-template <int N>
-void tImage::setpix(u32 x, u32 y, tImage::tPixel<N> pixel)
-{
-    for (int i = 0; i < N; i++)
-        m_buf[y*m_width*N + x*N + i] = pixel.data[i];
-}
 
 
 }    // namespace img

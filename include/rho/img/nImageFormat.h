@@ -3,6 +3,7 @@
 
 
 #include <rho/types.h>
+#include <rho/eRho.h>
 
 
 namespace rho
@@ -25,6 +26,10 @@ enum nImageFormat
     kUnspecified    = 98,
     kUnknown        = 99
 };
+
+
+// Gets the number of bytes per pixel for the given image format.
+u32 getBPP(nImageFormat format);
 
 
 // Converts an image buffer. Returns the number of bytes used of 'dest'.

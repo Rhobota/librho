@@ -8,6 +8,28 @@ namespace img
 {
 
 
+u32 getBPP(nImageFormat format)
+{
+    switch (format)
+    {
+        case kRGB16:
+            return 2;
+        case kRGB24:
+            return 3;
+        case kRGBA:
+            return 4;
+        case kBGRA:
+            return 4;
+        case kYUYV:
+            throw eInvalidArgument("YUYV doesn't really have a simple bpp value...");
+        case kGrey:
+            return 1;
+        default:
+            throw eInvalidArgument("Invalid format given. Cannot return the correct bpp.");
+    }
+}
+
+
 static inline
 u8 clip(double val)
 {

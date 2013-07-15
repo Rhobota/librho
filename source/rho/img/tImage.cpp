@@ -15,8 +15,8 @@ namespace img
 
 
 tImage::tImage()
-    : m_buf(NULL),
-      m_bufSize(0),
+    : m_buf(new u8[1024]),
+      m_bufSize(1024),
       m_bufUsed(0),
       m_width(0),
       m_height(0),
@@ -189,16 +189,19 @@ void s_verticalFlip(tImage* image)
 
     u32 bpp = bufUsed / (width * height);   // bytes-per-pixel
 
+    u8* row = buf;
     for (u32 h = 0; h < height; h++)
     {
-        u8* row = buf + (h * width * bpp);
-        for (u32 l=0, r=width-1; l < width/2; l++, r--)
+        u8* lp = row;
+        u8* rp = row + bpp*(width-1);
+        while (lp < rp)
         {
-            u8* lp = row + (l * bpp);
-            u8* rp = row + (r * bpp);
             for (u32 i = 0; i < bpp; i++)
                 std::swap(lp[i], rp[i]);
+            lp += bpp;
+            rp -= bpp;
         }
+        row += bpp * width;
     }
 }
 
@@ -233,6 +236,20 @@ void s_crop(const tImage* image, geo::tRect rect, tImage* dest)
     if (image == dest)
         throw eInvalidArgument("s_crop(): source and destination must be different objects");
 
+    if (image->width() == 0 || image->height() == 0)
+    {
+        dest->setBufUsed(0);
+        dest->setWidth(0);
+        dest->setHeight(0);
+        dest->setFormat(image->format());
+        return;
+    }
+
+    if (image->bufUsed() % (image->width() * image->height()))
+        throw eLogicError("Something is wack with the given image.");
+
+    int bpp = image->bufUsed() / (image->width() * image->height());
+
     if (rect.x < 0.0)
         rect.x = 0.0;
 
@@ -262,20 +279,10 @@ void s_crop(const tImage* image, geo::tRect rect, tImage* dest)
     u32 width = (u32) rect.width;
     u32 height = (u32) rect.height;
 
-    dest->setBufUsed(0);
+    dest->setBufUsed(width * height * bpp);
     dest->setWidth(width);
     dest->setHeight(height);
     dest->setFormat(image->format());
-
-    if (image->width() == 0 || image->height() == 0)
-        return;
-
-    if (image->bufUsed() % (image->width() * image->height()))
-        throw eLogicError("Something is wack with the given image.");
-
-    int bpp = image->bufUsed() / (image->width() * image->height());
-
-    dest->setBufUsed(width * height * bpp);
 
     if (dest->bufSize() < dest->bufUsed())
         dest->setBufSize(dest->bufUsed());
@@ -297,12 +304,17 @@ void s_crop(const tImage* image, geo::tRect rect, tImage* dest)
 }
 
 static
-u8 s_avg(const tImage* image, geo::tRect rect, u32 pixOffset, u32 bpp)
+u8 s_avg(const tImage* image, geo::tRect rect, u32 pixOffset, u32 bpp)   // helper for s_scale()
 {
     u32 x = (u32) rect.x;
     u32 y = (u32) rect.y;
     u32 xend = (u32) std::ceil(rect.x + rect.width);
     u32 yend = (u32) std::ceil(rect.y + rect.height);
+
+    if (xend > image->width())
+        xend = image->width();
+    if (yend > image->height())
+        yend = image->height();
 
     const u8* buf = image->buf() + (y*image->width() + x) * bpp + pixOffset;
 
@@ -334,13 +346,8 @@ void s_scale(const tImage* from, u32 width, u32 height, tImage* to)
     if (from == to)
         throw eInvalidArgument("s_scale(): source and destination must be different objects");
 
-    to->setBufUsed(0);
-    to->setWidth(width);
-    to->setHeight(height);
-    to->setFormat(from->format());
-
     if (from->width() == 0 || from->height() == 0)
-        return;
+        throw eInvalidArgument("s_scale(): cannot scale an image of no width or no height");
 
     if (from->bufUsed() % (from->width() * from->height()))
         throw eLogicError("Something is wack with the given image.");
@@ -348,6 +355,9 @@ void s_scale(const tImage* from, u32 width, u32 height, tImage* to)
     u32 bpp = from->bufUsed() / (from->width() * from->height());
 
     to->setBufUsed(width*height*bpp);
+    to->setWidth(width);
+    to->setHeight(height);
+    to->setFormat(from->format());
 
     if (to->bufSize() < to->bufUsed())
         to->setBufSize(to->bufUsed());
@@ -422,6 +432,15 @@ void tImage::convertToFormat(nImageFormat format, tImage* dest) const
     }
 }
 
+tImage::tRow tImage::operator[] (size_t index)
+{
+    tRow row;
+    u32 bpp = getBPP(m_format);
+    row.m_rowbuf = m_buf + index*m_width*bpp;
+    row.m_bpp = bpp;
+    return row;
+}
+
 void tImage::pack(iWritable* out) const
 {
     rho::pack(out, m_bufUsed);
@@ -434,20 +453,32 @@ void tImage::pack(iWritable* out) const
 
 void tImage::unpack(iReadable* in)
 {
-    if (m_buf)
+    try
     {
-        delete [] m_buf;
-        m_buf = NULL;
+        if (m_buf)
+        {
+            delete [] m_buf;
+            m_buf = NULL;
+        }
+        rho::unpack(in, m_bufUsed);
+        m_bufSize = m_bufUsed;
+        m_buf = new u8[m_bufSize];
+        for (u32 i = 0; i < m_bufUsed; i++)
+            rho::unpack(in, m_buf[i]);
+        rho::unpack(in, m_width);
+        rho::unpack(in, m_height);
+        u32 format; rho::unpack(in, format);
+        m_format = (nImageFormat)format;
     }
-    rho::unpack(in, m_bufUsed);
-    m_bufSize = m_bufUsed;
-    m_buf = new u8[m_bufSize];
-    for (u32 i = 0; i < m_bufUsed; i++)
-        rho::unpack(in, m_buf[i]);
-    rho::unpack(in, m_width);
-    rho::unpack(in, m_height);
-    u32 format; rho::unpack(in, format);
-    m_format = (nImageFormat)format;
+    catch (std::exception& e)
+    {
+        setBufSize(1024);
+        setBufUsed(0);
+        setWidth(0);
+        setHeight(0);
+        setFormat(kUnspecified);
+        throw e;
+    }
 }
 
 
