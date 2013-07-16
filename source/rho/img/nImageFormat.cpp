@@ -336,7 +336,7 @@ int bgra_to_rgb24(u8* source, int sourceSize,
                   u8* dest, int destSize)
 {
     if (sourceSize % 4)
-        throw eLogicError("An BGRA buffer must be a multiple of 4.");
+        throw eColorspaceConversionError("An BGRA buffer must be a multiple of 4.");
     int numPixels = sourceSize / 4;
     if (numPixels * 3 > destSize)
         throw eBufferOverflow("Not enough bytes in the RBG buffer.");
