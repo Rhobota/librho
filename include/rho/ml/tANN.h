@@ -146,9 +146,16 @@ class tANN : public rho::iPackable, public rho::bNonCopyable
          * grey image, set color to false.
          *
          * Specify the width of the image, and the height will be derived.
+         *
+         * If absolute is set to true, the absolute value of the weights
+         * will be used when producing the image. Otherwise, the relative
+         * weights will be used to produce the image (meaning that weights
+         * of value zero will be some shade of grey if any negative weights
+         * are present).
          */
         void getImage(u32 layerIndex, u32 nodeIndex,
-                      img::tImage* image, bool color, u32 width) const;
+                      img::tImage* image, bool color, u32 width,
+                      bool absolute=false) const;
 
         /**
          * Destructor...
