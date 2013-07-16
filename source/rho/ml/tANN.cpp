@@ -529,7 +529,8 @@ f64 tANN::getOutput(u32 layerIndex, u32 nodeIndex) const
 }
 
 void tANN::getImage(u32 layerIndex, u32 nodeIndex,
-                    img::tImage* image, bool color, u32 width) const
+                    img::tImage* image, bool color, u32 width,
+                    bool absolute) const
 {
     if (nodeIndex >= getNumNodesAtLayer(layerIndex))
         throw eInvalidArgument("No layer/node with that index.");
@@ -546,10 +547,19 @@ void tANN::getImage(u32 layerIndex, u32 nodeIndex,
         maxval = std::max(maxval, weights[i]);
         minval = std::min(minval, weights[i]);
     }
-    for (u32 i = 0; i < weights.size(); i++)
+    if (absolute)
     {
-        f64 val = (weights[i] - minval) * 255.0 / (maxval - minval);
-        weights[i] = val;
+        f64 absmax = std::max(std::abs(maxval), std::abs(minval));
+        for (u32 i = 0; i < weights.size(); i++)
+            weights[i] = std::abs(weights[i]) / absmax;
+    }
+    else
+    {
+        for (u32 i = 0; i < weights.size(); i++)
+        {
+            f64 val = (weights[i] - minval) * 255.0 / (maxval - minval);
+            weights[i] = val;
+        }
     }
 
     // Calculate some stuff.
