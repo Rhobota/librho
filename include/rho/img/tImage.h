@@ -9,6 +9,7 @@
 
 #include <cstdlib>
 #include <string>
+#include <vector>
 
 
 namespace rho
@@ -49,6 +50,23 @@ class tImage : public bNonCopyable, public iPackable
 
         void crop (geo::tRect rect,       tImage* dest)  const;
         void scale(u32 width, u32 height, tImage* dest)  const;
+
+        /**
+         * Adaptive thresholds the receiving image and stores the binary image
+         * result into 'dest'. Three parameters can be modified:
+         *     s: the number of trailing pixels that constitute the
+         *        running average (if -1, s will be set to width()/8)
+         *     t: the percent below the average that a pixel must be
+         *        to be made black (aka, false)
+         *     b: the starting running average value
+         *
+         * Algorithm first described by:
+         *     http://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-330.pdf
+         */
+        void adaptiveThreshold(std::vector< std::vector<bool> >& dest,
+                               i32 s = -1,
+                               i32 t = 5,
+                               i32 b = 127) const;
 
     public:
 

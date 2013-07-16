@@ -432,6 +432,79 @@ void tImage::convertToFormat(nImageFormat format, tImage* dest) const
     }
 }
 
+static
+void s_adaptiveThreshold(const tImage* image, u32 s, u32 t, u32 b,
+                         std::vector< std::vector<bool> >& dest)
+{
+    dest.resize(image->height());
+    for (size_t i = 0; i < dest.size(); i++)
+        dest[i].resize(image->width());
+
+    u32 g = b;
+    std::vector<u32> prev_g(image->width(), b);
+
+    const u8* buf = image->buf();
+
+    for (u32 h = 0; h < image->height(); h++)
+    {
+        for (u32 w = 0; w < image->width(); w++)
+        {
+            g -= g/s;
+            g += *buf;
+            u32 hh = (g + prev_g[w]) / 2;
+            if (*buf < hh/s*(100-t)/100)
+                dest[h][w] = false;
+            else
+                dest[h][w] = 255;
+            prev_g[w] = g;
+            buf++;
+        }
+        buf += image->width()-1;
+        h++;
+        if (h >= image->height())
+            break;
+        for (u32 w = image->width()-1; (int)w >= 0; w--)
+        {
+            g -= g/s;
+            g += *buf;
+            u32 hh = (g + prev_g[w]) / 2;
+            if (*buf < hh/s*(100-t)/100)
+                dest[h][w] = 0;
+            else
+                dest[h][w] = 255;
+            prev_g[w] = g;
+            buf--;
+        }
+        buf += image->width()+1;
+    }
+}
+
+void tImage::adaptiveThreshold(std::vector< std::vector<bool> >& dest,
+                               i32 s,
+                               i32 t,
+                               i32 b) const
+{
+    if (s == -1)
+        s = width() / 8;
+    if (s < 0)
+        throw eInvalidArgument("s must be >= 0 (or -1 to indicate the default value)");
+    if (t < 0)
+        throw eInvalidArgument("t must be >= 0");
+    if (b < 0)
+        throw eInvalidArgument("b must be >= 0");
+
+    if (m_format == kGrey)
+    {
+        s_adaptiveThreshold(this, (u32)s, (u32)t, (u32)b, dest);
+    }
+    else
+    {
+        tImage image;
+        convertToFormat(kGrey, &image);
+        s_adaptiveThreshold(&image, (u32)s, (u32)t, (u32)b, dest);
+    }
+}
+
 tImage::tRow tImage::operator[] (size_t index)
 {
     tRow row;
