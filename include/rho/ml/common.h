@@ -9,13 +9,17 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
-using std::vector;
 
 
 namespace rho
 {
 namespace ml
 {
+
+
+// Typedefs:
+typedef std::vector< f64 >              tIO;
+typedef std::vector< std::vector<u32> > tConfusionMatrix;
 
 
 // Logistic function:
@@ -25,27 +29,27 @@ f64 logistic_function_min();
 f64 logistic_function_max();
 
 
-// Example manipulation tools:
-vector<f64> examplify(const img::tImage* image);
-vector<f64> examplify(u32 val, u32 vectorSize);
-u32 un_examplify(const vector<f64>& output, f64* error = NULL);
+// Learner's IO manipulation tools:
+tIO examplify(const img::tImage* image);
+tIO examplify(u32 val, u32 vectorSize);
+u32 un_examplify(const tIO& output, f64* error = NULL);
 
 
 // Error measures:
-f64 standardSquaredError(const vector<f64>& output, const vector<f64>& target);
-f64 standardSquaredError(const vector< vector<f64> >& outputExamples,
-                         const vector< vector<f64> >& targetExamples);
+f64 standardSquaredError(const tIO& output, const tIO& target);
+f64 standardSquaredError(const std::vector<tIO>& outputExamples,
+                         const std::vector<tIO>& targetExamples);
 
 
 // Confusion matrix tools:
-void buildConfusionMatrix(const vector< vector<f64> >& outputExamples,
-                          const vector< vector<f64> >& targetExamples,
-                                vector< vector<u32> >& confusionMatrix);
-void print        (const vector< vector<u32> >& confusionMatrix, std::ostream& out);
-f64  errorRate    (const vector< vector<u32> >& confusionMatrix);
-f64  accuracy     (const vector< vector<u32> >& confusionMatrix);
-f64  precision    (const vector< vector<u32> >& confusionMatrix);
-f64  recall       (const vector< vector<u32> >& confusionMatrix);
+void buildConfusionMatrix(const std::vector<tIO>& outputExamples,
+                          const std::vector<tIO>& targetExamples,
+                                tConfusionMatrix& confusionMatrix);
+void print        (const tConfusionMatrix& confusionMatrix, std::ostream& out);
+f64  errorRate    (const tConfusionMatrix& confusionMatrix);
+f64  accuracy     (const tConfusionMatrix& confusionMatrix);
+f64  precision    (const tConfusionMatrix& confusionMatrix);
+f64  recall       (const tConfusionMatrix& confusionMatrix);
 
 
 }    // namespace ml
