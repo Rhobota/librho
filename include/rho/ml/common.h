@@ -29,6 +29,13 @@ f64 logistic_function_min();
 f64 logistic_function_max();
 
 
+// Hyperbolic function:
+f64 hyperbolic_function(f64 z);
+f64 derivative_of_hyperbolic_function(f64 z);
+f64 hyperbolic_function_min();
+f64 hyperbolic_function_max();
+
+
 // Learner's IO manipulation tools:
 tIO examplify(const img::tImage* image);
 tIO examplify(u32 val, u32 vectorSize);

@@ -29,6 +29,10 @@ string layerTypeToString(tANN::nLayerType type)
     {
         case tANN::kLayerTypeLogistic:
             return "logistic";
+        case tANN::kLayerTypeHyperbolic:
+            return "hyperbolic";
+        case tANN::kLayerTypeSoftmax:
+            return "softmax";
         default:
             throw eInvalidArgument("Invalid layer type");
     }
@@ -42,6 +46,10 @@ f64 squash(f64 val, tANN::nLayerType type)
     {
         case tANN::kLayerTypeLogistic:
             return logistic_function(val);
+        case tANN::kLayerTypeHyperbolic:
+            return hyperbolic_function(val);
+        case tANN::kLayerTypeSoftmax:
+            // Softmax layers must be handled specially
         default:
             throw eInvalidArgument("Invalid layer type");
     }
@@ -55,6 +63,10 @@ f64 derivative_of_squash(f64 val, tANN::nLayerType type)
     {
         case tANN::kLayerTypeLogistic:
             return derivative_of_logistic_function(val);
+        case tANN::kLayerTypeHyperbolic:
+            return derivative_of_hyperbolic_function(val);
+        case tANN::kLayerTypeSoftmax:
+            // Softmax layers must be handled specially
         default:
             throw eInvalidArgument("Invalid layer type");
     }
@@ -68,6 +80,10 @@ f64 squash_min(tANN::nLayerType type)
     {
         case tANN::kLayerTypeLogistic:
             return logistic_function_min();
+        case tANN::kLayerTypeHyperbolic:
+            return hyperbolic_function_min();
+        case tANN::kLayerTypeSoftmax:
+            return 0.0;
         default:
             throw eInvalidArgument("Invalid layer type");
     }
@@ -81,6 +97,10 @@ f64 squash_max(tANN::nLayerType type)
     {
         case tANN::kLayerTypeLogistic:
             return logistic_function_max();
+        case tANN::kLayerTypeHyperbolic:
+            return hyperbolic_function_max();
+        case tANN::kLayerTypeSoftmax:
+            return 1.0;
         default:
             throw eInvalidArgument("Invalid layer type");
     }
@@ -125,8 +145,16 @@ class tInputWorker : public sync::iRunnable
                     A[i] /= (f64) input.size();
             }
 
-            for (u32 i = off; i < off+size; i++)
-                a[i] = squash(A[i], layerType);
+            if (layerType == tANN::kLayerTypeSoftmax)
+            {
+                for (u32 i = off; i < off+size; i++)
+                    a[i] = std::exp(A[i]);
+            }
+            else
+            {
+                for (u32 i = off; i < off+size; i++)
+                    a[i] = squash(A[i], layerType);
+            }
         }
 
     private:
@@ -161,9 +189,15 @@ class tAccumWorker : public sync::iRunnable
 
         void run()
         {
-            for (u32 i = off; i < off+size; i++)
+            if (layerType == tANN::kLayerTypeSoftmax)
             {
-                dA[i] = da[i] * derivative_of_squash(A[i], layerType);
+                for (u32 i = off; i < off+size; i++)
+                    dA[i] = da[i];
+            }
+            else
+            {
+                for (u32 i = off; i < off+size; i++)
+                    dA[i] = da[i] * derivative_of_squash(A[i], layerType);
             }
 
             for (u32 s = 0; s < prev_a.size(); s++)
@@ -374,6 +408,15 @@ struct tLayer
                                           w, normalizeLayerInput, layerType);
         }
         scheduleWorkers(workers, pool);
+
+        if (layerType == tANN::kLayerTypeSoftmax)
+        {
+            f64 denom = 0.0;
+            for (size_t i = 0; i < a.size(); i++)
+                denom += a[i];
+            for (size_t i = 0; i < a.size(); i++)
+                a[i] /= denom;
+        }
     }
 
     void accumError(const vector<f64>& prev_a, sync::tThreadPool* pool)
@@ -469,6 +512,11 @@ tANN::tANN(vector<u32> layerSizes,
         throw eInvalidArgument("The learning rate multiplier must be greater than 0.0.");
     if (defaultLayerType < 0 || defaultLayerType >= kLayerTypeMax)
         throw eInvalidArgument("Invalid layer type");
+    if (defaultLayerType == kLayerTypeSoftmax)
+    {
+        throw eInvalidArgument("Only the top layer may be a softmax group. Use setLayerType() to "
+                "set the top layer to be a softmax group if that is what you want.");
+    }
 
     m_numLayers = (u32) layerSizes.size()-1;
                             // we don't need a layer for the input
@@ -508,6 +556,8 @@ void tANN::setLayerType(u32 layerIndex, nLayerType type)
         throw eInvalidArgument("No layer with that index.");
     if (type < 0 || type >= kLayerTypeMax)
         throw eInvalidArgument("Invalid layer type");
+    if (type == kLayerTypeSoftmax && layerIndex != m_numLayers-1)
+        throw eInvalidArgument("Only the top layer may be a softmax group.");
     m_layers[layerIndex].layerType = type;
 }
 
@@ -544,6 +594,18 @@ void tANN::addExample(const tIO& input, const tIO& target,
     for (u32 i = 0; i < target.size(); i++)
         if (target[i] < squash_min(type) || target[i] > squash_max(type))
             throw eInvalidArgument("The target vector must be in the range of the top layer's squashing function.");
+
+    if (type == kLayerTypeSoftmax)
+    {
+        f64 summation = 0.0;
+        for (u32 i = 0; i < target.size(); i++)
+            summation += target[i];
+        if (summation < 0.9999 || summation > 1.0001)
+        {
+            throw eInvalidArgument("For networks with a softmax top layer, the sum of the target "
+                    "vector must be 1.0");
+        }
+    }
 
     vector<f64>& top_da = m_layers[m_numLayers-1].da;
     top_da = actualOutput;
