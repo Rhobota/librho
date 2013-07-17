@@ -35,6 +35,58 @@ string layerTypeToString(tANN::nLayerType type)
 }
 
 
+static
+f64 squash(f64 val, tANN::nLayerType type)
+{
+    switch (type)
+    {
+        case tANN::kLayerTypeLogistic:
+            return logistic_function(val);
+        default:
+            throw eInvalidArgument("Invalid layer type");
+    }
+}
+
+
+static
+f64 derivative_of_squash(f64 val, tANN::nLayerType type)
+{
+    switch (type)
+    {
+        case tANN::kLayerTypeLogistic:
+            return derivative_of_logistic_function(val);
+        default:
+            throw eInvalidArgument("Invalid layer type");
+    }
+}
+
+
+static
+f64 squash_min(tANN::nLayerType type)
+{
+    switch (type)
+    {
+        case tANN::kLayerTypeLogistic:
+            return logistic_function_min();
+        default:
+            throw eInvalidArgument("Invalid layer type");
+    }
+}
+
+
+static
+f64 squash_max(tANN::nLayerType type)
+{
+    switch (type)
+    {
+        case tANN::kLayerTypeLogistic:
+            return logistic_function_max();
+        default:
+            throw eInvalidArgument("Invalid layer type");
+    }
+}
+
+
 class tInputWorker : public sync::iRunnable
 {
     public:
@@ -45,9 +97,11 @@ class tInputWorker : public sync::iRunnable
                      vector<f64>& A,
                      const vector<f64>& input,
                      const vector< vector<f64> >& w,
-                     u8 normalizeLayerInput)
+                     u8 normalizeLayerInput,
+                     tANN::nLayerType layerType)
             : off(off), size(size), a(a), A(A), input(input),
-              w(w), normalizeLayerInput(normalizeLayerInput)
+              w(w), normalizeLayerInput(normalizeLayerInput),
+              layerType(layerType)
         {
         }
 
@@ -72,7 +126,7 @@ class tInputWorker : public sync::iRunnable
             }
 
             for (u32 i = off; i < off+size; i++)
-                a[i] = logistic_function(A[i]);
+                a[i] = squash(A[i], layerType);
         }
 
     private:
@@ -84,6 +138,7 @@ class tInputWorker : public sync::iRunnable
         const vector<f64>& input;
         const vector< vector<f64> >& w;
         u8 normalizeLayerInput;
+        tANN::nLayerType layerType;
 };
 
 
@@ -97,8 +152,10 @@ class tAccumWorker : public sync::iRunnable
                      const vector<f64>& da,
                      vector<f64>& dA,
                      const vector<f64>& prev_a,
-                     vector< vector<f64> >& dw_accum)
-            : off(off), size(size), A(A), da(da), dA(dA), prev_a(prev_a), dw_accum(dw_accum)
+                     vector< vector<f64> >& dw_accum,
+                     tANN::nLayerType layerType)
+            : off(off), size(size), A(A), da(da), dA(dA), prev_a(prev_a), dw_accum(dw_accum),
+              layerType(layerType)
         {
         }
 
@@ -106,7 +163,7 @@ class tAccumWorker : public sync::iRunnable
         {
             for (u32 i = off; i < off+size; i++)
             {
-                dA[i] = da[i] * derivative_of_logistic_function(A[i]);
+                dA[i] = da[i] * derivative_of_squash(A[i], layerType);
             }
 
             for (u32 s = 0; s < prev_a.size(); s++)
@@ -128,6 +185,7 @@ class tAccumWorker : public sync::iRunnable
         vector<f64>& dA;
         const vector<f64>& prev_a;
         vector< vector<f64> >& dw_accum;
+        tANN::nLayerType layerType;
 };
 
 
@@ -313,7 +371,7 @@ struct tLayer
         for (size_t i = 0; i < sched.size(); i++)
         {
             workers[i] = new tInputWorker(sched[i].first, sched[i].second, a, A, input,
-                                          w, normalizeLayerInput);
+                                          w, normalizeLayerInput, layerType);
         }
         scheduleWorkers(workers, pool);
     }
@@ -327,7 +385,7 @@ struct tLayer
         for (size_t i = 0; i < sched.size(); i++)
         {
             workers[i] = new tAccumWorker(sched[i].first, sched[i].second, A, da, dA,
-                                          prev_a, dw_accum);
+                                          prev_a, dw_accum, layerType);
         }
         scheduleWorkers(workers, pool);
     }
@@ -482,9 +540,10 @@ void tANN::addExample(const tIO& input, const tIO& target,
     if (target.size() != actualOutput.size())
         throw eInvalidArgument("The target vector must be the same size as the ANN's output.");
 
+    nLayerType type = m_layers[m_numLayers-1].layerType;
     for (u32 i = 0; i < target.size(); i++)
-        if (target[i] < logistic_function_min() || target[i] > logistic_function_max())
-            throw eInvalidArgument("The target vector must be in the range of the logistic function.");
+        if (target[i] < squash_min(type) || target[i] > squash_max(type))
+            throw eInvalidArgument("The target vector must be in the range of the top layer's squashing function.");
 
     vector<f64>& top_da = m_layers[m_numLayers-1].da;
     top_da = actualOutput;
@@ -532,10 +591,6 @@ void tANN::evaluate(const tIO& input, tIO& output)
 {
     if (input.size()+1 != m_layers[0].w.size())
         throw eInvalidArgument("The input vector must be the same size as the ANN's input.");
-
-    for (u32 i = 0; i < input.size(); i++)
-        if (input[i] < logistic_function_min() || input[i] > logistic_function_max())
-            throw eInvalidArgument("The input vector must be in the range of the logistic function.");
 
     m_layers[0].takeInput(input, m_normalizeLayerInput, m_pool);
 
