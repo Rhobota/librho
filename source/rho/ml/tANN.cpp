@@ -4,10 +4,12 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <string>
 #include <utility>
 
 
 using std::vector;
+using std::string;
 using std::cout;
 using std::endl;
 using std::pair;
@@ -18,6 +20,19 @@ namespace rho
 {
 namespace ml
 {
+
+
+static
+string layerTypeToString(tANN::nLayerType type)
+{
+    switch (type)
+    {
+        case tANN::kLayerTypeLogistic:
+            return "logistic";
+        default:
+            throw eInvalidArgument("Invalid layer type");
+    }
+}
 
 
 class tInputWorker : public sync::iRunnable
@@ -198,6 +213,8 @@ struct tLayer
 
     vector< vector<f64> > dw_accum;
 
+    tANN::nLayerType layerType;
+
     void assertState(size_t prevLayerSize) const
     {
         assert(prevLayerSize+1 == w.size());
@@ -341,24 +358,34 @@ struct tLayer
         scheduleWorkers(workers, pool);
     }
 
-    void pack(iWritable* out)
+    void pack(iWritable* out) const
     {
-        rho::pack(out, a);
-        rho::pack(out, A);
-        rho::pack(out, da);
-        rho::pack(out, dA);
+        u8 type = (u8) layerType;
+        rho::pack(out, type);
+
+        u32 mySize = (u32) a.size();
+        u32 prevLayerSize = (u32) w.size()-1;
+        rho::pack(out, mySize);
+        rho::pack(out, prevLayerSize);
         rho::pack(out, w);
-        rho::pack(out, dw_accum);
     }
 
     void unpack(iReadable* in)
     {
-        rho::unpack(in, a);
-        rho::unpack(in, A);
-        rho::unpack(in, da);
-        rho::unpack(in, dA);
+        u8 type;
+        rho::unpack(in, type);
+        layerType = (tANN::nLayerType) type;
+
+        u32 mySize, prevLayerSize;
+        rho::unpack(in, mySize);
+        rho::unpack(in, prevLayerSize);
         rho::unpack(in, w);
-        rho::unpack(in, dw_accum);
+
+        a = vector<f64>(mySize, 0.0);
+        A = vector<f64>(mySize, 0.0);
+        da = vector<f64>(mySize, 0.0);
+        dA = vector<f64>(mySize, 0.0);
+        dw_accum = vector< vector<f64> >(prevLayerSize+1, vector<f64>(mySize, 0.0));
     }
 };
 
@@ -368,7 +395,8 @@ tANN::tANN(vector<u32> layerSizes,
            f64 alphaMultiplier,
            bool normalizeLayerInput,
            f64 randWeightMin,
-           f64 randWeightMax)
+           f64 randWeightMax,
+           nLayerType defaultLayerType)
     : m_layers(NULL),
       m_numLayers(0),
       m_alpha(alpha),
@@ -381,6 +409,8 @@ tANN::tANN(vector<u32> layerSizes,
         throw eInvalidArgument("The learning rate must be greater than 0.0.");
     if (alphaMultiplier <= 0.0)
         throw eInvalidArgument("The learning rate multiplier must be greater than 0.0.");
+    if (defaultLayerType < 0 || defaultLayerType >= kLayerTypeMax)
+        throw eInvalidArgument("Invalid layer type");
 
     m_numLayers = (u32) layerSizes.size()-1;
                             // we don't need a layer for the input
@@ -391,6 +421,7 @@ tANN::tANN(vector<u32> layerSizes,
 
     for (u32 i = 1; i < layerSizes.size(); i++)
     {
+        m_layers[i-1].layerType = defaultLayerType;
         m_layers[i-1].setSizes(layerSizes[i-1], layerSizes[i]);
         m_layers[i-1].randomizeWeights(randWeightMin, randWeightMax);
     }
@@ -411,6 +442,31 @@ tANN::~tANN()
     delete [] m_layers;
     m_layers = NULL;
     m_numLayers = 0;
+}
+
+void tANN::setLayerType(u32 layerIndex, nLayerType type)
+{
+    if (layerIndex >= m_numLayers)
+        throw eInvalidArgument("No layer with that index.");
+    if (type < 0 || type >= kLayerTypeMax)
+        throw eInvalidArgument("Invalid layer type");
+    m_layers[layerIndex].layerType = type;
+}
+
+void tANN::printNetworkInfo(std::ostream& out) const
+{
+    out << "Artificial Neural Network Info:\n";
+
+    out << "   size (top-to-bottom):";
+    for (u32 i = m_numLayers-1; (int)i >= 0; i--)
+        out << "  " << m_layers[i].a.size() << "(" << layerTypeToString(m_layers[i].layerType) << ")";
+    out << "  " << m_layers[0].w.size()-1 << "(input)\n";
+
+    out << "   learning rate:        " << m_alpha << "\n";
+    out << "   rate multiplier:      " << m_alphaMultiplier << "\n";
+    out << "   normalizes input:     " << (m_normalizeLayerInput ? "yes" : "no") << "\n";
+
+    out << endl;
 }
 
 void tANN::setThreadPool(refc<sync::tThreadPool> pool)

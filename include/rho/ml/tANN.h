@@ -25,6 +25,15 @@ class tANN : public rho::iPackable, public rho::bNonCopyable
     public:
 
         /**
+         * Each layer of the ANN has a certain type. That type defines
+         * which squashing function is used on that layer.
+         */
+        enum nLayerType {
+            kLayerTypeLogistic = 0,
+            kLayerTypeMax = 1
+        };
+
+        /**
          * layerSizes.front() will be the dimensionality of the ANN's input.
          * This layer will be called the bottom layer.
          *
@@ -57,12 +66,23 @@ class tANN : public rho::iPackable, public rho::bNonCopyable
              f64 alphaMultiplier = 1.0,
              bool normalizeLayerInput = true,
              f64 randWeightMin = -1.0,
-             f64 randWeightMax = 1.0);
+             f64 randWeightMax = 1.0,
+             nLayerType defaultLayerType = kLayerTypeLogistic);
 
         /**
          * Reads the ANN from an input stream.
          */
         tANN(iReadable* in);
+
+        /**
+         * Sets the type of the specified layer.
+         */
+        void setLayerType(u32 layerIndex, nLayerType type);
+
+        /**
+         * Prints the network size, learning rate, etc.
+         */
+        void printNetworkInfo(std::ostream& out) const;
 
         /**
          * The ANN's calculations can be parallelized in a thread pool, if you
