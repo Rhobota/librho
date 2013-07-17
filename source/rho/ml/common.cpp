@@ -31,6 +31,29 @@ f64 logistic_function_max()
 }
 
 
+f64 hyperbolic_function(f64 z)
+{
+    // Recommended by: "Efficient BackProp" (LeCun et al.)
+    return 1.7159 * std::tanh(2.0/3.0 * z);
+}
+
+f64 derivative_of_hyperbolic_function(f64 z)
+{
+    f64 s = acosh(2.0/3.0 * z);
+    return 1.14393 * s * s;
+}
+
+f64 hyperbolic_function_min()
+{
+    return -1.7159;
+}
+
+f64 hyperbolic_function_max()
+{
+    return 1.7159;
+}
+
+
 tIO examplify(const img::tImage* image)
 {
     if (image->bufUsed() == 0)

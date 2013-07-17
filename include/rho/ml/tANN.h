@@ -30,7 +30,9 @@ class tANN : public rho::iPackable, public rho::bNonCopyable
          */
         enum nLayerType {
             kLayerTypeLogistic = 0,
-            kLayerTypeMax = 1
+            kLayerTypeHyperbolic = 1,
+            kLayerTypeSoftmax = 2,
+            kLayerTypeMax = 3
         };
 
         /**
