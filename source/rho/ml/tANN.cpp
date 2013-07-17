@@ -418,8 +418,8 @@ void tANN::setThreadPool(refc<sync::tThreadPool> pool)
     m_pool = pool;
 }
 
-void tANN::addExample(const vector<f64>& input, const vector<f64>& target,
-                      vector<f64>& actualOutput)
+void tANN::addExample(const tIO& input, const tIO& target,
+                      tIO& actualOutput)
 {
     evaluate(input, actualOutput);
 
@@ -472,7 +472,7 @@ void tANN::updateWeights()
     }
 }
 
-void tANN::evaluate(const vector<f64>& input, vector<f64>& output)
+void tANN::evaluate(const tIO& input, tIO& output)
 {
     if (input.size()+1 != m_layers[0].w.size())
         throw eInvalidArgument("The input vector must be the same size as the ANN's input.");

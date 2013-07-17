@@ -77,8 +77,8 @@ class tANN : public rho::iPackable, public rho::bNonCopyable
          *
          * The inter-node weights will not be updated by this method.
          */
-        void addExample(const std::vector<f64>& input, const std::vector<f64>& target,
-                        std::vector<f64>& actualOutput);
+        void addExample(const tIO& input, const tIO& target,
+                        tIO& actualOutput);
 
         /**
          * Prints the most recently calculated error rates for each node and
@@ -97,7 +97,7 @@ class tANN : public rho::iPackable, public rho::bNonCopyable
         /**
          * Uses the current inter-node weights to evaluate the given input.
          */
-        void evaluate(const std::vector<f64>& input, std::vector<f64>& output);
+        void evaluate(const tIO& input, tIO& output);
 
         /**
          * Returns the number of layers in the network. This will be one less than

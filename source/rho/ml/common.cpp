@@ -31,27 +31,27 @@ f64 logistic_function_max()
 }
 
 
-vector<f64> examplify(const img::tImage* image)
+tIO examplify(const img::tImage* image)
 {
     if (image->bufUsed() == 0)
         throw eInvalidArgument("The example image must have at least one pixel in it!");
     const u8* buf = image->buf();
-    vector<f64> input(image->bufUsed(), 0.0);
+    tIO input(image->bufUsed(), 0.0);
     for (u32 i = 0; i < image->bufUsed(); i++)
         input[i] = buf[i] / 255.0;
     return input;
 }
 
-vector<f64> examplify(u32 val, u32 vectorSize)
+tIO examplify(u32 val, u32 vectorSize)
 {
     if (val >= vectorSize)
         throw eInvalidArgument("val must be < vectorSize");
-    vector<f64> target(vectorSize, 0.0);
+    tIO target(vectorSize, 0.0);
     target[val] = 1.0;
     return target;
 }
 
-u32 un_examplify(const vector<f64>& output, f64* error)
+u32 un_examplify(const tIO& output, f64* error)
 {
     if (output.size() == 0)
         throw eInvalidArgument("The output vector must have at least one dimension!");
@@ -65,21 +65,21 @@ u32 un_examplify(const vector<f64>& output, f64* error)
 }
 
 
-f64 standardSquaredError(const vector<f64>& output, const vector<f64>& target)
+f64 standardSquaredError(const tIO& output, const tIO& target)
 {
     if (output.size() != target.size())
         throw eInvalidArgument(
-                "The output vector must have the same dimensionality as the target vector");
+                "The output vector must have the same dimensionality as the target vector!");
     if (output.size() == 0)
-        throw eInvalidArgument("The output and target vectors must have at least one dimension");
+        throw eInvalidArgument("The output and target vectors must have at least one dimension!");
     f64 error = 0.0;
     for (size_t i = 0; i < output.size(); i++)
         error += (output[i]-target[i]) * (output[i]-target[i]);
     return 0.5*error;
 }
 
-f64 standardSquaredError(const vector< vector<f64> >& outputExamples,
-                         const vector< vector<f64> >& targetExamples)
+f64 standardSquaredError(const std::vector<tIO>& outputExamples,
+                         const std::vector<tIO>& targetExamples)
 {
     if (outputExamples.size() != targetExamples.size())
     {
@@ -99,9 +99,9 @@ f64 standardSquaredError(const vector< vector<f64> >& outputExamples,
 }
 
 
-void buildConfusionMatrix(const vector< vector<f64> >& outputExamples,
-                          const vector< vector<f64> >& targetExamples,
-                                vector< vector<u32> >& confusionMatrix)
+void buildConfusionMatrix(const std::vector<tIO>& outputExamples,
+                          const std::vector<tIO>& targetExamples,
+                                tConfusionMatrix& confusionMatrix)
 {
     if (outputExamples.size() != targetExamples.size())
     {
@@ -125,7 +125,7 @@ void buildConfusionMatrix(const vector< vector<f64> >& outputExamples,
 
     confusionMatrix.resize(outputExamples[0].size());
     for (size_t i = 0; i < confusionMatrix.size(); i++)
-        confusionMatrix[i] = vector<u32>(targetExamples[0].size(), 0);
+        confusionMatrix[i] = std::vector<u32>(targetExamples[0].size(), 0);
 
     for (size_t i = 0; i < outputExamples.size(); i++)
     {
@@ -135,13 +135,13 @@ void buildConfusionMatrix(const vector< vector<f64> >& outputExamples,
     }
 }
 
-void print        (const vector< vector<u32> >& confusionMatrix, std::ostream& out)
+void print        (const tConfusionMatrix& confusionMatrix, std::ostream& out)
 {
     out << "rho::ml::print() not implemented" << std::endl;
     throw eNotImplemented("I'm lazy right now and I don't actually need this yet.");
 }
 
-f64  errorRate    (const vector< vector<u32> >& confusionMatrix)
+f64  errorRate    (const tConfusionMatrix& confusionMatrix)
 {
     u32 total = 0;
     for (size_t i = 0; i < confusionMatrix.size(); i++)
@@ -153,7 +153,7 @@ f64  errorRate    (const vector< vector<u32> >& confusionMatrix)
     return ((f64)(total - correct)) / total;
 }
 
-f64  accuracy     (const vector< vector<u32> >& confusionMatrix)
+f64  accuracy     (const tConfusionMatrix& confusionMatrix)
 {
     u32 total = 0;
     for (size_t i = 0; i < confusionMatrix.size(); i++)
@@ -165,12 +165,12 @@ f64  accuracy     (const vector< vector<u32> >& confusionMatrix)
     return ((f64)correct) / total;
 }
 
-f64  precision    (const vector< vector<u32> >& confusionMatrix)
+f64  precision    (const tConfusionMatrix& confusionMatrix)
 {
     throw eNotImplemented("I'm lazy right now and I don't actually need this yet.");
 }
 
-f64  recall       (const vector< vector<u32> >& confusionMatrix)
+f64  recall       (const tConfusionMatrix& confusionMatrix)
 {
     throw eNotImplemented("I'm lazy right now and I don't actually need this yet.");
 }
