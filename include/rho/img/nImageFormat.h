@@ -33,9 +33,9 @@ u32 getBPP(nImageFormat format);
 
 
 // Converts an image buffer. Returns the number of bytes used of 'dest'.
-int colorspace_conversion(nImageFormat from, nImageFormat to,
-                          u8* source, int sourceSize,
-                          u8* dest, int destSize);
+i32 colorspace_conversion(nImageFormat from, nImageFormat to,
+                          u8* source, i32 sourceSize,
+                          u8* dest, i32 destSize);
 
 
 }  // namespace img

@@ -42,20 +42,20 @@ u8 clip(double val)
 
 
 static
-int no_conversion(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 no_conversion(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     if (destSize < sourceSize)
         throw eBufferOverflow("You're doing it wrong.");
-    for (int i = 0; i < sourceSize; i++)
+    for (i32 i = 0; i < sourceSize; i++)
         dest[i] = source[i];
     return sourceSize;
 }
 
 
 static
-int yuyv_to_rgb24(u8* yuyv, int yuyvSize,
-                  u8* rgb, int rgbSize)
+i32 yuyv_to_rgb24(u8* yuyv, i32 yuyvSize,
+                  u8* rgb, i32 rgbSize)
 {
     // yuyv images use four bytes to describe two pixels.
     // rbg images use three bytes to describe one pixel.
@@ -66,7 +66,7 @@ int yuyv_to_rgb24(u8* yuyv, int yuyvSize,
                 "The yuyv image buffer has an incorrect size");
     }
 
-    int numPixels = yuyvSize / 2;
+    i32 numPixels = yuyvSize / 2;
 
     if (rgbSize < numPixels * 3)
     {
@@ -75,7 +75,7 @@ int yuyv_to_rgb24(u8* yuyv, int yuyvSize,
                 "the supplied yuyv buffer.");
     }
 
-    for(int i = 0; i < yuyvSize; i += 4)
+    for(i32 i = 0; i < yuyvSize; i += 4)
     {
         u8 y0 = yuyv[i+0];
         u8 u  = yuyv[i+1];
@@ -112,8 +112,8 @@ int yuyv_to_rgb24(u8* yuyv, int yuyvSize,
 
 
 static
-int rgb24_to_yuyv(u8* rgb, int rgbSize,
-                  u8* yuyv, int yuyvSize)
+i32 rgb24_to_yuyv(u8* rgb, i32 rgbSize,
+                  u8* yuyv, i32 yuyvSize)
 {
     if (rgbSize % 3)
     {
@@ -121,7 +121,7 @@ int rgb24_to_yuyv(u8* rgb, int rgbSize,
                 "The yuyv image buffer has an incorrect size");
     }
 
-    int numPixels = rgbSize / 3;
+    i32 numPixels = rgbSize / 3;
 
     if (numPixels % 2)
     {
@@ -136,7 +136,7 @@ int rgb24_to_yuyv(u8* rgb, int rgbSize,
                 "the supplied yuyv buffer.");
     }
 
-    for (int i = 0; i < rgbSize; i += 6)
+    for (i32 i = 0; i < rgbSize; i += 6)
     {
         u8 r0 = rgb[i+0];
         u8 g0 = rgb[i+1];
@@ -158,8 +158,8 @@ int rgb24_to_yuyv(u8* rgb, int rgbSize,
 
 
 static
-int rgb16_to_rgb24(u8* source, int sourceSize,
-                   u8* dest, int destSize)
+i32 rgb16_to_rgb24(u8* source, i32 sourceSize,
+                   u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
@@ -167,8 +167,8 @@ int rgb16_to_rgb24(u8* source, int sourceSize,
 
 
 static
-int rgb16_to_rgba(u8* source, int sourceSize,
-                   u8* dest, int destSize)
+i32 rgb16_to_rgba(u8* source, i32 sourceSize,
+                   u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
@@ -176,8 +176,8 @@ int rgb16_to_rgba(u8* source, int sourceSize,
 
 
 static
-int rgb16_to_yuyv(u8* source, int sourceSize,
-                   u8* dest, int destSize)
+i32 rgb16_to_yuyv(u8* source, i32 sourceSize,
+                   u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
@@ -185,8 +185,8 @@ int rgb16_to_yuyv(u8* source, int sourceSize,
 
 
 static
-int rgb24_to_rgb16(u8* source, int sourceSize,
-                   u8* dest, int destSize)
+i32 rgb24_to_rgb16(u8* source, i32 sourceSize,
+                   u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
@@ -194,8 +194,8 @@ int rgb24_to_rgb16(u8* source, int sourceSize,
 
 
 static
-int rgb24_to_rgba(u8* source, int sourceSize,
-                   u8* dest, int destSize)
+i32 rgb24_to_rgba(u8* source, i32 sourceSize,
+                   u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
@@ -203,8 +203,8 @@ int rgb24_to_rgba(u8* source, int sourceSize,
 
 
 static
-int rgba_to_rgb16(u8* source, int sourceSize,
-                   u8* dest, int destSize)
+i32 rgba_to_rgb16(u8* source, i32 sourceSize,
+                   u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
@@ -212,8 +212,8 @@ int rgba_to_rgb16(u8* source, int sourceSize,
 
 
 static
-int rgba_to_rgb24(u8* source, int sourceSize,
-                   u8* dest, int destSize)
+i32 rgba_to_rgb24(u8* source, i32 sourceSize,
+                   u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
@@ -221,8 +221,8 @@ int rgba_to_rgb24(u8* source, int sourceSize,
 
 
 static
-int rgba_to_yuyv(u8* source, int sourceSize,
-                   u8* dest, int destSize)
+i32 rgba_to_yuyv(u8* source, i32 sourceSize,
+                   u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
@@ -230,8 +230,8 @@ int rgba_to_yuyv(u8* source, int sourceSize,
 
 
 static
-int yuyv_to_rgb16(u8* source, int sourceSize,
-                   u8* dest, int destSize)
+i32 yuyv_to_rgb16(u8* source, i32 sourceSize,
+                   u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
@@ -239,40 +239,40 @@ int yuyv_to_rgb16(u8* source, int sourceSize,
 
 
 static
-int yuyv_to_rgba(u8* source, int sourceSize,
-                   u8* dest, int destSize)
+i32 yuyv_to_rgba(u8* source, i32 sourceSize,
+                   u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
 }
 
 static
-int rgb16_to_bgra(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 rgb16_to_bgra(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
 }
 
 static
-int rgb16_to_grey(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 rgb16_to_grey(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
 }
 
 static
-int rgb24_to_bgra(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 rgb24_to_bgra(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
 }
 
 static
-int rgb24_to_grey(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 rgb24_to_grey(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     if ((sourceSize % 3) > 0)
     {
@@ -280,7 +280,7 @@ int rgb24_to_grey(u8* source, int sourceSize,
                 "to be an rgb24 image.");
     }
 
-    int numPix = sourceSize / 3;
+    i32 numPix = sourceSize / 3;
 
     if (destSize < numPix)
     {
@@ -289,7 +289,7 @@ int rgb24_to_grey(u8* source, int sourceSize,
                 "the supplied rgb24 buffer.");
     }
 
-    for (int i = 0; i < numPix; ++i)
+    for (i32 i = 0; i < numPix; ++i)
     {
         i32 r = *source++;
         i32 g = *source++;
@@ -308,39 +308,39 @@ int rgb24_to_grey(u8* source, int sourceSize,
 }
 
 static
-int rgba_to_bgra(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 rgba_to_bgra(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
 }
 
 static
-int rgba_to_grey(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 rgba_to_grey(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
 }
 
 static
-int bgra_to_rgb16(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 bgra_to_rgb16(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
 }
 
 static
-int bgra_to_rgb24(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 bgra_to_rgb24(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     if (sourceSize % 4)
         throw eColorspaceConversionError("An BGRA buffer must be a multiple of 4.");
-    int numPixels = sourceSize / 4;
+    i32 numPixels = sourceSize / 4;
     if (numPixels * 3 > destSize)
         throw eBufferOverflow("Not enough bytes in the RBG buffer.");
-    for (int i = 0; i < destSize; i += 4)
+    for (i32 i = 0; i < destSize; i += 4)
     {
         u8 b = source[i+0];
         u8 g = source[i+1];
@@ -354,61 +354,61 @@ int bgra_to_rgb24(u8* source, int sourceSize,
 }
 
 static
-int bgra_to_rgba(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 bgra_to_rgba(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
 }
 
 static
-int bgra_to_yuyv(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 bgra_to_yuyv(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
 }
 
 static
-int bgra_to_grey(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 bgra_to_grey(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
 }
 
 static
-int yuyv_to_bgra(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 yuyv_to_bgra(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
 }
 
 static
-int yuyv_to_grey(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 yuyv_to_grey(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
 }
 
 static
-int grey_to_rgb16(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 grey_to_rgb16(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
 }
 
 static
-int grey_to_rgb24(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 grey_to_rgb24(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     if (sourceSize * 3 > destSize)
         throw eBufferOverflow("Not enough space in the destination buffer.");
 
-    for (int i = 0; i < sourceSize; ++i)
+    for (i32 i = 0; i < sourceSize; ++i)
     {
         u8 pix = *source++;
         *dest++ = pix;
@@ -420,44 +420,44 @@ int grey_to_rgb24(u8* source, int sourceSize,
 }
 
 static
-int grey_to_rgba(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 grey_to_rgba(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
 }
 
 static
-int grey_to_bgra(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 grey_to_bgra(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
 }
 
 static
-int grey_to_yuyv(u8* source, int sourceSize,
-                  u8* dest, int destSize)
+i32 grey_to_yuyv(u8* source, i32 sourceSize,
+                  u8* dest, i32 destSize)
 {
     throw eNotImplemented("This function will be lazy-implemented.");
     return 0;
 }
 
 
-typedef int (*converstion_func)(u8* source, int sourceSize, u8* dest, int destSize);
+typedef i32 (*converstion_func)(u8* source, i32 sourceSize, u8* dest, i32 destSize);
 
 
 struct tConversionFunctionMatrixBuilder
 {
     tConversionFunctionMatrixBuilder()
     {
-        int numFormats = (int) kMaxImageFormat;
+        i32 numFormats = (i32) kMaxImageFormat;
 
         matrix = new converstion_func*[numFormats];
-        for (int i = 0; i < numFormats; i++)
+        for (i32 i = 0; i < numFormats; i++)
             matrix[i] = new converstion_func[numFormats];
 
-        for (int i = 0; i < numFormats; i++)
+        for (i32 i = 0; i < numFormats; i++)
             matrix[i][i] = no_conversion;
 
         matrix[kRGB16][kRGB24] = rgb16_to_rgb24;
@@ -499,8 +499,8 @@ struct tConversionFunctionMatrixBuilder
 
     ~tConversionFunctionMatrixBuilder()
     {
-        int numFormats = (int) kMaxImageFormat;
-        for (int i = 0; i < numFormats; i++)
+        i32 numFormats = (i32) kMaxImageFormat;
+        for (i32 i = 0; i < numFormats; i++)
             delete [] matrix[i];
         delete [] matrix;
     }
@@ -509,11 +509,11 @@ struct tConversionFunctionMatrixBuilder
 };
 
 
-int colorspace_conversion(nImageFormat from, nImageFormat to,
-                          u8* source, int sourceSize,
-                          u8* dest, int destSize)
+i32 colorspace_conversion(nImageFormat from, nImageFormat to,
+                          u8* source, i32 sourceSize,
+                          u8* dest, i32 destSize)
 {
-    int numFormats = (int) kMaxImageFormat;
+    i32 numFormats = (i32) kMaxImageFormat;
     if (from >= numFormats || to >= numFormats || from < 0 || to < 0)
         throw eInvalidArgument("'from' or 'to' format is invalid");
 

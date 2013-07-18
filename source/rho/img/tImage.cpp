@@ -42,7 +42,7 @@ tImage::tImage(std::string filepath, nImageFormat format)
       m_height(0),
       m_format(kUnspecified)
 {
-    int width, height, numComponents, req;
+    i32 width, height, numComponents, req;
     nImageFormat readFormat;
     switch (format)
     {
@@ -248,7 +248,7 @@ void s_crop(const tImage* image, geo::tRect rect, tImage* dest)
     if (image->bufUsed() % (image->width() * image->height()))
         throw eLogicError("Something is wack with the given image.");
 
-    int bpp = image->bufUsed() / (image->width() * image->height());
+    i32 bpp = image->bufUsed() / (image->width() * image->height());
 
     if (rect.x < 0.0)
         rect.x = 0.0;
@@ -294,7 +294,7 @@ void s_crop(const tImage* image, geo::tRect rect, tImage* dest)
     {
         for (u32 i = 0; i < width; i++)
         {
-            for (int k = 0; k < bpp; k++)
+            for (i32 k = 0; k < bpp; k++)
             {
                 *dbuf++ = *sbuf++;
             }
@@ -404,6 +404,82 @@ void tImage::scale(u32 width, u32 height, tImage* dest)  const
     s_scale(this, width, height, dest);
 }
 
+static
+void s_colorImageAtPoint(tImage* image, i32 npix, i32 x, i32 y, const u8* colorBuf, double percentage)
+{
+    if (x < 0 || x >= (i32)image->width())
+        return;
+    if (y < 0 || y >= (i32)image->height())
+        return;
+
+    u8* buf = image->buf() + npix*(y*image->width()+x);
+    for (i32 i = 0; i < npix; i++)
+    {
+        u32 val = (u32) (buf[i] + colorBuf[i]*percentage);
+        buf[i] = (u8) std::min((u32)255, val);
+    }
+}
+
+static
+void s_colorImageAtPoint(tImage* image, i32 npix, double x, double y, const u8* colorBuf)
+{
+    i32 xFloor = (i32) floor(x);
+    i32 yFloor = (i32) floor(y);
+
+    i32 xCeil = (i32) ceil(x);
+    i32 yCeil = (i32) ceil(y);
+
+    double leftRatio = xCeil == x ? 1.0 :  xCeil - x;
+    double topRatio = yCeil == y ? 1.0 :  yCeil - y;
+
+    // Left-top pixel
+    s_colorImageAtPoint(image, npix, xFloor, yFloor, colorBuf, leftRatio*topRatio);
+
+    // Right-top pixel
+    s_colorImageAtPoint(image, npix, xCeil, yFloor, colorBuf, (1.0-leftRatio)*topRatio);
+
+    // Right-bottom pixel
+    s_colorImageAtPoint(image, npix, xCeil, yCeil, colorBuf, (1.0-leftRatio)*(1.0-topRatio));
+
+    // Left-bottom pixel
+    s_colorImageAtPoint(image, npix, xFloor, yCeil, colorBuf, leftRatio*(1.0-topRatio));
+}
+
+void tImage::rotateImage(i32 originX, i32 originY, double angleDegrees,
+        tImage* dest) const
+{
+    // Create a black canvas for drawing onto.
+    tImage& canvas = *dest;
+    copyTo(&canvas);
+    for (u32 i = 0; i < canvas.bufUsed(); i++) canvas.buf()[i] = 0;
+
+    // Create the rotation matrix's cosine and sine elements.
+    double angleRad = (geo::kPI / 180.0) * angleDegrees;
+    double c = std::cos(angleRad);
+    double s = std::sin(angleRad);
+
+    // For each pixel in the image, draw it onto the canvas at its rotated position.
+    i32 npix = bufUsed() / (width()*height());
+    for (i32 y = 0; y < (i32)height(); y++)
+    {
+        for (i32 x = 0; x < (i32)width(); x++)
+        {
+            const u8* imageBuf = buf() + npix*(y*width()+x);
+
+            double xShift = x-originX;
+            double yShift = y-originY;
+
+            double xRotShift = xShift*c + yShift*s;
+            double yRotShift = -xShift*s + yShift*c;
+
+            double xRot = xRotShift+originX;
+            double yRot = yRotShift+originY;
+
+            s_colorImageAtPoint(&canvas, npix, xRot, yRot, imageBuf);
+        }
+    }
+}
+
 void tImage::convertToFormat(nImageFormat format, tImage* dest) const
 {
     if (this == dest)
@@ -414,7 +490,7 @@ void tImage::convertToFormat(nImageFormat format, tImage* dest) const
     {
         try
         {
-            int bufUsed = colorspace_conversion(m_format, format,
+            i32 bufUsed = colorspace_conversion(m_format, format,
                     m_buf, m_bufUsed,
                     dest->buf(), dest->bufSize());
             dest->setBufUsed(bufUsed);
@@ -458,7 +534,7 @@ void s_adaptiveThreshold(tImage* image, u32 s, u32 t, u32 b)
         h++;
         if (h >= image->height())
             break;
-        for (u32 w = image->width()-1; (int)w >= 0; w--)
+        for (u32 w = image->width()-1; (i32)w >= 0; w--)
         {
             g -= g/s;
             g += *buf;
