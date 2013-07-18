@@ -52,18 +52,19 @@ class tImage : public bNonCopyable, public iPackable
         void scale(u32 width, u32 height, tImage* dest)  const;
 
         /**
-         * Adaptive thresholds the receiving image and stores the binary image
-         * result into 'dest'. Three parameters can be modified:
+         * Adaptive thresholds the receiving image and stores the binary,
+         * grey-scale image result into 'dest'. Three parameters can be
+         * modified:
          *     s: the number of trailing pixels that constitute the
          *        running average (if -1, s will be set to width()/8)
          *     t: the percent below the average that a pixel must be
-         *        to be made black (aka, false)
+         *        to be turned black (it is turned white otherwise)
          *     b: the starting running average value
          *
          * Algorithm first described by:
          *     http://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-330.pdf
          */
-        void adaptiveThreshold(std::vector< std::vector<bool> >& dest,
+        void adaptiveThreshold(tImage* dest,
                                i32 s = -1,
                                i32 t = 5,
                                i32 b = 127) const;

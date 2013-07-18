@@ -39,7 +39,7 @@ f64 hyperbolic_function(f64 z)
 
 f64 derivative_of_hyperbolic_function(f64 z)
 {
-    f64 s = acosh(2.0/3.0 * z);
+    f64 s = 1.0 / std::cosh(2.0/3.0 * z);
     return 1.14393 * s * s;
 }
 

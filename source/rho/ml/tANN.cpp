@@ -148,7 +148,7 @@ class tInputWorker : public sync::iRunnable
             if (layerType == tANN::kLayerTypeSoftmax)
             {
                 for (u32 i = off; i < off+size; i++)
-                    a[i] = std::exp(A[i]);
+                    a[i] = std::min(std::exp(A[i]), 1e100);
             }
             else
             {
