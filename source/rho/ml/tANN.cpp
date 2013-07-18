@@ -181,9 +181,10 @@ class tAccumWorker : public sync::iRunnable
                      vector<f64>& dA,
                      const vector<f64>& prev_a,
                      vector< vector<f64> >& dw_accum,
+                     u8 normalizeLayerInput,
                      tANN::nLayerType layerType)
             : off(off), size(size), A(A), da(da), dA(dA), prev_a(prev_a), dw_accum(dw_accum),
-              layerType(layerType)
+              normalizeLayerInput(normalizeLayerInput), layerType(layerType)
         {
         }
 
@@ -200,14 +201,23 @@ class tAccumWorker : public sync::iRunnable
                     dA[i] = da[i] * derivative_of_squash(A[i], layerType);
             }
 
-            for (u32 s = 0; s < prev_a.size(); s++)
+            if (normalizeLayerInput)
             {
+                f64 norm = 1.0 / ((f64)prev_a.size());
+                for (u32 s = 0; s < prev_a.size(); s++)
+                    for (u32 i = off; i < off+size; i++)
+                        dw_accum[s][i] += dA[i] * prev_a[s] * norm;
                 for (u32 i = off; i < off+size; i++)
-                    dw_accum[s][i] += dA[i] * prev_a[s];
+                    dw_accum.back()[i] += dA[i] * 1.0 * norm;
             }
-
-            for (u32 i = off; i < off+size; i++)
-                dw_accum.back()[i] += dA[i] * 1.0;
+            else
+            {
+                for (u32 s = 0; s < prev_a.size(); s++)
+                    for (u32 i = off; i < off+size; i++)
+                        dw_accum[s][i] += dA[i] * prev_a[s];
+                for (u32 i = off; i < off+size; i++)
+                    dw_accum.back()[i] += dA[i] * 1.0;
+            }
         }
 
     private:
@@ -219,6 +229,7 @@ class tAccumWorker : public sync::iRunnable
         vector<f64>& dA;
         const vector<f64>& prev_a;
         vector< vector<f64> >& dw_accum;
+        u8 normalizeLayerInput;
         tANN::nLayerType layerType;
 };
 
@@ -419,7 +430,7 @@ struct tLayer
         }
     }
 
-    void accumError(const vector<f64>& prev_a, sync::tThreadPool* pool)
+    void accumError(const vector<f64>& prev_a, u8 normalizeLayerInput, sync::tThreadPool* pool)
     {
         assertState(prev_a.size());
 
@@ -428,7 +439,7 @@ struct tLayer
         for (size_t i = 0; i < sched.size(); i++)
         {
             workers[i] = new tAccumWorker(sched[i].first, sched[i].second, A, da, dA,
-                                          prev_a, dw_accum, layerType);
+                                          prev_a, dw_accum, normalizeLayerInput, layerType);
         }
         scheduleWorkers(workers, pool);
     }
@@ -614,11 +625,11 @@ void tANN::addExample(const tIO& input, const tIO& target,
 
     for (u32 i = m_numLayers-1; i > 0; i--)
     {
-        m_layers[i].accumError(m_layers[i-1].a, m_pool);
+        m_layers[i].accumError(m_layers[i-1].a, m_normalizeLayerInput, m_pool);
         m_layers[i].backpropagate(m_layers[i-1].da, m_pool);
     }
 
-    m_layers[0].accumError(input, m_pool);
+    m_layers[0].accumError(input, m_normalizeLayerInput, m_pool);
 }
 
 void tANN::printNodeInfo(std::ostream& out) const
@@ -722,9 +733,9 @@ void tANN::getImage(u32 layerIndex, u32 nodeIndex,
     }
     if (absolute)
     {
-        f64 absmax = std::max(std::abs(maxval), std::abs(minval));
+        f64 absmax = std::max(std::fabs(maxval), std::fabs(minval));
         for (u32 i = 0; i < weights.size(); i++)
-            weights[i] = std::abs(weights[i]) / absmax;
+            weights[i] = (std::fabs(weights[i]) / absmax) * 255.0;
     }
     else
     {
