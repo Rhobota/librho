@@ -2,6 +2,7 @@
 #define __rho_crypt_tRSA_h__
 
 
+#include <rho/iPackable.h>
 #include <rho/algo/tBigInteger.h>
 
 #include <string>
@@ -14,11 +15,12 @@ namespace crypt
 {
 
 
-class tRSA
+class tRSA : public iPackable
 {
     public:
 
         tRSA(std::string keyfilepath);
+        tRSA(iReadable* readable);
 
         tRSA(std::vector<u8> modulus, std::vector<u8> publicKey);
         tRSA(std::vector<u8> modulus, std::vector<u8> publicKey, std::vector<u8> privateKey);
@@ -36,6 +38,12 @@ class tRSA
         // The following can only be done for tRSA objects which have the private key:
         std::vector<u8> decrypt(std::vector<u8> ct) const;
         std::vector<u8> sign(std::vector<u8> hash)  const;
+
+    public:
+
+        // iPackable interface
+        void pack(iWritable* out) const;
+        void unpack(iReadable* in);
 
     private:
 

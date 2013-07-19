@@ -24,6 +24,12 @@ tRSA::tRSA(string keyfilepath)
         throw eInvalidArgument("Neither the modulus nor the public key may be zero.");
 }
 
+tRSA::tRSA(iReadable* readable)
+    : n(0), e(0), d(0)
+{
+    unpack(readable);
+}
+
 tRSA::tRSA(vector<u8> modulus, vector<u8> publicKey)
     : n(modulus), e(publicKey), d(0)
 {
@@ -109,6 +115,21 @@ bool tRSA::verify(vector<u8> hash, vector<u8> signature) const
         throw eInvalidArgument("The signature value must be less than the modulus.");
     algo::tBigInteger hashAsInt = sigAsInt.modPow(e, n);
     return unpad(hashAsInt.getBytes()) == hash;
+}
+
+void tRSA::pack(iWritable* out) const
+{
+    rho::pack(out, n.getBytes());
+    rho::pack(out, e.getBytes());
+    rho::pack(out, d.getBytes());
+}
+
+void tRSA::unpack(iReadable* in)
+{
+    std::vector<u8> bytes;
+    rho::unpack(in, bytes); n = algo::tBigInteger(bytes);
+    rho::unpack(in, bytes); e = algo::tBigInteger(bytes);
+    rho::unpack(in, bytes); d = algo::tBigInteger(bytes);
 }
 
 
