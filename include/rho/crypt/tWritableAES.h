@@ -4,8 +4,8 @@
 
 #include <rho/iFlushable.h>
 #include <rho/iWritable.h>
-#include <rho/crypt/eKeyLength.h>
-#include <rho/crypt/eOperationModeAES.h>
+#include <rho/crypt/nKeyLength.h>
+#include <rho/crypt/nOperationModeAES.h>
 
 #ifndef AES_BLOCK_SIZE
 #define AES_BLOCK_SIZE 16
@@ -22,8 +22,8 @@ class tWritableAES : public iWritable, public iFlushable
 {
     public:
 
-        tWritableAES(iWritable* internalStream, eOperationModeAES opmode,
-                     const u8 key[], eKeyLengthAES keylen);
+        tWritableAES(iWritable* internalStream, nOperationModeAES opmode,
+                     const u8 key[], nKeyLengthAES keylen);
 
         ~tWritableAES();
 
@@ -41,7 +41,7 @@ class tWritableAES : public iWritable, public iFlushable
         u32 m_bufUsed;
 
         // Operation mode stuff:
-        eOperationModeAES m_opmode;
+        nOperationModeAES m_opmode;
         u8 m_last_ct[AES_BLOCK_SIZE];        // <-- only used in kOpModeCBC
         bool m_hasSentInitializationVector;  // <-- only used in kOpModeCBC
 

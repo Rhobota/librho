@@ -1,5 +1,5 @@
-#ifndef __rho_crypt_eOperationModeAES_h__
-#define __rho_crypt_eOperationModeAES_h__
+#ifndef __rho_crypt_nOperationModeAES_h__
+#define __rho_crypt_nOperationModeAES_h__
 
 
 namespace rho
@@ -8,7 +8,7 @@ namespace crypt
 {
 
 
-enum eOperationModeAES
+enum nOperationModeAES
 {
     kOpModeECB,         // "electronic code book"
     kOpModeCBC          // "cipher-block chaining"
@@ -19,4 +19,4 @@ enum eOperationModeAES
 }    // namespace rho
 
 
-#endif   // __rho_crypt_eOperationModeAES_h__
+#endif   // __rho_crypt_nOperationModeAES_h__

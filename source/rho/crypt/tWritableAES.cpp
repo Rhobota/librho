@@ -12,8 +12,8 @@ namespace crypt
 {
 
 
-tWritableAES::tWritableAES(iWritable* internalStream, eOperationModeAES opmode,
-             const u8 key[], eKeyLengthAES keylen)
+tWritableAES::tWritableAES(iWritable* internalStream, nOperationModeAES opmode,
+             const u8 key[], nKeyLengthAES keylen)
     : m_stream(internalStream), m_buf(NULL),
       m_bufSize(0), m_bufUsed(0),
       m_opmode(opmode)
