@@ -28,7 +28,7 @@ void print(const vector<u8>& v)
 }
 
 
-int numBytes(crypt::eKeyLengthAES keylen)
+int numBytes(crypt::nKeyLengthAES keylen)
 {
     switch (keylen)
     {
@@ -40,7 +40,7 @@ int numBytes(crypt::eKeyLengthAES keylen)
 }
 
 
-void simpleTest(const tTest& t, crypt::eOperationModeAES opmode, u8* key, crypt::eKeyLengthAES keylen)
+void simpleTest(const tTest& t, crypt::nOperationModeAES opmode, u8* key, crypt::nKeyLengthAES keylen)
 {
     tByteWritable bw;
     tByteReadable br;
@@ -76,7 +76,7 @@ void simpleTest(const tTest& t, crypt::eOperationModeAES opmode, u8* key, crypt:
 }
 
 
-void randomFlushTest(const tTest& t, crypt::eOperationModeAES opmode, u8* key, crypt::eKeyLengthAES keylen)
+void randomFlushTest(const tTest& t, crypt::nOperationModeAES opmode, u8* key, crypt::nKeyLengthAES keylen)
 {
     tByteWritable bw;
     tByteReadable br;
