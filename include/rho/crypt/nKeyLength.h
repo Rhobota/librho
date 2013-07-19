@@ -1,5 +1,5 @@
-#ifndef __rho_crypt_eKeyLength_h__
-#define __rho_crypt_eKeyLength_h__
+#ifndef __rho_crypt_nKeyLength_h__
+#define __rho_crypt_nKeyLength_h__
 
 
 namespace rho
@@ -8,7 +8,7 @@ namespace crypt
 {
 
 
-enum eKeyLengthAES
+enum nKeyLengthAES
 {
     k128bit,
     k192bit,
@@ -20,4 +20,4 @@ enum eKeyLengthAES
 }    // namespace rho
 
 
-#endif    // __rho_crypt_eKeyLength_h__
+#endif    // __rho_crypt_nKeyLength_h__
