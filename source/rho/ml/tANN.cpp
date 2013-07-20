@@ -784,7 +784,9 @@ void tANN::getImage(u32 layerIndex, u32 nodeIndex,
     }
 
     // Add an output indicator.
-    f64 output = getOutput(layerIndex, nodeIndex);
+    nLayerType type = m_layers[layerIndex].layerType;
+    f64 output = (getOutput(layerIndex, nodeIndex) - squash_min(type))
+                    / (squash_max(type) - squash_min(type));
     u8 outputByte = (u8) (output*255.0);
     u8 red = 0;
     u8 green = (u8) (255 - outputByte);
