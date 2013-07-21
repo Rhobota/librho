@@ -568,7 +568,26 @@ void tImage::adaptiveThreshold(tImage* dest,
     s_adaptiveThreshold(dest, (u32)s, (u32)t, (u32)b);
 }
 
+u8* tImage::tRow::operator[] (size_t index)
+{
+    return m_rowbuf+index*m_bpp;
+}
+
+const u8* tImage::tRow::operator[] (size_t index) const
+{
+    return m_rowbuf+index*m_bpp;
+}
+
 tImage::tRow tImage::operator[] (size_t index)
+{
+    tRow row;
+    u32 bpp = getBPP(m_format);
+    row.m_rowbuf = m_buf + index*m_width*bpp;
+    row.m_bpp = bpp;
+    return row;
+}
+
+const tImage::tRow tImage::operator[] (size_t index) const
 {
     tRow row;
     u32 bpp = getBPP(m_format);

@@ -62,6 +62,12 @@ class tANN : public rho::iPackable, public rho::bNonCopyable
          *
          * The network's weights are initialized randomly over the uniform
          * range [randWeightMin, randWeightMax].
+         *
+         * Each layer of the ANN has a certain type which defines which
+         * squashing function is used on that layer. Each layer is
+         * initialized with the given defaultLayerType. This type may
+         * not be kLayerTypeSoftmax because only the top layer of a network
+         * can have that type (not all layers).
          */
         tANN(std::vector<u32> layerSizes,
              f64 alpha,
@@ -69,7 +75,7 @@ class tANN : public rho::iPackable, public rho::bNonCopyable
              bool normalizeLayerInput = true,
              f64 randWeightMin = -1.0,
              f64 randWeightMax = 1.0,
-             nLayerType defaultLayerType = kLayerTypeLogistic);
+             nLayerType defaultLayerType = kLayerTypeHyperbolic);
 
         /**
          * Reads the ANN from an input stream.
@@ -78,6 +84,8 @@ class tANN : public rho::iPackable, public rho::bNonCopyable
 
         /**
          * Sets the type of the specified layer.
+         *
+         * You may only specify kLayerTypeSoftmax for the top-most layer.
          */
         void setLayerType(u32 layerIndex, nLayerType type);
 
@@ -177,7 +185,7 @@ class tANN : public rho::iPackable, public rho::bNonCopyable
          */
         void getImage(u32 layerIndex, u32 nodeIndex,
                       img::tImage* image, bool color, u32 width,
-                      bool absolute=false) const;
+                      bool absolute=true) const;
 
         /**
          * Destructor...

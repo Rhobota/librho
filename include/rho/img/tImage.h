@@ -78,10 +78,13 @@ class tImage : public bNonCopyable, public iPackable
         {
             u8* m_rowbuf;
             u32 m_bpp;
-            u8* operator[] (size_t index) { return m_rowbuf+index*m_bpp; }
+
+            u8*       operator[] (size_t index);
+            const u8* operator[] (size_t index) const;
         };
 
-        tRow operator[] (size_t index);
+        tRow       operator[] (size_t index);
+        const tRow operator[] (size_t index) const;
 
     public:
 
