@@ -95,8 +95,11 @@ bool tReadableAES::refill()
         u8 initVectorCt[AES_BLOCK_SIZE];
         i32 r = m_stream.readAll(initVectorCt, AES_BLOCK_SIZE);
         if (r != AES_BLOCK_SIZE)
-            throw eRuntimeError("The AES reader could not read the CBC "
-                    "initialization vector!");
+        {
+            // throw eRuntimeError("The AES reader could not read the CBC "
+            //       "initialization vector!");
+            return false;
+        }
         rijndaelDecrypt(m_rk, m_Nr, initVectorCt, m_last_ct);
         m_hasReadInitializationVector = true;
     }
