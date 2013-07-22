@@ -1,5 +1,8 @@
 #include <rho/ml/common.h>
 
+#include <iostream>
+#include <iomanip>
+
 
 namespace rho
 {
@@ -118,7 +121,7 @@ f64 standardSquaredError(const std::vector<tIO>& outputExamples,
     f64 error = 0.0;
     for (size_t i = 0; i < outputExamples.size(); i++)
         error += standardSquaredError(outputExamples[i], targetExamples[i]);
-    return error;
+    return error / ((f64)outputExamples.size());
 }
 
 
@@ -146,22 +149,61 @@ void buildConfusionMatrix(const std::vector<tIO>& outputExamples,
         }
     }
 
-    confusionMatrix.resize(outputExamples[0].size());
+    confusionMatrix.resize(targetExamples[0].size());
     for (size_t i = 0; i < confusionMatrix.size(); i++)
-        confusionMatrix[i] = std::vector<u32>(targetExamples[0].size(), 0);
+        confusionMatrix[i] = std::vector<u32>(outputExamples[0].size(), 0);
 
     for (size_t i = 0; i < outputExamples.size(); i++)
     {
-        u32 output = un_examplify(outputExamples[i]);
         u32 target = un_examplify(targetExamples[i]);
-        confusionMatrix[output][target]++;
+        u32 output = un_examplify(outputExamples[i]);
+        confusionMatrix[target][output]++;
     }
+}
+
+static
+void printDashes(const tConfusionMatrix& confusionMatrix, std::ostream& out, u32 s, u32 w)
+{
+    for (u32 i = 1; i < s; i++)
+        out << " ";
+    out << "+";
+    for (size_t j = 0; j < confusionMatrix[0].size(); j++)
+    {
+        for (u32 i = 1; i < w; i++)
+            out << "-";
+        out << "+";
+    }
+    out << std::endl;
 }
 
 void print        (const tConfusionMatrix& confusionMatrix, std::ostream& out)
 {
-    out << "rho::ml::print() not implemented" << std::endl;
-    throw eNotImplemented("I'm lazy right now and I don't actually need this yet.");
+    if (confusionMatrix.size() == 0)
+        throw eInvalidArgument("Invalid confusion matrix");
+
+    u32 s = 14;
+    u32 w = 10;
+
+    out << "                   predicted" << std::endl;
+
+    printDashes(confusionMatrix, out, s, w);
+
+    for (size_t i = 0; i < confusionMatrix.size(); i++)
+    {
+        if (i == confusionMatrix.size()/2)
+            out << "  correct    |";
+        else
+            out << "             |";
+        for (size_t j = 0; j < confusionMatrix[i].size(); j++)
+        {
+            out << " " << std::right << std::setw(w-3) << confusionMatrix[i][j] << " |";
+        }
+        out << std::endl;
+    }
+
+    printDashes(confusionMatrix, out, s, w);
+
+    out << std::endl;
 }
 
 f64  errorRate    (const tConfusionMatrix& confusionMatrix)
@@ -190,12 +232,32 @@ f64  accuracy     (const tConfusionMatrix& confusionMatrix)
 
 f64  precision    (const tConfusionMatrix& confusionMatrix)
 {
-    throw eNotImplemented("I'm lazy right now and I don't actually need this yet.");
+    if (confusionMatrix.size() != 2)
+        throw eInvalidArgument("Precision is only defined for boolean classification.");
+    if (confusionMatrix[0].size() != 2 || confusionMatrix[1].size() != 2)
+        throw eInvalidArgument("Precision is only defined for boolean classification.");
+
+    f64 tp = (f64) confusionMatrix[1][1];
+    f64 fp = (f64) confusionMatrix[0][1];
+    //f64 tn = (f64) confusionMatrix[0][0];
+    //f64 fn = (f64) confusionMatrix[1][0];
+
+    return tp / (tp + fp);
 }
 
 f64  recall       (const tConfusionMatrix& confusionMatrix)
 {
-    throw eNotImplemented("I'm lazy right now and I don't actually need this yet.");
+    if (confusionMatrix.size() != 2)
+        throw eInvalidArgument("Recall is only defined for boolean classification.");
+    if (confusionMatrix[0].size() != 2 || confusionMatrix[1].size() != 2)
+        throw eInvalidArgument("Recall is only defined for boolean classification.");
+
+    f64 tp = (f64) confusionMatrix[1][1];
+    //f64 fp = (f64) confusionMatrix[0][1];
+    //f64 tn = (f64) confusionMatrix[0][0];
+    f64 fn = (f64) confusionMatrix[1][0];
+
+    return tp / (tp + fn);
 }
 
 
