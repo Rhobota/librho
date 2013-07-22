@@ -102,8 +102,11 @@ void tWritableAES::flush()
         rijndaelEncrypt(m_rk, m_Nr, m_last_ct, initVectorCt);
         i32 w = m_stream->writeAll(initVectorCt, AES_BLOCK_SIZE);
         if (w != AES_BLOCK_SIZE)
-            throw eRuntimeError("The AES writer could not send the CBC "
-                    "initialization vector!");
+        {
+            //throw eRuntimeError("The AES writer could not send the CBC "
+            //        "initialization vector!");
+            return;
+        }
         m_hasSentInitializationVector = true;
     }
 
@@ -146,9 +149,7 @@ void tWritableAES::flush()
     i32 r = m_stream->writeAll(m_buf, bytesToSend);
     if (r < 0 || ((u32)r) != bytesToSend)
     {
-        // This exception could be thrown through ~tWritableAES...
-        // ...so that could be bad if an exception is already in flight... :(
-        throw eRuntimeError("Could not flush the AES output stream!");
+        return;
     }
     m_bufUsed = 4;
 

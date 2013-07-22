@@ -64,7 +64,8 @@ void tBufferedWritable::flush()
     {
         // This exception could be thrown through ~tBufferedWritable...
         // ...so that could be bad if an exception is already in flight... :(
-        throw eRuntimeError("Could not flush the buffered output stream!");
+        //throw eRuntimeError("Could not flush the buffered output stream!");
+        return;
     }
     m_bufUsed = 0;
     iFlushable* flushable = dynamic_cast<iFlushable*>(m_stream);
