@@ -47,8 +47,8 @@ tWritableAES::tWritableAES(iWritable* internalStream, nOperationModeAES opmode,
             break;
 
         case kOpModeCBC:
-            for (int i = 0; i < AES_BLOCK_SIZE; i++)
-                m_last_ct[i] = (u8)(rand() % 256);   // <-- randomize the initialization vector
+            // Randomize the initialization vector
+            m_secureRand.readAll(m_last_ct, AES_BLOCK_SIZE);
             m_hasSentInitializationVector = false;
             break;
 
@@ -117,8 +117,8 @@ void tWritableAES::flush()
     // (Removes potential predictable plain text.)
     u32 extraBytes = (m_bufUsed % AES_BLOCK_SIZE);
     u32 bytesToSend = (extraBytes > 0) ? (m_bufUsed + (AES_BLOCK_SIZE-extraBytes)) : (m_bufUsed);
-    for (u32 i = m_bufUsed; i < bytesToSend; i++)
-        m_buf[i] = (u8)(rand() % 256);
+    if (bytesToSend > m_bufUsed)
+        m_secureRand.readAll(m_buf+m_bufUsed, bytesToSend-m_bufUsed);
 
     // Encrypt the whole chunk.
     u8 pt[AES_BLOCK_SIZE];

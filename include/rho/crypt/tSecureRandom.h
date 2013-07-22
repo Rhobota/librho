@@ -3,6 +3,7 @@
 
 
 #include <rho/iReadable.h>
+#include <rho/bNonCopyable.h>
 
 
 namespace rho
@@ -11,7 +12,7 @@ namespace crypt
 {
 
 
-class tSecureRandom : public iReadable
+class tSecureRandom : public iReadable, public bNonCopyable
 {
     public:
 

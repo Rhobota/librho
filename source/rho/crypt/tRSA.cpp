@@ -61,10 +61,14 @@ u32  tRSA::maxMessageLength() const
 }
 
 static
-vector<u8> pad(const vector<u8>& bytes)
+vector<u8> pad(const vector<u8>& bytes, const tSecureRandom& secureRand)
 {
+    tSecureRandom& secureRand2 = const_cast<tSecureRandom&>(secureRand);
+    u8 rnd = 0;
+    while (rnd == 0)
+        secureRand2.readAll(&rnd, 1);
+
     vector<u8> padded = bytes;
-    u8 rnd = (u8) ((rand() % 255) + 1);
     padded.push_back(rnd);
     return padded;
 }
@@ -79,7 +83,7 @@ vector<u8> unpad(const vector<u8>& bytes)
 
 vector<u8> tRSA::encrypt(vector<u8> pt) const
 {
-    algo::tBigInteger ptAsInt(pad(pt));
+    algo::tBigInteger ptAsInt(pad(pt, m_secureRand));
     if (ptAsInt >= n)
         throw eInvalidArgument("The plain text value must be less than the modulus.");
     algo::tBigInteger ctAsInt = ptAsInt.modPow(e, n);
@@ -101,7 +105,7 @@ vector<u8> tRSA::sign(vector<u8> hash) const
 {
     if (!hasPrivateKey())
         throw eLogicError("Cannot sign a hash unless the private key is available.");
-    algo::tBigInteger hashAsInt(pad(hash));
+    algo::tBigInteger hashAsInt(pad(hash, m_secureRand));
     if (hashAsInt >= n)
         throw eInvalidArgument("The hash value must be less than the modulus.");
     algo::tBigInteger sigAsInt = hashAsInt.modPow(d, n);

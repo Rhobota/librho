@@ -3,6 +3,7 @@
 
 
 #include <rho/iReadable.h>
+#include <rho/bNonCopyable.h>
 #include <rho/crypt/nKeyLength.h>
 #include <rho/crypt/nOperationModeAES.h>
 
@@ -17,7 +18,7 @@ namespace crypt
 {
 
 
-class tReadableAES : public iReadable
+class tReadableAES : public iReadable, public bNonCopyable
 {
     public:
 

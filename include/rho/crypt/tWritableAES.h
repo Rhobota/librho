@@ -2,10 +2,12 @@
 #define __rho_crypt_tWritableAES_h__
 
 
-#include <rho/iFlushable.h>
 #include <rho/iWritable.h>
+#include <rho/iFlushable.h>
+#include <rho/bNonCopyable.h>
 #include <rho/crypt/nKeyLength.h>
 #include <rho/crypt/nOperationModeAES.h>
+#include <rho/crypt/tSecureRandom.h>
 
 #ifndef AES_BLOCK_SIZE
 #define AES_BLOCK_SIZE 16
@@ -18,7 +20,7 @@ namespace crypt
 {
 
 
-class tWritableAES : public iWritable, public iFlushable
+class tWritableAES : public iWritable, public iFlushable, public bNonCopyable
 {
     public:
 
@@ -48,6 +50,9 @@ class tWritableAES : public iWritable, public iFlushable
         // Encryption state:
         u32 m_rk[60];    // size is 4*(MAXNR+1)
         int m_Nr;
+
+        // Secure random source:
+        tSecureRandom m_secureRand;
 };
 
 

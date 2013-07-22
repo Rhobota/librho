@@ -61,6 +61,8 @@ class tBufferedReadable : public iReadable, public bNonCopyable
         i32 read(u8* buffer, i32 length);
         i32 readAll(u8* buffer, i32 length);
 
+        iReadable* getInternalStream() { return m_stream; }
+
     private:
 
         bool refill();
