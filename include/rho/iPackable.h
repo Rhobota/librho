@@ -4,6 +4,7 @@
 
 #include <rho/iWritable.h>
 #include <rho/iReadable.h>
+#include <rho/eRho.h>
 #include <rho/types.h>
 
 #include <cmath>
@@ -57,7 +58,7 @@ void pack(iWritable*  out, f64  x);
 void unpack(iReadable* in, f64& x);
 
 void pack(iWritable*  out, const std::string& str);
-void unpack(iReadable* in, std::string& str);
+void unpack(iReadable* in, std::string& str, u32 maxlen = 0xFFFFFFFF);
 
 void pack(iWritable*  out, const iPackable& packable);
 void unpack(iReadable* in, iPackable& packable);
@@ -71,9 +72,11 @@ void pack(iWritable* out, const std::vector<T>& vtr)
 }
 
 template <class T>
-void unpack(iReadable* in, std::vector<T>& vtr)
+void unpack(iReadable* in, std::vector<T>& vtr, u32 maxlen = 0xFFFFFFFF)
 {
     u32 size; unpack(in, size);
+    if (size > maxlen)
+        throw eBufferOverflow("Unpacking a vector: the max length was exceeded!");
     vtr = std::vector<T>(size);
     for (u32 i = 0; i < size; i++)
         unpack(in, vtr[i]);
