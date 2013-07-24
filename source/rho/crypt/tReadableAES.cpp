@@ -137,7 +137,10 @@ bool tReadableAES::refill()
             (pt[2] <<  8) |
             (pt[3] <<  0);
         if (m_chunkBytesLeftToRead <= 4)
-            throw eImpossiblePath();
+        {
+            //throw eImpossiblePath();
+            return false;
+        }
         m_bufUsed = std::min((u32)AES_BLOCK_SIZE, m_chunkBytesLeftToRead) - 4;
         for (u32 i = 0; i < m_bufUsed; i++)
             m_buf[i] = pt[i+4];
