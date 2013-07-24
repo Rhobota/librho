@@ -120,7 +120,9 @@ class tSecureRandomInternal : public iReadable, public bNonCopyable
             #elif __MINGW32__
 
             if (!::CryptGenRandom((HCRYPTPROV)m_internal, (DWORD)length, (BYTE*)buffer))
-                throw eResourceAcquisitionError("Cannot generate any secure random bytes on windows!");
+                return 0;
+            else
+                return length;
 
             #else
             #error What platform are you on!?
@@ -147,23 +149,30 @@ class tSecureRandomInternal : public iReadable, public bNonCopyable
 
 
 tSecureRandom::tSecureRandom()
-    : m_readable(new tSecureRandomInternal)
+    : m_readable(NULL)
 {
+    tSecureRandomInternal* internal = new tSecureRandomInternal;
+    m_readable = new tBufferedReadable(internal);
 }
 
 tSecureRandom::~tSecureRandom()
 {
-    delete m_readable.getInternalStream();
+    tSecureRandomInternal* internal
+        = (tSecureRandomInternal*)m_readable->getInternalStream();
+    delete m_readable;
+    m_readable = NULL;
+    delete internal;
+    internal = NULL;
 }
 
 i32 tSecureRandom::read(u8* buffer, i32 length)
 {
-    return m_readable.read(buffer, length);
+    return m_readable->read(buffer, length);
 }
 
 i32 tSecureRandom::readAll(u8* buffer, i32 length)
 {
-    return m_readable.readAll(buffer, length);
+    return m_readable->readAll(buffer, length);
 }
 
 

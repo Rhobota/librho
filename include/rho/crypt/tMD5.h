@@ -3,6 +3,7 @@
 
 
 #include <rho/iWritable.h>
+#include <rho/bNonCopyable.h>
 #include <vector>
 
 
@@ -12,7 +13,7 @@ namespace crypt
 {
 
 
-class tMD5 : public iWritable
+class tMD5 : public iWritable, public bNonCopyable
 {
     public:
 

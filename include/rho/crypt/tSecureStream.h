@@ -7,6 +7,7 @@
 #include <rho/iReadable.h>
 #include <rho/iWritable.h>
 #include <rho/iFlushable.h>
+#include <rho/bNonCopyable.h>
 
 #include <rho/crypt/tReadableAES.h>
 #include <rho/crypt/tWritableAES.h>
@@ -19,7 +20,8 @@ namespace crypt
 {
 
 
-class tSecureStream : public iReadable, public iWritable, public iFlushable
+class tSecureStream : public iReadable, public iWritable,
+                      public iFlushable, public bNonCopyable
 {
     public:
 
