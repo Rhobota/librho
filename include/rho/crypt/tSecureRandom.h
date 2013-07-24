@@ -24,7 +24,7 @@ class tSecureRandom : public iReadable, public bNonCopyable
 
     private:
 
-        void* m_internal;
+        tBufferedReadable m_readable;
 };
 
 

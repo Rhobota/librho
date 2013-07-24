@@ -16,74 +16,102 @@ namespace crypt
 {
 
 
-tSecureRandom::tSecureRandom()
+class tSecureRandomInternal : public iReadable, public bNonCopyable
 {
-    #if __linux__ || __APPLE__ || __CYGWIN__
+    public:
 
-    m_internal = new tBufferedReadable(new tFileReadable("/dev/urandom"));
+        tSecureRandomInternal()
+        {
+            #if __linux__ || __APPLE__ || __CYGWIN__
 
-    #elif __MINGW32__
+            m_internal = new tFileReadable("/dev/urandom");
 
-    HCRYPTPROV hProvider = NULL;
-    if (!::CryptAcquireContextW(&hProvider, 0, 0, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
-        throw eResourceAcquisitionError("Cannot create a secure random thingy on windows!");
-    m_internal = hProvider;
+            #elif __MINGW32__
 
-    #else
-    #error What platform are you on!?
-    #endif
+            HCRYPTPROV hProvider = NULL;
+            if (!::CryptAcquireContextW(&hProvider, 0, 0, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
+                throw eResourceAcquisitionError("Cannot create a secure random thingy on windows!");
+            m_internal = hProvider;
+
+            #else
+            #error What platform are you on!?
+            #endif
+        }
+
+        ~tSecureRandomInternal()
+        {
+            if (m_internal)
+            {
+                #if __linux__ || __APPLE__ || __CYGWIN__
+
+                tFileReadable* fileReader = (tFileReadable*) m_internal;
+                delete fileReader;
+
+                #elif __MINGW32__
+
+                ::CryptReleaseContext((HCRYPTPROV)m_internal, 0);
+
+                #else
+                #error What platform are you on!?
+                #endif
+
+                m_internal = NULL;
+            }
+        }
+
+        i32 read(u8* buffer, i32 length)
+        {
+            #if __linux__ || __APPLE__ || __CYGWIN__
+
+            return ((tFileReadable*)m_internal)->read(buffer, length);
+
+            #elif __MINGW32__
+
+            if (!::CryptGenRandom((HCRYPTPROV)m_internal, (DWORD)length, (BYTE*)buffer))
+                throw eResourceAcquisitionError("Cannot generate any secure random bytes on windows!");
+
+            #else
+            #error What platform are you on!?
+            #endif
+        }
+
+        i32 readAll(u8* buffer, i32 length)
+        {
+            i32 amountRead = 0;
+            while (amountRead < length)
+            {
+                i32 n = read(buffer+amountRead, length-amountRead);
+                if (n <= 0)
+                    return (amountRead>0) ? amountRead : n;
+                amountRead += n;
+            }
+            return amountRead;
+        }
+
+    private:
+
+        void* m_internal;
+};
+
+
+tSecureRandom::tSecureRandom()
+    : m_readable(new tSecureRandomInternal)
+{
 }
 
 tSecureRandom::~tSecureRandom()
 {
-    if (m_internal)
-    {
-        #if __linux__ || __APPLE__ || __CYGWIN__
-
-        tBufferedReadable* bufReader = (tBufferedReadable*)m_internal;
-        iReadable* fileReader = bufReader->getInternalStream();
-        delete bufReader;
-        delete fileReader;
-
-        #elif __MINGW32__
-
-        ::CryptReleaseContext((HCRYPTPROV)m_internal, 0);
-
-        #else
-        #error What platform are you on!?
-        #endif
-
-        m_internal = NULL;
-    }
+    delete m_readable.getInternalStream();
 }
 
 i32 tSecureRandom::read(u8* buffer, i32 length)
 {
-    #if __linux__ || __APPLE__ || __CYGWIN__
-
-    return ((tBufferedReadable*)m_internal)->read(buffer, length);
-
-    #elif __MINGW32__
-
-    if (!::CryptGenRandom((HCRYPTPROV)m_internal, (DWORD)length, (BYTE*)buffer))
-        throw eResourceAcquisitionError("Cannot generate any secure random bytes on windows!");
-
-    #else
-    #error What platform are you on!?
-    #endif
+    return m_readable.read(buffer, length);
 }
 
 i32 tSecureRandom::readAll(u8* buffer, i32 length)
 {
-    i32 amountRead = 0;
-    while (amountRead < length)
-    {
-        i32 n = read(buffer+amountRead, length-amountRead);
-        if (n <= 0)
-            return (amountRead>0) ? amountRead : n;
-        amountRead += n;
-    }
-    return amountRead;
+    return m_readable.readAll(buffer, length);
 }
 
 
