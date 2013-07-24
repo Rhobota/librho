@@ -1,5 +1,5 @@
 #include <rho/crypt/tWritableAES.h>
-
+#include <rho/crypt/tSecureRandom.h>
 
 #include <rho/eRho.h>
 #include "rijndael-alg-fst.h"
@@ -48,7 +48,7 @@ tWritableAES::tWritableAES(iWritable* internalStream, nOperationModeAES opmode,
 
         case kOpModeCBC:
             // Randomize the initialization vector
-            m_secureRand.readAll(m_last_ct, AES_BLOCK_SIZE);
+            secureRand_readAll(m_last_ct, AES_BLOCK_SIZE);
             m_hasSentInitializationVector = false;
             break;
 
@@ -121,7 +121,7 @@ void tWritableAES::flush()
     u32 extraBytes = (m_bufUsed % AES_BLOCK_SIZE);
     u32 bytesToSend = (extraBytes > 0) ? (m_bufUsed + (AES_BLOCK_SIZE-extraBytes)) : (m_bufUsed);
     if (bytesToSend > m_bufUsed)
-        m_secureRand.readAll(m_buf+m_bufUsed, bytesToSend-m_bufUsed);
+        secureRand_readAll(m_buf+m_bufUsed, bytesToSend-m_bufUsed);
 
     // Encrypt the whole chunk.
     u8 pt[AES_BLOCK_SIZE];

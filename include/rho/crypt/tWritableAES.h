@@ -7,7 +7,6 @@
 #include <rho/bNonCopyable.h>
 #include <rho/crypt/nKeyLength.h>
 #include <rho/crypt/nOperationModeAES.h>
-#include <rho/crypt/tSecureRandom.h>
 
 #ifndef AES_BLOCK_SIZE
 #define AES_BLOCK_SIZE 16
@@ -50,9 +49,6 @@ class tWritableAES : public iWritable, public iFlushable, public bNonCopyable
         // Encryption state:
         u32 m_rk[60];    // size is 4*(MAXNR+1)
         int m_Nr;
-
-        // Secure random source:
-        tSecureRandom m_secureRand;
 };
 
 

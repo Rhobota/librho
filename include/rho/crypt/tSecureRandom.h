@@ -12,6 +12,17 @@ namespace crypt
 {
 
 
+// Functions used to generate secure random numbers...
+// These are locked by a global mutex (think "slow" when
+// many threads are involved).
+u8   secureRand_u8();
+u16  secureRand_u16();
+u32  secureRand_u32();
+void secureRand_readAll(u8* buffer, i32 length);
+
+
+// If you'll need a lot of secure random numbers for a long duration,
+// create your own secure random generation object.
 class tSecureRandom : public iReadable, public bNonCopyable
 {
     public:

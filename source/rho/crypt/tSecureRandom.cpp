@@ -1,5 +1,8 @@
 #include <rho/crypt/tSecureRandom.h>
 #include <rho/eRho.h>
+#include <rho/sync/tAutoSync.h>
+#include <rho/sync/tMutex.h>
+#include <rho/refc.h>
 
 #if __MINGW32__
 #include <windows.h>
@@ -14,6 +17,55 @@ namespace rho
 {
 namespace crypt
 {
+
+
+static sync::tMutex gSecureRandMutex;
+static refc<tSecureRandom> gSecureRand;
+
+
+u8   secureRand_u8()
+{
+    sync::tAutoSync as(gSecureRandMutex);
+    if (gSecureRand == NULL)
+        gSecureRand = new tSecureRandom;
+    u8 val;
+    if (gSecureRand->readAll(&val, 1) != 1)
+        throw eRuntimeError("Cannot read from the secure random stream!");
+    return val;
+}
+
+u16  secureRand_u16()
+{
+    sync::tAutoSync as(gSecureRandMutex);
+    if (gSecureRand == NULL)
+        gSecureRand = new tSecureRandom;
+    u8 vals[2];
+    if (gSecureRand->readAll(vals, 2) != 2)
+        throw eRuntimeError("Cannot read from the secure random stream!");
+    u16 val = (u16) ( (vals[0] << 8) | (vals[1]) );
+    return val;
+}
+
+u32  secureRand_u32()
+{
+    sync::tAutoSync as(gSecureRandMutex);
+    if (gSecureRand == NULL)
+        gSecureRand = new tSecureRandom;
+    u8 vals[4];
+    if (gSecureRand->readAll(vals, 4) != 4)
+        throw eRuntimeError("Cannot read from the secure random stream!");
+    u32 val = (u32) ( (vals[0] << 24) | (vals[1] << 16) | (vals[2] << 8) | (vals[3]) );
+    return val;
+}
+
+void secureRand_readAll(u8* buffer, i32 length)
+{
+    sync::tAutoSync as(gSecureRandMutex);
+    if (gSecureRand == NULL)
+        gSecureRand = new tSecureRandom;
+    if (gSecureRand->readAll(buffer, length) != length)
+        throw eRuntimeError("Cannot read from the secure random stream!");
+}
 
 
 class tSecureRandomInternal : public iReadable, public bNonCopyable

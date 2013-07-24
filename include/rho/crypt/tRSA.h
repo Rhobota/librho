@@ -5,7 +5,6 @@
 #include <rho/iPackable.h>
 #include <rho/bNonCopyable.h>
 #include <rho/algo/tBigInteger.h>
-#include <rho/crypt/tSecureRandom.h>
 
 #include <string>
 #include <vector>
@@ -52,8 +51,6 @@ class tRSA : public iPackable, public bNonCopyable
         algo::tBigInteger n;    // modulus
         algo::tBigInteger e;    // public key
         algo::tBigInteger d;    // private key
-
-        tSecureRandom m_secureRand;
 };
 
 
