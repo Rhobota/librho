@@ -1,7 +1,6 @@
 #include <rho/ip/_pre.h>   // for ntohs, ntohl, htons, htonl
 
 #include <rho/iPackable.h>
-#include <rho/eRho.h>
 
 #include <cmath>
 #include <cstdlib>
@@ -319,9 +318,11 @@ void pack(iWritable* out, const std::string& str)
         pack(out, (u8)str[i]);
 }
 
-void unpack(iReadable* in, std::string& str)
+void unpack(iReadable* in, std::string& str, u32 maxlen)
 {
     u32 length; unpack(in, length);
+    if (length > maxlen)
+        throw eBufferOverflow("Unpacking a string: the max length was exceeded!");
     str = "";
     for (u32 i = 0; i < length; i++)
     {
