@@ -149,8 +149,7 @@ tSecureRandom::tSecureRandom()
 
 tSecureRandom::~tSecureRandom()
 {
-    tSecureRandomInternal* internal
-        = (tSecureRandomInternal*)m_readable->getInternalStream();
+    iReadable* internal = m_readable->getInternalStream();
     delete m_readable;
     m_readable = NULL;
     delete internal;
