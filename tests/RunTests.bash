@@ -34,6 +34,8 @@ then
     TEST_DIR="$1"
 fi
 
+RUN_PREFIX="$2"
+
 function cleanup
 {
     rm -rf "$OUT_FILE"*
@@ -64,9 +66,14 @@ do
     compileStatus=$?
     if [ $compileStatus -eq 0 ]
     then
-        ./"$OUT_FILE" &
-        testPid=$!
-        wait $testPid
+        if [ -n "$RUN_PREFIX" ]
+        then
+            "$RUN_PREFIX" ./"$OUT_FILE"
+        else
+            ./"$OUT_FILE" &
+            testPid=$!
+            wait $testPid
+        fi
         testStatus=$?
         echo
         if [ $testStatus -ne 0 ]
