@@ -159,6 +159,13 @@ void tWritableAES::flush()
         flushable->flush();
 }
 
+void tWritableAES::reset()
+{
+    m_bufUsed = 4;
+    if (m_opmode == kOpModeCBC)
+        m_hasSentInitializationVector = false;
+}
+
 
 }   // namespace crypt
 }   // namespace rho

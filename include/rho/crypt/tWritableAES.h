@@ -33,6 +33,8 @@ class tWritableAES : public iWritable, public iFlushable, public bNonCopyable
 
         void flush();
 
+        void reset();
+
     private:
 
         // Stuff:
