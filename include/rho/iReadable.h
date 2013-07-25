@@ -54,6 +54,14 @@ class tBufferedReadable : public iReadable, public bNonCopyable
 {
     public:
 
+        /**
+         * Creates a buffered stream using the given stream as the source.
+         * This buffered stream does not take ownership of the given stream,
+         * so you must make sure that it does not get deleted until after
+         * this buffered stream has been deleted. Also, you must delete
+         * the given stream yourself; it is not automatically managed by
+         * this object.
+         */
         tBufferedReadable(iReadable* internalStream, u32 bufSize=4096);
 
         ~tBufferedReadable();
@@ -65,7 +73,7 @@ class tBufferedReadable : public iReadable, public bNonCopyable
 
     private:
 
-        bool refill();
+        bool m_refill();
 
     private:
 

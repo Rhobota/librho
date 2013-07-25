@@ -34,14 +34,13 @@ class tReadableAES : public iReadable, public bNonCopyable
 
     private:
 
-        bool refill();
+        bool m_refill();
 
     private:
 
         // Stuff:
         tBufferedReadable m_stream;
-        u8* m_buf;
-        u32 m_bufSize;
+        u8  m_buf[AES_BLOCK_SIZE];
         u32 m_bufUsed;
         u32 m_pos;
         u32 m_chunkBytesLeftToRead;

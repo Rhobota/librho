@@ -15,15 +15,11 @@ namespace crypt
 
 tReadableAES::tReadableAES(iReadable* internalStream, nOperationModeAES opmode,
              const u8 key[], nKeyLengthAES keylen)
-    : m_stream(internalStream), m_buf(NULL),
-      m_bufSize(0), m_bufUsed(0), m_pos(0),
+    : m_stream(internalStream),
+      m_bufUsed(0), m_pos(0),
       m_chunkBytesLeftToRead(0),
       m_opmode(opmode)
 {
-    // Setup stuff...
-    m_bufSize = AES_BLOCK_SIZE;
-    m_buf = new u8[m_bufSize];
-
     // Setup encryption state...
     int keybits;
     int expectedNr;
@@ -54,18 +50,13 @@ tReadableAES::tReadableAES(iReadable* internalStream, nOperationModeAES opmode,
 
 tReadableAES::~tReadableAES()
 {
-    delete [] m_buf;
-    m_buf = NULL;
-    m_bufSize = 0;
-    m_bufUsed = 0;
-    m_pos = 0;
-    m_chunkBytesLeftToRead = 0;
+    // Nothing to do...
 }
 
 i32 tReadableAES::read(u8* buffer, i32 length)
 {
     if (m_pos >= m_bufUsed)
-        if (! refill())      // sets m_pos and m_bufUsed
+        if (! m_refill())      // sets m_pos and m_bufUsed
             return -1;
     i32 i;
     for (i = 0; i < length && m_pos < m_bufUsed; i++)
@@ -86,9 +77,13 @@ i32 tReadableAES::readAll(u8* buffer, i32 length)
     return amountRead;
 }
 
-bool tReadableAES::refill()
+bool tReadableAES::m_refill()
 {
-    // If in cbc mode and this is the first time refill is called, read the
+    // Reset indices.
+    m_pos = 0;
+    m_bufUsed = 0;
+
+    // If in cbc mode and this is the first time m_refill is called, read the
     // initialization vector off the stream and decrypt it.
     if (m_opmode == kOpModeCBC && !m_hasReadInitializationVector)
     {
@@ -96,23 +91,19 @@ bool tReadableAES::refill()
         i32 r = m_stream.readAll(initVectorCt, AES_BLOCK_SIZE);
         if (r != AES_BLOCK_SIZE)
         {
-            // throw eRuntimeError("The AES reader could not read the CBC "
-            //       "initialization vector!");
-            return false;
+            return (r >= 0);  // <-- makes read() give the expected behavior
         }
         rijndaelDecrypt(m_rk, m_Nr, initVectorCt, m_last_ct);
         m_hasReadInitializationVector = true;
     }
 
-    // Reset indices.
-    m_pos = 0;
-    m_bufUsed = 0;
-
     // Read an AES block from the stream.
     u8  ct[AES_BLOCK_SIZE];
     i32 r = m_stream.readAll(ct, AES_BLOCK_SIZE);
     if (r != AES_BLOCK_SIZE)
-        return false;
+    {
+        return (r >= 0);  // <-- makes read() give the expected behavior
+    }
 
     // Decrypt the ct buffer into the pt buffer.
     u8 pt[AES_BLOCK_SIZE];
@@ -138,8 +129,7 @@ bool tReadableAES::refill()
             (pt[3] <<  0);
         if (m_chunkBytesLeftToRead <= 4)
         {
-            //throw eImpossiblePath();
-            return false;
+            throw eRuntimeError("This stream is not a valid AES stream.");
         }
         m_bufUsed = std::min((u32)AES_BLOCK_SIZE, m_chunkBytesLeftToRead) - 4;
         for (u32 i = 0; i < m_bufUsed; i++)
@@ -163,6 +153,8 @@ void tReadableAES::reset()
     m_pos = 0;
     m_bufUsed = 0;
     m_chunkBytesLeftToRead = 0;
+    if (m_opmode == kOpModeCBC)
+        m_hasReadInitializationVector = false;
 }
 
 

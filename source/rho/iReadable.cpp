@@ -18,6 +18,8 @@ tBufferedReadable::tBufferedReadable(
 {
     if (m_stream == NULL)
         throw eNullPointer("internalStream must not be NULL.");
+    if (bufSize == 0)
+        throw eInvalidArgument("The buffer size must be positive.");
     m_buf = new u8[bufSize];
     m_bufSize = bufSize;
 }
@@ -35,7 +37,7 @@ tBufferedReadable::~tBufferedReadable()
 i32 tBufferedReadable::read(u8* buffer, i32 length)
 {
     if (m_pos >= m_bufUsed)
-        if (! refill())      // sets m_pos and m_bufUsed
+        if (! m_refill())      // sets m_pos and m_bufUsed
             return -1;
     i32 i;
     for (i = 0; i < length && m_pos < m_bufUsed; i++)
@@ -56,7 +58,7 @@ i32 tBufferedReadable::readAll(u8* buffer, i32 length)
     return amountRead;
 }
 
-bool tBufferedReadable::refill()
+bool tBufferedReadable::m_refill()
 {
     m_pos = 0;
     m_bufUsed = 0;
