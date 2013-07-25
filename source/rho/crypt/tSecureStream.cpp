@@ -21,6 +21,8 @@ tSecureStream::tSecureStream(refc<iReadable> internalReadable,
     : m_internal_readable(internalReadable),
       m_internal_writable(internalWritable)
 {
+    if (internalReadable == NULL || internalWritable == NULL)
+        throw eInvalidArgument("The internal streams may not be null.");
     if (rsa.hasPrivateKey())
         m_setupServer(rsa, appGreeting);
     else
