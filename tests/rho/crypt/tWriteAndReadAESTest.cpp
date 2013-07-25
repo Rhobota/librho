@@ -60,6 +60,7 @@ void simpleTest(const tTest& t, crypt::nOperationModeAES opmode, u8* key, crypt:
 
         // Write the message to the AES writer (encryption).
         bw.reset();
+        cw.reset();
         cw.writeAll(&pt1[0], pt1.size());
         cw.flush();
 
@@ -96,6 +97,7 @@ void randomFlushTest(const tTest& t, crypt::nOperationModeAES opmode, u8* key, c
 
         // Write the message to the AES writer (encryption).
         bw.reset();
+        cw.reset();
         size_t w = 0;
         while (w < pt1.size())
         {
