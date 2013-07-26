@@ -18,13 +18,8 @@ tWritableAES::tWritableAES(iWritable* internalStream, nOperationModeAES opmode,
       m_bufSize(0), m_bufUsed(0),
       m_opmode(opmode)
 {
-    // Setup stuff...
     if (m_stream == NULL)
         throw eNullPointer("internalStream must not be NULL.");
-    m_bufSize = AES_BLOCK_SIZE*512;
-    m_buf = new u8[m_bufSize];
-    m_bufUsed = 4;               // <-- the first four bytes are used to store
-                                 //     the size of the chunk
 
     // Setup encryption state...
     int keybits;
@@ -54,6 +49,12 @@ tWritableAES::tWritableAES(iWritable* internalStream, nOperationModeAES opmode,
 
         default: throw eInvalidArgument("opmode is not recognized!");
     }
+
+    // Alloc stuff...
+    m_bufSize = AES_BLOCK_SIZE*512;
+    m_buf = new u8[m_bufSize];
+    m_bufUsed = 4;               // <-- the first four bytes are used to store
+                                 //     the size of the chunk
 }
 
 tWritableAES::~tWritableAES()
@@ -69,7 +70,8 @@ tWritableAES::~tWritableAES()
 i32 tWritableAES::write(const u8* buffer, i32 length)
 {
     if (m_bufUsed >= m_bufSize)
-        flush();                     // <-- resets m_bufUsed to 0
+        if (! flush())    // <-- if successful, resets m_bufUsed to 4
+            return 0;
     i32 i;
     for (i = 0; i < length && m_bufUsed < m_bufSize; i++)
         m_buf[m_bufUsed++] = buffer[i];
@@ -89,10 +91,10 @@ i32 tWritableAES::writeAll(const u8* buffer, i32 length)
     return amountWritten;
 }
 
-void tWritableAES::flush()
+bool tWritableAES::flush()
 {
     if (m_bufUsed <= 4)
-        return;
+        return true;
 
     // If in cbc mode and this is the first flush, send the initialization
     // vector to the reader.
@@ -102,11 +104,7 @@ void tWritableAES::flush()
         rijndaelEncrypt(m_rk, m_Nr, m_last_ct, initVectorCt);
         i32 w = m_stream->writeAll(initVectorCt, AES_BLOCK_SIZE);
         if (w != AES_BLOCK_SIZE)
-        {
-            //throw eRuntimeError("The AES writer could not send the CBC "
-            //        "initialization vector!");
-            return;
-        }
+            return false;
         m_hasSentInitializationVector = true;
     }
 
@@ -148,15 +146,15 @@ void tWritableAES::flush()
     // Send the chunk.
     i32 r = m_stream->writeAll(m_buf, bytesToSend);
     if (r < 0 || ((u32)r) != bytesToSend)
-    {
-        return;
-    }
+        return false;
     m_bufUsed = 4;
 
     // Flush the lower buffer if it supports flushing.
     iFlushable* flushable = dynamic_cast<iFlushable*>(m_stream);
     if (flushable)
-        flushable->flush();
+        return flushable->flush();
+    else
+        return true;
 }
 
 void tWritableAES::reset()

@@ -10,7 +10,7 @@ class iFlushable
 {
     public:
 
-        virtual void flush() = 0;
+        virtual bool flush() = 0;
 
         virtual ~iFlushable() { }
 };

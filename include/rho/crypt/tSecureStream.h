@@ -38,7 +38,7 @@ class tSecureStream : public iReadable, public iWritable,
         i32 write(const u8* buffer, i32 length);
         i32 writeAll(const u8* buffer, i32 length);
 
-        void flush();
+        bool flush();
 
     private:
 
