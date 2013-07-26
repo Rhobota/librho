@@ -29,8 +29,9 @@ class iWritable
          *
          * Returns the number of bytes actually written,
          * or 0 if an error occurred and nothing was written.
-         * The stream is not guaranteed to be functional
-         * after an error occurs.
+         *
+         * A well-behaved writable will return 0 on all subsequent
+         * calls after it has returned 0 once.
          */
         virtual i32 write(const u8* buffer, i32 length) = 0;
 
@@ -42,8 +43,9 @@ class iWritable
          *
          * Returns 'length' if all bytes were written, or less
          * then 'length' if an error occurred while writing.
-         * The stream is not guaranteed to be functional
-         * after an error occurs.
+         *
+         * A well-behaved writable will return 0 on all subsequent
+         * calls after it has returned less-than-length once.
          */
         virtual i32 writeAll(const u8* buffer, i32 length) = 0;
 
@@ -56,6 +58,13 @@ class tBufferedWritable : public iWritable, public iFlushable,
 {
     public:
 
+        /**
+         * This buffered writable does not own the internal stream.
+         * You must ensure the internal stream does not get deleted
+         * while this buffered writable is alive. Also, you are
+         * responsible for deleting the internal stream after this
+         * writer is gone.
+         */
         tBufferedWritable(iWritable* internalStream, u32 bufSize=4096);
 
         ~tBufferedWritable();
@@ -63,7 +72,7 @@ class tBufferedWritable : public iWritable, public iFlushable,
         i32 write(const u8* buffer, i32 length);
         i32 writeAll(const u8* buffer, i32 length);
 
-        void flush();
+        bool flush();
 
     private:
 
@@ -86,7 +95,7 @@ class tFileWritable : public iWritable, public iFlushable,
         i32 write(const u8* buffer, i32 length);
         i32 writeAll(const u8* buffer, i32 length);
 
-        void flush();
+        bool flush();
 
         std::string getFilename() const;
 
@@ -94,6 +103,7 @@ class tFileWritable : public iWritable, public iFlushable,
 
         std::string m_filename;
         FILE* m_file;
+        bool m_writeEOF;
 };
 
 

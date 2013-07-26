@@ -13,9 +13,10 @@ class tFoo : public iFlushable
 {
     public:
 
-        void flush()
+        bool flush()
         {
             gItWorked++;
+            return true;
         }
 
         ~tFoo()

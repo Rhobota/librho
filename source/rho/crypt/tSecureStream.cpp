@@ -57,9 +57,9 @@ i32 tSecureStream::writeAll(const u8* buffer, i32 length)
     return m_writable->writeAll(buffer, length);
 }
 
-void tSecureStream::flush()
+bool tSecureStream::flush()
 {
-    m_writable->flush();
+    return m_writable->flush();
 }
 
 static
@@ -86,7 +86,8 @@ void s_flush(iWritable* writable)
 {
     iFlushable* flushable = dynamic_cast<iFlushable*>(writable);
     if (flushable)
-        flushable->flush();
+        if (! flushable->flush())
+            throw eRuntimeError("Couldn't flush internal writable.");
 }
 
 static
@@ -144,7 +145,7 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
     vector<u8> randVect;
     secureRand_readAll(&randVect[0], (i32)randLen);
     rho::pack(secureWritable, randVect);
-    secureWritable->flush();
+    if (!secureWritable->flush()) throw eRuntimeError("Couldn't flush secure stream.");
     vector<u8> receivedRand;
     rho::unpack(secureReadable, receivedRand, randLen);
     if (s_reverse(receivedRand) != randVect)
@@ -154,7 +155,7 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
     rho::unpack(secureReadable, receivedRand, 300);
     receivedRand = s_reverse(receivedRand);
     rho::pack(secureWritable, receivedRand);
-    secureWritable->flush();
+    if (!secureWritable->flush()) throw eRuntimeError("Couldn't flush secure stream.");
 
     // All is well, so make this official!
     m_readable = secureReadable;
@@ -207,14 +208,14 @@ void tSecureStream::m_setupClient(const tRSA& rsa, string appGreeting)
     rho::unpack(secureReadable, receivedRand, 300);
     receivedRand = s_reverse(receivedRand);
     rho::pack(secureWritable, receivedRand);
-    secureWritable->flush();
+    if (!secureWritable->flush()) throw eRuntimeError("Couldn't flush secure stream.");
 
     // Let myself randomize communication with the server.
     u32 randLen = secureRand_u8() + 20;
     vector<u8> randVect;
     secureRand_readAll(&randVect[0], (i32)randLen);
     rho::pack(secureWritable, randVect);
-    secureWritable->flush();
+    if (!secureWritable->flush()) throw eRuntimeError("Couldn't flush secure stream.");
     rho::unpack(secureReadable, receivedRand, randLen);
     if (s_reverse(receivedRand) != randVect)
         throw eRuntimeError("The secure server failed the random challenge.");
