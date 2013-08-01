@@ -36,6 +36,9 @@ tBufferedWritable::~tBufferedWritable()
 
 i32 tBufferedWritable::write(const u8* buffer, i32 length)
 {
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
     if (m_bufUsed >= m_bufSize)
         if (! flush())    // <-- if successful, resets m_bufUsed to 0
             return 0;
@@ -47,6 +50,9 @@ i32 tBufferedWritable::write(const u8* buffer, i32 length)
 
 i32 tBufferedWritable::writeAll(const u8* buffer, i32 length)
 {
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
     i32 amountWritten = 0;
     while (amountWritten < length)
     {
@@ -98,6 +104,9 @@ tFileWritable::~tFileWritable()
 
 i32 tFileWritable::write(const u8* buffer, i32 length)
 {
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
     if (m_writeEOF)
         return 0;
 
@@ -116,6 +125,9 @@ i32 tFileWritable::write(const u8* buffer, i32 length)
 
 i32 tFileWritable::writeAll(const u8* buffer, i32 length)
 {
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
     i32 amountWritten = 0;
     while (amountWritten < length)
     {

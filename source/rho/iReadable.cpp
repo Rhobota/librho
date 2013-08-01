@@ -36,6 +36,9 @@ tBufferedReadable::~tBufferedReadable()
 
 i32 tBufferedReadable::read(u8* buffer, i32 length)
 {
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
     if (m_pos >= m_bufUsed)
         if (! m_refill())      // sets m_pos and m_bufUsed
             return -1;
@@ -47,6 +50,9 @@ i32 tBufferedReadable::read(u8* buffer, i32 length)
 
 i32 tBufferedReadable::readAll(u8* buffer, i32 length)
 {
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
     i32 amountRead = 0;
     while (amountRead < length)
     {
@@ -90,6 +96,9 @@ tFileReadable::~tFileReadable()
 
 i32 tFileReadable::read(u8* buffer, i32 length)
 {
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
     // If we've already seen the eof, return -1.
     if (m_eof)
         return -1;
@@ -117,6 +126,9 @@ i32 tFileReadable::read(u8* buffer, i32 length)
 
 i32 tFileReadable::readAll(u8* buffer, i32 length)
 {
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
     i32 amountRead = 0;
     while (amountRead < length)
     {

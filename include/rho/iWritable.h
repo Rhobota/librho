@@ -5,6 +5,7 @@
 #include <rho/bNonCopyable.h>
 #include <rho/iFlushable.h>
 #include <rho/types.h>
+#include <rho/eRho.h>
 
 #include <cstdio>
 #include <string>
@@ -123,6 +124,9 @@ class tByteWritable : public iWritable, public bNonCopyable
 
         i32 writeAll(const u8* buffer, i32 length)
         {
+            if (length <= 0)
+                throw eInvalidArgument("Stream read/write length must be >0");
+
             for (i32 i = 0; i < length; i++)
                 m_buf.push_back(buffer[i]);
             return length;

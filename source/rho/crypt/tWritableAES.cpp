@@ -69,6 +69,9 @@ tWritableAES::~tWritableAES()
 
 i32 tWritableAES::write(const u8* buffer, i32 length)
 {
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
     if (m_bufUsed >= m_bufSize)
         if (! flush())    // <-- if successful, resets m_bufUsed to 4
             return 0;
@@ -80,6 +83,9 @@ i32 tWritableAES::write(const u8* buffer, i32 length)
 
 i32 tWritableAES::writeAll(const u8* buffer, i32 length)
 {
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
     i32 amountWritten = 0;
     while (amountWritten < length)
     {

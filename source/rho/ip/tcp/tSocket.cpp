@@ -121,6 +121,9 @@ void tSocket::setNagles(bool on)
 
 i32 tSocket::read(u8* buffer, i32 length)
 {
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
     if (m_readEOF)
         return -1;
 
@@ -145,6 +148,9 @@ i32 tSocket::read(u8* buffer, i32 length)
 
 i32 tSocket::readAll(u8* buffer, i32 length)
 {
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
     i32 amountRead = 0;
     while (amountRead < length)
     {
@@ -158,6 +164,9 @@ i32 tSocket::readAll(u8* buffer, i32 length)
 
 i32 tSocket::write(const u8* buffer, i32 length)
 {
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
     if (m_writeEOF)
         return 0;
 
@@ -182,6 +191,9 @@ i32 tSocket::write(const u8* buffer, i32 length)
 
 i32 tSocket::writeAll(const u8* buffer, i32 length)
 {
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
     i32 amountWritten = 0;
     while (amountWritten < length)
     {

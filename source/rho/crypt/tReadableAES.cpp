@@ -55,6 +55,9 @@ tReadableAES::~tReadableAES()
 
 i32 tReadableAES::read(u8* buffer, i32 length)
 {
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
     if (m_pos >= m_bufUsed)
         if (! m_refill())      // sets m_pos and m_bufUsed
             return -1;
@@ -66,6 +69,9 @@ i32 tReadableAES::read(u8* buffer, i32 length)
 
 i32 tReadableAES::readAll(u8* buffer, i32 length)
 {
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
     i32 amountRead = 0;
     while (amountRead < length)
     {
