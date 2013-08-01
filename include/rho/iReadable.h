@@ -4,6 +4,7 @@
 
 #include <rho/bNonCopyable.h>
 #include <rho/types.h>
+#include <rho/eRho.h>
 
 #include <cstdio>
 #include <string>
@@ -120,6 +121,9 @@ class tByteReadable : public iReadable, public bNonCopyable
 
         i32 read(u8* buffer, i32 length)
         {
+            if (length <= 0)
+                throw eInvalidArgument("Stream read/write length must be >0");
+
             if (m_pos >= m_buf.size())
                 return m_eof ? -1 : ((m_eof = true), 0);
             i32 i;

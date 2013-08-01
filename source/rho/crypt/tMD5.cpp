@@ -32,6 +32,9 @@ i32 tMD5::write(const u8* buffer, i32 length)
 
 i32 tMD5::writeAll(const u8* buffer, i32 length)
 {
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
     MD5Update(((MD5_CTX*)m_context), buffer, (u32)length);
     return length;
 }

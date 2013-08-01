@@ -105,6 +105,9 @@ class tSecureRandomInternal : public iReadable, public bNonCopyable
 
         i32 read(u8* buffer, i32 length)
         {
+            if (length <= 0)
+                throw eInvalidArgument("Stream read/write length must be >0");
+
             #if __linux__ || __APPLE__ || __CYGWIN__
 
             return ((tFileReadable*)m_internal)->read(buffer, length);
@@ -123,6 +126,9 @@ class tSecureRandomInternal : public iReadable, public bNonCopyable
 
         i32 readAll(u8* buffer, i32 length)
         {
+            if (length <= 0)
+                throw eInvalidArgument("Stream read/write length must be >0");
+
             i32 amountRead = 0;
             while (amountRead < length)
             {
