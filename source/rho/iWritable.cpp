@@ -110,17 +110,12 @@ i32 tFileWritable::write(const u8* buffer, i32 length)
     if (m_writeEOF)
         return 0;
 
-    i32 w = (i32) fwrite(buffer, 1, length, m_file);
+    size_t w = fwrite(buffer, 1, length, m_file);
+    if (w > 0)
+        return (i32)w;
 
-    if (w < length)
-    {
-        m_writeEOF = true;
-        return (w>0) ? w : 0;
-    }
-    else
-    {
-        return w;
-    }
+    m_writeEOF = true;
+    return 0;
 }
 
 i32 tFileWritable::writeAll(const u8* buffer, i32 length)
