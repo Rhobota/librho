@@ -14,8 +14,8 @@ namespace crypt
 {
 
 
-tSecureStream::tSecureStream(refc<iReadable> internalReadable,
-                             refc<iWritable> internalWritable,
+tSecureStream::tSecureStream(iReadable* internalReadable,
+                             iWritable* internalWritable,
                              const tRSA& rsa,
                              string appGreeting)
     : m_internal_readable(internalReadable),
@@ -142,7 +142,7 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
 
     // Let myself randomize communication with the client.
     u32 randLen = secureRand_u8() + 20;
-    vector<u8> randVect;
+    vector<u8> randVect(randLen);
     secureRand_readAll(&randVect[0], (i32)randLen);
     rho::pack(secureWritable, randVect);
     if (!secureWritable->flush()) throw eRuntimeError("Couldn't flush secure stream.");
@@ -212,7 +212,7 @@ void tSecureStream::m_setupClient(const tRSA& rsa, string appGreeting)
 
     // Let myself randomize communication with the server.
     u32 randLen = secureRand_u8() + 20;
-    vector<u8> randVect;
+    vector<u8> randVect(randLen);
     secureRand_readAll(&randVect[0], (i32)randLen);
     rho::pack(secureWritable, randVect);
     if (!secureWritable->flush()) throw eRuntimeError("Couldn't flush secure stream.");
