@@ -25,8 +25,8 @@ class tSecureStream : public iReadable, public iWritable,
 {
     public:
 
-        tSecureStream(refc<iReadable> internalReadable,
-                      refc<iWritable> internalWritable,
+        tSecureStream(iReadable* internalReadable,
+                      iWritable* internalWritable,
                       const tRSA& rsa,
                       std::string appGreeting);
 
@@ -47,8 +47,8 @@ class tSecureStream : public iReadable, public iWritable,
 
     private:
 
-        refc<iReadable> m_internal_readable;
-        refc<iWritable> m_internal_writable;
+        iReadable* m_internal_readable;
+        iWritable* m_internal_writable;
 
         refc<tReadableAES> m_readable;
         refc<tWritableAES> m_writable;
