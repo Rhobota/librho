@@ -16,7 +16,7 @@ namespace crypt
 {
 
 
-class tRSA : public iPackable, public bNonCopyable
+class tRSA : public iPackable
 {
     public:
 
@@ -29,6 +29,7 @@ class tRSA : public iPackable, public bNonCopyable
         tRSA(std::string modulus, std::string publicKey);
         tRSA(std::string modulus, std::string publicKey, std::string privateKey);
 
+        // This tRSA's capabilities:
         bool hasPrivateKey()    const;
         u32  maxMessageLength() const;
 
@@ -40,9 +41,14 @@ class tRSA : public iPackable, public bNonCopyable
         std::vector<u8> decrypt(std::vector<u8> ct) const;
         std::vector<u8> sign(std::vector<u8> hash)  const;
 
+        // Access to the underlying integers:
+        algo::tBigInteger getModulus() const;
+        algo::tBigInteger getPubKey()  const;
+        algo::tBigInteger getPrivKey() const;
+
     public:
 
-        // iPackable interface
+        // iPackable interface:
         void pack(iWritable* out) const;
         void unpack(iReadable* in);
 

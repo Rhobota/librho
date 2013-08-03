@@ -121,6 +121,21 @@ bool tRSA::verify(vector<u8> hash, vector<u8> signature) const
     return unpad(hashAsInt.getBytes()) == hash;
 }
 
+algo::tBigInteger tRSA::getModulus() const
+{
+    return n;
+}
+
+algo::tBigInteger tRSA::getPubKey()  const
+{
+    return e;
+}
+
+algo::tBigInteger tRSA::getPrivKey() const
+{
+    return d;
+}
+
 void tRSA::pack(iWritable* out) const
 {
     rho::pack(out, n.getBytes());
