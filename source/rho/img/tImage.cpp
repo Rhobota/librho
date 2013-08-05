@@ -632,7 +632,7 @@ void tImage::unpack(iReadable* in)
         setWidth(0);
         setHeight(0);
         setFormat(kUnspecified);
-        throw e;
+        throw;
     }
 }
 
