@@ -18,6 +18,8 @@ class iTimerObserver
         /**
          * Called when the registered timer fires.
          *
+         * 'timerPeriod' is in micro-seconds (10^-6 seconds).
+         *
          * The receiver should return true if the timer
          * should continue calling periodically.
          *
