@@ -24,6 +24,8 @@ class tTimer : public bNonCopyable
          * and repeatedly.
          * This timer does not own the observer (i.e. you must destroy it
          * yourself).
+         *
+         * 'period' is in micro-seconds (10^-6 seconds).
          */
         tTimer(iTimerObserver* obs, u64 period);
 
@@ -33,7 +35,7 @@ class tTimer : public bNonCopyable
         iTimerObserver* getObserver() const;
 
         /**
-         * Returns the timer's period.
+         * Returns the timer's period in micro-seconds (10^-6 seconds).
          */
         u64 getPeriod() const;
 
