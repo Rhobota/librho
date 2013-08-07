@@ -10,6 +10,7 @@
 #include <pthread.h>
 
 #include <queue>
+#include <list>
 
 
 namespace rho
@@ -110,7 +111,7 @@ class tPCQ : public bNonCopyable
 
         nPCQOverflowBehavior m_behavior;
 
-        std::queue<T> m_queue;
+        std::queue< T, std::list<T> > m_queue;
 
         pthread_mutex_t m_mutex;
         pthread_cond_t  m_queueHasSomething;
