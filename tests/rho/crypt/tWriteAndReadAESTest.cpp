@@ -53,7 +53,7 @@ void simpleTest(const tTest& t, crypt::nOperationModeAES opmode, u8* key, crypt:
     for (int i = 0; i < kNumItersPerKey; i++)
     {
         // Gen a random message.
-        int messagelen = rand() % kMaxMessageLength;
+        int messagelen = (rand() % kMaxMessageLength) + 1;
         vector<u8> pt1(messagelen);
         for (size_t j = 0; j < pt1.size(); j++)
             pt1[j] = rand() % 256;
@@ -90,7 +90,7 @@ void randomFlushTest(const tTest& t, crypt::nOperationModeAES opmode, u8* key, c
     for (int i = 0; i < kNumItersPerKey; i++)
     {
         // Gen a random message.
-        int messagelen = rand() % kMaxMessageLength;
+        int messagelen = (rand() % kMaxMessageLength) + 1;
         vector<u8> pt1(messagelen);
         for (size_t j = 0; j < pt1.size(); j++)
             pt1[j] = rand() % 256;
