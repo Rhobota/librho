@@ -9,6 +9,7 @@
 
 #include <pthread.h>
 
+#include <deque>
 #include <queue>
 #include <list>
 
@@ -17,16 +18,6 @@ namespace rho
 {
 namespace sync
 {
-
-
-/**
- * Producer-Consumer Queue (PCQ)
- *
- * This PCQ is completely thread-safe. Use it with as many producers and
- * as many consumers as you need.
- */
-template <class T>
-class tPCQ;
 
 
 /**
@@ -46,7 +37,23 @@ enum nPCQOverflowBehavior
 };
 
 
-template <class T>
+/**
+ * Producer-Consumer Queue (PCQ)
+ *
+ * This PCQ is completely thread-safe. Use it with as many producers and
+ * as many consumers as you need.
+ *
+ * You can instantiate a PCQ of type T with the default internal container type
+ * by doing (defaults to using a std::deque as the internal container):
+ *
+ *              tPCQ<T> mypcq(...);
+ *
+ * or you can specify the use of a different internal container type by
+ * doing (the other common internal container is an std::list):
+ *
+ *              tPCQ< T, std::list<T> > mypcq(...);
+ */
+template < class T, class U=std::deque<T> >
 class tPCQ : public bNonCopyable
 {
     public:
@@ -111,7 +118,7 @@ class tPCQ : public bNonCopyable
 
         nPCQOverflowBehavior m_behavior;
 
-        std::queue< T, std::list<T> > m_queue;
+        std::queue<T, U> m_queue;
 
         pthread_mutex_t m_mutex;
         pthread_cond_t  m_queueHasSomething;
@@ -119,8 +126,8 @@ class tPCQ : public bNonCopyable
 };
 
 
-template <class T>
-tPCQ<T>::tPCQ(u32 capacity, nPCQOverflowBehavior behavior)
+template <class T, class U>
+tPCQ<T,U>::tPCQ(u32 capacity, nPCQOverflowBehavior behavior)
     : m_size(0),
       m_capacity(capacity),
       m_behavior(behavior),
@@ -150,16 +157,16 @@ tPCQ<T>::tPCQ(u32 capacity, nPCQOverflowBehavior behavior)
     }
 }
 
-template <class T>
-tPCQ<T>::~tPCQ()
+template <class T, class U>
+tPCQ<T,U>::~tPCQ()
 {
     pthread_mutex_destroy(&m_mutex);
     pthread_cond_destroy(&m_queueHasSomething);
     pthread_cond_destroy(&m_queueHasRoom);
 }
 
-template <class T>
-void tPCQ<T>::push(T item)
+template <class T, class U>
+void tPCQ<T,U>::push(T item)
 {
     tAutoLock al(this);
 
@@ -194,8 +201,8 @@ void tPCQ<T>::push(T item)
     }
 }
 
-template <class T>
-T tPCQ<T>::pop()
+template <class T, class U>
+T tPCQ<T,U>::pop()
 {
     tAutoLock al(this);
     while (m_size == 0)
@@ -214,22 +221,22 @@ T tPCQ<T>::pop()
     return f;
 }
 
-template <class T>
-u32 tPCQ<T>::size() const
+template <class T, class U>
+u32 tPCQ<T,U>::size() const
 {
-    tAutoLock al(const_cast<tPCQ<T>*>(this));
+    tAutoLock al(const_cast<tPCQ<T,U>*>(this));
     return m_size;
 }
 
-template <class T>
-u32 tPCQ<T>::capacity() const
+template <class T, class U>
+u32 tPCQ<T,U>::capacity() const
 {
-    tAutoLock al(const_cast<tPCQ<T>*>(this));
+    tAutoLock al(const_cast<tPCQ<T,U>*>(this));
     return m_capacity;
 }
 
-template <class T>
-void tPCQ<T>::m_push(T& item)
+template <class T, class U>
+void tPCQ<T,U>::m_push(T& item)
 {
     m_queue.push(item);
     ++m_size;
@@ -240,15 +247,15 @@ void tPCQ<T>::m_push(T& item)
     }
 }
 
-template <class T>
-void tPCQ<T>::m_lock()
+template <class T, class U>
+void tPCQ<T,U>::m_lock()
 {
     if (pthread_mutex_lock(&m_mutex) != 0)
         throw eRuntimeError("Cannot lock pcq mutex!");
 }
 
-template <class T>
-void tPCQ<T>::m_unlock()
+template <class T, class U>
+void tPCQ<T,U>::m_unlock()
 {
     if (pthread_mutex_unlock(&m_mutex) != 0)
         throw eRuntimeError("Cannot unlock pcq mutex!");
