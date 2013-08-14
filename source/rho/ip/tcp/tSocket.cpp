@@ -109,6 +109,34 @@ u16 tSocket::getForeignPort() const
     return m_addr.getUpperProtoPort();
 }
 
+tAddr tSocket::getLocalAddress() const
+{
+    struct sockaddr_in6 sockAddr;
+    socklen_t sockAddrLen = sizeof(sockAddr);
+    socklen_t returnedLen = sockAddrLen;
+
+    int fd = ::getsockname(m_fd, (struct sockaddr*)&sockAddr, &returnedLen);
+
+    if (fd == -1)
+    {
+        throw eResourceAcquisitionError(strerror(errno));
+    }
+
+    if (returnedLen > sockAddrLen)
+    {
+        throw eLogicError("Something is crazy wrong.");
+    }
+
+    tAddr addr((struct sockaddr*)&sockAddr, (int)returnedLen);
+    return addr;
+}
+
+u16 tSocket::getLocalPort() const
+{
+    tAddr addr = getLocalAddress();
+    return addr.getUpperProtoPort();
+}
+
 void tSocket::setNagles(bool on)
 {
     int flag = on ? 0 : 1;    // Nagle's on == TCP_NODELAY off
