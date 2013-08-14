@@ -61,6 +61,16 @@ class tSocket :
         u16 getForeignPort() const;
 
         /**
+         * Returns the address of the local side of the socket.
+         */
+        tAddr getLocalAddress() const;
+
+        /**
+         * Returns the port of the local side of the socket.
+         */
+        u16 getLocalPort() const;
+
+        /**
          * Enables/disables Nagle's algorithm. (It is enabled by default.)
          */
         void setNagles(bool on);
