@@ -17,7 +17,7 @@ void localhostBindTest(const tTest& t)
         // the localhost address.
         ip::tcp::tServer server(8571);
         string str = server.getBindAddress().toString();
-        t.assert(str == "::1" || str == "[::1]:8571");
+        t.assert(str == "::1");
         t.iseq(server.getBindAddress().getVersion(), ip::kIPv6);
         t.iseq(server.getBindPort(), 8571);
     }
@@ -27,7 +27,7 @@ void localhostBindTest(const tTest& t)
         ip::tAddrGroup g(ip::tAddrGroup::kLocalhostBind);
         ip::tcp::tServer server(g, 8572);
         string str = server.getBindAddress().toString();
-        t.assert(str == "::1" || str == "[::1]:8572");
+        t.assert(str == "::1");
         t.iseq(server.getBindAddress().getVersion(), ip::kIPv6);
         t.iseq(server.getBindPort(), 8572);
     }

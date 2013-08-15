@@ -36,7 +36,7 @@ class tAddr
         nVersion        getVersion()        const;
         std::vector<u8> getAddress()        const;
 
-        std::string     toString()          const;
+        std::string     toString(bool reverseLookup = false) const;
 
     private:
 
