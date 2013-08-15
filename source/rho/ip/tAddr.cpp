@@ -106,49 +106,24 @@ void tAddr::setUpperProtoPort(u16 port)
     }
 }
 
-std::string tAddr::toString() const
+std::string tAddr::toString(bool reverseLookup) const
 {
-    void* addr = NULL;
-    int   buffSize = 0;
+    // Get the hostname.
+    char hostname[NI_MAXHOST];
+    int res;
+    int flags = 0; if (!reverseLookup) flags = NI_NUMERICHOST;
+    while ((res = ::getnameinfo(m_sockaddr, m_sockaddrlen, hostname, NI_MAXHOST, NULL, 0, flags))
+            == EAI_AGAIN);
+    if (res != 0)
+        throw eRuntimeError("cannot toString() the IP address");
+    std::string hostnameStr(hostname);
 
-    std::string rep;
+    // If the hostname is an IPv4-mapped IPv6 address, make it look like a normal IPv4 address.
+    if (hostnameStr.find("::FFFF:") == 0 || hostnameStr.find("::ffff:") == 0)
+        hostnameStr = hostnameStr.substr(7);
 
-    if (m_sockaddr->sa_family == AF_INET)
-    {
-        struct sockaddr_in* ip4sockAddr = (struct sockaddr_in*) m_sockaddr;
-        struct in_addr* ip4addr = &(ip4sockAddr->sin_addr);
-        addr = ip4addr;
-        buffSize = INET_ADDRSTRLEN;
-    }
-    else if (m_sockaddr->sa_family == AF_INET6)
-    {
-        struct sockaddr_in6* ip6sockAddr = (struct sockaddr_in6*) m_sockaddr;
-        struct in6_addr* ip6addr = &(ip6sockAddr->sin6_addr);
-        addr = ip6addr;
-        buffSize = INET6_ADDRSTRLEN;
-    }
-
-    if (addr)
-    {
-        char* addrStr = new char[buffSize];
-        #if __linux__ || __APPLE__ || __CYGWIN__
-        inet_ntop(m_sockaddr->sa_family, addr, addrStr, buffSize);
-        #elif __MINGW32__
-        DWORD lengthOfReturnedString = buffSize;
-        WSAAddressToString(m_sockaddr, m_sockaddrlen, NULL, addrStr, &lengthOfReturnedString);
-        #else
-        #error What platform are you on!?
-        #endif
-        rep = addrStr;
-        delete [] addrStr;
-    }
-    else
-    {
-        throw eLogicError(
-                "Internal IP address structure has an unknown version.");
-    }
-
-    return rep;
+    // Done...
+    return hostnameStr;
 }
 
 tAddr::tAddr()
