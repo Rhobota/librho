@@ -113,7 +113,7 @@ std::string tAddr::toString(bool reverseLookup) const
     int res;
     int flags = 0; if (!reverseLookup) flags = NI_NUMERICHOST;
     while ((res = ::getnameinfo(m_sockaddr, m_sockaddrlen, hostname, NI_MAXHOST, NULL, 0, flags))
-            == EAI_AGAIN);
+            == EAI_AGAIN) { }
     if (res != 0)
         throw eRuntimeError("cannot toString() the IP address");
     std::string hostnameStr(hostname);
