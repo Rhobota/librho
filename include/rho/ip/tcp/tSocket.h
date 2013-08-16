@@ -76,6 +76,12 @@ class tSocket :
         void setNagles(bool on);
 
         /**
+         * Set read/write timeout. If cannot read or write in the given
+         * time, give up.
+         */
+        void setTimeout(u16 seconds);
+
+        /**
          * See iReadable interface.
          */
         i32 read(u8* buffer, i32 length);

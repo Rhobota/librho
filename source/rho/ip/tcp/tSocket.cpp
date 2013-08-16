@@ -147,6 +147,25 @@ void tSocket::setNagles(bool on)
     }
 }
 
+void tSocket::setTimeout(u16 seconds)
+{
+    struct timeval timeout;
+    timeout.tv_sec = seconds;
+    timeout.tv_usec = 0;
+
+    if (::setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout,
+                sizeof(timeout)) != 0)
+    {
+        throw eRuntimeError(strerror(errno));
+    }
+
+    if (::setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, (char*)&timeout,
+                sizeof(timeout)) != 0)
+    {
+        throw eRuntimeError(strerror(errno));
+    }
+}
+
 i32 tSocket::read(u8* buffer, i32 length)
 {
     if (length <= 0)
