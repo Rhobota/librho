@@ -20,8 +20,6 @@ void testParamsEnumerator(const tTest& t)
         return;   // it's ok if the enumerator is not implemented on this platform
     }
 
-    t.assert(enumerator->size() > 0);
-
     for (int i = 0; i < enumerator->size(); i++)
     {
         img::tImageCapParams params = (*enumerator)[i];
@@ -42,6 +40,9 @@ void testImageCap(const tTest& t)
     {
         return;   // it's ok if the enumerator is not implemented on this platform
     }
+
+    if (enumerator->size() == 0)
+        return;
 
     img::tImageCapParams params = (*enumerator)[0];
     params.displayFormat = img::kRGB24;
