@@ -558,6 +558,12 @@ void lesstest(const tTest& t)
 }
 
 
+void pseudoPrimeTest(const tTest& t)
+{
+    // empty... hand tested...
+}
+
+
 int main()
 {
     tCrashReporter::init();
@@ -572,10 +578,9 @@ int main()
     tTest("tBigInteger div test", divtest);
     tTest("tBigInteger mod test", modtest);
     tTest("tBigInteger final big test", bigtest, 25);
-
-    // Commented-out because they take too long to execute:
-    //tTest("tBigInteger equal test", equaltest);
-    //tTest("tBigInteger less test", lesstest);
+    tTest("tBigInteger equal test", equaltest);
+    tTest("tBigInteger less test", lesstest);
+    tTest("tBigInteger pseudo prime test", pseudoPrimeTest);
 
     return 0;
 }
