@@ -65,6 +65,34 @@ class tBigInteger
         bool        operator<= (const tBigInteger& o) const;
         bool        operator>= (const tBigInteger& o) const;
 
+    public:
+
+        /**
+         * Uses Miller-Rabin.
+         *
+         * If returns 'false', then n is definitely composite.
+         *
+         * If returns 'true', then n is prime with probability at least (1 - 2^(-numRounds)).
+         *
+         * Reference used: "Introduction to Algorithms (3rd edition)", pages 968-975
+         */
+        static bool isPrime(const tBigInteger& n, u32 numRounds);
+
+        /**
+         * Finds a random prime number that is at most 'numBits' long.
+         * This method uses Miller-Rabin, so a prime is found with
+         * probability at least (1 - 2^(-numRounds)).
+         */
+        static tBigInteger genPseudoPrime(u32 numBits, u32 numRounds);
+
+        /**
+         * Finds a random prime number that is at most 'numBits' long.
+         * This uses the pseudo-prime method described in "Introduction
+         * to Algorithms (3rd edition)" page 967. This method is not as good
+         * as Miller-Rabin, but is faster and good enough for most applications.
+         */
+        static tBigInteger genPseudoPrime(u32 numBits);
+
     private:
 
         tArray<u32> m_array;   // <-- stored little endian

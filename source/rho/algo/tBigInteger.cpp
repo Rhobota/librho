@@ -1,4 +1,5 @@
 #include <rho/algo/tBigInteger.h>
+#include <rho/crypt/tSecureRandom.h>
 #include <sstream>
 using namespace std;
 
@@ -27,6 +28,17 @@ bool isLess(const tArray<T>& a, const tArray<T>& b)
         if (a[i] != b[i])
             return a[i] < b[i];
     return false;
+}
+
+template <class T>
+static
+bool isEqual(const tArray<T>& a, const tArray<T>& b)
+{
+    if (a.size() != b.size()) return false;
+    for (int i = (int)a.size()-1; i >= 0; i--)
+        if (a[i] != b[i])
+            return false;
+    return true;
 }
 
 template <class T>
@@ -1242,6 +1254,143 @@ void extendedGCD(const tBigInteger& a, const tBigInteger& b, tBigInteger& x, tBi
 
     x = lastX;
     y = lastY;
+}
+
+static
+void s_genRandNumWithBits(u32 numBits, tArray<u32>& array)
+{
+    u32 numWords = numBits / 32;
+    if ((numBits % 32) > 0)
+        numWords++;
+
+    array.setSize(numWords);
+    if (numWords == 0)
+        return;
+
+    crypt::secureRand_readAll((u8*)(&array[0]), (i32)(numWords*4));
+
+    keepOnly(array, (size_t)numBits);
+}
+
+static
+void s_genRandNumLessThan(const tArray<u32>& maxValue, tArray<u32>& array)
+{
+    u32 numBits = (u32) numbits(maxValue);
+
+    while (true)
+    {
+        s_genRandNumWithBits(numBits, array);
+        if (isLess(array, maxValue))
+            break;
+    }
+}
+
+static
+bool s_miller_rabin_witness(const tArray<u32>& a, const tArray<u32>& n)
+{
+    static const tArray<u32> one(1, 1);
+
+    tArray<u32> nmo = n; subtract(nmo, one);
+    tArray<u32> u = nmo;
+
+    u32 t = 0;     // <-- num zeros on end of u
+    u32 mask = 1;
+    u32 index = 0;
+    while ((u[index] & mask) == 0)
+    {
+        t++;
+        mask <<= 1;
+        if (mask == 0)
+        {
+            mask = 1;
+            index++;
+        }
+    }
+
+    shiftRight(u, t);
+
+    tArray<u32> xCurr, xPrev;
+    tArray<u32> aux1, aux2, aux3, aux4;
+
+    modPow(a, u, n, xCurr);
+
+    for (u32 i = 0; i < t; i++)
+    {
+        xPrev = xCurr;
+        multiply(xPrev, xPrev, aux1, aux2, aux3);
+        divide(aux1, n, aux2, xCurr, aux3, aux4);
+
+        if (isEqual(xCurr, one) && !isEqual(xPrev, one) && !isEqual(xPrev, nmo))
+            return true;
+    }
+
+    if (!isEqual(xCurr, one))
+        return true;
+
+    return false;
+}
+
+bool tBigInteger::isPrime(const tBigInteger& n, u32 numRounds)
+{
+    if (numRounds == 0)
+        throw eInvalidArgument("numRounds must be > 0");
+
+    if (n.isNegative())
+        return false;
+    if (n.isZero())
+        return false;
+    if (n.isEven())
+        return false;
+    if (n == 1)
+        return false;
+
+    tArray<u32> a;
+    for (; numRounds > 0; numRounds--)
+    {
+        do { s_genRandNumLessThan(n.m_array, a); } while (a.size() == 0);
+        if (s_miller_rabin_witness(a, n.m_array))
+            return false;
+    }
+    return true;
+}
+
+tBigInteger tBigInteger::genPseudoPrime(u32 numBits, u32 numRounds)
+{
+    if (numBits < 2)
+        throw eInvalidArgument("numBits must be >= 2");
+
+    tBigInteger n(0);
+    while (true)
+    {
+        s_genRandNumWithBits(numBits, n.m_array);
+        if (n.isEven())
+            n += 1;
+        if (isPrime(n, numRounds))
+            return n;
+    }
+}
+
+tBigInteger tBigInteger::genPseudoPrime(u32 numBits)
+{
+    if (numBits < 2)
+        throw eInvalidArgument("numBits must be >= 2");
+
+    static const tBigInteger one(1);
+    static const tBigInteger two(2);
+
+    tBigInteger n(0);
+    while (true)
+    {
+        s_genRandNumWithBits(numBits, n.m_array);
+        if (n.isZero())
+            continue;
+        if (n == one)
+            continue;
+        if (n.isEven())
+            n += 1;
+        if (two.modPow(n-1,n) == one)
+            return n;
+    }
 }
 
 
