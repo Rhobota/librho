@@ -23,9 +23,11 @@ void print(const vector<u8>& bytes)
 }
 
 
-void test(const tTest& t)
+void test(const tTest& t, const crypt::tRSA& rsa)
 {
-    crypt::tRSA rsa("tests/rho/crypt/rsakeys.txt");
+    //cout << "n = " << rsa.getModulus() << endl;
+    //cout << "e = " << rsa.getPubKey() << endl;
+    //cout << "d = " << rsa.getPrivKey() << endl;
 
     for (int k = 0; k < kNumIters; k++)
     {
@@ -39,7 +41,24 @@ void test(const tTest& t)
         vector<u8> recoveredMessage = rsa.decrypt(cypherMessage);
 
         t.assert(origMessage == recoveredMessage);
+
+        //cout << "." << std::flush;
     }
+    //cout << endl;
+}
+
+
+void testWithFile(const tTest& t)
+{
+    crypt::tRSA rsa("tests/rho/crypt/rsakeys.txt");
+    test(t, rsa);
+}
+
+
+void testWithGenerate(const tTest& t)
+{
+    crypt::tRSA rsa = crypt::tRSA::generate(1024, 50);
+    test(t, rsa);
 }
 
 
@@ -48,7 +67,8 @@ int main()
     tCrashReporter::init();
     srand(time(0));
 
-    tTest("tRSA test", test);
+    tTest("tRSA test with file", testWithFile);
+    tTest("tRSA test with generate", testWithGenerate);
 
     return 0;
 }
