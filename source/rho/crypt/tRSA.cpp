@@ -151,6 +151,32 @@ void tRSA::unpack(iReadable* in)
     rho::unpack(in, bytes); d = algo::tBigInteger(bytes);
 }
 
+tRSA tRSA::generate(u32 numBits, u32 numRounds)
+{
+    algo::tBigInteger p(0);
+    algo::tBigInteger q(0);
+    do
+    {
+        p = algo::tBigInteger::genPseudoPrime(numBits/2, numRounds);
+        q = algo::tBigInteger::genPseudoPrime(numBits/2, numRounds);
+    } while (p == q);
+
+    algo::tBigInteger n = p * q;
+
+    algo::tBigInteger m = (p-1) * (q-1);
+
+    algo::tBigInteger e(65537);
+    while (algo::GCD(e, m) > 1)
+        e += 2;
+
+    algo::tBigInteger d(0), aux(0);
+    algo::extendedGCD(e, m, d, aux);
+    while (d.isNegative())
+        d += m;
+
+    return tRSA(n.getBytes(), e.getBytes(), d.getBytes());
+}
+
 
 }   // namespace crypt
 }   // namespace rho

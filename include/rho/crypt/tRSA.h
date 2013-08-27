@@ -48,6 +48,10 @@ class tRSA : public iPackable
 
     public:
 
+        static tRSA generate(u32 numBits, u32 numRounds);
+
+    public:
+
         // iPackable interface:
         void pack(iWritable* out) const;
         void unpack(iReadable* in);
