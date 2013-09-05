@@ -286,16 +286,18 @@ bool train(iLearner* learner, const std::vector<tIO>& inputs,
 
     outputs.resize(inputs.size());
 
+    std::vector<tIO> mostRecentBatch(batchSize);
     u32 batchCounter = 0;
 
     for (size_t i = 0; i < inputs.size(); i++)
     {
         learner->addExample(inputs[i], targets[i], outputs[i]);
+        mostRecentBatch[batchCounter] = inputs[i];
         batchCounter++;
         if (batchCounter == batchSize)
         {
             learner->update();
-            if (callback && !callback(learner, callbackContext))
+            if (callback && !callback(learner, mostRecentBatch, callbackContext))
                 return false;
             batchCounter = 0;
         }
@@ -303,7 +305,8 @@ bool train(iLearner* learner, const std::vector<tIO>& inputs,
     if (batchCounter > 0)
     {
         learner->update();
-        if (callback && !callback(learner, callbackContext))
+        mostRecentBatch.resize(batchCounter);
+        if (callback && !callback(learner, mostRecentBatch, callbackContext))
             return false;
     }
 

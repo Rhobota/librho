@@ -164,7 +164,9 @@ f64  recall       (const tConfusionMatrix& confusionMatrix);
  * halt. This is useful if you need to cancel training
  * due to user input, or something like that.
  */
-typedef bool (*train_didUpdate_callback)(iLearner* learner, void* context);
+typedef bool (*train_didUpdate_callback)(iLearner* learner,
+                                         const std::vector<tIO>& mostRecentBatch,
+                                         void* context);
 
 /**
  * This functions trains the leaner on the given examples,
