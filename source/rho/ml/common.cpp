@@ -261,7 +261,7 @@ f64  recall       (const tConfusionMatrix& confusionMatrix)
 }
 
 
-void train(iLearner* learner, const std::vector<tIO>& inputs,
+bool train(iLearner* learner, const std::vector<tIO>& inputs,
                               const std::vector<tIO>& targets,
                                     std::vector<tIO>& outputs,  // <-- populated during training
                               u32 batchSize,
@@ -295,17 +295,19 @@ void train(iLearner* learner, const std::vector<tIO>& inputs,
         if (batchCounter == batchSize)
         {
             learner->update();
-            if (callback)
-                callback(learner, callbackContext);
+            if (callback && !callback(learner, callbackContext))
+                return false;
             batchCounter = 0;
         }
     }
     if (batchCounter > 0)
     {
         learner->update();
-        if (callback)
-            callback(learner, callbackContext);
+        if (callback && !callback(learner, callbackContext))
+            return false;
     }
+
+    return true;
 }
 
 void evaluate(iLearner* learner, const std::vector<tIO>& inputs,
