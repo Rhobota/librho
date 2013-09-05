@@ -22,6 +22,10 @@ template <class A, class B>
 std::vector< std::pair<A,B> > zip(const std::vector<A>& a,
                                   const B& b);
 
+template <class A, class B>
+void unzip(const std::vector< std::pair<A,B> >& zipped, vector<A>& firstPart,
+                                                        vector<B>& secondPart);
+
 template <class A>
 void shuffle(std::vector<A>& v);
 
