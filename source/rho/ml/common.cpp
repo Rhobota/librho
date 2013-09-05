@@ -261,10 +261,12 @@ f64  recall       (const tConfusionMatrix& confusionMatrix)
 }
 
 
-void train(iLearner& learner, const std::vector<tIO>& inputs,
+void train(iLearner* learner, const std::vector<tIO>& inputs,
                               const std::vector<tIO>& targets,
                                     std::vector<tIO>& outputs,  // <-- populated during training
-                              u32 batchSize)
+                              u32 batchSize,
+                              train_didUpdate_callback callback,
+                              void* callbackContext)
 {
     if (inputs.size() != targets.size())
     {
@@ -288,21 +290,25 @@ void train(iLearner& learner, const std::vector<tIO>& inputs,
 
     for (size_t i = 0; i < inputs.size(); i++)
     {
-        learner.addExample(inputs[i], targets[i], outputs[i]);
+        learner->addExample(inputs[i], targets[i], outputs[i]);
         batchCounter++;
         if (batchCounter == batchSize)
         {
-            learner.update();
+            learner->update();
+            if (callback)
+                callback(learner, callbackContext);
             batchCounter = 0;
         }
     }
     if (batchCounter > 0)
     {
-        learner.update();
+        learner->update();
+        if (callback)
+            callback(learner, callbackContext);
     }
 }
 
-void evaluate(iLearner& learner, const std::vector<tIO>& inputs,
+void evaluate(iLearner* learner, const std::vector<tIO>& inputs,
                                        std::vector<tIO>& outputs)
 {
     if (inputs.size() == 0)
@@ -312,7 +318,7 @@ void evaluate(iLearner& learner, const std::vector<tIO>& inputs,
     outputs.resize(inputs.size());
     for (size_t i = 0; i < inputs.size(); i++)
     {
-        learner.evaluate(inputs[i], outputs[i]);
+        learner->evaluate(inputs[i], outputs[i]);
     }
 }
 
