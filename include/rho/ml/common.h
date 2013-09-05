@@ -2,6 +2,7 @@
 #define __rho_ml_common_h__
 
 
+#include <rho/ml/iLearner.h>
 #include <rho/eRho.h>
 #include <rho/types.h>
 #include <rho/img/tImage.h>
@@ -15,11 +16,6 @@ namespace rho
 {
 namespace ml
 {
-
-
-// Typedefs:
-typedef std::vector< f64 >              tIO;
-typedef std::vector< std::vector<u32> > tConfusionMatrix;
 
 
 // Logistic function:
@@ -38,25 +34,35 @@ f64 hyperbolic_function_max();
 
 // Learner's IO manipulation tools:
 tIO examplify(const img::tImage* image);
-tIO examplify(u32 val, u32 vectorSize);
+tIO examplify(u32 highDimension, u32 numDimensions);
 u32 un_examplify(const tIO& output, f64* error = NULL);
 
 
 // Error measures:
 f64 standardSquaredError(const tIO& output, const tIO& target);
-f64 standardSquaredError(const std::vector<tIO>& outputExamples,
-                         const std::vector<tIO>& targetExamples);
+f64 standardSquaredError(const std::vector<tIO>& outputs,
+                         const std::vector<tIO>& targets);
 
 
 // Confusion matrix tools:
-void buildConfusionMatrix(const std::vector<tIO>& outputExamples,
-                          const std::vector<tIO>& targetExamples,
+typedef std::vector< std::vector<u32> > tConfusionMatrix;
+void buildConfusionMatrix(const std::vector<tIO>& outputs,
+                          const std::vector<tIO>& targets,
                                 tConfusionMatrix& confusionMatrix);
 void print        (const tConfusionMatrix& confusionMatrix, std::ostream& out);
 f64  errorRate    (const tConfusionMatrix& confusionMatrix);
 f64  accuracy     (const tConfusionMatrix& confusionMatrix);
 f64  precision    (const tConfusionMatrix& confusionMatrix);
 f64  recall       (const tConfusionMatrix& confusionMatrix);
+
+
+// Training helpers:
+void train(iLearner& learner, const std::vector<tIO>& inputs,
+                              const std::vector<tIO>& targets,
+                                    std::vector<tIO>& outputs,  // <-- populated during training
+                              u32 batchSize);
+void evaluate(iLearner& learner, const std::vector<tIO>& inputs,
+                                       std::vector<tIO>& outputs);
 
 
 }    // namespace ml

@@ -68,12 +68,12 @@ tIO examplify(const img::tImage* image)
     return input;
 }
 
-tIO examplify(u32 val, u32 vectorSize)
+tIO examplify(u32 highDimension, u32 numDimensions)
 {
-    if (val >= vectorSize)
-        throw eInvalidArgument("val must be < vectorSize");
-    tIO target(vectorSize, 0.0);
-    target[val] = 1.0;
+    if (highDimension >= numDimensions)
+        throw eInvalidArgument("highDimension must be < numDimensions");
+    tIO target(numDimensions, 0.0);
+    target[highDimension] = 1.0;
     return target;
 }
 
@@ -104,59 +104,59 @@ f64 standardSquaredError(const tIO& output, const tIO& target)
     return 0.5*error;
 }
 
-f64 standardSquaredError(const std::vector<tIO>& outputExamples,
-                         const std::vector<tIO>& targetExamples)
+f64 standardSquaredError(const std::vector<tIO>& outputs,
+                         const std::vector<tIO>& targets)
 {
-    if (outputExamples.size() != targetExamples.size())
+    if (outputs.size() != targets.size())
     {
-        throw eInvalidArgument("The number of examples in outputExamples and targetExamples must "
+        throw eInvalidArgument("The number of examples in outputs and targets must "
                 "be the same!");
     }
 
-    if (outputExamples.size() == 0)
+    if (outputs.size() == 0)
     {
         throw eInvalidArgument("There must be at least one output/target pair!");
     }
 
     f64 error = 0.0;
-    for (size_t i = 0; i < outputExamples.size(); i++)
-        error += standardSquaredError(outputExamples[i], targetExamples[i]);
-    return error / ((f64)outputExamples.size());
+    for (size_t i = 0; i < outputs.size(); i++)
+        error += standardSquaredError(outputs[i], targets[i]);
+    return error / ((f64)outputs.size());
 }
 
 
-void buildConfusionMatrix(const std::vector<tIO>& outputExamples,
-                          const std::vector<tIO>& targetExamples,
+void buildConfusionMatrix(const std::vector<tIO>& outputs,
+                          const std::vector<tIO>& targets,
                                 tConfusionMatrix& confusionMatrix)
 {
-    if (outputExamples.size() != targetExamples.size())
+    if (outputs.size() != targets.size())
     {
-        throw eInvalidArgument("The number of examples in outputExamples and targetExamples must "
+        throw eInvalidArgument("The number of examples in outputs and targets must "
                 "be the same!");
     }
 
-    if (outputExamples.size() == 0)
+    if (outputs.size() == 0)
     {
         throw eInvalidArgument("There must be at least one output/target pair!");
     }
 
-    for (size_t i = 0; i < outputExamples.size(); i++)
+    for (size_t i = 0; i < outputs.size(); i++)
     {
-        if (outputExamples[i].size() != targetExamples[i].size() ||
-            outputExamples[i].size() != outputExamples[0].size())
+        if (outputs[i].size() != targets[i].size() ||
+            outputs[i].size() != outputs[0].size())
         {
             throw eInvalidArgument("Every output/target pair must have the same dimensionality!");
         }
     }
 
-    confusionMatrix.resize(targetExamples[0].size());
+    confusionMatrix.resize(targets[0].size());
     for (size_t i = 0; i < confusionMatrix.size(); i++)
-        confusionMatrix[i] = std::vector<u32>(outputExamples[0].size(), 0);
+        confusionMatrix[i] = std::vector<u32>(outputs[0].size(), 0);
 
-    for (size_t i = 0; i < outputExamples.size(); i++)
+    for (size_t i = 0; i < outputs.size(); i++)
     {
-        u32 target = un_examplify(targetExamples[i]);
-        u32 output = un_examplify(outputExamples[i]);
+        u32 target = un_examplify(targets[i]);
+        u32 output = un_examplify(outputs[i]);
         confusionMatrix[target][output]++;
     }
 }
@@ -258,6 +258,62 @@ f64  recall       (const tConfusionMatrix& confusionMatrix)
     f64 fn = (f64) confusionMatrix[1][0];
 
     return tp / (tp + fn);
+}
+
+
+void train(iLearner& learner, const std::vector<tIO>& inputs,
+                              const std::vector<tIO>& targets,
+                                    std::vector<tIO>& outputs,  // <-- populated during training
+                              u32 batchSize)
+{
+    if (inputs.size() != targets.size())
+    {
+        throw eInvalidArgument("The number of examples in inputs and targets must "
+                "be the same!");
+    }
+
+    if (inputs.size() == 0)
+    {
+        throw eInvalidArgument("There must be at least one input/target pair!");
+    }
+
+    if (batchSize == 0)
+    {
+        throw eInvalidArgument("batchSize must be positive!");
+    }
+
+    outputs.resize(inputs.size());
+
+    u32 batchCounter = 0;
+
+    for (size_t i = 0; i < inputs.size(); i++)
+    {
+        learner.addExample(inputs[i], targets[i], outputs[i]);
+        batchCounter++;
+        if (batchCounter == batchSize)
+        {
+            learner.update();
+            batchCounter = 0;
+        }
+    }
+    if (batchCounter > 0)
+    {
+        learner.update();
+    }
+}
+
+void evaluate(iLearner& learner, const std::vector<tIO>& inputs,
+                                       std::vector<tIO>& outputs)
+{
+    if (inputs.size() == 0)
+    {
+        throw eInvalidArgument("There must be at least one input example!");
+    }
+    outputs.resize(inputs.size());
+    for (size_t i = 0; i < inputs.size(); i++)
+    {
+        learner.evaluate(inputs[i], outputs[i]);
+    }
 }
 
 
