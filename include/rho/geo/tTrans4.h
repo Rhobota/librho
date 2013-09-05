@@ -98,7 +98,7 @@ class tTrans4
          * Builds and returns a matrix that converts from one frame
          * of reference to another frame of reference.
          *
-         * TODO - NEED MORE COMMENTS HERE!
+         * LIBTODO - NEED MORE COMMENTS HERE!
          */
         static tTrans4 frame(const tVector& vx, const tVector& vy,
                              const tVector& vz, const tVector& o);
