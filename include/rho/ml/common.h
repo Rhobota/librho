@@ -57,11 +57,14 @@ f64  recall       (const tConfusionMatrix& confusionMatrix);
 
 
 // Training helpers:
-void train(iLearner& learner, const std::vector<tIO>& inputs,
+typedef void (*train_didUpdate_callback)(iLearner* learner, void* context);
+void train(iLearner* learner, const std::vector<tIO>& inputs,
                               const std::vector<tIO>& targets,
                                     std::vector<tIO>& outputs,  // <-- populated during training
-                              u32 batchSize);
-void evaluate(iLearner& learner, const std::vector<tIO>& inputs,
+                              u32 batchSize,
+                              train_didUpdate_callback callback = NULL,
+                              void* callbackContext = NULL);
+void evaluate(iLearner* learner, const std::vector<tIO>& inputs,
                                        std::vector<tIO>& outputs);
 
 
