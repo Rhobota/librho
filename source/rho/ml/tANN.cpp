@@ -107,7 +107,7 @@ f64 squash_max(tANN::nLayerType type)
 }
 
 
-class tInputWorker : public sync::iRunnable
+class tInputWorker : public sync::iRunnable, public bNonCopyable
 {
     public:
 
@@ -170,7 +170,7 @@ class tInputWorker : public sync::iRunnable
 };
 
 
-class tAccumWorker : public sync::iRunnable
+class tAccumWorker : public sync::iRunnable, public bNonCopyable
 {
     public:
 
@@ -234,7 +234,7 @@ class tAccumWorker : public sync::iRunnable
 };
 
 
-class tBackpropWorker : public sync::iRunnable
+class tBackpropWorker : public sync::iRunnable, public bNonCopyable
 {
     public:
 
@@ -268,7 +268,7 @@ class tBackpropWorker : public sync::iRunnable
 };
 
 
-class tUpdateWorker : public sync::iRunnable
+class tUpdateWorker : public sync::iRunnable, public bNonCopyable
 {
     public:
 
@@ -303,8 +303,9 @@ class tUpdateWorker : public sync::iRunnable
 };
 
 
-struct tLayer
-{
+class tLayer : public bNonCopyable
+{ public:
+
     vector<f64> a;
     vector<f64> A;
 
@@ -577,7 +578,7 @@ void tANN::printNetworkInfo(std::ostream& out) const
     out << "Artificial Neural Network Info:\n";
 
     out << "   size (top-to-bottom):";
-    for (u32 i = m_numLayers-1; (int)i >= 0; i--)
+    for (i32 i = ((i32)m_numLayers-1); i >= 0; i--)
         out << "  " << m_layers[i].a.size() << "(" << layerTypeToString(m_layers[i].layerType) << ")";
     out << "  " << m_layers[0].w.size()-1 << "(input)\n";
 
