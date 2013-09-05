@@ -650,7 +650,7 @@ void tANN::printNodeInfo(std::ostream& out) const
     out << endl;
 }
 
-void tANN::updateWeights()
+void tANN::update()
 {
     for (u32 i = 0; i < m_numLayers; i++)
     {

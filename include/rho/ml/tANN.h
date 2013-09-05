@@ -7,6 +7,7 @@
 #include <rho/iPackable.h>
 #include <rho/img/tImage.h>
 #include <rho/ml/common.h>
+#include <rho/ml/iLearner.h>
 #include <rho/sync/tThreadPool.h>
 
 #include <cmath>
@@ -20,7 +21,7 @@ namespace ml
 {
 
 
-class tANN : public rho::iPackable, public rho::bNonCopyable
+class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
 {
     public:
 
@@ -122,7 +123,7 @@ class tANN : public rho::iPackable, public rho::bNonCopyable
          *
          * The accumulated error rates are then cleared.
          */
-        void updateWeights();
+        void update();
 
         /**
          * Uses the current inter-node weights to evaluate the given input.
