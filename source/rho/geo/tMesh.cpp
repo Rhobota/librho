@@ -349,7 +349,7 @@ vector<tMesh::tMeshMaterial> readMtlFile(string filename)
         // Ambient texture map...
 //         else if (parts[0] == "map_Ka")
 //         {
-//             // todo
+//             // LIBTODO
 //         }
 
         // Diffuse texture map...
@@ -365,31 +365,31 @@ vector<tMesh::tMeshMaterial> readMtlFile(string filename)
         // Specular color texture map...
 //         else if (parts[0] == "map_Ks")
 //         {
-//             // todo
+//             // LIBTODO
 //         }
 
         // Specular highlight texture map...
 //         else if (parts[0] == "map_Ns")
 //         {
-//             // todo
+//             // LIBTODO
 //         }
 
         // Alpha texture map...
 //         else if (parts[0] == "map_d")
 //         {
-//             // todo
+//             // LIBTODO
 //         }
 
         // Illumination model...
 //         else if (parts[0] == "illum")
 //         {
-//             // todo
+//             // LIBTODO
 //         }
 
         // Reflection map...?
 //         else if (parts[0] == "map_refl")
 //         {
-//             // todo
+//             // LIBTODO
 //         }
 
         // Other stuff...?
@@ -536,19 +536,19 @@ tMesh::tMesh(string filename)
         // Named object...
         else if (parts[0] == "o")
         {
-            // todo
+            // LIBTODO
         }
 
         // Polygon group...
         else if (parts[0] == "g")
         {
-            // todo
+            // LIBTODO
         }
 
         // Smooth shading across polygons...
         else if (parts[0] == "s")
         {
-            // todo
+            // LIBTODO
         }
 
         // Parameter space vertices...
