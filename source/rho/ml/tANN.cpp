@@ -347,16 +347,16 @@ class tLayer : public bNonCopyable
         dw_accum = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
     }
 
-    void randomizeWeights(f64 rmin, f64 rmax, iReadable& lcgReadable)
+    void randomizeWeights(f64 rmin, f64 rmax, algo::iLCG& lcg)
     {
         for (u32 s = 0; s < w.size(); s++)
         {
             for (u32 i = 0; i < w[s].size(); i++)
             {
-                u32 r=0; lcgReadable.readAll((u8*)(&r), 4);
-                w[s][i] = ((f64)r) / 0xFFFFFFFF;       // [0.0, 1.0]
-                w[s][i] *= rmax-rmin;                  // [0.0, rmax-rmin]
-                w[s][i] += rmin;                       // [rmin, rmax]
+                u64 r = lcg.next();
+                w[s][i] = ((f64)r) / ((f64)lcg.randMax());    // [0.0, 1.0]
+                w[s][i] *= rmax-rmin;                         // [0.0, rmax-rmin]
+                w[s][i] += rmin;                              // [rmin, rmax]
             }
         }
     }
@@ -539,7 +539,7 @@ tANN::tANN(vector<u32> layerSizes,
                             // m_layers[0] is the lowest layer
                             // (i.e. first one above the input layer)
 
-    algo::tLCG lcg;
+    algo::tKnuthLCG lcg;
 
     for (u32 i = 1; i < layerSizes.size(); i++)
     {

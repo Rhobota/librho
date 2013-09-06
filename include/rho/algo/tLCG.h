@@ -12,9 +12,23 @@ namespace algo
 
 
 /**
+ * Interface for all LCG objects.
+ */
+class iLCG
+{
+    public:
+
+        virtual u64 next() = 0;
+        virtual u64 randMax() = 0;
+
+        virtual ~iLCG() { }
+};
+
+
+/**
  * The LCG used by glibc.
  */
-class tLCG : public iReadable
+class tLCG : public iReadable, public iLCG
 {
     public:
 
@@ -23,19 +37,21 @@ class tLCG : public iReadable
         i32 read(u8* buffer, i32 length);
         i32 readAll(u8* buffer, i32 length);
 
-        u32 next();
-        u32 randMax();
+        u64 next();
+        u64 randMax();
 
     private:
 
         u32 m_x;
+        u32 m_curr;
+        u8 m_currLeft;
 };
 
 
 /**
  * The LCG recommended by Knuth.
  */
-class tKnuthLCG : public iReadable
+class tKnuthLCG : public iReadable, public iLCG
 {
     public:
 

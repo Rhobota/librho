@@ -14,7 +14,7 @@ std::vector< std::pair<A,B> > zip(const std::vector<A>& a, const std::vector<B>&
         throw eInvalidArgument("The vectors must be the same size to zip them together.");
     std::vector< std::pair<A,B> > z(a.size());
     for (std::size_t i = 0; i < a.size(); i++)
-        z[i] = make_pair(a[i], b[i]);
+        z[i] = std::make_pair(a[i], b[i]);
     return z;
 }
 
@@ -24,7 +24,7 @@ std::vector< std::pair<A,B> > zip(const std::vector<A>& a, const B& b)
 {
     std::vector< std::pair<A,B> > z(a.size());
     for (std::size_t i = 0; i < a.size(); i++)
-        z[i] = make_pair(a[i], b);
+        z[i] = std::make_pair(a[i], b);
     return z;
 }
 
@@ -44,28 +44,28 @@ void unzip(const std::vector< std::pair<A,B> >& zipped, std::vector<A>& firstPar
 
 
 template <class A>
-void shuffle(std::vector<A>& v, iReadable& lcgReadable)
+void shuffle(std::vector<A>& v, iLCG& lcg)
 {
     if (v.size() == 0)
         return;
     for (std::size_t i = v.size()-1; i > 0; i--)
     {
-        u32 r=0; lcgReadable.readAll((u8*)(&r), 4);
-        r = r % (i+1);
+        u64 rr = lcg.next();
+        u32 r = (u32)(rr % (i+1));
         swap(v[i], v[r]);
     }
 }
 
 
 template <class A>
-std::vector<A> mix(const std::vector<A>& a, const std::vector<A>& b, iReadable& lcgReadable)
+std::vector<A> mix(const std::vector<A>& a, const std::vector<A>& b, iLCG& lcg)
 {
     std::vector<A> m;
     for (std::size_t i = 0; i < a.size(); i++)
         m.push_back(a[i]);
     for (std::size_t i = 0; i < b.size(); i++)
         m.push_back(b[i]);
-    shuffle(m, lcgReadable);
+    shuffle(m, lcg);
     return m;
 }
 

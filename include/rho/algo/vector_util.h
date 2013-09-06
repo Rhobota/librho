@@ -28,12 +28,12 @@ void unzip(const std::vector< std::pair<A,B> >& zipped, std::vector<A>& firstPar
                                                         std::vector<B>& secondPart);
 
 template <class A>
-void shuffle(std::vector<A>& v, iReadable& lcgReadable = gDefaultLCG);
+void shuffle(std::vector<A>& v, iLCG& lcg = gDefaultLCG);
 
 template <class A>
 std::vector<A> mix(const std::vector<A>& a,
                    const std::vector<A>& b,
-                   iReadable& lcgReadable = gDefaultLCG);
+                   iLCG& lcg = gDefaultLCG);
 
 
 }   // namespace algo
