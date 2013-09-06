@@ -44,27 +44,28 @@ void unzip(const std::vector< std::pair<A,B> >& zipped, std::vector<A>& firstPar
 
 
 template <class A>
-void shuffle(std::vector<A>& v)
+void shuffle(std::vector<A>& v, iReadable& lcgReadable)
 {
     if (v.size() == 0)
         return;
     for (std::size_t i = v.size()-1; i > 0; i--)
     {
-        int r = rand() % (i+1);
+        u32 r=0; lcgReadable.readAll((u8*)(&r), 4);
+        r = r % (i+1);
         swap(v[i], v[r]);
     }
 }
 
 
 template <class A>
-std::vector<A> mix(const std::vector<A>& a, const std::vector<A>& b)
+std::vector<A> mix(const std::vector<A>& a, const std::vector<A>& b, iReadable& lcgReadable)
 {
     std::vector<A> m;
     for (std::size_t i = 0; i < a.size(); i++)
         m.push_back(a[i]);
     for (std::size_t i = 0; i < b.size(); i++)
         m.push_back(b[i]);
-    shuffle(m);
+    shuffle(m, lcgReadable);
     return m;
 }
 
