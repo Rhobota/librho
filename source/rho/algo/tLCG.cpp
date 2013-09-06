@@ -8,7 +8,7 @@ namespace algo
 
 
 tLCG::tLCG(u32 seed)
-    : m_x(seed)
+    : m_x(seed), m_curr(0), m_currLeft(0)
 {
 }
 
@@ -23,12 +23,22 @@ i32 tLCG::readAll(u8* buffer, i32 length)
         throw eInvalidArgument("Stream read/write length must be >0");
 
     for (i32 i = 0; i < length; i++)
-        buffer[i] = (u8)(next() & 0xFF);
+    {
+        if (m_currLeft == 0)
+        {
+            m_curr = (u32)next();
+            m_currLeft = 3;
+        }
+
+        buffer[i] = (u8)(m_curr & 0xFF);
+        m_curr >>= 8;
+        m_currLeft--;
+    }
 
     return length;
 }
 
-u32 tLCG::next()
+u64 tLCG::next()
 {
     const u32 a = 1103515245;
     const u32 c = 12345;
@@ -36,7 +46,7 @@ u32 tLCG::next()
     return m_x;
 }
 
-u32 tLCG::randMax()
+u64 tLCG::randMax()
 {
     return 0x7FFFFFFF;
 }
