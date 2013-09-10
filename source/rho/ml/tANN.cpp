@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <utility>
 
@@ -34,6 +35,23 @@ string layerTypeToString(tANN::nLayerType type)
             return "hyperbolic";
         case tANN::kLayerTypeSoftmax:
             return "softmax";
+        default:
+            throw eInvalidArgument("Invalid layer type");
+    }
+}
+
+
+static
+char layerTypeToChar(tANN::nLayerType type)
+{
+    switch (type)
+    {
+        case tANN::kLayerTypeLogistic:
+            return 'l';
+        case tANN::kLayerTypeHyperbolic:
+            return 'h';
+        case tANN::kLayerTypeSoftmax:
+            return 's';
         default:
             throw eInvalidArgument("Invalid layer type");
     }
@@ -591,6 +609,23 @@ void tANN::printNetworkInfo(std::ostream& out) const
     out << "   normalizes input:     " << (m_normalizeLayerInput ? "yes" : "no") << "\n";
 
     out << endl;
+}
+
+string tANN::networkInfoString() const
+{
+    std::ostringstream out;
+
+    // Network size:
+    out << m_layers[0].w.size()-1 << 'i';
+    for (u32 i = 0; i < m_numLayers; i++)
+        out << '-' << m_layers[i].a.size() << layerTypeToChar(m_layers[i].layerType);
+
+    // Other network parameters:
+    out << "__" << m_alpha << 'a';
+    out << "__" << m_alphaMultiplier << 'm';
+    out << "__" << (m_normalizeLayerInput ? "norm" : "full");
+
+    return out.str();
 }
 
 void tANN::setThreadPool(refc<sync::tThreadPool> pool)
