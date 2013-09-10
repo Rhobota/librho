@@ -96,6 +96,11 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
         void printNetworkInfo(std::ostream& out) const;
 
         /**
+         * Returns a single-line version of printNetworkInfo().
+         */
+        std::string networkInfoString() const;
+
+        /**
          * The ANN's calculations can be parallelized in a thread pool, if you
          * provide it a thread pool. Use this method to set the thread pool.
          */
