@@ -1,10 +1,46 @@
 
-all : test.exec
+SOURCE_FILES = $(wildcard *.cpp)
+EXECUTABLES = $(patsubst %.cpp,%.exec,$(SOURCE_FILES))
+
+
+ifeq ($(shell uname),Linux)
+	# Linux stuff:
+	LIB_FLAGS = \
+		-lglfw3 \
+		-lpthread \
+		-lXrandr \
+		-lXi \
+		-lGL
+else
+ifeq ($(shell uname),Darwin)
+	# OSX stuff:
+	LIB_FLAGS = \
+		-lglfw3 \
+		-lpthread \
+		-framework Foundation \
+		-framework Cocoa \
+		-framework OpenGL \
+		-framework IOKit
+else
+	# Mingw stuff:
+	LIB_FLAGS = \
+		-lglfw3 \
+		-lpthread \
+		-lglu32 \
+		-lopengl32 \
+		-lws2_32 \
+		-lwsock32
+endif
+endif
+
+
+all : $(EXECUTABLES)
 
 %.exec : %.cpp
-	g++ -Wall -Wextra -Werror -Wno-unused-parameter -I ~/rhepo/libs/librho/include $< ~/rhepo/libs/librho/objects/librho.a -lglfw3 -lXrandr -lXi -lGL -o $@
+	$(TARGET)g++ -Wall -Werror -I../../../include $^ ../../../objects/librho.a $(LIB_FLAGS) -o $@
 
 clean :
-	rm -rf *.exec
+	@rm -f *.exec
+	@echo "Clean successful."
 
 .PHONY : all clean
