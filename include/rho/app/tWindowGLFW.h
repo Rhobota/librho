@@ -16,28 +16,21 @@ namespace app
 {
 
 
+// Pre-declarations
+class tWindowRunnable;
+class tMainLoopGLFW;
+
+
 /**
  * tWindowGLFW manages a GLFW window in its own thread. All the methods of this
- * class are thread-safe, including the constructor and destructor.
+ * class are thread-safe. The constructor and destructor can even be called
+ * from secondary threads (such as from other instances of tWindowGLFW).
  *
  * See tMainLoopGLFW for how to handle the application's main thread.
  */
 class tWindowGLFW
 {
     public:
-
-        //////////////////////////////////////////////////////////////////////
-        //
-        // Window management:
-        //
-        // (Do not overload these.)
-        //
-        //////////////////////////////////////////////////////////////////////
-
-        /**
-         * Returns the number of monitors on this computer.
-         */
-        static u8 numMonitors();
 
         /**
          * Creates a window using the GLFW3 API. This window
@@ -47,6 +40,11 @@ class tWindowGLFW
          * is called by that thread.
          *
          * 'monitorIndex' is only applicable when 'fullscreen' is true.
+         *
+         * Subclassing notes:
+         * Do not call any OpenGL API here, and do not call flipBuffer()
+         * or postEvents(). The only thing you should do here is setup
+         * your own state.
          */
         tWindowGLFW(u32 width, u32 height, std::string title,
                     bool fullscreen=false, u8 monitorIndex=0);
@@ -54,8 +52,26 @@ class tWindowGLFW
         /**
          * Waits for the internal thread to join, then destructs
          * this object.
+         *
+         * Subclassing notes:
+         * Do not call any OpenGL API here, and do not call flipBuffer()
+         * or postEvents(). The only thing you should do here is clean-up
+         * your own resources.
          */
         virtual ~tWindowGLFW();
+
+        //////////////////////////////////////////////////////////////////////
+        //
+        // Window management:
+        //
+        // (Do not override these.)
+        //
+        //////////////////////////////////////////////////////////////////////
+
+        /**
+         * Returns the number of monitors on this computer.
+         */
+        static u8 numMonitors();
 
         /**
          * Sets the title of this window.
@@ -124,7 +140,7 @@ class tWindowGLFW
         // You must call postEvents() from windowMain() in order to receive
         // these callbacks.
         //
-        // (Overload only what you need.)
+        // (Override only what you need.)
         //
         //////////////////////////////////////////////////////////////////////
 
@@ -193,9 +209,10 @@ class tWindowGLFW
 
         //////////////////////////////////////////////////////////////////////
         //
-        // This method is called on its own thread.
+        // This method is called on its own thread. Do not call this method
+        // yourself!
         //
-        // Overload this method and call the OpenGL API all you want.
+        // Override this method and call the OpenGL API all you want.
         //
         // Call postEvents() and flipBuffer() from this method to receive
         // event callbacks and flip the render-buffer.
@@ -203,14 +220,18 @@ class tWindowGLFW
         //////////////////////////////////////////////////////////////////////
 
         /**
-         * Called on its own thread. Overload and call the OpenGL API.
+         * Called on its own thread. Override and call the OpenGL API.
          * Call postEvents() and flipBuffer() periodically from this method.
+         *
+         * You can create new windows from this method. Simply allocate them
+         * and hand them off to the 'mainLoop' object.
          */
-        virtual void windowMain() = 0;
+        virtual void windowMain(tMainLoopGLFW* mainLoop) = 0;
 
     private:
 
-        void m_open();
+        // These are internally used by tMainLoopGLFW.
+        void m_open(tMainLoopGLFW* mainLoop);
         bool m_isDone();
         void m_close();
 
@@ -222,6 +243,7 @@ class tWindowGLFW
         bool m_initFullscreen;
         u8 m_initMonitorIndex;
 
+        tMainLoopGLFW* m_mainLoop;
         GLFWwindow* m_window;
         refc<sync::tThread> m_thread;
         sync::tPCQ< std::vector<u8> > m_eventQueue;

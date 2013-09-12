@@ -17,7 +17,7 @@ class tMyWindowGLFW : public rho::app::tWindowGLFW
         {
         }
 
-        void windowMain()
+        void windowMain(rho::app::tMainLoopGLFW* mainLoop)
         {
             while (!shouldWindowClose())
             {
