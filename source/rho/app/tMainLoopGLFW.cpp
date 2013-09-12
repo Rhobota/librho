@@ -37,7 +37,7 @@ void tMainLoopGLFW::once()
     {
         refc<tWindowGLFW> window = m_newWindowsQueue.pop();
         m_windows.insert(window);
-        window->m_open();
+        window->m_open(this);
     }
 
     bool foundOne = true;
@@ -56,6 +56,12 @@ void tMainLoopGLFW::once()
                 break;
             }
         }
+    }
+
+    std::set< refc<tWindowGLFW> >::iterator itr;
+    for (itr = m_windows.begin(); itr != m_windows.end(); itr++)
+    {
+
     }
 
     glfwPollEvents();

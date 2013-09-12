@@ -130,7 +130,7 @@ class tWindowRunnable : public sync::iRunnable
         void run()
         {
             glfwMakeContextCurrent(m_window->m_window);
-            m_window->windowMain();
+            m_window->windowMain(m_window->m_mainLoop);
             m_window->m_done = true;
         }
 
@@ -152,7 +152,8 @@ tWindowGLFW::tWindowGLFW(u32 width, u32 height, string title,
             bool fullscreen, u8 monitorIndex)
     : m_initWidth(width), m_initHeight(height),
       m_initTitle(title), m_initFullscreen(fullscreen),
-      m_initMonitorIndex(monitorIndex), m_window(NULL),
+      m_initMonitorIndex(monitorIndex),
+      m_mainLoop(NULL), m_window(NULL),
       m_thread(), m_eventQueue(8, sync::kGrow),
       m_done(false)
 {
@@ -160,11 +161,6 @@ tWindowGLFW::tWindowGLFW(u32 width, u32 height, string title,
 
 tWindowGLFW::~tWindowGLFW()
 {
-    if (m_thread)
-    {
-        m_thread->join();
-        m_thread = NULL;
-    }
 }
 
 void tWindowGLFW::setTitle(string newTitle)
@@ -331,8 +327,10 @@ void tWindowGLFW::mouseButtonCallback(int button, int action, int mods)
 {
 }
 
-void tWindowGLFW::m_open()
+void tWindowGLFW::m_open(tMainLoopGLFW* mainLoop)
 {
+    m_mainLoop = mainLoop;
+
     if (m_initFullscreen)
     {
         int count = 0;
@@ -375,6 +373,9 @@ bool tWindowGLFW::m_isDone()
 
 void tWindowGLFW::m_close()
 {
+    m_thread->join();
+    m_thread = NULL;
+
     glfwSetFramebufferSizeCallback(m_window, NULL);
     glfwSetWindowSizeCallback(m_window, NULL);
     glfwSetWindowPosCallback(m_window, NULL);
@@ -389,6 +390,8 @@ void tWindowGLFW::m_close()
 
     glfwDestroyWindow(m_window);
     m_window = NULL;
+
+    m_mainLoop = NULL;
 }
 
 
