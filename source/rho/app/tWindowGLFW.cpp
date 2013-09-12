@@ -131,7 +131,7 @@ class tWindowRunnable : public sync::iRunnable
         {
             glfwMakeContextCurrent(m_window->m_window);
             m_window->windowMain(m_window->m_mainLoop);
-            m_window->m_done = true;
+            m_window->m_setIsDone();
         }
 
     private:
@@ -155,7 +155,8 @@ tWindowGLFW::tWindowGLFW(u32 width, u32 height, string title,
       m_initMonitorIndex(monitorIndex),
       m_mainLoop(NULL), m_window(NULL),
       m_thread(), m_eventQueue(8, sync::kGrow),
-      m_done(false)
+      m_mux(), m_done(false),
+      m_oldTitle(title), m_newTitle(title)
 {
 }
 
@@ -165,7 +166,20 @@ tWindowGLFW::~tWindowGLFW()
 
 void tWindowGLFW::setTitle(string newTitle)
 {
-    // todo -- glfwSetWindowTitle() can only be called from the main thread
+    sync::tAutoSync as(m_mux);
+    m_newTitle = newTitle;
+}
+
+bool tWindowGLFW::m_hasNewTitle(string& newTitle)
+{
+    sync::tAutoSync as(m_mux);
+    if (m_oldTitle != m_newTitle)
+    {
+        newTitle = m_newTitle;
+        m_oldTitle = m_newTitle;
+        return true;
+    }
+    return false;
 }
 
 void tWindowGLFW::setCursorMode(int mode)
@@ -366,8 +380,15 @@ void tWindowGLFW::m_open(tMainLoopGLFW* mainLoop)
     m_thread = new sync::tThread(refc<sync::iRunnable>(new tWindowRunnable(this)));
 }
 
+void tWindowGLFW::m_setIsDone()
+{
+    sync::tAutoSync as(m_mux);   // I don't really think I need this, but I'm paranoid
+    m_done = true;
+}
+
 bool tWindowGLFW::m_isDone()
 {
+    sync::tAutoSync as(m_mux);   // I don't really think I need this, but I'm paranoid
     return m_done;
 }
 

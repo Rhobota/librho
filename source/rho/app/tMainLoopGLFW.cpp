@@ -59,9 +59,12 @@ void tMainLoopGLFW::once()
     }
 
     std::set< refc<tWindowGLFW> >::iterator itr;
+    std::string newTitle;
     for (itr = m_windows.begin(); itr != m_windows.end(); itr++)
     {
-
+        refc<tWindowGLFW> window = *itr;
+        if (window->m_hasNewTitle(newTitle))
+            glfwSetWindowTitle(window->m_window, newTitle.c_str());
     }
 
     glfwPollEvents();

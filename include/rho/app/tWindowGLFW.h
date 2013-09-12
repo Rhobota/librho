@@ -232,8 +232,10 @@ class tWindowGLFW
 
         // These are internally used by tMainLoopGLFW.
         void m_open(tMainLoopGLFW* mainLoop);
+        void m_setIsDone();
         bool m_isDone();
         void m_close();
+        bool m_hasNewTitle(std::string& newTitle);
 
     private:
 
@@ -247,7 +249,11 @@ class tWindowGLFW
         GLFWwindow* m_window;
         refc<sync::tThread> m_thread;
         sync::tPCQ< std::vector<u8> > m_eventQueue;
+
+        sync::tMutex m_mux;
         bool m_done;
+        std::string m_oldTitle;
+        std::string m_newTitle;
 
         friend class tWindowRunnable;
         friend class tMainLoopGLFW;
