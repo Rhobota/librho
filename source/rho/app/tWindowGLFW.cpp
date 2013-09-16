@@ -148,10 +148,20 @@ u8 tWindowGLFW::numMonitors()
     return (u8)count;
 }
 
-tWindowGLFW::tWindowGLFW(u32 width, u32 height, string title,
-            bool fullscreen, u8 monitorIndex)
+tWindowGLFW::tWindowGLFW(u32 width, u32 height, string title)
     : m_initWidth(width), m_initHeight(height),
-      m_initTitle(title), m_initFullscreen(fullscreen),
+      m_initTitle(title), m_initFullscreen(false),
+      m_initMonitorIndex(0),
+      m_mainLoop(NULL), m_window(NULL),
+      m_thread(), m_eventQueue(8, sync::kGrow),
+      m_mux(), m_done(false),
+      m_oldTitle(title), m_newTitle(title)
+{
+}
+
+tWindowGLFW::tWindowGLFW(u8 monitorIndex, string title)
+    : m_initWidth(0), m_initHeight(0),
+      m_initTitle(title), m_initFullscreen(true),
       m_initMonitorIndex(monitorIndex),
       m_mainLoop(NULL), m_window(NULL),
       m_thread(), m_eventQueue(8, sync::kGrow),
@@ -351,8 +361,12 @@ void tWindowGLFW::m_open(tMainLoopGLFW* mainLoop)
         GLFWmonitor** monitors = glfwGetMonitors(&count);
         if (m_initMonitorIndex >= count)
             throw eInvalidArgument("No monitor with that index.");
+        GLFWmonitor* monitor = monitors[m_initMonitorIndex];
+        const GLFWvidmode* vidmode = glfwGetVideoMode(monitor);
+        m_initWidth = (u32)vidmode->width;
+        m_initHeight = (u32)vidmode->height;
         m_window = glfwCreateWindow((int)m_initWidth, (int)m_initHeight, m_initTitle.c_str(),
-                                     monitors[m_initMonitorIndex], NULL);
+                                     monitor, NULL);
     }
     else
     {
