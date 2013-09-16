@@ -33,21 +33,32 @@ class tWindowGLFW
     public:
 
         /**
-         * Creates a window using the GLFW3 API. This window
+         * Creates a normal window using the GLFW3 API. This window
          * is not opened until this object is given to the
          * tMainLoopGLFW object. After the window opens
          * it is managed by its own thread and this->threadMain()
          * is called by that thread.
-         *
-         * 'monitorIndex' is only applicable when 'fullscreen' is true.
          *
          * Subclassing notes:
          * Do not call any OpenGL API here, and do not call flipBuffer()
          * or postEvents(). The only thing you should do here is setup
          * your own state.
          */
-        tWindowGLFW(u32 width, u32 height, std::string title,
-                    bool fullscreen=false, u8 monitorIndex=0);
+        tWindowGLFW(u32 width, u32 height, std::string title);
+
+        /**
+         * Creates a fullscreen window using the GLFW3 API. This window
+         * is not opened until this object is given to the
+         * tMainLoopGLFW object. After the window opens
+         * it is managed by its own thread and this->threadMain()
+         * is called by that thread.
+         *
+         * Subclassing notes:
+         * Do not call any OpenGL API here, and do not call flipBuffer()
+         * or postEvents(). The only thing you should do here is setup
+         * your own state.
+         */
+        tWindowGLFW(u8 monitorIndex, std::string title);
 
         /**
          * Waits for the internal thread to join, then destructs
