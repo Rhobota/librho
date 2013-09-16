@@ -94,7 +94,8 @@ static void start_callbacks(stbi *s, stbi_io_callbacks *c, void *user)
    s->io_user_data = user;
    s->buflen = sizeof(s->buffer_start);
    s->read_from_callbacks = 1;
-   s->img_buffer_original = s->buffer_start;
+   s->img_buffer = s->img_buffer_original = s->buffer_start;
+   s->img_buffer_end = s->img_buffer+s->buflen;
    refill_buffer(s);
 }
 
@@ -384,7 +385,7 @@ enum
 static void refill_buffer(stbi *s)
 {
    int n = (s->io.read)(s->io_user_data,(char*)s->buffer_start,s->buflen);
-   if (n == 0) {
+   if (n <= 0) {
       // at end of file, treat same as if from memory
       s->read_from_callbacks = 0;
       s->img_buffer = s->img_buffer_end-1;
