@@ -48,11 +48,9 @@ class tImage : public bNonCopyable, public iPackable
         void verticalFlip();
         void horizontalFlip();
 
-        void crop (geo::tRect rect,       tImage* dest)  const;
-        void scale(u32 width, u32 height, tImage* dest)  const;
-
-        void rotate(i32 originX, i32 originY, double angleDegrees,
-                    tImage* dest, bool shrinkToFit=false) const;
+        void crop  (geo::tRect rect,       tImage* dest)  const;
+        void scale (u32 width, u32 height, tImage* dest)  const;
+        void rotate(double angleDegrees,   tImage* dest)  const;
 
         /**
          * Adaptive thresholds the receiving image and stores the binary,

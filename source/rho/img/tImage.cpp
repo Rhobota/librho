@@ -445,8 +445,7 @@ void s_colorImageAtPoint(tImage* image, i32 npix, double x, double y, const u8* 
     s_colorImageAtPoint(image, npix, xFloor, yCeil, colorBuf, leftRatio*(1.0-topRatio));
 }
 
-void tImage::rotate(i32 originX, i32 originY, double angleDegrees,
-        tImage* dest, bool shrinkToFit) const
+void tImage::rotate(double angleDegrees, tImage* dest) const
 {
     // Stuff that will be needed below.
     i32 npix = bufUsed() / (width()*height());
@@ -455,10 +454,8 @@ void tImage::rotate(i32 originX, i32 originY, double angleDegrees,
     // Calculate how big the canvas needs to be.
     double diagAng = atan(((double)height())/width());
     double diagLen = hypot(width()/2.0, height()/2.0);
-    double newWidth  = shrinkToFit ? (std::min(fabs(cos(angleRad+diagAng)), fabs(cos(angleRad-diagAng))) * diagLen * 2)
-                                   : (std::max(fabs(cos(angleRad+diagAng)), fabs(cos(angleRad-diagAng))) * diagLen * 2);
-    double newHeight = shrinkToFit ? (std::min(fabs(sin(angleRad+diagAng)), fabs(sin(angleRad-diagAng))) * diagLen * 2)
-                                   : (std::max(fabs(sin(angleRad+diagAng)), fabs(sin(angleRad-diagAng))) * diagLen * 2);
+    double newWidth  = std::max(fabs(cos(angleRad+diagAng)), fabs(cos(angleRad-diagAng))) * diagLen * 2;
+    double newHeight = std::max(fabs(sin(angleRad+diagAng)), fabs(sin(angleRad-diagAng))) * diagLen * 2;
     double halfWidthGain = (newWidth-width())/2.0;
     double halfHeightGain = (newHeight-height())/2.0;
 
@@ -476,6 +473,8 @@ void tImage::rotate(i32 originX, i32 originY, double angleDegrees,
     double s = std::sin(angleRad);
 
     // For each pixel in the image, draw it onto the canvas at its rotated position.
+    double originX = width()/2.0;
+    double originY = height()/2.0;
     for (i32 y = 0; y < (i32)height(); y++)
     {
         for (i32 x = 0; x < (i32)width(); x++)
