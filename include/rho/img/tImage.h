@@ -28,7 +28,7 @@ class tImage : public bNonCopyable, public iPackable
                nImageFormat format);
         ~tImage();
 
-        void copyTo(tImage* other) const;  // <-- copies must be explicit
+        void copyTo(tImage* other) const;  // <-- copies must be explicit with this method
         void convertToFormat(nImageFormat format, tImage* dest) const;
 
         void setBufSize(u32 bufSize);      // <-- allocates a buffer of that size
@@ -51,8 +51,8 @@ class tImage : public bNonCopyable, public iPackable
         void crop (geo::tRect rect,       tImage* dest)  const;
         void scale(u32 width, u32 height, tImage* dest)  const;
 
-        void rotateImage(i32 originX, i32 originY, double angleDegrees,
-                         tImage* dest) const;
+        void rotate(i32 originX, i32 originY, double angleDegrees,
+                    tImage* dest, bool shrinkToFit=false) const;
 
         /**
          * Adaptive thresholds the receiving image and stores the binary,
