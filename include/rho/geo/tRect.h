@@ -22,6 +22,8 @@ class tRect : public bDrawableByArtist
         tRect(f64 x,     f64 y,
               f64 width, f64 height);
 
+        void normalize();
+
         tRect inset(f64 dx, f64 dy) const;
 
         tBox toBox() const;
