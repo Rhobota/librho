@@ -18,6 +18,20 @@ tRect::tRect(f64 x,     f64 y,
 {
 }
 
+void tRect::normalize()
+{
+    if (width < 0.0)
+    {
+        x += width;
+        width = -width;
+    }
+    if (height < 0.0)
+    {
+        y += height;
+        height = -height;
+    }
+}
+
 tRect tRect::inset(f64 dx, f64 dy) const
 {
     tRect o = *this;
