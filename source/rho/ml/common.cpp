@@ -68,6 +68,73 @@ tIO examplify(const img::tImage* image)
     return input;
 }
 
+void un_examplify(const tIO& io, bool color, u32 width,
+                  bool absolute, img::tImage* dest)
+{
+    // Create a copy of io that can be modified.
+    std::vector<f64> weights = io;
+
+    // Normalize the weights to [0.0, 255.0].
+    f64 maxval = -1e100;
+    f64 minval = 1e100;
+    for (u32 i = 0; i < weights.size(); i++)
+    {
+        maxval = std::max(maxval, weights[i]);
+        minval = std::min(minval, weights[i]);
+    }
+    if (absolute)
+    {
+        f64 absmax = std::max(std::fabs(maxval), std::fabs(minval));
+        for (u32 i = 0; i < weights.size(); i++)
+            weights[i] = (std::fabs(weights[i]) / absmax) * 255.0;
+    }
+    else
+    {
+        for (u32 i = 0; i < weights.size(); i++)
+        {
+            f64 val = (weights[i] - minval) * 255.0 / (maxval - minval);
+            weights[i] = val;
+        }
+    }
+
+    // Calculate some stuff.
+    u32 pixWidth = color ? 3 : 1;
+    if ((weights.size() % pixWidth) > 0)
+        throw eLogicError("Pixels do not align with the number of weights.");
+    u32 numPix = (u32) weights.size() / pixWidth;
+    if ((numPix % width) > 0)
+        throw eLogicError("Cannot build image of that width. Last row not filled.");
+    u32 height = numPix / width;
+
+    // Create the image.
+    dest->setFormat(img::kRGB24);
+    dest->setBufSize(width*height*3);
+    dest->setBufUsed(width*height*3);
+    dest->setWidth(width);
+    dest->setHeight(height);
+    u8* buf = dest->buf();
+    u32 bufIndex = 0;
+    u32 wIndex = 0;
+    for (u32 i = 0; i < height; i++)
+    {
+        for (u32 j = 0; j < width; j++)
+        {
+            if (color)
+            {
+                buf[bufIndex++] = (u8) weights[wIndex++];
+                buf[bufIndex++] = (u8) weights[wIndex++];
+                buf[bufIndex++] = (u8) weights[wIndex++];
+            }
+            else
+            {
+                buf[bufIndex++] = (u8) weights[wIndex];
+                buf[bufIndex++] = (u8) weights[wIndex];
+                buf[bufIndex++] = (u8) weights[wIndex++];
+            }
+        }
+    }
+}
+
 tIO examplify(u32 highDimension, u32 numDimensions)
 {
     if (highDimension >= numDimensions)

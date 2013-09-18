@@ -49,16 +49,14 @@ f64 hyperbolic_function_max();
 //////////////////////////////////////////////////////////////////////
 
 /**
- * Turns the given image into an example that can be trained-on.
- */
-tIO examplify(const img::tImage* image);
-
-/**
  * Turns the integer value into an example that can be trained-on.
  * The returned training example has 'numDimensions' number of
  * dimensions, where one dimension is set to 1.0, and all others
  * are set to 0.0. The high dimension's index is given by
  * 'highDimension'.
+ *
+ * This is useful for creating the target vector for doing
+ * classification.
  */
 tIO examplify(u32 highDimension, u32 numDimensions);
 
@@ -73,8 +71,37 @@ tIO examplify(u32 highDimension, u32 numDimensions);
  * index for the highest dimension is correct, thus the method
  * calculates the standard error between the given output and
  * the "correct" output.
+ *
+ * This is useful evaluating the output of a classification
+ * learner.
  */
 u32 un_examplify(const tIO& output, f64* error = NULL);
+
+/**
+ * Turns the given image into an example that can be trained-on.
+ */
+tIO examplify(const img::tImage* image);
+
+/**
+ * Generates an image representation of the given tIO object, 'io'.
+ *
+ * If 'io' should be interpreted as an RGB image, set 'color'
+ * to true. If the 'io' should be interpreted as a grey image,
+ * set 'color' to false.
+ *
+ * You must specify the 'width' of the generated image. The
+ * height will be derived by this function.
+ *
+ * If 'absolute' is set to true, the absolute value of the weights
+ * will be used when producing the image. Otherwise, the relative
+ * weights will be used to produce the image (meaning that weights
+ * of value zero will be some shade of grey if any negative weights
+ * are present).
+ *
+ * The generated image is stored in 'dest'.
+ */
+void un_examplify(const tIO& io, bool color, u32 width,
+                  bool absolute, img::tImage* dest);
 
 
 //////////////////////////////////////////////////////////////////////

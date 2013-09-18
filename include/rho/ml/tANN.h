@@ -173,7 +173,7 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
 
         /**
          * Generates an image representation of the specified node. The
-         * image includes the weights of the inter-node connections
+         * image shows the weights of the inter-node connections
          * below the specified node as well as the node's most recent
          * output value.
          *
