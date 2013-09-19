@@ -19,7 +19,7 @@ namespace ml
  * this learner are vector data.
  *
  * This typedef makes it easier to represent several input examples
- * or several target examples, without having to explicitly declare
+ * or several target examples without having to explicitly declare
  * vectors of vectors of floats.
  */
 typedef std::vector<f64> tIO;

@@ -330,7 +330,6 @@ f64  recall       (const tConfusionMatrix& confusionMatrix)
 
 bool train(iLearner* learner, const std::vector<tIO>& inputs,
                               const std::vector<tIO>& targets,
-                                    std::vector<tIO>& outputs,  // <-- populated during training
                               u32 batchSize,
                               train_didUpdate_callback callback,
                               void* callbackContext)
@@ -351,14 +350,13 @@ bool train(iLearner* learner, const std::vector<tIO>& inputs,
         throw eInvalidArgument("batchSize must be positive!");
     }
 
-    outputs.resize(inputs.size());
-
     std::vector<tIO> mostRecentBatch(batchSize);
     u32 batchCounter = 0;
+    tIO output;
 
     for (size_t i = 0; i < inputs.size(); i++)
     {
-        learner->addExample(inputs[i], targets[i], outputs[i]);
+        learner->addExample(inputs[i], targets[i], output);
         mostRecentBatch[batchCounter] = inputs[i];
         batchCounter++;
         if (batchCounter == batchSize)
