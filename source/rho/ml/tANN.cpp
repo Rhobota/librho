@@ -126,202 +126,6 @@ f64 squash_max(tANN::nLayerType type)
 }
 
 
-class tInputWorker : public sync::iRunnable, public bNonCopyable
-{
-    public:
-
-        tInputWorker(u32 off,
-                     u32 size,
-                     vector<f64>& a,
-                     vector<f64>& A,
-                     const vector<f64>& input,
-                     const vector< vector<f64> >& w,
-                     u8 normalizeLayerInput,
-                     tANN::nLayerType layerType)
-            : off(off), size(size), a(a), A(A), input(input),
-              w(w), normalizeLayerInput(normalizeLayerInput),
-              layerType(layerType)
-        {
-        }
-
-        void run()
-        {
-            for (u32 i = off; i < off+size; i++)
-                A[i] = 0.0;
-
-            for (u32 s = 0; s < input.size(); s++)
-            {
-                for (u32 i = off; i < off+size; i++)
-                    A[i] += w[s][i] * input[s];
-            }
-
-            for (u32 i = off; i < off+size; i++)
-                A[i] += w.back()[i] * 1.0;
-
-            if (normalizeLayerInput)
-            {
-                for (u32 i = off; i < off+size; i++)
-                    A[i] /= (f64) input.size();
-            }
-
-            if (layerType == tANN::kLayerTypeSoftmax)
-            {
-                for (u32 i = off; i < off+size; i++)
-                    a[i] = std::min(std::exp(A[i]), 1e100);
-            }
-            else
-            {
-                for (u32 i = off; i < off+size; i++)
-                    a[i] = squash(A[i], layerType);
-            }
-        }
-
-    private:
-
-        u32 off;
-        u32 size;
-        vector<f64>& a;
-        vector<f64>& A;
-        const vector<f64>& input;
-        const vector< vector<f64> >& w;
-        u8 normalizeLayerInput;
-        tANN::nLayerType layerType;
-};
-
-
-class tAccumWorker : public sync::iRunnable, public bNonCopyable
-{
-    public:
-
-        tAccumWorker(u32 off,
-                     u32 size,
-                     const vector<f64>& A,
-                     const vector<f64>& da,
-                     vector<f64>& dA,
-                     const vector<f64>& prev_a,
-                     vector< vector<f64> >& dw_accum,
-                     u8 normalizeLayerInput,
-                     tANN::nLayerType layerType)
-            : off(off), size(size), A(A), da(da), dA(dA), prev_a(prev_a), dw_accum(dw_accum),
-              normalizeLayerInput(normalizeLayerInput), layerType(layerType)
-        {
-        }
-
-        void run()
-        {
-            if (layerType == tANN::kLayerTypeSoftmax)
-            {
-                for (u32 i = off; i < off+size; i++)
-                    dA[i] = da[i];
-            }
-            else
-            {
-                for (u32 i = off; i < off+size; i++)
-                    dA[i] = da[i] * derivative_of_squash(A[i], layerType);
-            }
-
-            if (normalizeLayerInput)
-            {
-                f64 norm = 1.0 / ((f64)prev_a.size());
-                for (u32 s = 0; s < prev_a.size(); s++)
-                    for (u32 i = off; i < off+size; i++)
-                        dw_accum[s][i] += dA[i] * prev_a[s] * norm;
-                for (u32 i = off; i < off+size; i++)
-                    dw_accum.back()[i] += dA[i] * 1.0 * norm;
-            }
-            else
-            {
-                for (u32 s = 0; s < prev_a.size(); s++)
-                    for (u32 i = off; i < off+size; i++)
-                        dw_accum[s][i] += dA[i] * prev_a[s];
-                for (u32 i = off; i < off+size; i++)
-                    dw_accum.back()[i] += dA[i] * 1.0;
-            }
-        }
-
-    private:
-
-        u32 off;
-        u32 size;
-        const vector<f64>& A;
-        const vector<f64>& da;
-        vector<f64>& dA;
-        const vector<f64>& prev_a;
-        vector< vector<f64> >& dw_accum;
-        u8 normalizeLayerInput;
-        tANN::nLayerType layerType;
-};
-
-
-class tBackpropWorker : public sync::iRunnable, public bNonCopyable
-{
-    public:
-
-        tBackpropWorker(u32 off,
-                        u32 size,
-                        vector<f64>& prev_da,
-                        const vector<f64>& dA,
-                        const vector< vector<f64> >& w)
-            : off(off), size(size), prev_da(prev_da), dA(dA), w(w)
-        {
-        }
-
-        void run()
-        {
-            for (u32 s = off; s < off+size; s++)
-            {
-                prev_da[s] = 0.0;
-
-                for (u32 i = 0; i < dA.size(); i++)
-                    prev_da[s] += w[s][i] * dA[i];
-            }
-        }
-
-    private:
-
-        u32 off;
-        u32 size;
-        vector<f64>& prev_da;
-        const vector<f64>& dA;
-        const vector< vector<f64> >& w;
-};
-
-
-class tUpdateWorker : public sync::iRunnable, public bNonCopyable
-{
-    public:
-
-        tUpdateWorker(u32 off,
-                      u32 size,
-                      f64 alpha,
-                      vector< vector<f64> >& dw_accum,
-                      vector< vector<f64> >& w)
-            : off(off), size(size), alpha(alpha), dw_accum(dw_accum), w(w)
-        {
-        }
-
-        void run()
-        {
-            for (u32 s = off; s < off+size; s++)
-            {
-                for (u32 i = 0; i < w[s].size(); i++)
-                {
-                    w[s][i] -= alpha * dw_accum[s][i];
-                    dw_accum[s][i] = 0.0;
-                }
-            }
-        }
-
-    private:
-
-        u32 off;
-        u32 size;
-        f64 alpha;
-        vector< vector<f64> >& dw_accum;
-        vector< vector<f64> >& w;
-};
-
-
 class tLayer : public bNonCopyable
 { public:
 
@@ -379,116 +183,104 @@ class tLayer : public bNonCopyable
         }
     }
 
-    vector< pair<u32,u32> > splitForWorkers(u32 size, sync::tThreadPool* pool) const
-    {
-        vector< pair<u32,u32> > sched;
-        if (pool == NULL)
-        {
-            sched.push_back(make_pair(0, size));
-        }
-        else
-        {
-            u32 nt = pool->getNumThreads();
-            u32 div = size / nt;
-            u32 rem = size % nt;
-            u32 count = 0;
-            for (u32 i = 0; i < nt; i++)
-            {
-                u32 sizeHere = div;
-                if (i < rem)
-                    sizeHere++;
-                sched.push_back(make_pair(count, sizeHere));
-                count += sizeHere;
-            }
-            assert(count == size);
-        }
-        return sched;
-    }
-
-    void scheduleWorkers(vector< refc<sync::iRunnable> >& workers, sync::tThreadPool* pool) const
-    {
-        assert(workers.size() > 0);
-
-        if (workers.size() == 1)
-        {
-            workers[0]->run();
-        }
-
-        else
-        {
-            assert(pool != NULL);
-
-            vector<sync::tThreadPool::tTaskKey> keys(workers.size());
-
-            for (size_t i = 0; i < workers.size(); i++)
-                keys[i] = pool->push(workers[i]);
-
-            for (size_t i = 0; i < keys.size(); i++)
-                pool->wait(keys[i]);
-        }
-    }
-
-    void takeInput(const vector<f64>& input, u8 normalizeLayerInput, sync::tThreadPool* pool)
+    void takeInput(const vector<f64>& input, u8 normalizeLayerInput)
     {
         assertState(input.size());
 
-        vector< pair<u32,u32> > sched = splitForWorkers((u32)A.size(), pool);
-        vector< refc<sync::iRunnable> > workers(sched.size());
-        for (size_t i = 0; i < sched.size(); i++)
+        for (u32 i = 0; i < A.size(); i++)
+            A[i] = 0.0;
+
+        for (u32 s = 0; s < input.size(); s++)
         {
-            workers[i] = new tInputWorker(sched[i].first, sched[i].second, a, A, input,
-                                          w, normalizeLayerInput, layerType);
+            for (u32 i = 0; i < A.size(); i++)
+                A[i] += w[s][i] * input[s];
         }
-        scheduleWorkers(workers, pool);
+
+        for (u32 i = 0; i < A.size(); i++)
+            A[i] += w.back()[i] * 1.0;
+
+        if (normalizeLayerInput)
+        {
+            for (u32 i = 0; i < A.size(); i++)
+                A[i] /= (f64) input.size();
+        }
 
         if (layerType == tANN::kLayerTypeSoftmax)
         {
+            for (u32 i = 0; i < A.size(); i++)
+                a[i] = std::min(std::exp(A[i]), 1e100);
             f64 denom = 0.0;
             for (size_t i = 0; i < a.size(); i++)
                 denom += a[i];
             for (size_t i = 0; i < a.size(); i++)
                 a[i] /= denom;
         }
+        else
+        {
+            for (u32 i = 0; i < A.size(); i++)
+                a[i] = squash(A[i], layerType);
+        }
     }
 
-    void accumError(const vector<f64>& prev_a, u8 normalizeLayerInput, sync::tThreadPool* pool)
+    void accumError(const vector<f64>& prev_a, u8 normalizeLayerInput)
     {
         assertState(prev_a.size());
 
-        vector< pair<u32,u32> > sched = splitForWorkers((u32)dA.size(), pool);
-        vector< refc<sync::iRunnable> > workers(sched.size());
-        for (size_t i = 0; i < sched.size(); i++)
+        if (layerType == tANN::kLayerTypeSoftmax)
         {
-            workers[i] = new tAccumWorker(sched[i].first, sched[i].second, A, da, dA,
-                                          prev_a, dw_accum, normalizeLayerInput, layerType);
+            for (u32 i = 0; i < dA.size(); i++)
+                dA[i] = da[i];
         }
-        scheduleWorkers(workers, pool);
+        else
+        {
+            for (u32 i = 0; i < dA.size(); i++)
+                dA[i] = da[i] * derivative_of_squash(A[i], layerType);
+        }
+
+        if (normalizeLayerInput)
+        {
+            f64 norm = 1.0 / ((f64)prev_a.size());
+            for (u32 s = 0; s < prev_a.size(); s++)
+                for (u32 i = 0; i < dA.size(); i++)
+                    dw_accum[s][i] += dA[i] * prev_a[s] * norm;
+            for (u32 i = 0; i < dA.size(); i++)
+                dw_accum.back()[i] += dA[i] * 1.0 * norm;
+        }
+        else
+        {
+            for (u32 s = 0; s < prev_a.size(); s++)
+                for (u32 i = 0; i < dA.size(); i++)
+                    dw_accum[s][i] += dA[i] * prev_a[s];
+            for (u32 i = 0; i < dA.size(); i++)
+                dw_accum.back()[i] += dA[i] * 1.0;
+        }
     }
 
-    void backpropagate(vector<f64>& prev_da, sync::tThreadPool* pool) const
+    void backpropagate(vector<f64>& prev_da) const
     {
         assertState(prev_da.size());
 
-        vector< pair<u32,u32> > sched = splitForWorkers((u32)prev_da.size(), pool);
-        vector< refc<sync::iRunnable> > workers(sched.size());
-        for (size_t i = 0; i < sched.size(); i++)
+        for (u32 s = 0; s < prev_da.size(); s++)
         {
-            workers[i] = new tBackpropWorker(sched[i].first, sched[i].second, prev_da, dA, w);
+            prev_da[s] = 0.0;
+
+            for (u32 i = 0; i < dA.size(); i++)
+                prev_da[s] += w[s][i] * dA[i];
         }
-        scheduleWorkers(workers, pool);
     }
 
-    void updateWeights(f64 alpha, sync::tThreadPool* pool)
+    void updateWeights(f64 alpha)
     {
         assertState(w.size()-1);
 
-        vector< pair<u32,u32> > sched = splitForWorkers((u32)w.size(), pool);
-        vector< refc<sync::iRunnable> > workers(sched.size());
-        for (size_t i = 0; i < sched.size(); i++)
+        for (u32 s = 0; s < w.size(); s++)
         {
-            workers[i] = new tUpdateWorker(sched[i].first, sched[i].second, alpha, dw_accum, w);
+            for (u32 i = 0; i < w[s].size(); i++)
+            {
+                w[s][i] -= alpha * dw_accum[s][i];
+                dw_accum[s][i] = 0.0;
+            }
         }
-        scheduleWorkers(workers, pool);
     }
 
     void pack(iWritable* out) const
@@ -628,11 +420,6 @@ string tANN::networkInfoString() const
     return out.str();
 }
 
-void tANN::setThreadPool(refc<sync::tThreadPool> pool)
-{
-    m_pool = pool;
-}
-
 void tANN::addExample(const tIO& input, const tIO& target,
                       tIO& actualOutput)
 {
@@ -665,11 +452,11 @@ void tANN::addExample(const tIO& input, const tIO& target,
 
     for (u32 i = m_numLayers-1; i > 0; i--)
     {
-        m_layers[i].accumError(m_layers[i-1].a, m_normalizeLayerInput, m_pool);
-        m_layers[i].backpropagate(m_layers[i-1].da, m_pool);
+        m_layers[i].accumError(m_layers[i-1].a, m_normalizeLayerInput);
+        m_layers[i].backpropagate(m_layers[i-1].da);
     }
 
-    m_layers[0].accumError(input, m_normalizeLayerInput, m_pool);
+    m_layers[0].accumError(input, m_normalizeLayerInput);
 }
 
 void tANN::printNodeInfo(std::ostream& out) const
@@ -696,7 +483,7 @@ void tANN::update()
     {
         f64 distFromTop = m_numLayers-1-i;
         f64 alphaHere = m_alpha * std::pow(m_alphaMultiplier, distFromTop);
-        m_layers[i].updateWeights(alphaHere, m_pool);
+        m_layers[i].updateWeights(alphaHere);
     }
 }
 
@@ -705,10 +492,10 @@ void tANN::evaluate(const tIO& input, tIO& output)
     if (input.size()+1 != m_layers[0].w.size())
         throw eInvalidArgument("The input vector must be the same size as the ANN's input.");
 
-    m_layers[0].takeInput(input, m_normalizeLayerInput, m_pool);
+    m_layers[0].takeInput(input, m_normalizeLayerInput);
 
     for (u32 i = 1; i < m_numLayers; i++)
-        m_layers[i].takeInput(m_layers[i-1].a, m_normalizeLayerInput, m_pool);
+        m_layers[i].takeInput(m_layers[i-1].a, m_normalizeLayerInput);
 
     output = m_layers[m_numLayers-1].a;
 }
