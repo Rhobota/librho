@@ -14,8 +14,6 @@ using std::vector;
 using std::string;
 using std::cout;
 using std::endl;
-using std::pair;
-using std::make_pair;
 
 
 namespace rho
