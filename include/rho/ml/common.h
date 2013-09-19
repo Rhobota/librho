@@ -55,16 +55,17 @@ f64 hyperbolic_function_max();
  * are set to 0.0. The high dimension's index is given by
  * 'highDimension'.
  *
- * This is useful for creating the target vector for doing
- * classification.
+ * This is useful for creating the target vector when training
+ * a classifier.
  */
 tIO examplify(u32 highDimension, u32 numDimensions);
 
 /**
  * Does the opposite operation as the above examplify() function.
  * It does so by determining which dimension has the highest
- * value, and returns the index to that dimension. If 'error'
- * is not NULL, the standard error between the given output
+ * value, and returns the index to that dimension.
+ *
+ * If 'error' is not NULL, the std error between the given output
  * and the "correct" output is calculated and stored in 'error'.
  * The "correct" output is obtained by calling the examplify()
  * function above. The assumption is made that the returned
@@ -72,8 +73,7 @@ tIO examplify(u32 highDimension, u32 numDimensions);
  * calculates the standard error between the given output and
  * the "correct" output.
  *
- * This is useful evaluating the output of a classification
- * learner.
+ * This is useful for evaluating the output of a classifier.
  */
 u32 un_examplify(const tIO& output, f64* error = NULL);
 
@@ -131,16 +131,16 @@ f64 standardSquaredError(const std::vector<tIO>& outputs,
 //////////////////////////////////////////////////////////////////////
 
 /**
- * This typedef make creating a confusion matrix easier.
+ * This typedef makes creating a confusion matrix easier.
  */
 typedef std::vector< std::vector<u32> > tConfusionMatrix;
 
 /**
  * Creates a confusion matrix for the given output/target
  * pairs. For each output/target pair, un_examplify() is
- * called twice (once for the output and once for the target).
- * The corresponding entry in the confusion matrix is then
- * incremented for each output/target pair.
+ * called twice (once for the output and once for the target),
+ * and the corresponding entry in the confusion matrix is
+ * incremented.
  */
 void buildConfusionMatrix(const std::vector<tIO>& outputs,
                           const std::vector<tIO>& targets,
@@ -149,33 +149,37 @@ void buildConfusionMatrix(const std::vector<tIO>& outputs,
 /**
  * Prints the confusion matrix in a pretty format.
  */
-void print        (const tConfusionMatrix& confusionMatrix, std::ostream& out);
+void print(const tConfusionMatrix& confusionMatrix, std::ostream& out);
 
 /**
  * Calculates the error rate for the given confusion matrix.
+ *
  * Works for any confusion matrix.
  */
-f64  errorRate    (const tConfusionMatrix& confusionMatrix);
+f64  errorRate(const tConfusionMatrix& confusionMatrix);
 
 /**
  * Calculates the accuracy for the given confusion matrix.
+ *
  * Works for any confusion matrix.
  */
-f64  accuracy     (const tConfusionMatrix& confusionMatrix);
+f64  accuracy(const tConfusionMatrix& confusionMatrix);
 
 /**
  * Calculates the precision of the confusion matrix.
+ *
  * Only works for confusion matrices that have true/false
  * dimensions (aka, confusion matrices that are two-by-two).
  */
-f64  precision    (const tConfusionMatrix& confusionMatrix);
+f64  precision(const tConfusionMatrix& confusionMatrix);
 
 /**
  * Calculates the recall of the confusion matrix.
+ *
  * Only works for confusion matrices that have true/false
  * dimensions (aka, confusion matrices that are two-by-two).
  */
-f64  recall       (const tConfusionMatrix& confusionMatrix);
+f64  recall(const tConfusionMatrix& confusionMatrix);
 
 
 //////////////////////////////////////////////////////////////////////
@@ -202,18 +206,25 @@ typedef bool (*train_didUpdate_callback)(iLearner* learner,
  * the training process completed fully, and it returns false
  * if the callback function indicated that training should
  * halt.
- * Use this for training on the training-set examples.
+ *
+ * Use this for training on the training-set.
  */
 bool train(iLearner* learner, const std::vector<tIO>& inputs,
                               const std::vector<tIO>& targets,
-                                    std::vector<tIO>& outputs,  // <-- populated during training
                               u32 batchSize,
                               train_didUpdate_callback callback = NULL,
                               void* callbackContext = NULL);
 
 /**
  * This function tests the learner on the given examples.
- * Use this for evaluating the test-set examples.
+ * The 'outputs' parameter is populated by this function,
+ * making it easy to create a confusion matrix after this
+ * function returns (assuming, of course, that you have
+ * the targets for each of the inputs given to this function).
+ *
+ * Use this for evaluating how the learner is doing on the
+ * training-set AND test-set. Know how the learner is doing
+ * on each is vital.
  */
 void evaluate(iLearner* learner, const std::vector<tIO>& inputs,
                                        std::vector<tIO>& outputs);
