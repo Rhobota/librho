@@ -8,7 +8,6 @@
 #include <rho/img/tImage.h>
 #include <rho/ml/common.h>
 #include <rho/ml/iLearner.h>
-#include <rho/sync/tThreadPool.h>
 
 #include <cmath>
 #include <iostream>
@@ -99,12 +98,6 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * Returns a single-line version of printNetworkInfo().
          */
         std::string networkInfoString() const;
-
-        /**
-         * The ANN's calculations can be parallelized in a thread pool, if you
-         * provide it a thread pool. Use this method to set the thread pool.
-         */
-        void setThreadPool(refc<sync::tThreadPool> pool);
 
         /**
          * Shows the ANN one example. The ANN will calculate error rates at
@@ -213,8 +206,6 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
         f64 m_alphaMultiplier;
 
         u8 m_normalizeLayerInput;
-
-        refc<sync::tThreadPool> m_pool;
 };
 
 
