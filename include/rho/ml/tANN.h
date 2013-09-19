@@ -36,6 +36,15 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
         };
 
         /**
+         * Each layer has a gradient update rule. It determines how the
+         * gradient is used to update the weights when update() is called.
+         */
+        enum nGradUpType {
+            kGradUpTypeFixedLearningRate = 0,  // the standard learning rate method
+            kGradUpTypeMax               = 1   // marks the max of this enum (do not use)
+        };
+
+        /**
          * layerSizes.front() will be the dimensionality of the ANN's input.
          * This layer will be called the bottom layer.
          *
@@ -45,15 +54,9 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * All other specified layers will be hidden layers in the ANN,
          * meaning that there are (layerSizes.size()-2) hidden layers.
          *
-         * The learning rate of the top layer is given by the alpha parameter.
-         * The layer immediately below the top layer will learn at a rate
-         * of alpha*alphaMultiplier. The next previous layer will learn at
-         * a rate of alpha*alphaMultiplier^2. Etc...
-         *
-         * Notice that setting alphaMultiplier equal to 1.0 causes all layers
-         * of the network to learn at the same rate (i.e. alpha itself).
-         * Set alphaMultiplier greater than 1.0 to cause the lower layers of
-         * the network to learn at faster rates.
+         * The network defaults to the standard learning rate method for
+         * updating the weights using the calculated gradient. For this
+         * method, the learning rate (aka, alpha) must be specified.
          *
          * When a layer has many inputs, the weighted sum will be initially
          * very large. You can choose to normalize each layer's input with
@@ -73,7 +76,6 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          */
         tANN(std::vector<u32> layerSizes,
              f64 alpha,
-             f64 alphaMultiplier         = 1.0,
              bool normalizeLayerInput    = true,
              f64 randWeightMin           = -1.0,
              f64 randWeightMax           = 1.0,
@@ -206,13 +208,8 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
 
     private:
 
-        struct tLayer* m_layers;
+        class tLayer* m_layers;
         u32 m_numLayers;
-
-        f64 m_alpha;
-        f64 m_alphaMultiplier;
-
-        u8 m_normalizeLayerInput;
 };
 
 

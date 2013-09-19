@@ -127,18 +127,81 @@ f64 squash_max(tANN::nLayerType type)
 class tLayer : public bNonCopyable
 { public:
 
-    vector<f64> a;
-    vector<f64> A;
+    /////////////////////////////////////////////////////////////////////////////////////
+    // Connection state
+    /////////////////////////////////////////////////////////////////////////////////////
 
-    vector<f64> da;
-    vector<f64> dA;
+    vector<f64> a;     // the output of each unit (the squashed values)
+    vector<f64> A;     // the accumulated input of each unit (the pre-squashed values)
+
+    vector<f64> da;    // dE/da -- the gradient wrt the output of each unit
+    vector<f64> dA;    // dE/dA -- the gradient wrt the accumulated input of each unit
 
     vector< vector<f64> > w;   // <-- the weights connecting to the layer below
                                //                       (i.e. the previous layer)
 
-    vector< vector<f64> > dw_accum;
+    vector< vector<f64> > dw_accum;   // dE/dw -- the gradient of each weight
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    // Behavioral state -- squashing function and derivative calculations
+    /////////////////////////////////////////////////////////////////////////////////////
 
     tANN::nLayerType layerType;
+    u8 normalizeLayerInput;
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    // Behavioral state -- how is the gradient handled (learning rates, momentum, etc)
+    /////////////////////////////////////////////////////////////////////////////////////
+
+    tANN::nGradUpType gradUpType;
+    f64 alpha;
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    // Methods...
+    /////////////////////////////////////////////////////////////////////////////////////
+
+    tLayer()
+    {
+        // This is an invalid object. You must call init() to setup this object
+        // properly.
+        layerType = tANN::kLayerTypeMax;
+        normalizeLayerInput = 0;
+        gradUpType = tANN::kGradUpTypeMax;
+        alpha = 0.0;
+    }
+
+    void init(u32 prevSize, u32 mySize,
+              f64 rmin, f64 rmax, algo::iLCG& lcg,
+              tANN::nLayerType lt, u8 nli, f64 al)
+    {
+        // Setup connection state size.
+        a.resize(mySize, 0.0);
+        A.resize(mySize, 0.0);
+        da.resize(mySize, 0.0);
+        dA.resize(mySize, 0.0);
+        w.resize(prevSize+1);
+        for (u32 s = 0; s < w.size(); s++)
+            w[s].resize(mySize, 0.0);
+        dw_accum = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
+
+        // Randomize the initial weights.
+        for (u32 s = 0; s < w.size(); s++)
+        {
+            for (u32 i = 0; i < w[s].size(); i++)
+            {
+                u64 r = lcg.next();
+                w[s][i] = ((f64)r) / ((f64)lcg.randMax());    // [0.0, 1.0]
+                w[s][i] *= rmax-rmin;                         // [0.0, rmax-rmin]
+                w[s][i] += rmin;                              // [rmin, rmax]
+            }
+        }
+
+        // Setup behavioral state.
+        layerType = lt;
+        normalizeLayerInput = nli;
+        gradUpType = tANN::kGradUpTypeFixedLearningRate;
+        alpha = al;
+    }
 
     void assertState(size_t prevLayerSize) const
     {
@@ -153,35 +216,13 @@ class tLayer : public bNonCopyable
             assert(A.size() == w[s].size());
             assert(w[s].size() == dw_accum[s].size());
         }
+
+        assert(layerType >= 0 && layerType < tANN::kLayerTypeMax);
+        assert(gradUpType >= 0 && gradUpType < tANN::kGradUpTypeMax);
+        assert(alpha > 0.0);
     }
 
-    void setSizes(u32 prevSize, u32 mySize)
-    {
-        a.resize(mySize, 0.0);
-        A.resize(mySize, 0.0);
-        da.resize(mySize, 0.0);
-        dA.resize(mySize, 0.0);
-        w.resize(prevSize+1);
-        for (u32 s = 0; s < w.size(); s++)
-            w[s].resize(mySize, 0.0);
-        dw_accum = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
-    }
-
-    void randomizeWeights(f64 rmin, f64 rmax, algo::iLCG& lcg)
-    {
-        for (u32 s = 0; s < w.size(); s++)
-        {
-            for (u32 i = 0; i < w[s].size(); i++)
-            {
-                u64 r = lcg.next();
-                w[s][i] = ((f64)r) / ((f64)lcg.randMax());    // [0.0, 1.0]
-                w[s][i] *= rmax-rmin;                         // [0.0, rmax-rmin]
-                w[s][i] += rmin;                              // [rmin, rmax]
-            }
-        }
-    }
-
-    void takeInput(const vector<f64>& input, u8 normalizeLayerInput)
+    void takeInput(const vector<f64>& input)
     {
         assertState(input.size());
 
@@ -220,7 +261,7 @@ class tLayer : public bNonCopyable
         }
     }
 
-    void accumError(const vector<f64>& prev_a, u8 normalizeLayerInput)
+    void accumError(const vector<f64>& prev_a)
     {
         assertState(prev_a.size());
 
@@ -267,7 +308,7 @@ class tLayer : public bNonCopyable
         }
     }
 
-    void updateWeights(f64 alpha)
+    void updateWeights()
     {
         assertState(w.size()-1);
 
@@ -283,6 +324,8 @@ class tLayer : public bNonCopyable
 
     void pack(iWritable* out) const
     {
+        throw eNotImplemented("The state of this object is in flux right now, so I'm waiting to finish this method.");
+
         u8 type = (u8) layerType;
         rho::pack(out, type);
 
@@ -295,6 +338,8 @@ class tLayer : public bNonCopyable
 
     void unpack(iReadable* in)
     {
+        throw eNotImplemented("The state of this object is in flux right now, so I'm waiting to finish this method.");
+
         u8 type;
         rho::unpack(in, type);
         layerType = (tANN::nLayerType) type;
@@ -315,23 +360,17 @@ class tLayer : public bNonCopyable
 
 tANN::tANN(vector<u32> layerSizes,
            f64 alpha,
-           f64 alphaMultiplier,
            bool normalizeLayerInput,
            f64 randWeightMin,
            f64 randWeightMax,
            nLayerType defaultLayerType)
     : m_layers(NULL),
-      m_numLayers(0),
-      m_alpha(alpha),
-      m_alphaMultiplier(alphaMultiplier),
-      m_normalizeLayerInput(normalizeLayerInput ? 1 : 0)
+      m_numLayers(0)
 {
     if (layerSizes.size() < 2)
         throw eInvalidArgument("There must be at least an input and output layer.");
     if (alpha <= 0.0)
         throw eInvalidArgument("The learning rate must be greater than 0.0.");
-    if (alphaMultiplier <= 0.0)
-        throw eInvalidArgument("The learning rate multiplier must be greater than 0.0.");
     if (defaultLayerType < 0 || defaultLayerType >= kLayerTypeMax)
         throw eInvalidArgument("Invalid layer type");
     if (defaultLayerType == kLayerTypeSoftmax)
@@ -351,18 +390,15 @@ tANN::tANN(vector<u32> layerSizes,
 
     for (u32 i = 1; i < layerSizes.size(); i++)
     {
-        m_layers[i-1].layerType = defaultLayerType;
-        m_layers[i-1].setSizes(layerSizes[i-1], layerSizes[i]);
-        m_layers[i-1].randomizeWeights(randWeightMin, randWeightMax, lcg);
+        m_layers[i-1].init(layerSizes[i-1], layerSizes[i],
+                           randWeightMin, randWeightMax, lcg,
+                           defaultLayerType, normalizeLayerInput?1:0, alpha);
     }
 }
 
 tANN::tANN(iReadable* in)
     : m_layers(NULL),
-      m_numLayers(0),
-      m_alpha(1.0),
-      m_alphaMultiplier(1.0),
-      m_normalizeLayerInput(1)
+      m_numLayers(0)
 {
     this->unpack(in);
 }
@@ -394,10 +430,6 @@ void tANN::printNetworkInfo(std::ostream& out) const
         out << "  " << m_layers[i].a.size() << "(" << layerTypeToString(m_layers[i].layerType) << ")";
     out << "  " << m_layers[0].w.size()-1 << "(input)\n";
 
-    out << "   learning rate:        " << m_alpha << "\n";
-    out << "   rate multiplier:      " << m_alphaMultiplier << "\n";
-    out << "   normalizes input:     " << (m_normalizeLayerInput ? "yes" : "no") << "\n";
-
     out << endl;
 }
 
@@ -409,11 +441,6 @@ string tANN::networkInfoString() const
     out << m_layers[0].w.size()-1 << 'i';
     for (u32 i = 0; i < m_numLayers; i++)
         out << '-' << m_layers[i].a.size() << layerTypeToChar(m_layers[i].layerType);
-
-    // Other network parameters:
-    out << "__" << m_alpha << 'a';
-    out << "__" << m_alphaMultiplier << 'm';
-    out << "__" << (m_normalizeLayerInput ? "norm" : "full");
 
     return out.str();
 }
@@ -450,11 +477,11 @@ void tANN::addExample(const tIO& input, const tIO& target,
 
     for (u32 i = m_numLayers-1; i > 0; i--)
     {
-        m_layers[i].accumError(m_layers[i-1].a, m_normalizeLayerInput);
+        m_layers[i].accumError(m_layers[i-1].a);
         m_layers[i].backpropagate(m_layers[i-1].da);
     }
 
-    m_layers[0].accumError(input, m_normalizeLayerInput);
+    m_layers[0].accumError(input);
 }
 
 void tANN::printNodeInfo(std::ostream& out) const
@@ -479,9 +506,7 @@ void tANN::update()
 {
     for (u32 i = 0; i < m_numLayers; i++)
     {
-        f64 distFromTop = m_numLayers-1-i;
-        f64 alphaHere = m_alpha * std::pow(m_alphaMultiplier, distFromTop);
-        m_layers[i].updateWeights(alphaHere);
+        m_layers[i].updateWeights();
     }
 }
 
@@ -490,10 +515,10 @@ void tANN::evaluate(const tIO& input, tIO& output)
     if (input.size()+1 != m_layers[0].w.size())
         throw eInvalidArgument("The input vector must be the same size as the ANN's input.");
 
-    m_layers[0].takeInput(input, m_normalizeLayerInput);
+    m_layers[0].takeInput(input);
 
     for (u32 i = 1; i < m_numLayers; i++)
-        m_layers[i].takeInput(m_layers[i-1].a, m_normalizeLayerInput);
+        m_layers[i].takeInput(m_layers[i-1].a);
 
     output = m_layers[m_numLayers-1].a;
 }
@@ -635,23 +660,31 @@ void tANN::getImage(u32 layerIndex, u32 nodeIndex,
 void tANN::pack(iWritable* out) const
 {
     rho::pack(out, m_numLayers);
-    rho::pack(out, m_alpha);
-    rho::pack(out, m_alphaMultiplier);
-    rho::pack(out, m_normalizeLayerInput);
     for (u32 i = 0; i < m_numLayers; i++)
         m_layers[i].pack(out);
 }
 
 void tANN::unpack(iReadable* in)
 {
-    rho::unpack(in, m_numLayers);
-    rho::unpack(in, m_alpha);
-    rho::unpack(in, m_alphaMultiplier);
-    rho::unpack(in, m_normalizeLayerInput);
+    // Try to unpack the network.
+    u32 numLayers;
+    rho::unpack(in, numLayers);
+    tLayer* layers = new tLayer[numLayers];
+    try
+    {
+        for (u32 i = 0; i < numLayers; i++)
+            layers[i].unpack(in);
+    }
+    catch (ebObject& e)
+    {
+        delete [] layers;
+        throw;
+    }
+
+    // If it worked, clobber the current network.
+    m_numLayers = numLayers;
     delete [] m_layers;
-    m_layers = new tLayer[m_numLayers];
-    for (u32 i = 0; i < m_numLayers; i++)
-        m_layers[i].unpack(in);
+    m_layers = layers;
 }
 
 
