@@ -57,6 +57,28 @@ f64 hyperbolic_function_max()
 }
 
 
+tIO examplify(u32 highDimension, u32 numDimensions)
+{
+    if (highDimension >= numDimensions)
+        throw eInvalidArgument("highDimension must be < numDimensions");
+    tIO target(numDimensions, 0.0);
+    target[highDimension] = 1.0;
+    return target;
+}
+
+u32 un_examplify(const tIO& output, f64* error)
+{
+    if (output.size() == 0)
+        throw eInvalidArgument("The output vector must have at least one dimension!");
+    u32 maxindex = 0;
+    for (size_t i = 1; i < output.size(); i++)
+        if (output[i] > output[maxindex])
+            maxindex = (u32)i;
+    if (error)
+        *error = standardSquaredError(output, examplify(maxindex, (u32)output.size()));
+    return maxindex;
+}
+
 tIO examplify(const img::tImage* image)
 {
     if (image->bufUsed() == 0)
@@ -133,28 +155,6 @@ void un_examplify(const tIO& io, bool color, u32 width,
             }
         }
     }
-}
-
-tIO examplify(u32 highDimension, u32 numDimensions)
-{
-    if (highDimension >= numDimensions)
-        throw eInvalidArgument("highDimension must be < numDimensions");
-    tIO target(numDimensions, 0.0);
-    target[highDimension] = 1.0;
-    return target;
-}
-
-u32 un_examplify(const tIO& output, f64* error)
-{
-    if (output.size() == 0)
-        throw eInvalidArgument("The output vector must have at least one dimension!");
-    u32 maxindex = 0;
-    for (size_t i = 1; i < output.size(); i++)
-        if (output[i] > output[maxindex])
-            maxindex = (u32)i;
-    if (error)
-        *error = standardSquaredError(output, examplify(maxindex, (u32)output.size()));
-    return maxindex;
 }
 
 
@@ -243,7 +243,7 @@ void printDashes(const tConfusionMatrix& confusionMatrix, std::ostream& out, u32
     out << std::endl;
 }
 
-void print        (const tConfusionMatrix& confusionMatrix, std::ostream& out)
+void print(const tConfusionMatrix& confusionMatrix, std::ostream& out)
 {
     if (confusionMatrix.size() == 0)
         throw eInvalidArgument("Invalid confusion matrix");
@@ -273,7 +273,7 @@ void print        (const tConfusionMatrix& confusionMatrix, std::ostream& out)
     out << std::endl;
 }
 
-f64  errorRate    (const tConfusionMatrix& confusionMatrix)
+f64  errorRate(const tConfusionMatrix& confusionMatrix)
 {
     u32 total = 0;
     for (size_t i = 0; i < confusionMatrix.size(); i++)
@@ -285,7 +285,7 @@ f64  errorRate    (const tConfusionMatrix& confusionMatrix)
     return ((f64)(total - correct)) / total;
 }
 
-f64  accuracy     (const tConfusionMatrix& confusionMatrix)
+f64  accuracy(const tConfusionMatrix& confusionMatrix)
 {
     u32 total = 0;
     for (size_t i = 0; i < confusionMatrix.size(); i++)
@@ -297,7 +297,7 @@ f64  accuracy     (const tConfusionMatrix& confusionMatrix)
     return ((f64)correct) / total;
 }
 
-f64  precision    (const tConfusionMatrix& confusionMatrix)
+f64  precision(const tConfusionMatrix& confusionMatrix)
 {
     if (confusionMatrix.size() != 2)
         throw eInvalidArgument("Precision is only defined for boolean classification.");
@@ -312,7 +312,7 @@ f64  precision    (const tConfusionMatrix& confusionMatrix)
     return tp / (tp + fp);
 }
 
-f64  recall       (const tConfusionMatrix& confusionMatrix)
+f64  recall(const tConfusionMatrix& confusionMatrix)
 {
     if (confusionMatrix.size() != 2)
         throw eInvalidArgument("Recall is only defined for boolean classification.");

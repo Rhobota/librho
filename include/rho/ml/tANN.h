@@ -29,10 +29,10 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * which squashing function is used on that layer.
          */
         enum nLayerType {
-            kLayerTypeLogistic = 0,
-            kLayerTypeHyperbolic = 1,
-            kLayerTypeSoftmax = 2,
-            kLayerTypeMax = 3
+            kLayerTypeLogistic      = 0,
+            kLayerTypeHyperbolic    = 1,
+            kLayerTypeSoftmax       = 2,
+            kLayerTypeMax           = 3  // <-- represents the max of this enum (do not use)
         };
 
         /**
@@ -67,14 +67,16 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * squashing function is used on that layer. Each layer is
          * initialized with the given defaultLayerType. This type may
          * not be kLayerTypeSoftmax because only the top layer of a network
-         * can have that type (not all layers).
+         * can have that type (not all layers). If you would like to top
+         * layer of the network to be a softmax group, use the setLayerType()
+         * method after the object is constructed but before learning starts.
          */
         tANN(std::vector<u32> layerSizes,
              f64 alpha,
-             f64 alphaMultiplier = 1.0,
-             bool normalizeLayerInput = true,
-             f64 randWeightMin = -1.0,
-             f64 randWeightMax = 1.0,
+             f64 alphaMultiplier         = 1.0,
+             bool normalizeLayerInput    = true,
+             f64 randWeightMin           = -1.0,
+             f64 randWeightMax           = 1.0,
              nLayerType defaultLayerType = kLayerTypeHyperbolic);
 
         /**
@@ -154,6 +156,11 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
 
         /**
          * Returns the bias value of the specified node.
+         *
+         * The getWeights() method omits the bias of each node so that
+         * the number of weights returned is equal to the dimensionality
+         * of the layer below. This method is how you can access the bias
+         * of a node.
          */
         f64 getBias(u32 layerIndex, u32 nodeIndex) const;
 
