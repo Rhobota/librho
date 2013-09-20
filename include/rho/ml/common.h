@@ -200,7 +200,7 @@ typedef bool (*train_didUpdate_callback)(iLearner* learner,
                                          void* context);
 
 /**
- * This functions trains the leaner on the given examples,
+ * This function trains the leaner on the given examples,
  * calling the callback function after each batch has been
  * processed by the learner. This function returns true if
  * the training process completed fully, and it returns false

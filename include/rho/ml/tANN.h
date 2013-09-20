@@ -9,10 +9,6 @@
 #include <rho/ml/common.h>
 #include <rho/ml/iLearner.h>
 
-#include <cmath>
-#include <iostream>
-#include <vector>
-
 
 namespace rho
 {
@@ -24,9 +20,13 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
 {
     public:
 
+        //////////////////////////////////////////////////////////////////////
+        // Enumerations used within tANN
+        //////////////////////////////////////////////////////////////////////
+
         /**
          * Each layer of the ANN has a certain type. That type defines
-         * which squashing function is used on that layer.
+         * which squashing function is used on the neurons in that layer.
          */
         enum nLayerType {
             kLayerTypeLogistic      = 0,
@@ -36,65 +36,151 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
         };
 
         /**
-         * Each layer also has a gradient update rule. It determines how the
-         * gradient is used to update the weights when update() is called.
+         * Each layer also has a weight update rule. It determines how the
+         * gradient is used to update that layer's incoming weights during
+         * training.
          */
-        enum nGradUpType {
-            kGradUpTypeFixedLearningRate = 0,  // the standard learning rate method
-            kGradUpTypeMax               = 1   // marks the max of this enum (do not use)
+        enum nWeightUpRule {
+            kWeightUpRuleNone              = 0,  // no changes will be made to the weights
+            kWeightUpRuleFixedLearningRate = 1,  // the standard fixed learning rate method
+            kWeightUpRuleMax               = 2   // marks the max of this enum (do not use)
         };
 
-        /**
-         * layerSizes.front() will be the dimensionality of the ANN's input.
-         * This layer will be called the bottom layer.
-         *
-         * layerSizes.back() will be the dimensionality of the ANN's output.
-         * This layer will be called the top layer.
-         *
-         * All other specified layers will be hidden layers in the ANN,
-         * meaning that there are (layerSizes.size()-2) hidden layers.
-         *
-         * The network defaults to the standard learning rate method for
-         * updating the weights using the calculated gradient. For this
-         * method, the learning rate (aka, "alpha") must be specified.
-         *
-         * When a layer has many inputs, the weighted sum will be initially
-         * very large. You can choose to normalize each layer's input with
-         * respect to the number of inputs so that the weighted sum is not
-         * so large. Do so by setting normalizeLayerInput to true.
-         *
-         * The network's weights are initialized randomly over the uniform
-         * range [randWeightMin, randWeightMax].
-         *
-         * Each layer of the ANN has a certain type which defines which
-         * squashing function is used on that layer. Each layer is
-         * initialized with the given defaultLayerType. This type may
-         * not be kLayerTypeSoftmax because only the top layer of a network
-         * can have that type (not all layers). If you would like to top
-         * layer of the network to be a softmax group, use the setLayerType()
-         * method after the object is constructed but before learning starts.
-         */
-        tANN(std::vector<u32> layerSizes,
-             f64 alpha,
-             bool normalizeLayerInput    = true,
-             f64 randWeightMin           = -1.0,
-             f64 randWeightMax           = 1.0,
-             nLayerType defaultLayerType = kLayerTypeHyperbolic);
+        //////////////////////////////////////////////////////////////////////
+        // Constructors / destructor
+        //////////////////////////////////////////////////////////////////////
 
         /**
-         * Reads the ANN from an input stream.
+         * Reads the ANN from an input stream. This is useful for
+         * restoring an ANN from disk for more training, or for using
+         * a pre-trained ANN in an application.
          */
         tANN(iReadable* in);
 
         /**
-         * Sets the type of the specified layer.
+         * Creates a new ANN which will be subsequently trained.
          *
-         * You may only specify kLayerTypeSoftmax for the top-most layer.
+         * The size of each layer will be specified by the 'layerSizes'
+         * vector. "layerSizes.front()" will be the dimensionality of the
+         * ANN's input. "layerSizes.back()" will be the dimensionality of
+         * the ANN's output. All other specified layers will be hidden
+         * layers in the ANN, meaning that there are "layerSizes.size()-2"
+         * hidden layers. The network will not actually create a layer
+         * for the input, so the number of layers in the network will be
+         * equal to "layerSizes.size()-1". The layer immediately above the
+         * input will be called the "bottom layer". The layer that represents
+         * the output will be called the "top layer".
+         *
+         * The network's weights are initialized randomly over the uniform
+         * range ['randWeightMin', 'randWeightMax'].
+         *
+         * By default:
+         *     1. The network's layer type is set as kLayerTypeHyperbolic
+         *        for all layers.
+         *     2. Every layer will have 'normalizeLayerInput' set to true.
+         *     3. The network will NOT be ready to learn; that is, all the
+         *        layers' weight update rules will be set to kWeightUpRuleNone.
+         *        Use the methods below to specify how the network should
+         *        do its learning before you begin training.
          */
-        void setLayerType(u32 layerIndex, nLayerType type);
+        tANN(std::vector<u32> layerSizes,
+             f64 randWeightMin = -1.0,
+             f64 randWeightMax = 1.0);
 
         /**
-         * Prints the network size, learning rate, etc.
+         * Destructor...
+         */
+        ~tANN();
+
+        //////////////////////////////////////////////////////////////////////
+        // Network configuration -- do this before training!
+        //////////////////////////////////////////////////////////////////////
+
+        /**
+         * Sets the layer type of one layer (first method) or
+         * all layers (second method). The layer type determines
+         * which squashing function is used on the neurons in a
+         * layer.
+         *
+         * Note: You may only specify kLayerTypeSoftmax for the
+         *       top layer.
+         */
+        void setLayerType(nLayerType type, u32 layerIndex);
+        void setLayerType(nLayerType type);
+
+        /**
+         * Sets whether or not a layer normalizes its input wrt
+         * the number of inputs. Doing this keeps the total input
+         * to a neuron from being very large early in training, which
+         * is common for neurons with many inputs, and which causes
+         * the neuron to be over-saturated making learning slow due
+         * to small gradients on the plateaus of the squashing function.
+         * This method turns this feature on or off for one layer
+         * (first method) or all layers (second method).
+         */
+        void setNormalizeLayerInput(bool on, u32 layerIndex);
+        void setNormalizeLayerInput(bool on);
+
+        /**
+         * Sets the weight update rule for one layer (first method)
+         * or all layers (second method).
+         *
+         * For each layer, you must also setup the learning parameters
+         * associated with the weight update rule for that layer.
+         * Below describes the parameters needed for each rule:
+         *
+         *    - kWeightUpRuleNone
+         *         -- no extra parameters needed
+         *
+         *    - kWeightUpRuleFixedLearningRate
+         *         -- requires setAlpha()
+         */
+        void setWeightUpRule(nWeightUpRule rule, u32 layerIndex);
+        void setWeightUpRule(nWeightUpRule rule);
+
+        /**
+         * Sets the alpha parameter for one layer (first method) or
+         * all layers (second method). The alpha parameter is the
+         * "fixed learning rate" parameter, used when the weight update
+         * rule is kWeightUpRuleFixedLearningRate.
+         */
+        void setAlpha(f64 alpha, u32 layerIndex);
+        void setAlpha(f64 alpha);
+
+        //////////////////////////////////////////////////////////////////////
+        // Training -- this is the iLearner interface
+        //////////////////////////////////////////////////////////////////////
+
+        /**
+         * Shows the ANN one example. The ANN will calculate the error
+         * gradients for each weight in the network, then add those gradients
+         * to the accumulated error gradients for each weight.
+         *
+         * The network's weights will not be updated by this method.
+         */
+        void addExample(const tIO& input, const tIO& target,
+                        tIO& actualOutput);
+
+        /**
+         * Updates the network's weights using the accumulated error
+         * gradients. Updates are made according to the current weight
+         * update rule for each layer.
+         *
+         * The accumulated error gradients are reset by this method.
+         */
+        void update();
+
+        /**
+         * Uses the network's current weights to evaluate the given input.
+         */
+        void evaluate(const tIO& input, tIO& output) const;
+
+        //////////////////////////////////////////////////////////////////////
+        // Debugging
+        //////////////////////////////////////////////////////////////////////
+
+        /**
+         * Prints the network's configuration in a readable format.
          */
         void printNetworkInfo(std::ostream& out) const;
 
@@ -104,101 +190,83 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
         std::string networkInfoString() const;
 
         /**
-         * Shows the ANN one example. The ANN will calculate error rates at
-         * each node, then add those rates to the accumulated error at each
-         * node.
-         *
-         * The inter-node weights will not be updated by this method.
+         * Prints the most recently calculated error rates for every neuron and
+         * the bias value of every neuron.
          */
-        void addExample(const tIO& input, const tIO& target,
-                        tIO& actualOutput);
+        void printNeuronInfo(std::ostream& out) const;
+
+        //////////////////////////////////////////////////////////////////////
+        // Getters
+        //////////////////////////////////////////////////////////////////////
 
         /**
-         * Prints the most recently calculated error rates for each node and
-         * the bias value of each node.
-         */
-        void printNodeInfo(std::ostream& out) const;
-
-        /**
-         * Updates the inter-node weights using the accumulated error at each
-         * node.
-         *
-         * The accumulated error rates are then cleared.
-         */
-        void update();
-
-        /**
-         * Uses the current inter-node weights to evaluate the given input.
-         */
-        void evaluate(const tIO& input, tIO& output);
-
-        /**
-         * Returns the number of layers in the network. This will be one less than
-         * what was specified to the constructor, because the ANN does not actually
-         * use a layer for the input.
+         * Returns the number of layers in the network. This will be one less
+         * than what was specified to the constructor, because the ANN does
+         * not actually use a layer for the input.
          */
         u32 getNumLayers() const;
 
         /**
-         * Returns the number of nodes in the specified layer. The given parameter
-         * is interpreted as the layer index where 0 is first layer above the input,
-         * and all consecutive layers are higher in the network (i.e. closer to the
-         * output layer).
+         * Returns the number of neurons in the specified layer. The given
+         * parameter is interpreted as the layer index where 0 is the first
+         * layer above the input, and all consecutive layers are higher in the
+         * network (i.e. closer to the output layer).
          */
-        u32 getNumNodesAtLayer(u32 index) const;
+        u32 getNumNeuronsInLayer(u32 layerIndex) const;
 
         /**
-         * Returns the weights of the inter-node connections below the specified
-         * node. The number of weights returned will equal the number of nodes
-         * in the layer below the specified layer. If the specified layer is 0,
+         * Returns the weights of the connections below the specified neuron.
+         * The number of weights returned will equal the number of neurons
+         * in the layer below the specified neuron. If the specified layer is 0,
          * the number of weights returned will equal the dimensionality of the
          * input.
          */
-        void getWeights(u32 layerIndex, u32 nodeIndex, std::vector<f64>& weights) const;
+        void getWeights(u32 layerIndex, u32 neuronIndex, std::vector<f64>& weights) const;
 
         /**
-         * Returns the bias value of the specified node.
+         * Returns the bias value of the specified neuron.
          *
-         * The getWeights() method omits the bias of each node so that
+         * The getWeights() method omits the bias of each neuron so that
          * the number of weights returned is equal to the dimensionality
          * of the layer below. This method is how you can access the bias
-         * of a node.
+         * of a neuron.
          */
-        f64 getBias(u32 layerIndex, u32 nodeIndex) const;
+        f64 getBias(u32 layerIndex, u32 neuronIndex) const;
 
         /**
-         * Returns the output value of the specified node. This will be
-         * the node's output value from the last call to addExample() or
+         * Returns the output value of the specified neuron. This will be
+         * the neuron's output value from the last call to addExample() or
          * evaluate().
          */
-        f64 getOutput(u32 layerIndex, u32 nodeIndex) const;
+        f64 getOutput(u32 layerIndex, u32 neuronIndex) const;
 
         /**
-         * Generates an image representation of the specified node. The
-         * image shows the weights of the inter-node connections
-         * below the specified node as well as the node's most recent
-         * output value.
+         * Generates an image representation of the specified neuron.
+         * The image shows a visual representation of the weights of
+         * the connections below the specified neuron, as well as the
+         * neuron's most recent output value.
          *
          * If the weights should be interpreted as an RGB image, set
-         * color to true. If the weights should be interpreted as a
-         * grey image, set color to false.
+         * 'color' to true. If the weights should be interpreted as a
+         * grey image, set 'color' to false.
          *
-         * Specify the width of the image, and the height will be derived.
+         * Specify the 'width' of the image, and the height will be derived.
          *
-         * If absolute is set to true, the absolute value of the weights
+         * If 'absolute' is set to true, the absolute value of the weights
          * will be used when producing the image. Otherwise, the relative
          * weights will be used to produce the image (meaning that weights
          * of value zero will be some shade of grey if any negative weights
          * are present).
+         *
+         * The generated image is stored in 'dest'.
          */
-        void getImage(u32 layerIndex, u32 nodeIndex,
-                      img::tImage* image, bool color, u32 width,
-                      bool absolute=true) const;
+        void getImage(u32 layerIndex, u32 neuronIndex,
+                      bool color, u32 width, bool absolute,
+                      img::tImage* dest) const;
 
-        /**
-         * Destructor...
-         */
-        ~tANN();
+        //////////////////////////////////////////////////////////////////////
+        // END -- read no further
+        //////////////////////////////////////////////////////////////////////
 
     public:
 

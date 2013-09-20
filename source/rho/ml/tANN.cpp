@@ -153,7 +153,7 @@ class tLayer : public bNonCopyable
     // Behavioral state -- how is the gradient handled (learning rates, momentum, etc)
     /////////////////////////////////////////////////////////////////////////////////////
 
-    tANN::nGradUpType gradUpType;
+    tANN::nWeightUpRule weightUpRule;
     f64 alpha;
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -166,7 +166,7 @@ class tLayer : public bNonCopyable
         // properly.
         layerType = tANN::kLayerTypeMax;
         normalizeLayerInput = 0;
-        gradUpType = tANN::kGradUpTypeMax;
+        weightUpRule = tANN::kWeightUpRuleMax;
         alpha = 0.0;
     }
 
@@ -197,7 +197,7 @@ class tLayer : public bNonCopyable
         // Setup behavioral state.
         layerType = lt;
         normalizeLayerInput = nli;
-        gradUpType = tANN::kGradUpTypeFixedLearningRate;
+        weightUpRule = tANN::kWeightUpRuleFixedLearningRate;
         alpha = al;
     }
 
@@ -216,7 +216,7 @@ class tLayer : public bNonCopyable
         }
 
         assert(layerType >= 0 && layerType < tANN::kLayerTypeMax);
-        assert(gradUpType >= 0 && gradUpType < tANN::kGradUpTypeMax);
+        assert(weightUpRule >= 0 && weightUpRule < tANN::kWeightUpRuleMax);
         assert(alpha > 0.0);
     }
 
