@@ -2,17 +2,12 @@
 #include <rho/algo/tLCG.h>
 
 #include <cassert>
-#include <cmath>
-#include <cstdlib>
-#include <iostream>
+#include <iomanip>
 #include <sstream>
-#include <string>
-#include <utility>
 
 
 using std::vector;
 using std::string;
-using std::cout;
 using std::endl;
 
 
@@ -131,11 +126,11 @@ class tLayer : public bNonCopyable
     // Connection state
     /////////////////////////////////////////////////////////////////////////////////////
 
-    vector<f64> a;     // the output of each unit (the squashed values)
-    vector<f64> A;     // the accumulated input of each unit (the pre-squashed values)
+    vector<f64> a;     // the output of each neuron (the squashed values)
+    vector<f64> A;     // the accumulated input of each neuron (the pre-squashed values)
 
-    vector<f64> da;    // dE/da -- the error gradient wrt the output of each unit
-    vector<f64> dA;    // dE/dA -- the error gradient wrt the accumulated input of each unit
+    vector<f64> da;    // dE/da -- the error gradient wrt the output of each neuron
+    vector<f64> dA;    // dE/dA -- the error gradient wrt the accumulated input of each neuron
 
     vector< vector<f64> > w;   // <-- the weights connecting to the layer below
                                //                       (i.e. the previous layer)
@@ -143,7 +138,7 @@ class tLayer : public bNonCopyable
     vector< vector<f64> > dw_accum;   // dE/dw -- the error gradient wrt each weight
 
     /////////////////////////////////////////////////////////////////////////////////////
-    // Behavioral state -- squashing function and derivative calculations
+    // Behavioral state -- defines the squashing function and derivative calculations
     /////////////////////////////////////////////////////////////////////////////////////
 
     tANN::nLayerType layerType;
@@ -165,14 +160,11 @@ class tLayer : public bNonCopyable
         // This is an invalid object. You must call init() to setup this object
         // properly.
         layerType = tANN::kLayerTypeMax;
-        normalizeLayerInput = 0;
         weightUpRule = tANN::kWeightUpRuleMax;
-        alpha = 0.0;
     }
 
     void init(u32 prevSize, u32 mySize,
-              f64 rmin, f64 rmax, algo::iLCG& lcg,
-              tANN::nLayerType lt, u8 nli, f64 al)
+              f64 rmin, f64 rmax, algo::iLCG& lcg)
     {
         // Setup connection state size.
         a  = vector<f64>(mySize, 0.0);
@@ -194,11 +186,11 @@ class tLayer : public bNonCopyable
             }
         }
 
-        // Setup behavioral state.
-        layerType = lt;
-        normalizeLayerInput = nli;
-        weightUpRule = tANN::kWeightUpRuleFixedLearningRate;
-        alpha = al;
+        // Setup behavioral state to the default values.
+        layerType = tANN::kLayerTypeHyperbolic;
+        normalizeLayerInput = 1;
+        weightUpRule = tANN::kWeightUpRuleNone;
+        alpha = 0.0;
     }
 
     void assertState(size_t prevLayerSize) const
@@ -217,7 +209,6 @@ class tLayer : public bNonCopyable
 
         assert(layerType >= 0 && layerType < tANN::kLayerTypeMax);
         assert(weightUpRule >= 0 && weightUpRule < tANN::kWeightUpRuleMax);
-        assert(alpha > 0.0);
     }
 
     void takeInput(const vector<f64>& input)
@@ -311,12 +302,32 @@ class tLayer : public bNonCopyable
     {
         assertState(w.size()-1);
 
-        for (u32 s = 0; s < w.size(); s++)
+        switch (weightUpRule)
         {
-            for (u32 i = 0; i < w[s].size(); i++)
+            case tANN::kWeightUpRuleNone:
             {
-                w[s][i] -= alpha * dw_accum[s][i];
-                dw_accum[s][i] = 0.0;
+                break;
+            }
+
+            case tANN::kWeightUpRuleFixedLearningRate:
+            {
+                if (alpha <= 0.0)
+                    throw eLogicError("When using the fixed learning rate rule, alpha must be set.");
+                for (u32 s = 0; s < w.size(); s++)
+                {
+                    for (u32 i = 0; i < w[s].size(); i++)
+                    {
+                        w[s][i] -= alpha * dw_accum[s][i];
+                        dw_accum[s][i] = 0.0;
+                    }
+                }
+                break;
+            }
+
+            default:
+            {
+                assert(false);
+                break;
             }
         }
     }
@@ -357,26 +368,26 @@ class tLayer : public bNonCopyable
 };
 
 
+tANN::tANN(iReadable* in)
+    : m_layers(NULL),
+      m_numLayers(0)
+{
+    this->unpack(in);
+}
+
 tANN::tANN(vector<u32> layerSizes,
-           f64 alpha,
-           bool normalizeLayerInput,
            f64 randWeightMin,
-           f64 randWeightMax,
-           nLayerType defaultLayerType)
+           f64 randWeightMax)
     : m_layers(NULL),
       m_numLayers(0)
 {
     if (layerSizes.size() < 2)
         throw eInvalidArgument("There must be at least an input and output layer.");
-    if (alpha <= 0.0)
-        throw eInvalidArgument("The learning rate must be greater than 0.0.");
-    if (defaultLayerType < 0 || defaultLayerType >= kLayerTypeMax)
-        throw eInvalidArgument("Invalid layer type");
-    if (defaultLayerType == kLayerTypeSoftmax)
-    {
-        throw eInvalidArgument("Only the top layer may be a softmax group. Use setLayerType() to "
-                "set the top layer to be a softmax group if that is what you want.");
-    }
+    for (size_t i = 0; i < layerSizes.size(); i++)
+        if (layerSizes[i] == 0)
+            throw eInvalidArgument("Every layer must have size > 0");
+    if (randWeightMin >= randWeightMax)
+        throw eInvalidArgument("Invalid [randWeightMin, randWeightMax] range.");
 
     m_numLayers = (u32) layerSizes.size()-1;
                             // we don't need a layer for the input
@@ -390,16 +401,8 @@ tANN::tANN(vector<u32> layerSizes,
     for (u32 i = 1; i < layerSizes.size(); i++)
     {
         m_layers[i-1].init(layerSizes[i-1], layerSizes[i],
-                           randWeightMin, randWeightMax, lcg,
-                           defaultLayerType, normalizeLayerInput?1:0, alpha);
+                           randWeightMin, randWeightMax, lcg);
     }
-}
-
-tANN::tANN(iReadable* in)
-    : m_layers(NULL),
-      m_numLayers(0)
-{
-    this->unpack(in);
 }
 
 tANN::~tANN()
@@ -409,7 +412,7 @@ tANN::~tANN()
     m_numLayers = 0;
 }
 
-void tANN::setLayerType(u32 layerIndex, nLayerType type)
+void tANN::setLayerType(nLayerType type, u32 layerIndex)
 {
     if (layerIndex >= m_numLayers)
         throw eInvalidArgument("No layer with that index.");
@@ -420,43 +423,76 @@ void tANN::setLayerType(u32 layerIndex, nLayerType type)
     m_layers[layerIndex].layerType = type;
 }
 
-void tANN::printNetworkInfo(std::ostream& out) const
+void tANN::setLayerType(nLayerType type)
 {
-    out << "Artificial Neural Network Info:\n";
-
-    out << "   size (top-to-bottom):";
-    for (i32 i = ((i32)m_numLayers-1); i >= 0; i--)
-        out << "  " << m_layers[i].a.size() << "(" << layerTypeToString(m_layers[i].layerType) << ")";
-    out << "  " << m_layers[0].w.size()-1 << "(input)\n";
-
-    out << endl;
+    if (type < 0 || type >= kLayerTypeMax)
+        throw eInvalidArgument("Invalid layer type");
+    if (type == kLayerTypeSoftmax && m_numLayers>1)
+        throw eInvalidArgument("Only the top layer may be a softmax group.");
+    for (u32 i = 0; i < m_numLayers; i++)
+        setLayerType(type, i);
 }
 
-string tANN::networkInfoString() const
+void tANN::setNormalizeLayerInput(bool on, u32 layerIndex)
 {
-    std::ostringstream out;
+    if (layerIndex >= m_numLayers)
+        throw eInvalidArgument("No layer with that index.");
+    m_layers[layerIndex].normalizeLayerInput = (on ? 1 : 0);
+}
 
-    // Network size:
-    out << m_layers[0].w.size()-1 << 'i';
+void tANN::setNormalizeLayerInput(bool on)
+{
     for (u32 i = 0; i < m_numLayers; i++)
-        out << '-' << m_layers[i].a.size() << layerTypeToChar(m_layers[i].layerType);
+        setNormalizeLayerInput(on, i);
+}
 
-    return out.str();
+void tANN::setWeightUpRule(nWeightUpRule rule, u32 layerIndex)
+{
+    if (layerIndex >= m_numLayers)
+        throw eInvalidArgument("No layer with that index.");
+    if (rule < 0 || rule >= kWeightUpRuleMax)
+        throw eInvalidArgument("Invalid weight update rule");
+    m_layers[layerIndex].weightUpRule = rule;
+}
+
+void tANN::setWeightUpRule(nWeightUpRule rule)
+{
+    if (rule < 0 || rule >= kWeightUpRuleMax)
+        throw eInvalidArgument("Invalid weight update rule");
+    for (u32 i = 0; i < m_numLayers; i++)
+        setWeightUpRule(rule, i);
+}
+
+void tANN::setAlpha(f64 alpha, u32 layerIndex)
+{
+    if (layerIndex >= m_numLayers)
+        throw eInvalidArgument("No layer with that index.");
+    if (alpha <= 0.0)
+        throw eInvalidArgument("Alpha must be greater than zero.");
+    m_layers[layerIndex].alpha = alpha;
+}
+
+void tANN::setAlpha(f64 alpha)
+{
+    if (alpha <= 0.0)
+        throw eInvalidArgument("Alpha must be greater than zero.");
+    for (u32 i = 0; i < m_numLayers; i++)
+        setAlpha(alpha, i);
 }
 
 void tANN::addExample(const tIO& input, const tIO& target,
-                      tIO& actualOutput)
+                tIO& actualOutput)
 {
-    evaluate(input, actualOutput);
-
-    if (target.size() != actualOutput.size())
-        throw eInvalidArgument("The target vector must be the same size as the ANN's output.");
-
+    // Validate the target vector.
     nLayerType type = m_layers[m_numLayers-1].layerType;
     for (u32 i = 0; i < target.size(); i++)
+    {
         if (target[i] < squash_min(type) || target[i] > squash_max(type))
-            throw eInvalidArgument("The target vector must be in the range of the top layer's squashing function.");
-
+        {
+            throw eInvalidArgument("The target vector must be in the range of the "
+                                   "top layer's squashing function.");
+        }
+    }
     if (type == kLayerTypeSoftmax)
     {
         f64 summation = 0.0;
@@ -468,37 +504,28 @@ void tANN::addExample(const tIO& input, const tIO& target,
                     "vector must be 1.0");
         }
     }
+    if (target.size() != getNumNeuronsInLayer(m_numLayers-1))
+        throw eInvalidArgument("The target vector must be the same size as the ANN's output.");
 
-    vector<f64>& top_da = m_layers[m_numLayers-1].da;
-    top_da = actualOutput;
-    for (u32 i = 0; i < top_da.size(); i++)
-        top_da[i] -= target[i];
-
-    for (u32 i = m_numLayers-1; i > 0; i--)
+    // Show the example to the network.
     {
-        m_layers[i].accumError(m_layers[i-1].a);
-        m_layers[i].backpropagate(m_layers[i-1].da);
-    }
+        evaluate(input, actualOutput);
+        assert(target.size() == actualOutput.size());
 
-    m_layers[0].accumError(input);
-}
+        vector<f64>& top_da = m_layers[m_numLayers-1].da;
+        assert(top_da.size() == actualOutput.size());
 
-void tANN::printNodeInfo(std::ostream& out) const
-{
-    for (i32 i = ((i32)m_numLayers-1); i >= 0; i--)
-    {
-        out << "Layer " << i << ":\n";
-        for (u32 n = 0; n < getNumNodesAtLayer(i); n++)
+        for (u32 i = 0; i < top_da.size(); i++)
+            top_da[i] = actualOutput[i] - target[i];
+
+        for (u32 i = m_numLayers-1; i > 0; i--)
         {
-            out << "   a:  " << m_layers[i].a[n] << "\n";
-            out << "   A:  " << m_layers[i].A[n] << "\n";
-            out << "   da: " << m_layers[i].da[n] << "\n";
-            out << "   dA: " << m_layers[i].dA[n] << "\n";
-            out << "   b:  " << m_layers[i].w.back()[n] << "\n";
-            out << "\n";
+            m_layers[i].accumError(m_layers[i-1].a);
+            m_layers[i].backpropagate(m_layers[i-1].da);
         }
+
+        m_layers[0].accumError(input);
     }
-    out << endl;
 }
 
 void tANN::update()
@@ -509,7 +536,7 @@ void tANN::update()
     }
 }
 
-void tANN::evaluate(const tIO& input, tIO& output)
+void tANN::evaluate(const tIO& input, tIO& output) const
 {
     if (input.size()+1 != m_layers[0].w.size())
         throw eInvalidArgument("The input vector must be the same size as the ANN's input.");
@@ -522,64 +549,114 @@ void tANN::evaluate(const tIO& input, tIO& output)
     output = m_layers[m_numLayers-1].a;
 }
 
+void tANN::printNetworkInfo(std::ostream& out) const
+{
+    int colw = 10;
+
+    out << "Artificial Neural Network Info:\n";
+
+    out << "   (bottom-to-top) size:";
+    out << std::right << std::setw(colw) << m_layers[0].w.size()-1;
+    for (u32 i = 0; i < m_numLayers; i++)
+        out << std::right << std::setw(colw) << m_layers[i].a.size();
+    out << endl;
+
+    out << "                   type:";
+    out << std::right << std::setw(colw) << "input";
+    for (u32 i = 0; i < m_numLayers; i++)
+        out << std::right << std::setw(colw) << layerTypeToString(m_layers[i].layerType);
+    out << endl;
+
+    // libtodo -- other layer params
+
+    out << endl;
+}
+
+string tANN::networkInfoString() const
+{
+    std::ostringstream out;
+
+    out << m_layers[0].w.size()-1 << 'i';
+    for (u32 i = 0; i < m_numLayers; i++)
+        out << '-' << m_layers[i].a.size() << layerTypeToChar(m_layers[i].layerType);
+
+    // libtodo -- other layer params
+
+    return out.str();
+}
+
+void tANN::printNeuronInfo(std::ostream& out) const
+{
+    for (i32 i = ((i32)m_numLayers-1); i >= 0; i--)
+    {
+        out << "Layer " << i << ":\n";
+        for (u32 n = 0; n < getNumNeuronsInLayer(i); n++)
+        {
+            out << "   a:  " << m_layers[i].a[n] << "\n";
+            out << "   A:  " << m_layers[i].A[n] << "\n";
+            out << "   da: " << m_layers[i].da[n] << "\n";
+            out << "   dA: " << m_layers[i].dA[n] << "\n";
+            out << "   b:  " << m_layers[i].w.back()[n] << "\n";
+            out << "\n";
+        }
+    }
+    out << endl;
+}
+
 u32 tANN::getNumLayers() const
 {
     return m_numLayers;
 }
 
-u32 tANN::getNumNodesAtLayer(u32 index) const
+u32 tANN::getNumNeuronsInLayer(u32 layerIndex) const
 {
-    if (index >= m_numLayers)
+    if (layerIndex >= m_numLayers)
         throw eInvalidArgument("No layer with that index.");
-    return (u32) m_layers[index].a.size();
+    return (u32) m_layers[layerIndex].a.size();
 }
 
-void tANN::getWeights(u32 layerIndex, u32 nodeIndex, vector<f64>& weights) const
+void tANN::getWeights(u32 layerIndex, u32 neuronIndex, vector<f64>& weights) const
 {
-    if (nodeIndex >= getNumNodesAtLayer(layerIndex))
+    if (neuronIndex >= getNumNeuronsInLayer(layerIndex))
         throw eInvalidArgument("No layer/node with that index.");
 
     vector< vector<f64> >& w = m_layers[layerIndex].w;
     weights.resize(w.size()-1);
     for (u32 s = 0; s < w.size()-1; s++)
-        weights[s] = w[s][nodeIndex];
+        weights[s] = w[s][neuronIndex];
 }
 
-f64 tANN::getBias(u32 layerIndex, u32 nodeIndex) const
+f64 tANN::getBias(u32 layerIndex, u32 neuronIndex) const
 {
-    if (nodeIndex >= getNumNodesAtLayer(layerIndex))
+    if (neuronIndex >= getNumNeuronsInLayer(layerIndex))
         throw eInvalidArgument("No layer/node with that index.");
-
-    return m_layers[layerIndex].w.back()[nodeIndex];
+    return m_layers[layerIndex].w.back()[neuronIndex];
 }
 
-f64 tANN::getOutput(u32 layerIndex, u32 nodeIndex) const
+f64 tANN::getOutput(u32 layerIndex, u32 neuronIndex) const
 {
-    if (nodeIndex >= getNumNodesAtLayer(layerIndex))
+    if (neuronIndex >= getNumNeuronsInLayer(layerIndex))
         throw eInvalidArgument("No layer/node with that index.");
-
-    return m_layers[layerIndex].a[nodeIndex];
+    return m_layers[layerIndex].a[neuronIndex];
 }
 
-void tANN::getImage(u32 layerIndex, u32 nodeIndex,
-                    img::tImage* image, bool color, u32 width,
-                    bool absolute) const
+void tANN::getImage(u32 layerIndex, u32 neuronIndex,
+              bool color, u32 width, bool absolute,
+              img::tImage* dest) const
 {
-    if (nodeIndex >= getNumNodesAtLayer(layerIndex))
-        throw eInvalidArgument("No layer/node with that index.");
-
     // Get the weights.
     vector<f64> weights;
-    getWeights(layerIndex, nodeIndex, weights);
+    getWeights(layerIndex, neuronIndex, weights);
 
     // Normalize the weights to [0.0, 255.0].
-    f64 maxval = -1e100;
-    f64 minval = 1e100;
-    for (u32 i = 0; i < weights.size(); i++)
+    f64 maxval = weights[0];
+    f64 minval = weights[0];
+    for (u32 i = 1; i < weights.size(); i++)
     {
         maxval = std::max(maxval, weights[i]);
         minval = std::min(minval, weights[i]);
     }
+    if (maxval == minval) maxval += 0.000001;
     if (absolute)
     {
         f64 absmax = std::max(std::fabs(maxval), std::fabs(minval));
@@ -590,7 +667,7 @@ void tANN::getImage(u32 layerIndex, u32 nodeIndex,
     {
         for (u32 i = 0; i < weights.size(); i++)
         {
-            f64 val = (weights[i] - minval) * 255.0 / (maxval - minval);
+            f64 val = ((weights[i] - minval) / (maxval - minval)) * 255.0;
             weights[i] = val;
         }
     }
@@ -605,12 +682,12 @@ void tANN::getImage(u32 layerIndex, u32 nodeIndex,
     u32 height = numPix / width;
 
     // Create the image.
-    image->setFormat(img::kRGB24);
-    image->setBufSize(width*height*3);
-    image->setBufUsed(width*height*3);
-    image->setWidth(width);
-    image->setHeight(height);
-    u8* buf = image->buf();
+    dest->setFormat(img::kRGB24);
+    dest->setBufSize(width*height*3);
+    dest->setBufUsed(width*height*3);
+    dest->setWidth(width);
+    dest->setHeight(height);
+    u8* buf = dest->buf();
     u32 bufIndex = 0;
     u32 wIndex = 0;
     for (u32 i = 0; i < height; i++)
@@ -634,8 +711,8 @@ void tANN::getImage(u32 layerIndex, u32 nodeIndex,
 
     // Add an output indicator.
     nLayerType type = m_layers[layerIndex].layerType;
-    f64 output = (getOutput(layerIndex, nodeIndex) - squash_min(type))
-                    / (squash_max(type) - squash_min(type));
+    f64 output = (getOutput(layerIndex, neuronIndex) - squash_min(type))
+                    / (squash_max(type) - squash_min(type));   // output now in [0, 1]
     u8 outputByte = (u8) (output*255.0);
     u8 red = 0;
     u8 green = (u8) (255 - outputByte);
@@ -648,7 +725,7 @@ void tANN::getImage(u32 layerIndex, u32 nodeIndex,
     {
         for (u32 c = xStart; c < xStart+xSpan; c++)
         {
-            buf = image->buf() + r*image->width()*3 + c*3;
+            buf = dest->buf() + r*dest->width()*3 + c*3;
             buf[0] = red;
             buf[1] = green;
             buf[2] = blue;
@@ -687,5 +764,5 @@ void tANN::unpack(iReadable* in)
 }
 
 
-}    // namespace ml
-}    // namespace rho
+}   // namespace ml
+}   // namespace rho
