@@ -36,7 +36,7 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
         };
 
         /**
-         * Each layer has a gradient update rule. It determines how the
+         * Each layer also has a gradient update rule. It determines how the
          * gradient is used to update the weights when update() is called.
          */
         enum nGradUpType {
@@ -56,7 +56,7 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          *
          * The network defaults to the standard learning rate method for
          * updating the weights using the calculated gradient. For this
-         * method, the learning rate (aka, alpha) must be specified.
+         * method, the learning rate (aka, "alpha") must be specified.
          *
          * When a layer has many inputs, the weighted sum will be initially
          * very large. You can choose to normalize each layer's input with
