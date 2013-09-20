@@ -134,13 +134,13 @@ class tLayer : public bNonCopyable
     vector<f64> a;     // the output of each unit (the squashed values)
     vector<f64> A;     // the accumulated input of each unit (the pre-squashed values)
 
-    vector<f64> da;    // dE/da -- the gradient wrt the output of each unit
-    vector<f64> dA;    // dE/dA -- the gradient wrt the accumulated input of each unit
+    vector<f64> da;    // dE/da -- the error gradient wrt the output of each unit
+    vector<f64> dA;    // dE/dA -- the error gradient wrt the accumulated input of each unit
 
     vector< vector<f64> > w;   // <-- the weights connecting to the layer below
                                //                       (i.e. the previous layer)
 
-    vector< vector<f64> > dw_accum;   // dE/dw -- the gradient of each weight
+    vector< vector<f64> > dw_accum;   // dE/dw -- the error gradient wrt each weight
 
     /////////////////////////////////////////////////////////////////////////////////////
     // Behavioral state -- squashing function and derivative calculations
@@ -175,13 +175,11 @@ class tLayer : public bNonCopyable
               tANN::nLayerType lt, u8 nli, f64 al)
     {
         // Setup connection state size.
-        a.resize(mySize, 0.0);
-        A.resize(mySize, 0.0);
-        da.resize(mySize, 0.0);
-        dA.resize(mySize, 0.0);
-        w.resize(prevSize+1);
-        for (u32 s = 0; s < w.size(); s++)
-            w[s].resize(mySize, 0.0);
+        a  = vector<f64>(mySize, 0.0);
+        A  = vector<f64>(mySize, 0.0);
+        da = vector<f64>(mySize, 0.0);
+        dA = vector<f64>(mySize, 0.0);
+        w  = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
         dw_accum = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
 
         // Randomize the initial weights.
@@ -246,12 +244,13 @@ class tLayer : public bNonCopyable
 
         if (layerType == tANN::kLayerTypeSoftmax)
         {
-            for (u32 i = 0; i < A.size(); i++)
-                a[i] = std::min(std::exp(A[i]), 1e100);
             f64 denom = 0.0;
-            for (size_t i = 0; i < a.size(); i++)
+            for (u32 i = 0; i < a.size(); i++)
+            {
+                a[i] = std::min(std::exp(A[i]), 1e100);
                 denom += a[i];
-            for (size_t i = 0; i < a.size(); i++)
+            }
+            for (u32 i = 0; i < a.size(); i++)
                 a[i] /= denom;
         }
         else
