@@ -1,6 +1,5 @@
 #include <rho/ml/common.h>
 
-#include <iostream>
 #include <iomanip>
 
 
@@ -93,17 +92,21 @@ tIO examplify(const img::tImage* image)
 void un_examplify(const tIO& io, bool color, u32 width,
                   bool absolute, img::tImage* dest)
 {
+    if (io.size() == 0)
+        throw eInvalidArgument("The example io must have at least one dimension!");
+
     // Create a copy of io that can be modified.
     std::vector<f64> weights = io;
 
     // Normalize the weights to [0.0, 255.0].
-    f64 maxval = -1e100;
-    f64 minval = 1e100;
-    for (u32 i = 0; i < weights.size(); i++)
+    f64 maxval = weights[0];
+    f64 minval = weights[0];
+    for (u32 i = 1; i < weights.size(); i++)
     {
         maxval = std::max(maxval, weights[i]);
         minval = std::min(minval, weights[i]);
     }
+    if (maxval == minval) maxval += 0.000001;
     if (absolute)
     {
         f64 absmax = std::max(std::fabs(maxval), std::fabs(minval));
@@ -114,7 +117,7 @@ void un_examplify(const tIO& io, bool color, u32 width,
     {
         for (u32 i = 0; i < weights.size(); i++)
         {
-            f64 val = (weights[i] - minval) * 255.0 / (maxval - minval);
+            f64 val = ((weights[i] - minval) / (maxval - minval)) * 255.0;
             weights[i] = val;
         }
     }
@@ -185,6 +188,20 @@ f64 standardSquaredError(const std::vector<tIO>& outputs,
         throw eInvalidArgument("There must be at least one output/target pair!");
     }
 
+    for (size_t i = 0; i < outputs.size(); i++)
+    {
+        if (outputs[i].size() != targets[i].size() ||
+            outputs[i].size() != outputs[0].size())
+        {
+            throw eInvalidArgument("Every output/target pair must have the same dimensionality!");
+        }
+    }
+
+    if (outputs[0].size() == 0)
+    {
+        throw eInvalidArgument("The output/target pairs must have at least one dimension!");
+    }
+
     f64 error = 0.0;
     for (size_t i = 0; i < outputs.size(); i++)
         error += standardSquaredError(outputs[i], targets[i]);
@@ -216,6 +233,11 @@ void buildConfusionMatrix(const std::vector<tIO>& outputs,
         }
     }
 
+    if (outputs[0].size() == 0)
+    {
+        throw eInvalidArgument("The output/target pairs must have at least one dimension!");
+    }
+
     confusionMatrix.resize(targets[0].size());
     for (size_t i = 0; i < confusionMatrix.size(); i++)
         confusionMatrix[i] = std::vector<u32>(outputs[0].size(), 0);
@@ -225,6 +247,19 @@ void buildConfusionMatrix(const std::vector<tIO>& outputs,
         u32 target = un_examplify(targets[i]);
         u32 output = un_examplify(outputs[i]);
         confusionMatrix[target][output]++;
+    }
+}
+
+static
+void checkConfusionMatrix(const tConfusionMatrix& confusionMatrix)
+{
+    if (confusionMatrix.size() == 0)
+        throw eInvalidArgument("Invalid confusion matrix");
+
+    for (size_t i = 0; i < confusionMatrix.size(); i++)
+    {
+        if (confusionMatrix[i].size() != confusionMatrix.size())
+            throw eInvalidArgument("Invalid confusion matrix");
     }
 }
 
@@ -245,8 +280,7 @@ void printDashes(const tConfusionMatrix& confusionMatrix, std::ostream& out, u32
 
 void print(const tConfusionMatrix& confusionMatrix, std::ostream& out)
 {
-    if (confusionMatrix.size() == 0)
-        throw eInvalidArgument("Invalid confusion matrix");
+    checkConfusionMatrix(confusionMatrix);
 
     u32 s = 14;
     u32 w = 10;
@@ -275,6 +309,8 @@ void print(const tConfusionMatrix& confusionMatrix, std::ostream& out)
 
 f64  errorRate(const tConfusionMatrix& confusionMatrix)
 {
+    checkConfusionMatrix(confusionMatrix);
+
     u32 total = 0;
     for (size_t i = 0; i < confusionMatrix.size(); i++)
         for (size_t j = 0; j < confusionMatrix[i].size(); j++)
@@ -287,6 +323,8 @@ f64  errorRate(const tConfusionMatrix& confusionMatrix)
 
 f64  accuracy(const tConfusionMatrix& confusionMatrix)
 {
+    checkConfusionMatrix(confusionMatrix);
+
     u32 total = 0;
     for (size_t i = 0; i < confusionMatrix.size(); i++)
         for (size_t j = 0; j < confusionMatrix[i].size(); j++)
@@ -299,9 +337,9 @@ f64  accuracy(const tConfusionMatrix& confusionMatrix)
 
 f64  precision(const tConfusionMatrix& confusionMatrix)
 {
+    checkConfusionMatrix(confusionMatrix);
+
     if (confusionMatrix.size() != 2)
-        throw eInvalidArgument("Precision is only defined for boolean classification.");
-    if (confusionMatrix[0].size() != 2 || confusionMatrix[1].size() != 2)
         throw eInvalidArgument("Precision is only defined for boolean classification.");
 
     f64 tp = (f64) confusionMatrix[1][1];
@@ -314,9 +352,9 @@ f64  precision(const tConfusionMatrix& confusionMatrix)
 
 f64  recall(const tConfusionMatrix& confusionMatrix)
 {
+    checkConfusionMatrix(confusionMatrix);
+
     if (confusionMatrix.size() != 2)
-        throw eInvalidArgument("Recall is only defined for boolean classification.");
-    if (confusionMatrix[0].size() != 2 || confusionMatrix[1].size() != 2)
         throw eInvalidArgument("Recall is only defined for boolean classification.");
 
     f64 tp = (f64) confusionMatrix[1][1];
@@ -343,6 +381,22 @@ bool train(iLearner* learner, const std::vector<tIO>& inputs,
     if (inputs.size() == 0)
     {
         throw eInvalidArgument("There must be at least one input/target pair!");
+    }
+
+    for (size_t i = 1; i < inputs.size(); i++)
+    {
+        if (inputs[i].size() != inputs[0].size())
+        {
+            throw eInvalidArgument("Every input must have the same dimensionality!");
+        }
+    }
+
+    for (size_t i = 1; i < targets.size(); i++)
+    {
+        if (targets[i].size() != targets[0].size())
+        {
+            throw eInvalidArgument("Every target must have the same dimensionality!");
+        }
     }
 
     if (batchSize == 0)
@@ -383,7 +437,7 @@ void evaluate(iLearner* learner, const std::vector<tIO>& inputs,
 {
     if (inputs.size() == 0)
     {
-        throw eInvalidArgument("There must be at least one input example!");
+        throw eInvalidArgument("There must be at least one input vector!");
     }
     outputs.resize(inputs.size());
     for (size_t i = 0; i < inputs.size(); i++)

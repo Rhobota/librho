@@ -54,7 +54,7 @@ class iLearner
         /**
          * Uses the current knowledge of the learner to evaluate the given input.
          */
-        virtual void evaluate(const tIO& input, tIO& output) = 0;
+        virtual void evaluate(const tIO& input, tIO& output) const = 0;
 
         /**
          * Virtual dtor...
