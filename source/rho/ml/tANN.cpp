@@ -18,7 +18,7 @@ namespace ml
 
 
 static
-string layerTypeToString(tANN::nLayerType type)
+string s_layerTypeToString(tANN::nLayerType type)
 {
     switch (type)
     {
@@ -29,13 +29,13 @@ string layerTypeToString(tANN::nLayerType type)
         case tANN::kLayerTypeSoftmax:
             return "softmax";
         default:
-            throw eInvalidArgument("Invalid layer type");
+            assert(false);
     }
 }
 
 
 static
-char layerTypeToChar(tANN::nLayerType type)
+char s_layerTypeToChar(tANN::nLayerType type)
 {
     switch (type)
     {
@@ -46,13 +46,13 @@ char layerTypeToChar(tANN::nLayerType type)
         case tANN::kLayerTypeSoftmax:
             return 's';
         default:
-            throw eInvalidArgument("Invalid layer type");
+            assert(false);
     }
 }
 
 
 static
-f64 squash(f64 val, tANN::nLayerType type)
+f64 s_squash(f64 val, tANN::nLayerType type)
 {
     switch (type)
     {
@@ -63,13 +63,13 @@ f64 squash(f64 val, tANN::nLayerType type)
         case tANN::kLayerTypeSoftmax:
             // Softmax layers must be handled specially
         default:
-            throw eInvalidArgument("Invalid layer type");
+            assert(false);
     }
 }
 
 
 static
-f64 derivative_of_squash(f64 val, tANN::nLayerType type)
+f64 s_derivative_of_squash(f64 val, tANN::nLayerType type)
 {
     switch (type)
     {
@@ -80,13 +80,13 @@ f64 derivative_of_squash(f64 val, tANN::nLayerType type)
         case tANN::kLayerTypeSoftmax:
             // Softmax layers must be handled specially
         default:
-            throw eInvalidArgument("Invalid layer type");
+            assert(false);
     }
 }
 
 
 static
-f64 squash_min(tANN::nLayerType type)
+f64 s_squash_min(tANN::nLayerType type)
 {
     switch (type)
     {
@@ -97,13 +97,13 @@ f64 squash_min(tANN::nLayerType type)
         case tANN::kLayerTypeSoftmax:
             return 0.0;
         default:
-            throw eInvalidArgument("Invalid layer type");
+            assert(false);
     }
 }
 
 
 static
-f64 squash_max(tANN::nLayerType type)
+f64 s_squash_max(tANN::nLayerType type)
 {
     switch (type)
     {
@@ -114,7 +114,7 @@ f64 squash_max(tANN::nLayerType type)
         case tANN::kLayerTypeSoftmax:
             return 1.0;
         default:
-            throw eInvalidArgument("Invalid layer type");
+            assert(false);
     }
 }
 
@@ -157,8 +157,8 @@ class tLayer : public bNonCopyable
 
     tLayer()
     {
-        // This is an invalid object. You must call init() to setup this object
-        // properly.
+        // This is an invalid object. You must call init() or unpack() to setup
+        // this object properly.
         layerType = tANN::kLayerTypeMax;
         weightUpRule = tANN::kWeightUpRuleMax;
     }
@@ -247,7 +247,7 @@ class tLayer : public bNonCopyable
         else
         {
             for (u32 i = 0; i < A.size(); i++)
-                a[i] = squash(A[i], layerType);
+                a[i] = s_squash(A[i], layerType);
         }
     }
 
@@ -263,7 +263,7 @@ class tLayer : public bNonCopyable
         else
         {
             for (u32 i = 0; i < dA.size(); i++)
-                dA[i] = da[i] * derivative_of_squash(A[i], layerType);
+                dA[i] = da[i] * s_derivative_of_squash(A[i], layerType);
         }
 
         if (normalizeLayerInput)
@@ -306,6 +306,9 @@ class tLayer : public bNonCopyable
         {
             case tANN::kWeightUpRuleNone:
             {
+                for (u32 s = 0; s < w.size(); s++)
+                    for (u32 i = 0; i < w[s].size(); i++)
+                        dw_accum[s][i] = 0.0;
                 break;
             }
 
@@ -364,6 +367,8 @@ class tLayer : public bNonCopyable
         da = vector<f64>(mySize, 0.0);
         dA = vector<f64>(mySize, 0.0);
         dw_accum = vector< vector<f64> >(prevLayerSize+1, vector<f64>(mySize, 0.0));
+
+        assertState(prevLayerSize);
     }
 };
 
@@ -487,7 +492,7 @@ void tANN::addExample(const tIO& input, const tIO& target,
     nLayerType type = m_layers[m_numLayers-1].layerType;
     for (u32 i = 0; i < target.size(); i++)
     {
-        if (target[i] < squash_min(type) || target[i] > squash_max(type))
+        if (target[i] < s_squash_min(type) || target[i] > s_squash_max(type))
         {
             throw eInvalidArgument("The target vector must be in the range of the "
                                    "top layer's squashing function.");
@@ -564,7 +569,7 @@ void tANN::printNetworkInfo(std::ostream& out) const
     out << "                   type:";
     out << std::right << std::setw(colw) << "input";
     for (u32 i = 0; i < m_numLayers; i++)
-        out << std::right << std::setw(colw) << layerTypeToString(m_layers[i].layerType);
+        out << std::right << std::setw(colw) << s_layerTypeToString(m_layers[i].layerType);
     out << endl;
 
     // libtodo -- other layer params
@@ -578,7 +583,7 @@ string tANN::networkInfoString() const
 
     out << m_layers[0].w.size()-1 << 'i';
     for (u32 i = 0; i < m_numLayers; i++)
-        out << '-' << m_layers[i].a.size() << layerTypeToChar(m_layers[i].layerType);
+        out << '-' << m_layers[i].a.size() << s_layerTypeToChar(m_layers[i].layerType);
 
     // libtodo -- other layer params
 
@@ -647,6 +652,7 @@ void tANN::getImage(u32 layerIndex, u32 neuronIndex,
     // Get the weights.
     vector<f64> weights;
     getWeights(layerIndex, neuronIndex, weights);
+    assert(weights.size() > 0);
 
     // Normalize the weights to [0.0, 255.0].
     f64 maxval = weights[0];
@@ -711,8 +717,8 @@ void tANN::getImage(u32 layerIndex, u32 neuronIndex,
 
     // Add an output indicator.
     nLayerType type = m_layers[layerIndex].layerType;
-    f64 output = (getOutput(layerIndex, neuronIndex) - squash_min(type))
-                    / (squash_max(type) - squash_min(type));   // output now in [0, 1]
+    f64 output = (getOutput(layerIndex, neuronIndex) - s_squash_min(type))
+                    / (s_squash_max(type) - s_squash_min(type));   // output now in [0, 1]
     u8 outputByte = (u8) (output*255.0);
     u8 red = 0;
     u8 green = (u8) (255 - outputByte);
