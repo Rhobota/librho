@@ -163,8 +163,7 @@ class tLayer : public bNonCopyable
         weightUpRule = tANN::kWeightUpRuleMax;
     }
 
-    void init(u32 prevSize, u32 mySize,
-              f64 rmin, f64 rmax, algo::iLCG& lcg)
+    void init_data(u32 prevSize, u32 mySize)
     {
         // Setup connection state size.
         a  = vector<f64>(mySize, 0.0);
@@ -174,6 +173,18 @@ class tLayer : public bNonCopyable
         w  = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
         dw_accum = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
 
+        // Setup behavioral state to the default values.
+        layerType = tANN::kLayerTypeHyperbolic;
+        normalizeLayerInput = 1;
+        weightUpRule = tANN::kWeightUpRuleNone;
+        alpha = 0.0;
+
+        // Make sure all is well. (Of course it should be...)
+        assertState(prevSize);
+    }
+
+    void init_weights(f64 rmin, f64 rmax, algo::iLCG& lcg)
+    {
         // Randomize the initial weights.
         for (u32 s = 0; s < w.size(); s++)
         {
@@ -185,12 +196,13 @@ class tLayer : public bNonCopyable
                 w[s][i] += rmin;                              // [rmin, rmax]
             }
         }
+    }
 
-        // Setup behavioral state to the default values.
-        layerType = tANN::kLayerTypeHyperbolic;
-        normalizeLayerInput = 1;
-        weightUpRule = tANN::kWeightUpRuleNone;
-        alpha = 0.0;
+    void init(u32 prevSize, u32 mySize,
+              f64 rmin, f64 rmax, algo::iLCG& lcg)
+    {
+        init_data(prevSize, mySize);
+        init_weights(rmin, rmax, lcg);
     }
 
     void assertState(size_t prevLayerSize) const
@@ -337,37 +349,72 @@ class tLayer : public bNonCopyable
 
     void pack(iWritable* out) const
     {
-        throw eNotImplemented("The state of this object is in flux right now, so I'm waiting to finish this method.");
-
-        u8 type = (u8) layerType;
-        rho::pack(out, type);
-
         u32 mySize = (u32) a.size();
         u32 prevLayerSize = (u32) w.size()-1;
+        u8 type = (u8) layerType;
+        u8 rule = (u8) weightUpRule;
+
         rho::pack(out, mySize);
         rho::pack(out, prevLayerSize);
+        rho::pack(out, type);
+        rho::pack(out, normalizeLayerInput);
+        rho::pack(out, rule);
+
+        switch (weightUpRule)
+        {
+            case tANN::kWeightUpRuleNone:
+                break;
+
+            case tANN::kWeightUpRuleFixedLearningRate:
+                rho::pack(out, alpha);
+                break;
+
+            default:
+                assert(false);
+        }
+
         rho::pack(out, w);
     }
 
     void unpack(iReadable* in)
     {
-        throw eNotImplemented("The state of this object is in flux right now, so I'm waiting to finish this method.");
+        u32 mySize, prevLayerSize;
+        rho::unpack(in, mySize);
+        rho::unpack(in, prevLayerSize);
+        if (mySize == 0 || prevLayerSize == 0)
+            throw eRuntimeError("Invalid layer stream -- invalid sizes");
+        init_data(prevLayerSize, mySize);
 
         u8 type;
         rho::unpack(in, type);
         layerType = (tANN::nLayerType) type;
+        if (layerType < 0 || layerType >= tANN::kLayerTypeMax)
+            throw eRuntimeError("Invalid layer stream -- invalid layer type");
 
-        u32 mySize, prevLayerSize;
-        rho::unpack(in, mySize);
-        rho::unpack(in, prevLayerSize);
+        rho::unpack(in, normalizeLayerInput);
+        if (normalizeLayerInput > 1)
+            throw eRuntimeError("Invalid layer stream -- invalid normalizeLayerInput");
+
+        u8 rule;
+        rho::unpack(in, rule);
+        weightUpRule = (tANN::nWeightUpRule) rule;
+        if (weightUpRule < 0 || weightUpRule >= tANN::kWeightUpRuleMax)
+            throw eRuntimeError("Invalid layer stream -- invalid weight update rule");
+
+        switch (weightUpRule)
+        {
+            case tANN::kWeightUpRuleNone:
+                break;
+
+            case tANN::kWeightUpRuleFixedLearningRate:
+                rho::unpack(in, alpha);
+                break;
+
+            default:
+                assert(false);
+        }
+
         rho::unpack(in, w);
-
-        a = vector<f64>(mySize, 0.0);
-        A = vector<f64>(mySize, 0.0);
-        da = vector<f64>(mySize, 0.0);
-        dA = vector<f64>(mySize, 0.0);
-        dw_accum = vector< vector<f64> >(prevLayerSize+1, vector<f64>(mySize, 0.0));
-
         assertState(prevLayerSize);
     }
 };
