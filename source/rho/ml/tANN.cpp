@@ -52,6 +52,36 @@ char s_layerTypeToChar(tANN::nLayerType type)
 
 
 static
+string s_weightUpRuleToString(tANN::nWeightUpRule rule)
+{
+    switch (rule)
+    {
+        case tANN::kWeightUpRuleNone:
+            return "none";
+        case tANN::kWeightUpRuleFixedLearningRate:
+            return "fixedrate";
+        default:
+            assert(false);
+    }
+}
+
+
+static
+char s_weightUpRuleToChar(tANN::nWeightUpRule rule)
+{
+    switch (rule)
+    {
+        case tANN::kWeightUpRuleNone:
+            return 'n';
+        case tANN::kWeightUpRuleFixedLearningRate:
+            return 'f';
+        default:
+            assert(false);
+    }
+}
+
+
+static
 f64 s_squash(f64 val, tANN::nLayerType type)
 {
     switch (type)
@@ -605,21 +635,47 @@ void tANN::printNetworkInfo(std::ostream& out) const
 {
     int colw = 10;
 
-    out << "Artificial Neural Network Info:\n";
+    out << "Artificial Neural Network Info:" << endl;
 
+    // Network size:
     out << "   (bottom-to-top) size:";
     out << std::right << std::setw(colw) << m_layers[0].w.size()-1;
     for (u32 i = 0; i < m_numLayers; i++)
         out << std::right << std::setw(colw) << m_layers[i].a.size();
-    out << endl;
+    out << endl << endl;
 
-    out << "                   type:";
+    // Layer type:
+    out << "             layer type:";
     out << std::right << std::setw(colw) << "input";
     for (u32 i = 0; i < m_numLayers; i++)
         out << std::right << std::setw(colw) << s_layerTypeToString(m_layers[i].layerType);
     out << endl;
 
-    // libtodo -- other layer params
+    // Normalized layer input (yes/no):
+    out << "                        ";
+    out << std::right << std::setw(colw) << " ";
+    for (u32 i = 0; i < m_numLayers; i++)
+        out << std::right << std::setw(colw) << (m_layers[i].normalizeLayerInput ? "norm" : " ");
+    out << endl << endl;
+
+    // Weight update rule:
+    out << "     weight update rule:";
+    out << std::right << std::setw(colw) << " ";
+    for (u32 i = 0; i < m_numLayers; i++)
+        out << std::right << std::setw(colw) << s_weightUpRuleToString(m_layers[i].weightUpRule);
+    out << endl;
+
+    // Alpha (only when appropriate):
+    out << "                  alpha:";
+    out << std::right << std::setw(colw) << " ";
+    for (u32 i = 0; i < m_numLayers; i++)
+        if (m_layers[i].weightUpRule == kWeightUpRuleFixedLearningRate)
+            out << std::right << std::setw(colw) << m_layers[i].alpha;
+        else
+            out << std::right << std::setw(colw) << " ";
+    out << endl;
+
+    // Other learning parameters will go here as they are implemented...
 
     out << endl;
 }
@@ -628,11 +684,33 @@ string tANN::networkInfoString() const
 {
     std::ostringstream out;
 
-    out << m_layers[0].w.size()-1 << 'i';
+    out << "size::" << m_layers[0].w.size()-1;
     for (u32 i = 0; i < m_numLayers; i++)
-        out << '-' << m_layers[i].a.size() << s_layerTypeToChar(m_layers[i].layerType);
+        out << '-' << m_layers[i].a.size();
 
-    // libtodo -- other layer params
+    out << "__type::" << 'i';
+    for (u32 i = 0; i < m_numLayers; i++)
+    {
+        out << '-' << s_layerTypeToChar(m_layers[i].layerType);
+        if (m_layers[i].normalizeLayerInput)
+            out << 'n';
+    }
+
+    out << "__wrule::" << 'i';
+    for (u32 i = 0; i < m_numLayers; i++)
+    {
+        out << '-' << s_weightUpRuleToChar(m_layers[i].weightUpRule);
+        switch (m_layers[i].weightUpRule)
+        {
+            case kWeightUpRuleNone:
+                break;
+            case kWeightUpRuleFixedLearningRate:
+                out << m_layers[i].alpha;
+                break;
+            default:
+                assert(false);
+        }
+    }
 
     return out.str();
 }
