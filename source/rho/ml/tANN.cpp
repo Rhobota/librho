@@ -461,7 +461,9 @@ tANN::tANN(vector<u32> layerSizes,
            f64 randWeightMin,
            f64 randWeightMax)
     : m_layers(NULL),
-      m_numLayers(0)
+      m_numLayers(0),
+      m_randWeightMin(randWeightMin),
+      m_randWeightMax(randWeightMax)
 {
     if (layerSizes.size() < 2)
         throw eInvalidArgument("There must be at least an input and output layer.");
@@ -483,7 +485,17 @@ tANN::tANN(vector<u32> layerSizes,
     for (u32 i = 1; i < layerSizes.size(); i++)
     {
         m_layers[i-1].init(layerSizes[i-1], layerSizes[i],
-                           randWeightMin, randWeightMax, lcg);
+                           m_randWeightMin, m_randWeightMax, lcg);
+    }
+}
+
+void tANN::resetWeights()
+{
+    algo::tKnuthLCG lcg;
+
+    for (u32 i = 0; i < m_numLayers; i++)
+    {
+        m_layers[i].init_weights(m_randWeightMin, m_randWeightMax, lcg);
     }
 }
 
@@ -867,18 +879,23 @@ void tANN::pack(iWritable* out) const
     rho::pack(out, m_numLayers);
     for (u32 i = 0; i < m_numLayers; i++)
         m_layers[i].pack(out);
+    rho::pack(out, m_randWeightMin);
+    rho::pack(out, m_randWeightMax);
 }
 
 void tANN::unpack(iReadable* in)
 {
     // Try to unpack the network.
     u32 numLayers;
+    f64 randWeightMin, randWeightMax;
     rho::unpack(in, numLayers);
     tLayer* layers = new tLayer[numLayers];
     try
     {
         for (u32 i = 0; i < numLayers; i++)
             layers[i].unpack(in);
+        rho::unpack(in, randWeightMin);
+        rho::unpack(in, randWeightMax);
     }
     catch (ebObject& e)
     {
@@ -890,6 +907,8 @@ void tANN::unpack(iReadable* in)
     m_numLayers = numLayers;
     delete [] m_layers;
     m_layers = layers;
+    m_randWeightMin = randWeightMin;
+    m_randWeightMax = randWeightMax;
 }
 
 

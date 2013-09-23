@@ -29,10 +29,10 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * which squashing function is used on the neurons in that layer.
          */
         enum nLayerType {
-            kLayerTypeLogistic      = 0,
-            kLayerTypeHyperbolic    = 1,
-            kLayerTypeSoftmax       = 2,
-            kLayerTypeMax           = 3  // <-- represents the max of this enum (do not use)
+            kLayerTypeLogistic      = 0, // the logistic function
+            kLayerTypeHyperbolic    = 1, // the hyperbolic tangent function
+            kLayerTypeSoftmax       = 2, // a softmax group
+            kLayerTypeMax           = 3  // marks the max of this enum (do not use)
         };
 
         /**
@@ -47,7 +47,7 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
         };
 
         //////////////////////////////////////////////////////////////////////
-        // Constructors / destructor
+        // Constructors / resetWeights() / destructor
         //////////////////////////////////////////////////////////////////////
 
         /**
@@ -86,6 +86,17 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
         tANN(std::vector<u32> layerSizes,
              f64 randWeightMin = -1.0,
              f64 randWeightMax = 1.0);
+
+        /**
+         * Resets the weighs in the network to the initial random weights
+         * set by the above constructor.
+         *
+         * This is useful when you need to train the same network several
+         * times with varying training sets (e.g. for ten-fold cross-
+         * validation, or for exploring how the amount of training data
+         * affects performance).
+         */
+        void resetWeights();
 
         /**
          * Destructor...
@@ -276,8 +287,11 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
 
     private:
 
-        class tLayer* m_layers;
-        u32 m_numLayers;
+        class tLayer* m_layers;  // an array of layers
+        u32 m_numLayers;         // number of layers
+
+        f64 m_randWeightMin;     // used for resetWeights()
+        f64 m_randWeightMax;     // used for resetWeights()
 };
 
 
