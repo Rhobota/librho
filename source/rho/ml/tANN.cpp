@@ -633,7 +633,7 @@ void tANN::evaluate(const tIO& input, tIO& output) const
 
 void tANN::printNetworkInfo(std::ostream& out) const
 {
-    int colw = 10;
+    int colw = 20;
 
     out << "Artificial Neural Network Info:" << endl;
 
@@ -642,42 +642,40 @@ void tANN::printNetworkInfo(std::ostream& out) const
     out << std::right << std::setw(colw) << m_layers[0].w.size()-1;
     for (u32 i = 0; i < m_numLayers; i++)
         out << std::right << std::setw(colw) << m_layers[i].a.size();
-    out << endl << endl;
+    out << endl;
 
-    // Layer type:
+    // Layer type (and normalizeLayerInput):
     out << "             layer type:";
     out << std::right << std::setw(colw) << "input";
     for (u32 i = 0; i < m_numLayers; i++)
-        out << std::right << std::setw(colw) << s_layerTypeToString(m_layers[i].layerType);
+    {
+        string print = s_layerTypeToString(m_layers[i].layerType);
+        if (m_layers[i].normalizeLayerInput)
+            print += "(norm'd)";
+        out << std::right << std::setw(colw) << print;
+    }
     out << endl;
-
-    // Normalized layer input (yes/no):
-    out << "                        ";
-    out << std::right << std::setw(colw) << " ";
-    for (u32 i = 0; i < m_numLayers; i++)
-        out << std::right << std::setw(colw) << (m_layers[i].normalizeLayerInput ? "norm" : " ");
-    out << endl << endl;
 
     // Weight update rule:
     out << "     weight update rule:";
-    out << std::right << std::setw(colw) << " ";
+    out << std::right << std::setw(colw) << "N/A";
     for (u32 i = 0; i < m_numLayers; i++)
-        out << std::right << std::setw(colw) << s_weightUpRuleToString(m_layers[i].weightUpRule);
-    out << endl;
-
-    // Alpha (only when appropriate):
-    out << "                  alpha:";
-    out << std::right << std::setw(colw) << " ";
-    for (u32 i = 0; i < m_numLayers; i++)
-        if (m_layers[i].weightUpRule == kWeightUpRuleFixedLearningRate)
-            out << std::right << std::setw(colw) << m_layers[i].alpha;
-        else
-            out << std::right << std::setw(colw) << " ";
-    out << endl;
-
-    // Other learning parameters will go here as they are implemented...
-
-    out << endl;
+    {
+        std::ostringstream ss;
+        ss << s_weightUpRuleToString(m_layers[i].weightUpRule);
+        switch (m_layers[i].weightUpRule)
+        {
+            case kWeightUpRuleNone:
+                break;
+            case kWeightUpRuleFixedLearningRate:
+                ss << "(a=" << m_layers[i].alpha << ")";
+                break;
+            default:
+                assert(false);
+        }
+        out << std::right << std::setw(colw) << ss.str();
+    }
+    out << endl << endl;
 }
 
 string tANN::networkInfoString() const
