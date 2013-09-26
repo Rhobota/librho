@@ -3,7 +3,6 @@
 #include <rho/crypt/tSecureRandom.h>
 
 #include <cstdlib>
-#include <fstream>
 using namespace std;
 
 
@@ -12,18 +11,6 @@ namespace rho
 namespace crypt
 {
 
-
-tRSA::tRSA(string keyfilepath)
-    : n(0), e(0), d(0)
-{
-    ifstream in(keyfilepath.c_str());
-    if (!in)
-        throw eResourceAcquisitionError("Cannot open RSA key file!");
-    in >> n >> e >> d;
-    in.close();
-    if (n.isZero() || e.isZero())
-        throw eInvalidArgument("Neither the modulus nor the public key may be zero.");
-}
 
 tRSA::tRSA(iReadable* readable)
     : n(0), e(0), d(0)
