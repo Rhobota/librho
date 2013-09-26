@@ -694,11 +694,11 @@ string tANN::networkInfoString() const
 {
     std::ostringstream out;
 
-    out << "size::" << m_layers[0].w.size()-1;
+    out << "size=" << m_layers[0].w.size()-1;
     for (u32 i = 0; i < m_numLayers; i++)
         out << '-' << m_layers[i].a.size();
 
-    out << "__type::" << 'i';
+    out << "__type=" << 'i';
     for (u32 i = 0; i < m_numLayers; i++)
     {
         out << '-' << s_layerTypeToChar(m_layers[i].layerType);
@@ -706,7 +706,7 @@ string tANN::networkInfoString() const
             out << 'n';
     }
 
-    out << "__wrule::" << 'i';
+    out << "__wrule=" << 'i';
     for (u32 i = 0; i < m_numLayers; i++)
     {
         out << '-' << s_weightUpRuleToChar(m_layers[i].weightUpRule);
