@@ -20,7 +20,6 @@ class tRSA : public iPackable
 {
     public:
 
-        tRSA(std::string keyfilepath);
         tRSA(iReadable* readable);
 
         tRSA(std::vector<u8> modulus, std::vector<u8> publicKey);
