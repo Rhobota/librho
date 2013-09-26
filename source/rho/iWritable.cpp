@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <string.h>
 #include <sstream>
+#include <fcntl.h>
 
 
 namespace rho
@@ -86,9 +87,13 @@ bool tBufferedWritable::flush()
 tFileWritable::tFileWritable(std::string filename)
     : m_filename(filename), m_file(NULL), m_writeEOF(false)
 {
-    m_file = fopen(filename.c_str(), "wb");
+    int fd = open(filename.c_str(), O_WRONLY|O_CREAT|O_TRUNC|O_CLOEXEC, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
+    if (fd >= 0)
+        m_file = fdopen(fd, "wb");
     if (m_file == NULL)
     {
+        if (fd >= 0)
+            close(fd);
         std::ostringstream out;
         out << "Cannot open [" << filename << "] for writing (error: " << strerror(errno);
         throw eRuntimeError(out.str());
