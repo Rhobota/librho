@@ -43,14 +43,25 @@ void tSocket::m_init(const tAddr& addr, u16 port)
     m_addr = addr;
     m_addr.setUpperProtoPort(port);
 
-    if (addr.getVersion() == kIPv4)
-        m_fd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    else if (addr.getVersion() == kIPv6)
-        m_fd = ::socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+    #if __linux__
+    m_fd = (addr.getVersion() == kIPv4) ? ::socket(AF_INET, SOCK_STREAM|SOCK_CLOEXEC, IPPROTO_TCP)
+                                        : ::socket(AF_INET6, SOCK_STREAM|SOCK_CLOEXEC, IPPROTO_TCP);
+    #elif __APPLE__ || __CYGWIN__ || __MINGW32__
+    m_fd = (addr.getVersion() == kIPv4) ? ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)
+                                        : ::socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+    #endif
     if (m_fd == -1)
     {
         throw eSocketCreationError("Cannot create posix tcp socket.");
     }
+
+    #if __APPLE__ || __CYGWIN__ || __MINGW32__
+    if (fcntl(m_fd, F_SETFD, FD_CLOEXEC) == -1)
+    {
+        m_finalize();
+        throw eSocketCreationError("Cannot set close-on-exec on the new socket.");
+    }
+    #endif
 
     if (::connect(m_fd, m_addr.m_sockaddr, m_addr.m_sockaddrlen) == -1)
     {
