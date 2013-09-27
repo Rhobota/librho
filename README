@@ -124,6 +124,16 @@ not depend on any static initialization within librho). Doing so is useful if
 you *really* need a global object. Simply set the NULL global refc equal to a
 real object as a part of main(), then use you global object happily.
 
+3. Be careful if your application does a fork()+exec(). Librho sets most of
+the file descriptors that it opens to close-on-exec, but not all of them.
+It cannot set close-on-exec when a file is opened via the C++ fstream library.
+Currently only geo::tMesh and audio::tWaveMaker use the fstream library, so
+chances are that you are okay. Also, currently, reading an image from file
+using the img::tImage constructor opens a file without setting close-on-
+exec. If you do any of these in an application that does a fork()+exec(),
+you could end up leaking file descriptors. Using tFileReadable, tFileWritable,
+ip::tcp::tSocket, and ip::tcp::tServer are all safe, however.
+
 
 -------------
 --- Other ---
@@ -136,8 +146,6 @@ Here are a few things I'd like the library to have soon:
 
     - udp sockets
     - non-blocking tcp sockets
-    - a thread pool
     - graph library
-    - machine learning tools
 
 Things left to do are marked with a comment that contains 'libtodo' or 'LIBTODO'.
