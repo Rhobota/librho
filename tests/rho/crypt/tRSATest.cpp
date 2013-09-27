@@ -3,6 +3,7 @@
 #include <rho/tTest.h>
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 
 
@@ -50,7 +51,10 @@ void test(const tTest& t, const crypt::tRSA& rsa)
 
 void testWithFile(const tTest& t)
 {
-    crypt::tRSA rsa("tests/rho/crypt/rsakeys.txt");
+    std::ifstream file("tests/rho/crypt/rsakeys.txt");
+    std::string n, e, d;
+    file >> n >> e >> d;
+    crypt::tRSA rsa(n, e, d);
     test(t, rsa);
 }
 
