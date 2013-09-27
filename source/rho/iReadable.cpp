@@ -80,7 +80,7 @@ bool tBufferedReadable::m_refill()
 tFileReadable::tFileReadable(std::string filename)
     : m_filename(filename), m_file(NULL), m_eof(false)
 {
-    int fd = open(filename.c_str(), O_RDONLY|O_CLOEXEC, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
+    int fd = open(filename.c_str(), O_RDONLY|O_CLOEXEC);
     if (fd >= 0)
         m_file = fdopen(fd, "rb");
     if (m_file == NULL)

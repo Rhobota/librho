@@ -35,11 +35,23 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
     m_addr = addrGroup[0];
     m_addr.setUpperProtoPort(bindPort);
 
+    #if __linux__
+    m_fd = ::socket(AF_INET6, SOCK_STREAM|SOCK_CLOEXEC, IPPROTO_TCP);
+    #elif __APPLE__ || __CYGWIN__ || __MINGW32__
     m_fd = ::socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+    #endif
     if (m_fd == -1)
     {
         throw eSocketCreationError("Cannot create posix socket.");
     }
+
+    #if __APPLE__ || __CYGWIN__ || __MINGW32__
+    if (fcntl(m_fd, F_SETFD, FD_CLOEXEC) == -1)
+    {
+        m_finalize();
+        throw eSocketCreationError("Cannot set close-on-exec on the new socket.");
+    }
+    #endif
 
     #if __linux__ || __APPLE__ || __CYGWIN__
     int off = 0;
@@ -115,12 +127,24 @@ refc<tSocket> tServer::accept()
     socklen_t sockAddrLen = sizeof(sockAddr);
     socklen_t returnedLen = sockAddrLen;
 
+    #if __linux__
+    int fd = ::accept4(m_fd, (struct sockaddr*)&sockAddr, &returnedLen, SOCK_CLOEXEC);
+    #elif __APPLE__ || __CYGWIN__ || __MINGW32__
     int fd = ::accept(m_fd, (struct sockaddr*)&sockAddr, &returnedLen);
+    #endif
 
     if (fd == -1)
     {
         throw eResourceAcquisitionError(strerror(errno));
     }
+
+    #if __APPLE__ || __CYGWIN__ || __MINGW32__
+    if (fcntl(fd, F_SETFD, FD_CLOEXEC) == -1)
+    {
+        close(fd);
+        throw eResourceAcquisitionError(strerror(errno));
+    }
+    #endif
 
     if (returnedLen > sockAddrLen)
     {
