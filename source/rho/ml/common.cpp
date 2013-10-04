@@ -1,3 +1,5 @@
+#pragma GCC optimize 3
+
 #include <rho/ml/common.h>
 
 #include <iomanip>

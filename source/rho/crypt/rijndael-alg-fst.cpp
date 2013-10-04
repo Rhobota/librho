@@ -23,10 +23,14 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#pragma GCC optimize 3
+
 #include <assert.h>
 #include <stdlib.h>
 
 #include "rijndael-alg-fst.h"
+
 
 /*
 Te0[x] = S [x].[02, 01, 01, 03];

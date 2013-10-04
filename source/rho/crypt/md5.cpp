@@ -27,6 +27,8 @@ documentation and/or software.
  */
 
 
+#pragma GCC optimize 3
+
 
 #include "md5.h"
 
