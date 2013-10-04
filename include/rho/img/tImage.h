@@ -31,6 +31,8 @@ class tImage : public bNonCopyable, public iPackable
         void copyTo(tImage* other) const;  // <-- copies must be explicit with this method
         void convertToFormat(nImageFormat format, tImage* dest) const;
 
+        void saveToFile(std::string filepath) const;
+
         void setBufSize(u32 bufSize);      // <-- allocates a buffer of that size
         void setBufUsed(u32 bufUsed);
         void setWidth(u32 width);
