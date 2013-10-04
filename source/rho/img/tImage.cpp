@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include "stb_image.h"
+#include "lodepng.h"
 
 
 namespace rho
@@ -108,6 +109,54 @@ void tImage::copyTo(tImage* other) const
     other->setFormat(m_format);
     for (u32 i = 0; i < m_bufUsed; i++)
         other->m_buf[i] = m_buf[i];
+}
+
+void tImage::saveToFile(std::string filepath) const
+{
+    LodePNGColorType saveFormat;
+    nImageFormat needFormat;
+    switch (m_format)
+    {
+        case kRGB16:
+        case kRGB24:
+        case kYUYV:
+            saveFormat = LCT_RGB;
+            needFormat = kRGB24;
+            break;
+        case kRGBA:
+        case kBGRA:
+            saveFormat = LCT_RGBA;
+            needFormat = kRGBA;
+            break;
+        case kGrey:
+            saveFormat = LCT_GREY;
+            needFormat = kGrey;
+            break;
+        default:
+            throw eLogicError("The format of this image is unknown and cannot be saved to a file.");
+    }
+
+    unsigned err;
+
+    if (m_format == needFormat)
+    {
+        err = lodepng_encode_file(filepath.c_str(), m_buf, m_width, m_height,
+                                  saveFormat, 8);
+    }
+    else
+    {
+        tImage image;
+        convertToFormat(needFormat, &image);
+        err = lodepng_encode_file(filepath.c_str(), image.buf(), image.width(), image.height(),
+                                  saveFormat, 8);
+    }
+
+    if (err != 0)
+    {
+        std::ostringstream out;
+        out << "Cannot save image (" << lodepng_error_text(err) << "): " << filepath;
+        throw eLogicError(out.str());
+    }
 }
 
 void tImage::setBufSize(u32 bufSize)
