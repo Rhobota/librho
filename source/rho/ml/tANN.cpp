@@ -167,6 +167,7 @@ class tLayer : public bNonCopyable
                                //                       (i.e. the previous layer)
 
     vector< vector<f64> > dw_accum;   // dE/dw -- the error gradient wrt each weight
+    u32 batchSize;                    // number of dE/dw inside dw_accum
 
     /////////////////////////////////////////////////////////////////////////////////////
     // Behavioral state -- defines the squashing function and derivative calculations
@@ -203,6 +204,7 @@ class tLayer : public bNonCopyable
         dA = vector<f64>(mySize, 0.0);
         w  = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
         dw_accum = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
+        batchSize = 0;
 
         // Setup behavioral state to the default values.
         layerType = tANN::kLayerTypeHyperbolic;
@@ -326,6 +328,7 @@ class tLayer : public bNonCopyable
             for (u32 i = 0; i < dA.size(); i++)
                 dw_accum.back()[i] += dA[i] * 1.0;
         }
+        batchSize++;
     }
 
     void backpropagate(vector<f64>& prev_da) const
@@ -352,6 +355,7 @@ class tLayer : public bNonCopyable
                 for (u32 s = 0; s < w.size(); s++)
                     for (u32 i = 0; i < w[s].size(); i++)
                         dw_accum[s][i] = 0.0;
+                batchSize = 0;
                 break;
             }
 
@@ -359,14 +363,16 @@ class tLayer : public bNonCopyable
             {
                 if (alpha <= 0.0)
                     throw eLogicError("When using the fixed learning rate rule, alpha must be set.");
+                double mult = (10.0 / batchSize) * alpha;
                 for (u32 s = 0; s < w.size(); s++)
                 {
                     for (u32 i = 0; i < w[s].size(); i++)
                     {
-                        w[s][i] -= alpha * dw_accum[s][i];
+                        w[s][i] -= mult * dw_accum[s][i];
                         dw_accum[s][i] = 0.0;
                     }
                 }
+                batchSize = 0;
                 break;
             }
 
