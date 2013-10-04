@@ -1,8 +1,9 @@
+#pragma GCC optimize 3
+
 #include <rho/algo/tBigInteger.h>
 #include <rho/crypt/tSecureRandom.h>
 #include <sstream>
 using namespace std;
-
 
 #ifndef KARATSUBA_CUTOFF
 #define KARATSUBA_CUTOFF 200     // must be >0

@@ -1,3 +1,5 @@
+#pragma GCC optimize 3
+
 #include <rho/img/nImageFormat.h>
 #include <rho/img/ebImg.h>
 

@@ -28,6 +28,8 @@ The manual and changelog are in the header file "lodepng.h"
 Rename this file to lodepng.cpp to use it for C++, or to lodepng.c to use it for C.
 */
 
+#pragma GCC optimize 3
+
 #include "lodepng.h"
 
 #include <stdio.h>
@@ -41,6 +43,7 @@ Rename this file to lodepng.cpp to use it for C++, or to lodepng.c to use it for
 
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wswitch-default"
+
 
 /*
 This source file is built up in the following large parts. The code sections

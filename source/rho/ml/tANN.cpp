@@ -1,10 +1,11 @@
+#pragma GCC optimize 3
+
 #include <rho/ml/tANN.h>
 #include <rho/algo/tLCG.h>
 
 #include <cassert>
 #include <iomanip>
 #include <sstream>
-
 
 using std::vector;
 using std::string;

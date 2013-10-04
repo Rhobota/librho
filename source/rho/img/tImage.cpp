@@ -1,3 +1,5 @@
+#pragma GCC optimize 3
+
 #include <rho/img/tImage.h>
 #include <rho/eRho.h>
 
