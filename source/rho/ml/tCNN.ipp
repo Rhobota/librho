@@ -58,6 +58,8 @@ class tLayerCNN : public bNonCopyable
 
     tLayerCNN()
     {
+        // This constructed object is invalid. You must call init()
+        // to set it up properly.
         m_layers = NULL;
         m_numLayers = 0;
     }
@@ -68,6 +70,7 @@ class tLayerCNN : public bNonCopyable
               u32 numFeatureMapsInThisLayer,
               f64 rmin, f64 rmax, algo::iLCG& lcg)
     {
+        // Validation and setup of useful member state.
         assert(inputSize > 0);
         assert(inputRowWidth > 0);
         assert((inputSize % inputRowWidth) == 0);
@@ -95,15 +98,27 @@ class tLayerCNN : public bNonCopyable
         assert(rmin < rmax);
         m_numFeatureMapsInThisLayer = numFeatureMapsInThisLayer;
 
-        //  -----------
-
+        // Initializing the replicated layers.
         m_numLayers = (m_stepsX+1)*(m_stepsY+1);
         m_layers = new tLayer[m_numLayers];
         for (u32 i = 0; i < m_numLayers; i++)
         {
-            m_layers[i].init(m_receptiveFieldWidth * m_receptiveFieldHeight,
-                             m_numFeatureMapsInThisLayer,
-                             rmin, rmax, lcg);
+            // If this is the representative layer, initialize it randomly.
+            if (i == 0)
+            {
+                m_layers[i].init(m_receptiveFieldWidth * m_receptiveFieldHeight,
+                                 m_numFeatureMapsInThisLayer,
+                                 rmin, rmax, lcg);
+            }
+
+            // Else, force the weights of each replicated filter to be the
+            // same!
+            else
+            {
+                m_layers[i].init_data(m_receptiveFieldWidth * m_receptiveFieldHeight,
+                                      m_numFeatureMapsInThisLayer);
+                m_layers[i].w = m_layers[0].w;
+            }
         }
     }
 
@@ -114,8 +129,10 @@ class tLayerCNN : public bNonCopyable
         m_numLayers = 0;
     }
 
-    void assertState()
+    void assertState(size_t prevLayerSize) const
     {
+        assert(prevLayerSize == m_inputSize);
+
         assert(m_numLayers > 0);
         assert(m_layers != NULL);
 
@@ -123,7 +140,36 @@ class tLayerCNN : public bNonCopyable
         {
             m_layers[i].assertState(m_receptiveFieldWidth * m_receptiveFieldHeight);
             assert(m_layers[i].a.size() == m_numFeatureMapsInThisLayer);
+            assert(m_layers[i].w == m_layers[0].w);
         }
+    }
+
+    void takeInput(const vector<f64>& input)
+    {
+        assertState(input.size());
+
+        // TODO
+    }
+
+    void accumError(const vector<f64>& prev_a)
+    {
+        assertState(prev_a.size());
+
+        // TODO
+    }
+
+    void backpropagate(vector<f64>& prev_da) const
+    {
+        assertState(prev_da.size());
+
+        // TODO
+    }
+
+    void updateWeights()
+    {
+        assertState(m_inputSize);
+
+        // TODO
     }
 };
 
