@@ -921,3 +921,7 @@ void tANN::unpack(iReadable* in)
 
 }   // namespace ml
 }   // namespace rho
+
+
+#include "tCNN.ipp"    // this is done because tCNN uses tLayer, and this will
+                       // allow the compiler to optimize the code a lot
