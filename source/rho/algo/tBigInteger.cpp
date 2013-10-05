@@ -1,4 +1,6 @@
+#if __linux__
 #pragma GCC optimize 3
+#endif
 
 #include <rho/algo/tBigInteger.h>
 #include <rho/crypt/tSecureRandom.h>

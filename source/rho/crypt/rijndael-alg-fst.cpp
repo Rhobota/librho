@@ -24,7 +24,9 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if __linux__
 #pragma GCC optimize 3
+#endif
 
 #include <assert.h>
 #include <stdlib.h>
