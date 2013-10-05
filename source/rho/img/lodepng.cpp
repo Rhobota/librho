@@ -28,7 +28,9 @@ The manual and changelog are in the header file "lodepng.h"
 Rename this file to lodepng.cpp to use it for C++, or to lodepng.c to use it for C.
 */
 
+#if __linux__
 #pragma GCC optimize 3
+#endif
 
 #include "lodepng.h"
 
@@ -6128,6 +6130,7 @@ State::State()
 }
 
 State::State(const State& other)
+    : LodePNGState()
 {
   lodepng_state_init(this);
   lodepng_state_copy(this, &other);

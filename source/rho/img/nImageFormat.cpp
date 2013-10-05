@@ -1,4 +1,6 @@
+#if __linux__
 #pragma GCC optimize 3
+#endif
 
 #include <rho/img/nImageFormat.h>
 #include <rho/img/ebImg.h>
