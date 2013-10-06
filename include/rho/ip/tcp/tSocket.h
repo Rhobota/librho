@@ -9,6 +9,8 @@
 #include <rho/iReadable.h>
 #include <rho/iWritable.h>
 #include <rho/types.h>
+#include <rho/sync/tMutex.h>
+#include <rho/sync/tAutoSync.h>
 
 #include <string>
 
@@ -129,6 +131,7 @@ class tSocket :
         tAddr m_addr;
         bool  m_readEOF;
         bool  m_writeEOF;
+        sync::tMutex m_closeMux;
 };
 
 
