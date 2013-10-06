@@ -265,22 +265,15 @@ i32 tSocket::writeAll(const u8* buffer, i32 length)
 
 void tSocket::close()
 {
-    m_readEOF = true;
-    m_writeEOF = true;
-    #if __linux__ || __APPLE__ || __CYGWIN__
-    if (::shutdown(m_fd, SHUT_RDWR) == -1)
-    #elif __MINGW32__
-    if (::shutdown(m_fd, SD_BOTH) == -1)
-    #else
-    #error What platform are you on!?
-    #endif
-    {
-        //throw eRuntimeError(strerror(errno));
-    }
+    closeRead();
+    closeWrite();
 }
 
 void tSocket::closeRead()
 {
+    sync::tAutoSync as(m_closeMux);
+    if (m_readEOF)
+        return;
     m_readEOF = true;
     #if __linux__ || __APPLE__ || __CYGWIN__
     if (::shutdown(m_fd, SHUT_RD) == -1)
@@ -299,6 +292,9 @@ void tSocket::closeRead()
 
 void tSocket::closeWrite()
 {
+    sync::tAutoSync as(m_closeMux);
+    if (m_writeEOF)
+        return;
     m_writeEOF = true;
     #if __linux__ || __APPLE__ || __CYGWIN__
     if (::shutdown(m_fd, SHUT_WR) == -1)
