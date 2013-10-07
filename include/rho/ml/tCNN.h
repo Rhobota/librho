@@ -87,8 +87,11 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
 
     private:
 
-        class tLayerCNN* m_layers;  // an array of layers
-        u32 m_numLayers;            // number of layers
+        class tLayerCNN* m_layers;   // an array of layers
+        u32 m_numLayers;             // number of layers
+
+        f64 m_randWeightMin;   // used for resetWeights()
+        f64 m_randWeightMax;   // ...
 };
 
 
