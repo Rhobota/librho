@@ -83,7 +83,7 @@ class tLayerCNN : public bNonCopyable
         assert((inputSize % inputRowWidth) == 0);
         m_inputSize = inputSize;
         m_inputWidth = inputRowWidth;
-        m_inputHeight = (inputSize % inputRowWidth);
+        m_inputHeight = (inputSize / inputRowWidth);
 
         assert(receptiveFieldWidth > 0);
         assert(receptiveFieldHeight > 0);
@@ -107,6 +107,7 @@ class tLayerCNN : public bNonCopyable
 
         // Initializing the replicated layers.
         m_numLayers = (m_stepsX+1)*(m_stepsY+1);
+        delete [] m_layers;
         m_layers = new tLayer[m_numLayers];
         for (u32 i = 0; i < m_numLayers; i++)
         {
@@ -172,9 +173,9 @@ class tLayerCNN : public bNonCopyable
         }
     }
 
-    tANN::nLayerType getLayerType() const
+    tLayer& getPrimaryLayer()
     {
-        return m_layers[0].layerType;
+        return m_layers[0];
     }
 
     u32 getInputSize() const
@@ -185,8 +186,8 @@ class tLayerCNN : public bNonCopyable
     void m_fillField(const vector<f64>& input, u32 x, u32 y, vector<f64>& fieldInput) const
     {
         assert(input.size() == m_inputSize);
-        assert(x+m_receptiveFieldWidth < m_inputWidth);
-        assert(y+m_receptiveFieldHeight < m_inputHeight);
+        assert(x+m_receptiveFieldWidth <= m_inputWidth);
+        assert(y+m_receptiveFieldHeight <= m_inputHeight);
         assert(fieldInput.size() == m_receptiveFieldWidth * m_receptiveFieldHeight);
 
         u32 inputIndex = y*m_inputWidth + x;
@@ -204,8 +205,8 @@ class tLayerCNN : public bNonCopyable
     void m_reverseFillField(const vector<f64>& fieldInput, u32 x, u32 y, vector<f64>& input) const
     {
         assert(input.size() == m_inputSize);
-        assert(x+m_receptiveFieldWidth < m_inputWidth);
-        assert(y+m_receptiveFieldHeight < m_inputHeight);
+        assert(x+m_receptiveFieldWidth <= m_inputWidth);
+        assert(y+m_receptiveFieldHeight <= m_inputHeight);
         assert(fieldInput.size() == m_receptiveFieldWidth * m_receptiveFieldHeight);
 
         u32 inputIndex = y*m_inputWidth + x;
@@ -226,9 +227,9 @@ class tLayerCNN : public bNonCopyable
 
         u32 layerIndex = 0;
 
-        for (u32 y = 0; y < m_inputHeight-m_receptiveFieldHeight; y += m_stepSizeY)
+        for (u32 y = 0; y < m_inputHeight-m_receptiveFieldHeight+1; y += m_stepSizeY)
         {
-            for (u32 x = 0; x < m_inputWidth-m_receptiveFieldWidth; x += m_stepSizeX)
+            for (u32 x = 0; x < m_inputWidth-m_receptiveFieldWidth+1; x += m_stepSizeX)
             {
                 m_fillField(input, x, y, m_fieldInput);
                 m_layers[layerIndex++].takeInput(m_fieldInput);
@@ -257,9 +258,9 @@ class tLayerCNN : public bNonCopyable
 
         u32 layerIndex = 0;
 
-        for (u32 y = 0; y < m_inputHeight-m_receptiveFieldHeight; y += m_stepSizeY)
+        for (u32 y = 0; y < m_inputHeight-m_receptiveFieldHeight+1; y += m_stepSizeY)
         {
-            for (u32 x = 0; x < m_inputWidth-m_receptiveFieldWidth; x += m_stepSizeX)
+            for (u32 x = 0; x < m_inputWidth-m_receptiveFieldWidth+1; x += m_stepSizeX)
             {
                 m_fillField(prev_a, x, y, m_fieldInput);
                 m_layers[layerIndex++].accumError(m_fieldInput);
@@ -294,9 +295,9 @@ class tLayerCNN : public bNonCopyable
 
         u32 layerIndex = 0;
 
-        for (u32 y = 0; y < m_inputHeight-m_receptiveFieldHeight; y += m_stepSizeY)
+        for (u32 y = 0; y < m_inputHeight-m_receptiveFieldHeight+1; y += m_stepSizeY)
         {
-            for (u32 x = 0; x < m_inputWidth-m_receptiveFieldWidth; x += m_stepSizeX)
+            for (u32 x = 0; x < m_inputWidth-m_receptiveFieldWidth+1; x += m_stepSizeX)
             {
                 m_layers[layerIndex++].backpropagate(m_fieldInput);
                 m_reverseFillField(m_fieldInput, x, y, prev_da);
@@ -375,6 +376,10 @@ tCNN::tCNN(std::string descriptionString)
                      m_randWeightMin,     //   f64 rmin
                      m_randWeightMax,     //   f64 rmax
                      lcg);                //   algo::iLCG& lcg
+    m_layers[0].getPrimaryLayer().layerType = tANN::kLayerTypeLogistic;
+    m_layers[0].getPrimaryLayer().normalizeLayerInput = 1;
+    m_layers[0].getPrimaryLayer().weightUpRule = tANN::kWeightUpRuleFixedLearningRate;
+    m_layers[0].getPrimaryLayer().alpha = 1.0;
 
     m_layers[1].init(294,                 //   u32 inputSize
                      42,                  //   u32 inputRowWidth
@@ -386,8 +391,12 @@ tCNN::tCNN(std::string descriptionString)
                      m_randWeightMin,     //   f64 rmin
                      m_randWeightMax,     //   f64 rmax
                      lcg);                //   algo::iLCG& lcg
+    m_layers[1].getPrimaryLayer().layerType = tANN::kLayerTypeLogistic;
+    m_layers[1].getPrimaryLayer().normalizeLayerInput = 1;
+    m_layers[1].getPrimaryLayer().weightUpRule = tANN::kWeightUpRuleFixedLearningRate;
+    m_layers[1].getPrimaryLayer().alpha = 1.0;
 
-    m_layers[1].init(160,                 //   u32 inputSize
+    m_layers[2].init(160,                 //   u32 inputSize
                      40,                  //   u32 inputRowWidth
                      40,                  //   u32 receptiveFieldWidth
                      4,                   //   u32 receptiveFieldHeight
@@ -397,6 +406,10 @@ tCNN::tCNN(std::string descriptionString)
                      m_randWeightMin,     //   f64 rmin
                      m_randWeightMax,     //   f64 rmax
                      lcg);                //   algo::iLCG& lcg
+    m_layers[2].getPrimaryLayer().layerType = tANN::kLayerTypeLogistic;
+    m_layers[2].getPrimaryLayer().normalizeLayerInput = 1;
+    m_layers[2].getPrimaryLayer().weightUpRule = tANN::kWeightUpRuleFixedLearningRate;
+    m_layers[2].getPrimaryLayer().alpha = 1.0;
 }
 
 void tCNN::resetWeights()
@@ -420,7 +433,7 @@ void tCNN::addExample(const tIO& input, const tIO& target,
                       tIO& actualOutput)
 {
     // Validate the target vector.
-    tANN::nLayerType type = m_layers[m_numLayers-1].getLayerType();
+    tANN::nLayerType type = m_layers[m_numLayers-1].getPrimaryLayer().layerType;
     for (u32 i = 0; i < target.size(); i++)
     {
         if (target[i] < s_squash_min(type) || target[i] > s_squash_max(type))
