@@ -175,12 +175,54 @@ class tLayerCNN : public bNonCopyable
 
     tLayer& getPrimaryLayer()
     {
+        assert(m_numLayers > 0);
         return m_layers[0];
+    }
+
+    u32 getNumLayers() const
+    {
+        return m_numLayers;
+    }
+
+    tLayer& getLayer(u32 layerIndex)
+    {
+        assert(layerIndex < m_numLayers);
+        return m_layers[layerIndex];
     }
 
     u32 getInputSize() const
     {
         return m_inputSize;
+    }
+
+    u32 getReceptiveFieldWidth() const
+    {
+        return m_receptiveFieldWidth;
+    }
+
+    u32 getReceptiveFieldHeight() const
+    {
+        return m_receptiveFieldHeight;
+    }
+
+    u32 getStepSizeX() const
+    {
+        return m_stepSizeX;
+    }
+
+    u32 getStepSizeY() const
+    {
+        return m_stepSizeY;
+    }
+
+    u32 getStepsX() const
+    {
+        return m_stepsX;
+    }
+
+    u32 getStepsY() const
+    {
+        return m_stepsY;
     }
 
     void m_fillField(const vector<f64>& input, u32 x, u32 y, vector<f64>& fieldInput) const
@@ -345,7 +387,7 @@ class tLayerCNN : public bNonCopyable
 };
 
 
-tCNN::tCNN(std::string descriptionString)
+tCNN::tCNN(string descriptionString)
 {
 //     if (layerSizes.size() < 2)
 //         throw eInvalidArgument("There must be at least an input and output layer.");
@@ -379,7 +421,7 @@ tCNN::tCNN(std::string descriptionString)
     m_layers[0].getPrimaryLayer().layerType = tANN::kLayerTypeLogistic;
     m_layers[0].getPrimaryLayer().normalizeLayerInput = 1;
     m_layers[0].getPrimaryLayer().weightUpRule = tANN::kWeightUpRuleFixedLearningRate;
-    m_layers[0].getPrimaryLayer().alpha = 1.0;
+    m_layers[0].getPrimaryLayer().alpha = 5.0;
 
     m_layers[1].init(294,                 //   u32 inputSize
                      42,                  //   u32 inputRowWidth
@@ -394,7 +436,7 @@ tCNN::tCNN(std::string descriptionString)
     m_layers[1].getPrimaryLayer().layerType = tANN::kLayerTypeLogistic;
     m_layers[1].getPrimaryLayer().normalizeLayerInput = 1;
     m_layers[1].getPrimaryLayer().weightUpRule = tANN::kWeightUpRuleFixedLearningRate;
-    m_layers[1].getPrimaryLayer().alpha = 1.0;
+    m_layers[1].getPrimaryLayer().alpha = 2.0;
 
     m_layers[2].init(160,                 //   u32 inputSize
                      40,                  //   u32 inputRowWidth
@@ -496,6 +538,226 @@ void tCNN::evaluate(const tIO& input, tIO& output) const
         m_layers[i].takeInput(m_layers[i-1].getOutput());
 
     output = m_layers[m_numLayers-1].getOutput();
+}
+
+void tCNN::printNetworkInfo(std::ostream& out) const
+{
+    // TODO
+}
+
+string tCNN::networkInfoString() const
+{
+    // TODO
+    return "cnn";
+}
+
+u32 tCNN::getNumLayers() const
+{
+    return m_numLayers;
+}
+
+u32 tCNN::getNumFeatureMaps(u32 layerIndex) const
+{
+    if (layerIndex >= m_numLayers)
+        throw eInvalidArgument("No layer with that index.");
+
+    return (u32) (m_layers[layerIndex].getPrimaryLayer().a.size());
+}
+
+void tCNN::getWeights(u32 layerIndex, u32 mapIndex, vector<f64>& weights) const
+{
+    if (mapIndex >= getNumFeatureMaps(layerIndex))
+        throw eInvalidArgument("No layer/map with that index.");
+
+    vector< vector<f64> >& w = m_layers[layerIndex].getPrimaryLayer().w;
+    weights.resize(w.size()-1);
+    for (u32 s = 0; s < w.size()-1; s++)
+        weights[s] = w[s][mapIndex];
+}
+
+f64 tCNN::getBias(u32 layerIndex, u32 mapIndex) const
+{
+    if (mapIndex >= getNumFeatureMaps(layerIndex))
+        throw eInvalidArgument("No layer/map with that index.");
+
+    vector< vector<f64> >& w = m_layers[layerIndex].getPrimaryLayer().w;
+    return w.back()[mapIndex];
+}
+
+u32 tCNN::getNumReplicatedFilters(u32 layerIndex) const
+{
+    if (layerIndex >= m_numLayers)
+        throw eInvalidArgument("No layer with that index.");
+
+    return m_layers[layerIndex].getNumLayers();
+}
+
+f64 tCNN::getOutput(u32 layerIndex, u32 mapIndex, u32 filterIndex) const
+{
+    if (mapIndex >= getNumFeatureMaps(layerIndex))
+        throw eInvalidArgument("No layer/map with that index.");
+
+    if (filterIndex >= getNumReplicatedFilters(layerIndex))
+        throw eInvalidArgument("No layer/filter with that index.");
+
+    return m_layers[layerIndex].getLayer(filterIndex).a[mapIndex];
+}
+
+void tCNN::getFeatureMapImage(u32 layerIndex, u32 mapIndex,
+                              bool color, bool absolute,
+                              img::tImage* dest) const
+{
+    // Get the weights.
+    vector<f64> weights;
+    getWeights(layerIndex, mapIndex, weights);
+    assert(weights.size() > 0);
+    u32 width = m_layers[layerIndex].getReceptiveFieldWidth();
+    assert(width > 0);
+
+    // Normalize the weights to [0.0, 255.0].
+    f64 maxval = weights[0];
+    f64 minval = weights[0];
+    for (u32 i = 1; i < weights.size(); i++)
+    {
+        maxval = std::max(maxval, weights[i]);
+        minval = std::min(minval, weights[i]);
+    }
+    if (maxval == minval) maxval += 0.000001;
+    if (absolute)
+    {
+        f64 absmax = std::max(std::fabs(maxval), std::fabs(minval));
+        for (u32 i = 0; i < weights.size(); i++)
+            weights[i] = (std::fabs(weights[i]) / absmax) * 255.0;
+    }
+    else
+    {
+        for (u32 i = 0; i < weights.size(); i++)
+        {
+            f64 val = ((weights[i] - minval) / (maxval - minval)) * 255.0;
+            weights[i] = val;
+        }
+    }
+
+    // Calculate some stuff.
+    u32 pixWidth = color ? 3 : 1;
+    if ((weights.size() % pixWidth) > 0)
+        throw eLogicError("Pixels do not align with the number of weights.");
+    u32 numPix = (u32) weights.size() / pixWidth;
+    if ((numPix % width) > 0)
+        throw eLogicError("Cannot build image of that width. Last row not filled.");
+    u32 height = numPix / width;
+
+    // Create the image.
+    dest->setFormat(img::kRGB24);
+    dest->setBufSize(width*height*3);
+    dest->setBufUsed(width*height*3);
+    dest->setWidth(width);
+    dest->setHeight(height);
+    u8* buf = dest->buf();
+    u32 bufIndex = 0;
+    u32 wIndex = 0;
+    for (u32 i = 0; i < height; i++)
+    {
+        for (u32 j = 0; j < width; j++)
+        {
+            if (color)
+            {
+                buf[bufIndex++] = (u8) weights[wIndex++];
+                buf[bufIndex++] = (u8) weights[wIndex++];
+                buf[bufIndex++] = (u8) weights[wIndex++];
+            }
+            else
+            {
+                buf[bufIndex++] = (u8) weights[wIndex];
+                buf[bufIndex++] = (u8) weights[wIndex];
+                buf[bufIndex++] = (u8) weights[wIndex++];
+            }
+        }
+    }
+}
+
+void tCNN::getOutputImage(u32 layerIndex, u32 mapIndex,
+                          bool color, bool absolute,
+                          img::tImage* dest) const
+{
+    if (mapIndex >= getNumFeatureMaps(layerIndex))
+        throw eInvalidArgument("No layer/map with that index.");
+
+    // Get the weights.
+    vector<f64> weights;
+    u32 width;
+    {
+        size_t stride = getNumFeatureMaps(layerIndex);
+        vector<f64>& alloutput = m_layers[layerIndex].getOutput();
+
+        for (size_t i = mapIndex; i < alloutput.size(); i += stride)
+            weights.push_back(alloutput[i]);
+        assert(weights.size() > 0);
+
+        width = m_layers[layerIndex].getStepsX() + 1;
+        assert(width > 0);
+    }
+
+    // Normalize the weights to [0.0, 255.0].
+    f64 maxval = weights[0];
+    f64 minval = weights[0];
+    for (u32 i = 1; i < weights.size(); i++)
+    {
+        maxval = std::max(maxval, weights[i]);
+        minval = std::min(minval, weights[i]);
+    }
+    if (maxval == minval) maxval += 0.000001;
+    if (absolute)
+    {
+        f64 absmax = std::max(std::fabs(maxval), std::fabs(minval));
+        for (u32 i = 0; i < weights.size(); i++)
+            weights[i] = (std::fabs(weights[i]) / absmax) * 255.0;
+    }
+    else
+    {
+        for (u32 i = 0; i < weights.size(); i++)
+        {
+            f64 val = ((weights[i] - minval) / (maxval - minval)) * 255.0;
+            weights[i] = val;
+        }
+    }
+
+    // Calculate some stuff.
+    u32 pixWidth = color ? 3 : 1;
+    if ((weights.size() % pixWidth) > 0)
+        throw eLogicError("Pixels do not align with the number of weights.");
+    u32 numPix = (u32) weights.size() / pixWidth;
+    if ((numPix % width) > 0)
+        throw eLogicError("Cannot build image of that width. Last row not filled.");
+    u32 height = numPix / width;
+
+    // Create the image.
+    dest->setFormat(img::kRGB24);
+    dest->setBufSize(width*height*3);
+    dest->setBufUsed(width*height*3);
+    dest->setWidth(width);
+    dest->setHeight(height);
+    u8* buf = dest->buf();
+    u32 bufIndex = 0;
+    u32 wIndex = 0;
+    for (u32 i = 0; i < height; i++)
+    {
+        for (u32 j = 0; j < width; j++)
+        {
+            if (color)
+            {
+                buf[bufIndex++] = (u8) weights[wIndex++];
+                buf[bufIndex++] = (u8) weights[wIndex++];
+                buf[bufIndex++] = (u8) weights[wIndex++];
+            }
+            else
+            {
+                buf[bufIndex++] = (u8) weights[wIndex];
+                buf[bufIndex++] = (u8) weights[wIndex];
+                buf[bufIndex++] = (u8) weights[wIndex++];
+            }
+        }
+    }
 }
 
 void tCNN::pack(iWritable* out) const

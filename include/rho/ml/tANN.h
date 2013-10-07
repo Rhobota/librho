@@ -197,6 +197,8 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
 
         /**
          * Returns a single-line version of printNetworkInfo().
+         *
+         * Useful for generating file names for storing ANN-related data.
          */
         std::string networkInfoString() const;
 
