@@ -61,6 +61,69 @@ class tLayerCNN : public bNonCopyable
     vector<f64> m_da;
     vector<f64> m_fieldInput;
 
+  private:
+
+    void m_fillField(const vector<f64>& input, u32 x, u32 y, vector<f64>& fieldInput) const
+    {
+        assert(input.size() == m_inputSize);
+        assert(x+m_receptiveFieldWidth <= m_inputWidth);
+        assert(y+m_receptiveFieldHeight <= m_inputHeight);
+        assert(fieldInput.size() == m_receptiveFieldWidth * m_receptiveFieldHeight);
+
+        u32 inputIndex = y*m_inputWidth + x;
+        u32 fieldInputIndex = 0;
+        for (u32 yy = 0; yy < m_receptiveFieldHeight; yy++)
+        {
+            for (u32 xx = 0; xx < m_receptiveFieldWidth; xx++)
+            {
+                fieldInput[fieldInputIndex++] = input[inputIndex+xx];
+            }
+            inputIndex += m_inputWidth;
+        }
+    }
+
+    void m_reverseFillField(const vector<f64>& fieldInput, u32 x, u32 y, vector<f64>& input) const
+    {
+        assert(input.size() == m_inputSize);
+        assert(x+m_receptiveFieldWidth <= m_inputWidth);
+        assert(y+m_receptiveFieldHeight <= m_inputHeight);
+        assert(fieldInput.size() == m_receptiveFieldWidth * m_receptiveFieldHeight);
+
+        u32 inputIndex = y*m_inputWidth + x;
+        u32 fieldInputIndex = 0;
+        for (u32 yy = 0; yy < m_receptiveFieldHeight; yy++)
+        {
+            for (u32 xx = 0; xx < m_receptiveFieldWidth; xx++)
+            {
+                 input[inputIndex+xx] += fieldInput[fieldInputIndex++];
+            }
+            inputIndex += m_inputWidth;
+        }
+    }
+
+    void m_accumWeights(vector< vector<f64> >& accum, vector< vector<f64> >& vals)
+    {
+        for (size_t s = 0; s < accum.size(); s++)
+        {
+            for (size_t i = 0; i < accum[s].size(); i++)
+            {
+                accum[s][i] += vals[s][i];
+                vals[s][i] = 0.0;
+            }
+        }
+    }
+
+    void m_set(vector< vector<f64> >& dest, const vector< vector<f64> >& source)
+    {
+        for (size_t s = 0; s < dest.size(); s++)
+        {
+            for (size_t i = 0; i < dest[s].size(); i++)
+            {
+                dest[s][i] = source[s][i];
+            }
+        }
+    }
+
   public:
 
     tLayerCNN()
@@ -257,44 +320,6 @@ class tLayerCNN : public bNonCopyable
         return m_stepsY;
     }
 
-    void m_fillField(const vector<f64>& input, u32 x, u32 y, vector<f64>& fieldInput) const
-    {
-        assert(input.size() == m_inputSize);
-        assert(x+m_receptiveFieldWidth <= m_inputWidth);
-        assert(y+m_receptiveFieldHeight <= m_inputHeight);
-        assert(fieldInput.size() == m_receptiveFieldWidth * m_receptiveFieldHeight);
-
-        u32 inputIndex = y*m_inputWidth + x;
-        u32 fieldInputIndex = 0;
-        for (u32 yy = 0; yy < m_receptiveFieldHeight; yy++)
-        {
-            for (u32 xx = 0; xx < m_receptiveFieldWidth; xx++)
-            {
-                fieldInput[fieldInputIndex++] = input[inputIndex+xx];
-            }
-            inputIndex += m_inputWidth;
-        }
-    }
-
-    void m_reverseFillField(const vector<f64>& fieldInput, u32 x, u32 y, vector<f64>& input) const
-    {
-        assert(input.size() == m_inputSize);
-        assert(x+m_receptiveFieldWidth <= m_inputWidth);
-        assert(y+m_receptiveFieldHeight <= m_inputHeight);
-        assert(fieldInput.size() == m_receptiveFieldWidth * m_receptiveFieldHeight);
-
-        u32 inputIndex = y*m_inputWidth + x;
-        u32 fieldInputIndex = 0;
-        for (u32 yy = 0; yy < m_receptiveFieldHeight; yy++)
-        {
-            for (u32 xx = 0; xx < m_receptiveFieldWidth; xx++)
-            {
-                 input[inputIndex+xx] += fieldInput[fieldInputIndex++];
-            }
-            inputIndex += m_inputWidth;
-        }
-    }
-
     void takeInput(const vector<f64>& input)
     {
         assertState(input.size());
@@ -381,29 +406,6 @@ class tLayerCNN : public bNonCopyable
         assert(layerIndex == (m_stepsX+1)*(m_stepsY+1));
     }
 
-    void m_accumWeights(vector< vector<f64> >& accum, vector< vector<f64> >& vals)
-    {
-        for (size_t s = 0; s < accum.size(); s++)
-        {
-            for (size_t i = 0; i < accum[s].size(); i++)
-            {
-                accum[s][i] += vals[s][i];
-                vals[s][i] = 0.0;
-            }
-        }
-    }
-
-    void m_set(vector< vector<f64> >& dest, const vector< vector<f64> >& source)
-    {
-        for (size_t s = 0; s < dest.size(); s++)
-        {
-            for (size_t i = 0; i < dest[s].size(); i++)
-            {
-                dest[s][i] = source[s][i];
-            }
-        }
-    }
-
     void updateWeights()
     {
         assertState(m_inputSize);
@@ -415,6 +417,56 @@ class tLayerCNN : public bNonCopyable
 
         for (u32 i = 1; i < m_numLayers; i++)
             m_set(m_layers[i].w, m_layers[0].w);
+    }
+
+    void pack(iWritable* out) const
+    {
+        rho::pack(out, m_inputSize);
+        rho::pack(out, m_inputWidth);
+        rho::pack(out, m_inputHeight);
+        rho::pack(out, m_receptiveFieldWidth);
+        rho::pack(out, m_receptiveFieldHeight);
+        rho::pack(out, m_stepSizeX);
+        rho::pack(out, m_stepSizeY);
+        rho::pack(out, m_stepsX);
+        rho::pack(out, m_stepsY);
+        rho::pack(out, m_numFeatureMapsInThisLayer);
+        rho::pack(out, m_numLayers);
+        m_layers[0].pack(out);
+    }
+
+    void unpack(iReadable* in)
+    {
+        rho::unpack(in, m_inputSize);
+        rho::unpack(in, m_inputWidth);
+        rho::unpack(in, m_inputHeight);
+        rho::unpack(in, m_receptiveFieldWidth);
+        rho::unpack(in, m_receptiveFieldHeight);
+        rho::unpack(in, m_stepSizeX);
+        rho::unpack(in, m_stepSizeY);
+        rho::unpack(in, m_stepsX);
+        rho::unpack(in, m_stepsY);
+        rho::unpack(in, m_numFeatureMapsInThisLayer);
+        rho::unpack(in, m_numLayers);
+        assert(m_numLayers > 0);
+
+        delete [] m_layers;
+        m_layers = new tLayer[m_numLayers];
+        m_layers[0].unpack(in);
+
+        for (u32 i = 1; i < m_numLayers; i++)
+        {
+            tByteWritable bw;
+            m_layers[0].pack(&bw);
+            tByteReadable br(bw.getBuf());
+            m_layers[i].unpack(&br);
+        }
+
+        assertState(m_inputSize);
+
+        m_output = vector<f64>(m_numLayers * m_numFeatureMapsInThisLayer, 0.0);
+        m_da = m_output;
+        m_fieldInput = vector<f64>(m_receptiveFieldWidth * m_receptiveFieldHeight, 0.0);
     }
 };
 
@@ -786,12 +838,39 @@ void tCNN::getOutputImage(u32 layerIndex, u32 mapIndex,
 
 void tCNN::pack(iWritable* out) const
 {
-    // TODO
+    rho::pack(out, m_numLayers);
+    for (u32 i = 0; i < m_numLayers; i++)
+        m_layers[i].pack(out);
+    rho::pack(out, m_randWeightMin);
+    rho::pack(out, m_randWeightMax);
 }
 
 void tCNN::unpack(iReadable* in)
 {
-    // TODO
+    // Try to unpack the network.
+    u32 numLayers;
+    f64 randWeightMin, randWeightMax;
+    rho::unpack(in, numLayers);
+    tLayerCNN* layers = new tLayerCNN[numLayers];
+    try
+    {
+        for (u32 i = 0; i < numLayers; i++)
+            layers[i].unpack(in);
+        rho::unpack(in, randWeightMin);
+        rho::unpack(in, randWeightMax);
+    }
+    catch (ebObject& e)
+    {
+        delete [] layers;
+        throw;
+    }
+
+    // If it worked, clobber the current network.
+    m_numLayers = numLayers;
+    delete [] m_layers;
+    m_layers = layers;
+    m_randWeightMin = randWeightMin;
+    m_randWeightMax = randWeightMax;
 }
 
 
