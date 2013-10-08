@@ -167,22 +167,14 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
 
         /**
          * Generates an image representation of the output of every
-         * replicated filter in the specified feature map.
-         *
-         * If the outputs should be interpreted as an RGB image, set
-         * 'color' to true. If the outputs should be interpreted as a
-         * grey image, set 'color' to false.
-         *
-         * If 'absolute' is set to true, the absolute value of the outputs
-         * will be used when producing the image. Otherwise, the relative
-         * outputs will be used to produce the image (meaning that outputs
-         * of value zero will be some shade of grey if any negative outputs
-         * are present).
+         * replicated filter in the specified feature map. You can
+         * think of this as a representation of the transformed
+         * input to the specified layer, transformed by the specified
+         * feature map.
          *
          * The generated image is stored in 'dest'.
          */
         void getOutputImage(u32 layerIndex, u32 mapIndex,
-                            bool color, bool absolute,
                             img::tImage* dest) const;
 
         //////////////////////////////////////////////////////////////////////
