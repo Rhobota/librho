@@ -30,7 +30,21 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * The hyper-parameters of the CNN will be described by the given
          * string.
          *
-         * TODO -- define the descriptionString format.
+         * The description string looks like this:
+         *
+         *        <input:width> <input:height>
+         *        <clayer:rf_width> <clayer:rf_height> <clayer:rf_stepx> <clayer:rf_stepy> <clayer::num_maps>
+         *        <clayer:rf_width> <clayer:rf_height> <clayer:rf_stepx> <clayer:rf_stepy> <clayer::num_maps>
+         *        ...
+         *        <flayer:num_neurons>
+         *        <flayer:num_neurons>
+         *
+         * where the "input" fields describes the size of the network's input,
+         * the "clayer" fields describe a convolutional layer, and
+         * the "flayer" fields describe a fully-connected layer.
+         *
+         * There may be no convolutional layers after the first fully-
+         * connected layer.
          */
         tCNN(std::string descriptionString);
 

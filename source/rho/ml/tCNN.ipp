@@ -1,5 +1,7 @@
 #include <rho/ml/tCNN.h>
 
+#include <rho/algo/string_util.h>
+
 
 namespace rho
 {
@@ -471,71 +473,120 @@ class tLayerCNN : public bNonCopyable
 };
 
 
+static
+u32 s_toInt(const string& str)
+{
+    std::istringstream in(str);
+    u32 val;
+    if (!(in >> val))
+        throw eInvalidArgument("Expected numeric value where there was not one.");
+    return val;
+}
+
+
 tCNN::tCNN(string descriptionString)
 {
-//     if (layerSizes.size() < 2)
-//         throw eInvalidArgument("There must be at least an input and output layer.");
-//     for (size_t i = 0; i < layerSizes.size(); i++)
-//         if (layerSizes[i] == 0)
-//             throw eInvalidArgument("Every layer must have size > 0");
-//     if (randWeightMin >= randWeightMax)
-//         throw eInvalidArgument("Invalid [randWeightMin, randWeightMax] range.");
-
     m_randWeightMin = -1.0;
     m_randWeightMax = 1.0;
+    algo::tKnuthLCG lcg;
 
-    m_numLayers = 3;     // we don't need a layer for the input
+    {
+        m_numLayers = 0;
+        std::istringstream in(descriptionString);
+        string line;
+        getline(in, line);
+        while (getline(in, line)) m_numLayers++;
+    }
+
+    if (m_numLayers == 0)
+        throw eInvalidArgument("There must be at least one layer in the CNN.");
 
     m_layers = new tLayerCNN[m_numLayers];
                             // m_layers[0] is the lowest layer
                             // (i.e. first one above the input layer)
 
-    algo::tKnuthLCG lcg;
+    try
+    {
+        std::istringstream in(descriptionString);
+        string line;
 
-    m_layers[0].init(28*28,               //   u32 inputSize
-                     28,                  //   u32 inputRowWidth
-                     4,                   //   u32 receptiveFieldWidth
-                     4,                   //   u32 receptiveFieldHeight
-                     4,                   //   u32 stepSizeHorizontal
-                     4,                   //   u32 stepSizeVertical
-                     6,                   //   u32 numFeatureMapsInThisLayer
-                     m_randWeightMin,     //   f64 rmin
-                     m_randWeightMax,     //   f64 rmax
-                     lcg);                //   algo::iLCG& lcg
-    m_layers[0].setLayerType(tANN::kLayerTypeLogistic);
-    m_layers[0].setLayerNormalizeLayerInput(true);
-    m_layers[0].setLayerWeightUpdateRule(tANN::kWeightUpRuleFixedLearningRate);
-    m_layers[0].setLayerAlpha(5.0);
+        u32 width, height;
+        {
+            if (!getline(in, line))
+                throw eInvalidArgument("Not sure why this failed.");
+            std::istringstream linein(line);
+            if (!(linein >> width >> height))
+                throw eInvalidArgument("Cannot read input description line.");
+        }
 
-    m_layers[1].init(294,                 //   u32 inputSize
-                     42,                  //   u32 inputRowWidth
-                     24,                  //   u32 receptiveFieldWidth
-                     4,                   //   u32 receptiveFieldHeight
-                     6,                   //   u32 stepSizeHorizontal
-                     1,                   //   u32 stepSizeVertical
-                     10,                  //   u32 numFeatureMapsInThisLayer
-                     m_randWeightMin,     //   f64 rmin
-                     m_randWeightMax,     //   f64 rmax
-                     lcg);                //   algo::iLCG& lcg
-    m_layers[1].setLayerType(tANN::kLayerTypeLogistic);
-    m_layers[1].setLayerNormalizeLayerInput(true);
-    m_layers[1].setLayerWeightUpdateRule(tANN::kWeightUpRuleFixedLearningRate);
-    m_layers[1].setLayerAlpha(2.0);
+        u32 nmaps = 1;
 
-    m_layers[2].init(160,                 //   u32 inputSize
-                     40,                  //   u32 inputRowWidth
-                     40,                  //   u32 receptiveFieldWidth
-                     4,                   //   u32 receptiveFieldHeight
-                     1,                   //   u32 stepSizeHorizontal
-                     1,                   //   u32 stepSizeVertical
-                     10,                  //   u32 numFeatureMapsInThisLayer
-                     m_randWeightMin,     //   f64 rmin
-                     m_randWeightMax,     //   f64 rmax
-                     lcg);                //   algo::iLCG& lcg
-    m_layers[2].setLayerType(tANN::kLayerTypeSoftmax);
-    m_layers[2].setLayerNormalizeLayerInput(true);
-    m_layers[2].setLayerWeightUpdateRule(tANN::kWeightUpRuleFixedLearningRate);
-    m_layers[2].setLayerAlpha(1.0);
+        for (u32 i = 0; i < m_numLayers; i++)
+        {
+            if (!getline(in, line))
+                throw eInvalidArgument("Not sure why this failed.");
+
+            vector<string> parts = algo::split(line, " ");
+
+            if (parts.size() == 5)
+            {
+                // A convolutional layer:
+
+                u32 rfwidth = s_toInt(parts[0]);
+                u32 rfheight = s_toInt(parts[1]);
+                u32 rfstepx = s_toInt(parts[2]);
+                u32 rfstepy = s_toInt(parts[3]);
+                u32 nmapsHere = s_toInt(parts[4]);
+
+                m_layers[i].init(width*height*nmaps,  //   u32 inputSize
+                                 width*nmaps,         //   u32 inputRowWidth
+                                 rfwidth*nmaps,       //   u32 receptiveFieldWidth
+                                 rfheight,            //   u32 receptiveFieldHeight
+                                 rfstepx*nmaps,       //   u32 stepSizeHorizontal
+                                 rfstepy,             //   u32 stepSizeVertical
+                                 nmapsHere,           //   u32 numFeatureMapsInThisLayer
+                                 m_randWeightMin,     //   f64 rmin
+                                 m_randWeightMax,     //   f64 rmax
+                                 lcg);                //   algo::iLCG& lcg
+
+                nmaps = nmapsHere;
+                width = m_layers[i].getStepsX()+1;
+                height = m_layers[i].getStepsY()+1;
+            }
+            else if (parts.size() == 1)
+            {
+                // A fully-connected layer:
+
+                u32 numouts = s_toInt(parts[0]);
+
+                m_layers[i].init(width*height*nmaps,  //   u32 inputSize
+                                 width*nmaps,         //   u32 inputRowWidth
+                                 width*nmaps,         //   u32 receptiveFieldWidth
+                                 height,              //   u32 receptiveFieldHeight
+                                 1,                   //   u32 stepSizeHorizontal
+                                 1,                   //   u32 stepSizeVertical
+                                 numouts,             //   u32 numFeatureMapsInThisLayer
+                                 m_randWeightMin,     //   f64 rmin
+                                 m_randWeightMax,     //   f64 rmax
+                                 lcg);                //   algo::iLCG& lcg
+
+                nmaps = numouts;
+                width = 1;
+                height = 1;
+            }
+            else
+            {
+                throw eInvalidArgument("Invalid line in description string.");
+            }
+        }
+    }
+    catch (std::exception& e)
+    {
+        delete [] m_layers;
+        m_layers = NULL;
+        m_numLayers = 0;
+        throw;
+    }
 }
 
 void tCNN::resetWeights()
