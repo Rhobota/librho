@@ -555,6 +555,74 @@ tCNN::~tCNN()
     m_numLayers = 0;
 }
 
+void tCNN::setLayerType(tANN::nLayerType type, u32 layerIndex)
+{
+    if (layerIndex >= m_numLayers)
+        throw eInvalidArgument("No layer with that index.");
+    if (type < 0 || type >= tANN::kLayerTypeMax)
+        throw eInvalidArgument("Invalid layer type");
+    if (type == tANN::kLayerTypeSoftmax && layerIndex != m_numLayers-1)
+        throw eInvalidArgument("Only the top layer may be a softmax group.");
+    m_layers[layerIndex].setLayerType(type);
+}
+
+void tCNN::setLayerType(tANN::nLayerType type)
+{
+    if (type < 0 || type >= tANN::kLayerTypeMax)
+        throw eInvalidArgument("Invalid layer type");
+    if (type == tANN::kLayerTypeSoftmax && m_numLayers>1)
+        throw eInvalidArgument("Only the top layer may be a softmax group.");
+    for (u32 i = 0; i < m_numLayers; i++)
+        setLayerType(type, i);
+}
+
+void tCNN::setNormalizeLayerInput(bool on, u32 layerIndex)
+{
+    if (layerIndex >= m_numLayers)
+        throw eInvalidArgument("No layer with that index.");
+    m_layers[layerIndex].setLayerNormalizeLayerInput(on);
+}
+
+void tCNN::setNormalizeLayerInput(bool on)
+{
+    for (u32 i = 0; i < m_numLayers; i++)
+        setNormalizeLayerInput(on, i);
+}
+
+void tCNN::setWeightUpRule(tANN::nWeightUpRule rule, u32 layerIndex)
+{
+    if (layerIndex >= m_numLayers)
+        throw eInvalidArgument("No layer with that index.");
+    if (rule < 0 || rule >= tANN::kWeightUpRuleMax)
+        throw eInvalidArgument("Invalid weight update rule");
+    m_layers[layerIndex].setLayerWeightUpdateRule(rule);
+}
+
+void tCNN::setWeightUpRule(tANN::nWeightUpRule rule)
+{
+    if (rule < 0 || rule >= tANN::kWeightUpRuleMax)
+        throw eInvalidArgument("Invalid weight update rule");
+    for (u32 i = 0; i < m_numLayers; i++)
+        setWeightUpRule(rule, i);
+}
+
+void tCNN::setAlpha(f64 alpha, u32 layerIndex)
+{
+    if (layerIndex >= m_numLayers)
+        throw eInvalidArgument("No layer with that index.");
+    if (alpha <= 0.0)
+        throw eInvalidArgument("Alpha must be greater than zero.");
+    m_layers[layerIndex].setLayerAlpha(alpha);
+}
+
+void tCNN::setAlpha(f64 alpha)
+{
+    if (alpha <= 0.0)
+        throw eInvalidArgument("Alpha must be greater than zero.");
+    for (u32 i = 0; i < m_numLayers; i++)
+        setAlpha(alpha, i);
+}
+
 void tCNN::addExample(const tIO& input, const tIO& target,
                       tIO& actualOutput)
 {

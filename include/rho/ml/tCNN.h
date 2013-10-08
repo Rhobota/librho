@@ -51,6 +51,61 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
         ~tCNN();
 
         //////////////////////////////////////////////////////////////////////
+        // Network configuration -- do this before training!
+        //////////////////////////////////////////////////////////////////////
+
+        /**
+         * Sets the layer type of one layer (first method) or
+         * all layers (second method). The layer type determines
+         * which squashing function is used on the neurons in a
+         * layer.
+         *
+         * Note: You may only specify kLayerTypeSoftmax for the
+         *       top layer.
+         */
+        void setLayerType(tANN::nLayerType type, u32 layerIndex);
+        void setLayerType(tANN::nLayerType type);
+
+        /**
+         * Sets whether or not a layer normalizes its input wrt
+         * the number of inputs. Doing this keeps the total input
+         * to a neuron from being very large early in training, which
+         * is common for neurons with many inputs, and which causes
+         * the neuron to be over-saturated making learning slow due
+         * to small gradients on the plateaus of the squashing function.
+         * This method turns this feature on or off for one layer
+         * (first method) or all layers (second method).
+         */
+        void setNormalizeLayerInput(bool on, u32 layerIndex);
+        void setNormalizeLayerInput(bool on);
+
+        /**
+         * Sets the weight update rule for one layer (first method)
+         * or all layers (second method).
+         *
+         * For each layer, you must also setup the learning parameters
+         * associated with the weight update rule for that layer.
+         * Below describes the parameters needed for each rule:
+         *
+         *    - kWeightUpRuleNone
+         *         -- no extra parameters needed
+         *
+         *    - kWeightUpRuleFixedLearningRate
+         *         -- requires setAlpha()
+         */
+        void setWeightUpRule(tANN::nWeightUpRule rule, u32 layerIndex);
+        void setWeightUpRule(tANN::nWeightUpRule rule);
+
+        /**
+         * Sets the alpha parameter for one layer (first method) or
+         * all layers (second method). The alpha parameter is the
+         * "fixed learning rate" parameter, used when the weight update
+         * rule is kWeightUpRuleFixedLearningRate.
+         */
+        void setAlpha(f64 alpha, u32 layerIndex);
+        void setAlpha(f64 alpha);
+
+        //////////////////////////////////////////////////////////////////////
         // Training -- this is the iLearner interface
         //////////////////////////////////////////////////////////////////////
 
