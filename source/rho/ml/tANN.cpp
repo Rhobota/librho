@@ -365,7 +365,7 @@ class tLayer : public bNonCopyable
             {
                 if (alpha <= 0.0)
                     throw eLogicError("When using the fixed learning rate rule, alpha must be set.");
-                double mult = (10.0 / batchSize) * alpha;
+                f64 mult = (10.0 / batchSize) * alpha;
                 for (u32 s = 0; s < w.size(); s++)
                 {
                     for (u32 i = 0; i < w[s].size(); i++)
