@@ -694,13 +694,139 @@ void tCNN::evaluate(const tIO& input, tIO& output) const
 
 void tCNN::printNetworkInfo(std::ostream& out) const
 {
-    // TODO
+    int colw = 20;
+
+    out << "Convolutional Neural Network Info:" << endl;
+
+    // Network output sizes:
+    out << "   (bottom-to-top) out size:";
+    out << std::right << std::setw(colw) << m_layers[0].getInputSize();
+    for (u32 i = 0; i < m_numLayers; i++)
+        out << std::right << std::setw(colw) << m_layers[i].getOutput().size();
+    out << endl;
+
+    // Layer type (and normalizeLayerInput):
+    out << "                 layer type:";
+    out << std::right << std::setw(colw) << "input";
+    for (u32 i = 0; i < m_numLayers; i++)
+    {
+        string print = s_layerTypeToString(m_layers[i].getPrimaryLayer().layerType);
+        if (m_layers[i].getPrimaryLayer().normalizeLayerInput)
+            print += "(norm'd)";
+        out << std::right << std::setw(colw) << print;
+    }
+    out << endl;
+
+    // Weight update rule:
+    out << "         weight update rule:";
+    out << std::right << std::setw(colw) << "N/A";
+    for (u32 i = 0; i < m_numLayers; i++)
+    {
+        std::ostringstream ss;
+        ss << s_weightUpRuleToString(m_layers[i].getPrimaryLayer().weightUpRule);
+        switch (m_layers[i].getPrimaryLayer().weightUpRule)
+        {
+            case tANN::kWeightUpRuleNone:
+                break;
+            case tANN::kWeightUpRuleFixedLearningRate:
+                ss << "(a=" << m_layers[i].getPrimaryLayer().alpha << ")";
+                break;
+            default:
+                assert(false);
+        }
+        out << std::right << std::setw(colw) << ss.str();
+    }
+    out << endl;
+
+    // Number of feature maps:
+    out << "        number feature maps:";
+    out << std::right << std::setw(colw) << "N/A";
+    for (u32 i = 0; i < m_numLayers; i++)
+        out << std::right << std::setw(colw) << m_layers[i].getPrimaryLayer().a.size();
+    out << endl;
+
+    // Receptive field sizes:
+    out << "       receptive field size:";
+    out << std::right << std::setw(colw) << "N/A";
+    for (u32 i = 0; i < m_numLayers; i++)
+    {
+        std::ostringstream ss;
+        ss << m_layers[i].getReceptiveFieldWidth() << "x" << m_layers[i].getReceptiveFieldHeight();
+        out << std::right << std::setw(colw) << ss.str();
+    }
+    out << endl;
+
+    // Receptive field step sizes:
+    out << "            field step size:";
+    out << std::right << std::setw(colw) << "N/A";
+    for (u32 i = 0; i < m_numLayers; i++)
+    {
+        std::ostringstream ss;
+        ss << m_layers[i].getStepSizeX() << "x" << m_layers[i].getStepSizeY();
+        out << std::right << std::setw(colw) << ss.str();
+    }
+    out << endl;
+
+    out << endl;
 }
 
 string tCNN::networkInfoString() const
 {
-    // TODO
-    return "cnn";
+    std::ostringstream out;
+
+    // Network output sizes:
+    out << "size=";
+    out << m_layers[0].getInputSize();
+    for (u32 i = 0; i < m_numLayers; i++)
+        out << '-' << m_layers[i].getOutput().size();
+
+    // Layer type (and normalizeLayerInput):
+    out << "__type=";
+    out << "i";
+    for (u32 i = 0; i < m_numLayers; i++)
+    {
+        out << '-' << s_layerTypeToChar(m_layers[i].getPrimaryLayer().layerType);
+        if (m_layers[i].getPrimaryLayer().normalizeLayerInput)
+            out << 'n';
+    }
+
+    // Weight update rule:
+    out << "__rule=";
+    out << "i";
+    for (u32 i = 0; i < m_numLayers; i++)
+    {
+        out << '-' << s_weightUpRuleToChar(m_layers[i].getPrimaryLayer().weightUpRule);
+        switch (m_layers[i].getPrimaryLayer().weightUpRule)
+        {
+            case tANN::kWeightUpRuleNone:
+                break;
+            case tANN::kWeightUpRuleFixedLearningRate:
+                out << m_layers[i].getPrimaryLayer().alpha;
+                break;
+            default:
+                assert(false);
+        }
+    }
+
+    // Number of feature maps:
+    out << "__maps=";
+    out << "i";
+    for (u32 i = 0; i < m_numLayers; i++)
+        out << '-' << m_layers[i].getPrimaryLayer().a.size();
+
+    // Receptive field sizes:
+    out << "__rf=";
+    out << "i";
+    for (u32 i = 0; i < m_numLayers; i++)
+        out << '-' << m_layers[i].getReceptiveFieldWidth() << "x" << m_layers[i].getReceptiveFieldHeight();
+
+    // Receptive field step sizes:
+    out << "__step=";
+    out << "i";
+    for (u32 i = 0; i < m_numLayers; i++)
+        out << '-' << m_layers[i].getStepSizeX() << "x" << m_layers[i].getStepSizeY();
+
+    return out.str();
 }
 
 u32 tCNN::getNumLayers() const
