@@ -160,17 +160,49 @@ class tLayerCNN : public bNonCopyable
 
     void assertState(size_t prevLayerSize) const
     {
-        assert(prevLayerSize == m_inputSize);
-
         assert(m_numLayers > 0);
         assert(m_layers != NULL);
+        assert(prevLayerSize == m_inputSize);
+        assert(m_inputSize == m_inputWidth * m_inputHeight);
+        assert(m_numLayers == (m_stepsX+1)*(m_stepsY+1));
 
         for (u32 i = 0; i < m_numLayers; i++)
         {
             m_layers[i].assertState(m_receptiveFieldWidth * m_receptiveFieldHeight);
             assert(m_layers[i].a.size() == m_numFeatureMapsInThisLayer);
             assert(m_layers[i].w == m_layers[0].w);
+            assert(m_layers[i].layerType == m_layers[0].layerType);
+            assert(m_layers[i].normalizeLayerInput == m_layers[0].normalizeLayerInput);
+            assert(m_layers[i].weightUpRule == m_layers[0].weightUpRule);
+            assert(m_layers[i].alpha == m_layers[0].alpha);
         }
+    }
+
+    void setLayerType(tANN::nLayerType type)
+    {
+        assert(type >= 0 && type < tANN::kLayerTypeMax);
+        for (u32 i = 0; i < m_numLayers; i++)
+            m_layers[i].layerType = type;
+    }
+
+    void setLayerNormalizeLayerInput(bool norm)
+    {
+        for (u32 i = 0; i < m_numLayers; i++)
+            m_layers[i].normalizeLayerInput = (norm ? 1 : 0);
+    }
+
+    void setLayerWeightUpdateRule(tANN::nWeightUpRule rule)
+    {
+        assert(rule >= 0 && rule < tANN::kWeightUpRuleMax);
+        for (u32 i = 0; i < m_numLayers; i++)
+            m_layers[i].weightUpRule = rule;
+    }
+
+    void setLayerAlpha(f64 alpha)
+    {
+        assert(alpha > 0.0);
+        for (u32 i = 0; i < m_numLayers; i++)
+            m_layers[i].alpha = alpha;
     }
 
     tLayer& getPrimaryLayer()
@@ -418,10 +450,10 @@ tCNN::tCNN(string descriptionString)
                      m_randWeightMin,     //   f64 rmin
                      m_randWeightMax,     //   f64 rmax
                      lcg);                //   algo::iLCG& lcg
-    m_layers[0].getPrimaryLayer().layerType = tANN::kLayerTypeLogistic;
-    m_layers[0].getPrimaryLayer().normalizeLayerInput = 1;
-    m_layers[0].getPrimaryLayer().weightUpRule = tANN::kWeightUpRuleFixedLearningRate;
-    m_layers[0].getPrimaryLayer().alpha = 5.0;
+    m_layers[0].setLayerType(tANN::kLayerTypeLogistic);
+    m_layers[0].setLayerNormalizeLayerInput(true);
+    m_layers[0].setLayerWeightUpdateRule(tANN::kWeightUpRuleFixedLearningRate);
+    m_layers[0].setLayerAlpha(5.0);
 
     m_layers[1].init(294,                 //   u32 inputSize
                      42,                  //   u32 inputRowWidth
@@ -433,10 +465,10 @@ tCNN::tCNN(string descriptionString)
                      m_randWeightMin,     //   f64 rmin
                      m_randWeightMax,     //   f64 rmax
                      lcg);                //   algo::iLCG& lcg
-    m_layers[1].getPrimaryLayer().layerType = tANN::kLayerTypeLogistic;
-    m_layers[1].getPrimaryLayer().normalizeLayerInput = 1;
-    m_layers[1].getPrimaryLayer().weightUpRule = tANN::kWeightUpRuleFixedLearningRate;
-    m_layers[1].getPrimaryLayer().alpha = 2.0;
+    m_layers[1].setLayerType(tANN::kLayerTypeLogistic);
+    m_layers[1].setLayerNormalizeLayerInput(true);
+    m_layers[1].setLayerWeightUpdateRule(tANN::kWeightUpRuleFixedLearningRate);
+    m_layers[1].setLayerAlpha(2.0);
 
     m_layers[2].init(160,                 //   u32 inputSize
                      40,                  //   u32 inputRowWidth
@@ -448,10 +480,10 @@ tCNN::tCNN(string descriptionString)
                      m_randWeightMin,     //   f64 rmin
                      m_randWeightMax,     //   f64 rmax
                      lcg);                //   algo::iLCG& lcg
-    m_layers[2].getPrimaryLayer().layerType = tANN::kLayerTypeLogistic;
-    m_layers[2].getPrimaryLayer().normalizeLayerInput = 1;
-    m_layers[2].getPrimaryLayer().weightUpRule = tANN::kWeightUpRuleFixedLearningRate;
-    m_layers[2].getPrimaryLayer().alpha = 1.0;
+    m_layers[2].setLayerType(tANN::kLayerTypeSoftmax);
+    m_layers[2].setLayerNormalizeLayerInput(true);
+    m_layers[2].setLayerWeightUpdateRule(tANN::kWeightUpRuleFixedLearningRate);
+    m_layers[2].setLayerAlpha(1.0);
 }
 
 void tCNN::resetWeights()
@@ -613,6 +645,12 @@ void tCNN::getFeatureMapImage(u32 layerIndex, u32 mapIndex,
     assert(weights.size() > 0);
     u32 width = m_layers[layerIndex].getReceptiveFieldWidth();
     assert(width > 0);
+    if (color)
+    {
+        if ((width % 3) > 0)
+            throw eLogicError("Pixels do not align with width of the receptive field.");
+        width /= 3;
+    }
 
     // Normalize the weights to [0.0, 255.0].
     f64 maxval = weights[0];
@@ -677,7 +715,6 @@ void tCNN::getFeatureMapImage(u32 layerIndex, u32 mapIndex,
 }
 
 void tCNN::getOutputImage(u32 layerIndex, u32 mapIndex,
-                          bool color, bool absolute,
                           img::tImage* dest) const
 {
     if (mapIndex >= getNumFeatureMaps(layerIndex))
@@ -699,30 +736,17 @@ void tCNN::getOutputImage(u32 layerIndex, u32 mapIndex,
     }
 
     // Normalize the weights to [0.0, 255.0].
-    f64 maxval = weights[0];
-    f64 minval = weights[0];
-    for (u32 i = 1; i < weights.size(); i++)
+    tANN::nLayerType type = m_layers[layerIndex].getPrimaryLayer().layerType;
+    f64 maxval = s_squash_max(type);
+    f64 minval = s_squash_min(type);
+    for (u32 i = 0; i < weights.size(); i++)
     {
-        maxval = std::max(maxval, weights[i]);
-        minval = std::min(minval, weights[i]);
-    }
-    if (maxval == minval) maxval += 0.000001;
-    if (absolute)
-    {
-        f64 absmax = std::max(std::fabs(maxval), std::fabs(minval));
-        for (u32 i = 0; i < weights.size(); i++)
-            weights[i] = (std::fabs(weights[i]) / absmax) * 255.0;
-    }
-    else
-    {
-        for (u32 i = 0; i < weights.size(); i++)
-        {
-            f64 val = ((weights[i] - minval) / (maxval - minval)) * 255.0;
-            weights[i] = val;
-        }
+        f64 val = ((weights[i] - minval) / (maxval - minval)) * 255.0;
+        weights[i] = val;
     }
 
     // Calculate some stuff.
+    bool color = false;
     u32 pixWidth = color ? 3 : 1;
     if ((weights.size() % pixWidth) > 0)
         throw eLogicError("Pixels do not align with the number of weights.");
