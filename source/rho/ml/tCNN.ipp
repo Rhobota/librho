@@ -311,6 +311,16 @@ class tLayerCNN : public bNonCopyable
         return m_inputSize;
     }
 
+    u32 getInputWidth() const
+    {
+        return m_inputWidth;
+    }
+
+    u32 getInputHeight() const
+    {
+        return m_inputHeight;
+    }
+
     u32 getReceptiveFieldWidth() const
     {
         return m_receptiveFieldWidth;
@@ -339,6 +349,11 @@ class tLayerCNN : public bNonCopyable
     u32 getStepsY() const
     {
         return m_stepsY;
+    }
+
+    u32 getNumFeatureMaps() const
+    {
+        return m_numFeatureMapsInThisLayer;
     }
 
     u32 getPoolWidth() const
@@ -866,13 +881,6 @@ void tCNN::printNetworkInfo(std::ostream& out) const
 
     out << "Convolutional Neural Network Info:" << endl;
 
-    // Network output sizes:
-    out << "   (bottom-to-top) out size:";
-    out << std::right << std::setw(colw) << m_layers[0].getInputSize();
-    for (u32 i = 0; i < m_numLayers; i++)
-        out << std::right << std::setw(colw) << m_layers[i].getOutput().size();
-    out << endl;
-
     // Layer type (and normalizeLayerInput):
     out << "                 layer type:";
     out << std::right << std::setw(colw) << "input";
@@ -887,7 +895,7 @@ void tCNN::printNetworkInfo(std::ostream& out) const
 
     // Weight update rule:
     out << "         weight update rule:";
-    out << std::right << std::setw(colw) << "N/A";
+    out << std::right << std::setw(colw) << "-";
     for (u32 i = 0; i < m_numLayers; i++)
     {
         std::ostringstream ss;
@@ -908,31 +916,71 @@ void tCNN::printNetworkInfo(std::ostream& out) const
 
     // Number of feature maps:
     out << "        number feature maps:";
-    out << std::right << std::setw(colw) << "N/A";
+    out << std::right << std::setw(colw) << "-";
     for (u32 i = 0; i < m_numLayers; i++)
         out << std::right << std::setw(colw) << m_layers[i].getPrimaryLayer().a.size();
     out << endl;
 
     // Receptive field sizes:
     out << "       receptive field size:";
-    out << std::right << std::setw(colw) << "N/A";
+    out << std::right << std::setw(colw) << "-";
     for (u32 i = 0; i < m_numLayers; i++)
     {
         std::ostringstream ss;
-        ss << m_layers[i].getReceptiveFieldWidth() << "x" << m_layers[i].getReceptiveFieldHeight();
+        ss << m_layers[i].getReceptiveFieldWidth() / (i > 0 ? m_layers[i-1].getNumFeatureMaps() : 1)
+           << "x"
+           << m_layers[i].getReceptiveFieldHeight();
         out << std::right << std::setw(colw) << ss.str();
     }
     out << endl;
 
     // Receptive field step sizes:
     out << "            field step size:";
-    out << std::right << std::setw(colw) << "N/A";
+    out << std::right << std::setw(colw) << "-";
     for (u32 i = 0; i < m_numLayers; i++)
     {
         std::ostringstream ss;
-        ss << m_layers[i].getStepSizeX() << "x" << m_layers[i].getStepSizeY();
+        ss << m_layers[i].getStepSizeX() / (i > 0 ? m_layers[i-1].getNumFeatureMaps() : 1)
+           << "x"
+           << m_layers[i].getStepSizeY();
         out << std::right << std::setw(colw) << ss.str();
     }
+    out << endl;
+
+    // Network output dimensions:
+    out << "                  out dim's:";
+    {
+        std::ostringstream ss;
+        ss << m_layers[0].getInputWidth() << "x"
+           << m_layers[0].getInputHeight();
+        out << std::right << std::setw(colw) << ss.str();
+    }
+    for (u32 i = 0; i < m_numLayers; i++)
+    {
+        std::ostringstream ss;
+        ss << (m_layers[i].getStepsX()+1);
+        ss << "x";
+        ss << (m_layers[i].getStepsY()+1);
+        out << std::right << std::setw(colw) << ss.str();
+    }
+    out << endl;
+
+    // Pool size:
+    out << "                 pool dim's:";
+    out << std::right << std::setw(colw) << "1x1";
+    for (u32 i = 0; i < m_numLayers; i++)
+    {
+        std::ostringstream ss;
+        ss << m_layers[i].getPoolWidth() << "x" << m_layers[i].getPoolHeight();
+        out << std::right << std::setw(colw) << ss.str();
+    }
+    out << endl;
+
+    // Network output size:
+    out << "                   out size:";
+    out << std::right << std::setw(colw) << m_layers[0].getInputSize();
+    for (u32 i = 0; i < m_numLayers; i++)
+        out << std::right << std::setw(colw) << m_layers[i].getOutput().size();
     out << endl;
 
     out << endl;
@@ -1129,6 +1177,7 @@ void tCNN::getFeatureMapImage(u32 layerIndex, u32 mapIndex,
 }
 
 void tCNN::getOutputImage(u32 layerIndex, u32 mapIndex,
+                          bool pooled,
                           img::tImage* dest) const
 {
     if (mapIndex >= getNumFeatureMaps(layerIndex))
@@ -1139,13 +1188,15 @@ void tCNN::getOutputImage(u32 layerIndex, u32 mapIndex,
     u32 width;
     {
         size_t stride = getNumFeatureMaps(layerIndex);
-        vector<f64>& alloutput = m_layers[layerIndex].getOutput();
+        vector<f64>& alloutput = pooled ? m_layers[layerIndex].getOutput()
+                                        : m_layers[layerIndex].getRealOutput();
 
         for (size_t i = mapIndex; i < alloutput.size(); i += stride)
             weights.push_back(alloutput[i]);
         assert(weights.size() > 0);
 
-        width = (m_layers[layerIndex].getStepsX()+1) / m_layers[layerIndex].getPoolWidth();
+        width = pooled ? (m_layers[layerIndex].getStepsX()+1) / m_layers[layerIndex].getPoolWidth()
+                       : (m_layers[layerIndex].getStepsX()+1);
         assert(width > 0);
     }
 

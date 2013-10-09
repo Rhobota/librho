@@ -241,9 +241,13 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * input to the specified layer, transformed by the specified
          * feature map.
          *
+         * If 'pooled', an image of the pooled output will be created.
+         * Else, an image of the full output of the layer will be created.
+         *
          * The generated image is stored in 'dest'.
          */
         void getOutputImage(u32 layerIndex, u32 mapIndex,
+                            bool pooled,
                             img::tImage* dest) const;
 
         //////////////////////////////////////////////////////////////////////
