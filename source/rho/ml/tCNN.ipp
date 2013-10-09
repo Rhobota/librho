@@ -341,6 +341,16 @@ class tLayerCNN : public bNonCopyable
         return m_stepsY;
     }
 
+    u32 getPoolWidth() const
+    {
+        return m_poolWidth;
+    }
+
+    u32 getPoolHeight() const
+    {
+        return m_poolHeight;
+    }
+
     void takeInput(const vector<f64>& input)
     {
         assertState(input.size());
@@ -1135,7 +1145,7 @@ void tCNN::getOutputImage(u32 layerIndex, u32 mapIndex,
             weights.push_back(alloutput[i]);
         assert(weights.size() > 0);
 
-        width = m_layers[layerIndex].getStepsX() + 1;
+        width = (m_layers[layerIndex].getStepsX()+1) / m_layers[layerIndex].getPoolWidth();
         assert(width > 0);
     }
 
