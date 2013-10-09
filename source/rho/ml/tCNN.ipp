@@ -26,6 +26,9 @@ class tLayerCNN : public bNonCopyable
     u32 m_stepsX;   // The number of times you can step the
     u32 m_stepsY;   // receptive field.
 
+    u32 m_poolWidth;    // The output max-pooling size.
+    u32 m_poolHeight;   // ...
+
   private:
 
     u32 m_numFeatureMapsInThisLayer;   // The number of features maps that this
@@ -59,8 +62,13 @@ class tLayerCNN : public bNonCopyable
 
     // The following is state to make calculations faster so that you don't
     // have to reallocate vectors all the time.
+
     vector<f64> m_output;
     vector<f64> m_da;
+
+    vector<f64> m_pooledOutput;
+    vector<f64> m_pooled_da;
+
     vector<f64> m_fieldInput;
 
   private:
@@ -140,6 +148,7 @@ class tLayerCNN : public bNonCopyable
               u32 receptiveFieldWidth, u32 receptiveFieldHeight,
               u32 stepSizeHorizontal, u32 stepSizeVertical,
               u32 numFeatureMapsInThisLayer,
+              u32 poolWidth, u32 poolHeight,
               f64 rmin, f64 rmax, algo::iLCG& lcg)
     {
         // Validation and setup of useful member state.
@@ -167,8 +176,14 @@ class tLayerCNN : public bNonCopyable
         m_stepsY = numPossibleStepsY / m_stepSizeY;
 
         assert(numFeatureMapsInThisLayer > 0);
-        assert(rmin < rmax);
         m_numFeatureMapsInThisLayer = numFeatureMapsInThisLayer;
+
+        assert(poolWidth > 0);
+        assert(poolHeight > 0);
+        m_poolWidth = poolWidth;
+        m_poolHeight = poolHeight;
+
+        assert(rmin < rmax);
 
         // Initializing the replicated layers.
         m_numLayers = (m_stepsX+1)*(m_stepsY+1);
@@ -195,8 +210,12 @@ class tLayerCNN : public bNonCopyable
         }
 
         // Init the fast data members.
-        m_output = vector<f64>(m_numLayers * m_numFeatureMapsInThisLayer, 0.0);
+        m_output = vector<f64>((m_stepsX+1)*(m_stepsY+1) * m_numFeatureMapsInThisLayer, 0.0);
         m_da = m_output;
+
+        m_pooledOutput = vector<f64>(((m_stepsX+1)/m_poolWidth) * ((m_stepsY+1)/m_poolHeight) * m_numFeatureMapsInThisLayer, 0.0);
+        m_pooled_da = m_pooledOutput;
+
         m_fieldInput = vector<f64>(m_receptiveFieldWidth * m_receptiveFieldHeight, 0.0);
     }
 
@@ -339,6 +358,7 @@ class tLayerCNN : public bNonCopyable
 
         assert(layerIndex == (m_stepsX+1)*(m_stepsY+1));
 
+        // Put the output of each filter into one output vector.
         size_t outputIndex = 0;
         for (u32 i = 0; i < m_numLayers; i++)
         {
@@ -346,9 +366,48 @@ class tLayerCNN : public bNonCopyable
                 m_output[outputIndex++] = m_layers[i].a[j];
         }
         assert(outputIndex == m_output.size());
+
+        // Pool the output vector.
+        if (m_poolWidth > 1 || m_poolHeight > 1)
+        {
+            size_t outWidth = (m_stepsX+1) * m_numFeatureMapsInThisLayer;
+            size_t pooledoutIndex = 0;
+            for (u32 y = 0; y <= m_stepsY; y += m_poolHeight)
+            {
+                for (u32 x = 0; x <= m_stepsX; x += m_poolWidth)
+                {
+                    size_t outputIndex = y*outWidth + x*m_numFeatureMapsInThisLayer;
+                    for (u32 m = 0; m < m_numFeatureMapsInThisLayer; m++)
+                    {
+                        size_t off = outputIndex + m;
+                        f64 maxval = m_output[off];
+                        for (u32 i = 0; i < m_poolHeight; i++)
+                        {
+                            size_t off2 = off;
+                            for (u32 j = 0; j < m_poolWidth; j++)
+                            {
+                                maxval = std::max(maxval, m_output[off2]);
+                                off2 += m_numFeatureMapsInThisLayer;
+                            }
+                            off += outWidth;
+                        }
+                        m_pooledOutput[pooledoutIndex++] = maxval;
+                    }
+                }
+            }
+            assert(pooledoutIndex == m_pooledOutput.size());
+        }
     }
 
     vector<f64>& getOutput()
+    {
+        if (m_poolWidth > 1 || m_poolHeight > 1)
+            return m_pooledOutput;
+        else
+            return m_output;
+    }
+
+    vector<f64>& getRealOutput()
     {
         return m_output;
     }
@@ -373,11 +432,45 @@ class tLayerCNN : public bNonCopyable
 
     vector<f64>& get_da()
     {
-        return m_da;
+        if (m_poolWidth > 1 || m_poolHeight > 1)
+            return m_pooled_da;
+        else
+            return m_da;
     }
 
     void distribute_da()
     {
+        // If we do max pooling, we will need to expand the pooled da.
+        if (m_poolWidth > 1 || m_poolHeight > 1)
+        {
+            size_t outWidth = (m_stepsX+1) * m_numFeatureMapsInThisLayer;
+            size_t pooledoutIndex = 0;
+            for (u32 y = 0; y <= m_stepsY; y += m_poolHeight)
+            {
+                for (u32 x = 0; x <= m_stepsX; x += m_poolWidth)
+                {
+                    size_t outputIndex = y*outWidth + x*m_numFeatureMapsInThisLayer;
+                    for (u32 m = 0; m < m_numFeatureMapsInThisLayer; m++)
+                    {
+                        size_t off = outputIndex + m;
+                        for (u32 i = 0; i < m_poolHeight; i++)
+                        {
+                            size_t off2 = off;
+                            for (u32 j = 0; j < m_poolWidth; j++)
+                            {
+                                m_da[off2] = m_pooled_da[pooledoutIndex];
+                                off2 += m_numFeatureMapsInThisLayer;
+                            }
+                            off += outWidth;
+                        }
+                        pooledoutIndex++;
+                    }
+                }
+            }
+            assert(pooledoutIndex == m_pooled_da.size());
+        }
+
+        // Distribute.
         size_t daindex = 0;
         for (u32 i = 0; i < m_numLayers; i++)
         {
@@ -432,6 +525,8 @@ class tLayerCNN : public bNonCopyable
         rho::pack(out, m_stepSizeY);
         rho::pack(out, m_stepsX);
         rho::pack(out, m_stepsY);
+        rho::pack(out, m_poolWidth);
+        rho::pack(out, m_poolHeight);
         rho::pack(out, m_numFeatureMapsInThisLayer);
         rho::pack(out, m_numLayers);
         m_layers[0].pack(out);
@@ -448,6 +543,8 @@ class tLayerCNN : public bNonCopyable
         rho::unpack(in, m_stepSizeY);
         rho::unpack(in, m_stepsX);
         rho::unpack(in, m_stepsY);
+        rho::unpack(in, m_poolWidth);
+        rho::unpack(in, m_poolHeight);
         rho::unpack(in, m_numFeatureMapsInThisLayer);
         rho::unpack(in, m_numLayers);
         assert(m_numLayers > 0);
@@ -466,8 +563,12 @@ class tLayerCNN : public bNonCopyable
 
         assertState(m_inputSize);
 
-        m_output = vector<f64>(m_numLayers * m_numFeatureMapsInThisLayer, 0.0);
+        m_output = vector<f64>((m_stepsX+1)*(m_stepsY+1) * m_numFeatureMapsInThisLayer, 0.0);
         m_da = m_output;
+
+        m_pooledOutput = vector<f64>(((m_stepsX+1)/m_poolWidth) * ((m_stepsY+1)/m_poolHeight) * m_numFeatureMapsInThisLayer, 0.0);
+        m_pooled_da = m_pooledOutput;
+
         m_fieldInput = vector<f64>(m_receptiveFieldWidth * m_receptiveFieldHeight, 0.0);
     }
 };
@@ -528,7 +629,7 @@ tCNN::tCNN(string descriptionString)
 
             vector<string> parts = algo::split(line, " ");
 
-            if (parts.size() == 5)
+            if (parts.size() == 7)
             {
                 // A convolutional layer:
 
@@ -537,6 +638,8 @@ tCNN::tCNN(string descriptionString)
                 u32 rfstepx = s_toInt(parts[2]);
                 u32 rfstepy = s_toInt(parts[3]);
                 u32 nmapsHere = s_toInt(parts[4]);
+                u32 poolwidth = s_toInt(parts[5]);
+                u32 poolheight = s_toInt(parts[6]);
 
                 m_layers[i].init(width*height*nmaps,  //   u32 inputSize
                                  width*nmaps,         //   u32 inputRowWidth
@@ -545,13 +648,15 @@ tCNN::tCNN(string descriptionString)
                                  rfstepx*nmaps,       //   u32 stepSizeHorizontal
                                  rfstepy,             //   u32 stepSizeVertical
                                  nmapsHere,           //   u32 numFeatureMapsInThisLayer
+                                 poolwidth,           //   u32 poolWidth
+                                 poolheight,          //   u32 poolHeight
                                  m_randWeightMin,     //   f64 rmin
                                  m_randWeightMax,     //   f64 rmax
                                  lcg);                //   algo::iLCG& lcg
 
                 nmaps = nmapsHere;
-                width = m_layers[i].getStepsX()+1;
-                height = m_layers[i].getStepsY()+1;
+                width = (m_layers[i].getStepsX()+1) / poolwidth;
+                height = (m_layers[i].getStepsY()+1) / poolheight;
             }
             else if (parts.size() == 1)
             {
@@ -566,6 +671,8 @@ tCNN::tCNN(string descriptionString)
                                  1,                   //   u32 stepSizeHorizontal
                                  1,                   //   u32 stepSizeVertical
                                  numouts,             //   u32 numFeatureMapsInThisLayer
+                                 1,                   //   u32 poolWidth
+                                 1,                   //   u32 poolHeight
                                  m_randWeightMin,     //   f64 rmin
                                  m_randWeightMax,     //   f64 rmax
                                  lcg);                //   algo::iLCG& lcg
