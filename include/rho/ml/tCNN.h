@@ -33,8 +33,8 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * The description string looks like this:
          *
          *        <input:width> <input:height>
-         *        <clayer:rf_width> <clayer:rf_height> <clayer:rf_stepx> <clayer:rf_stepy> <clayer::num_maps>
-         *        <clayer:rf_width> <clayer:rf_height> <clayer:rf_stepx> <clayer:rf_stepy> <clayer::num_maps>
+         *        <clayer:rf_width> <clayer:rf_height> <clayer:rf_stepx> <clayer:rf_stepy> <clayer::num_maps> <clayer:pool_width> <clayer:pool_height>
+         *        <clayer:rf_width> <clayer:rf_height> <clayer:rf_stepx> <clayer:rf_stepy> <clayer::num_maps> <clayer:pool_width> <clayer:pool_height>
          *        ...
          *        <flayer:num_neurons>
          *        <flayer:num_neurons>
