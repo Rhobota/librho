@@ -111,7 +111,7 @@ class tLayerCNN : public bNonCopyable
         }
     }
 
-    void m_accumWeights(vector< vector<f64> >& accum, vector< vector<f64> >& vals)
+    void m_accum_dw(vector< vector<f64> >& accum, vector< vector<f64> >& vals)
     {
         for (size_t s = 0; s < accum.size(); s++)
         {
@@ -121,6 +121,17 @@ class tLayerCNN : public bNonCopyable
                 vals[s][i] = 0.0;
             }
         }
+    }
+
+    void m_norm_dw(vector< vector<f64> >& accum)
+    {
+        if (m_numLayers == 1)
+            return;
+        f64 div = (f64)m_numLayers;
+        f64 mul = 1.0 / div;
+        for (size_t s = 0; s < accum.size(); s++)
+            for (size_t i = 0; i < accum[s].size(); i++)
+                accum[s][i] *= mul;
     }
 
     void m_set(vector< vector<f64> >& dest, const vector< vector<f64> >& source)
@@ -531,7 +542,9 @@ class tLayerCNN : public bNonCopyable
         assertState(m_inputSize);
 
         for (u32 i = 1; i < m_numLayers; i++)
-            m_accumWeights(m_layers[0].dw_accum, m_layers[i].dw_accum);
+            m_accum_dw(m_layers[0].dw_accum, m_layers[i].dw_accum);
+
+        m_norm_dw(m_layers[0].dw_accum);
 
         m_layers[0].updateWeights();
 
@@ -965,7 +978,7 @@ void tCNN::printNetworkInfo(std::ostream& out) const
     }
     out << endl;
 
-    // Pool size:
+    // Pool dimensions:
     out << "                 pool dim's:";
     out << std::right << std::setw(colw) << "1x1";
     for (u32 i = 0; i < m_numLayers; i++)
@@ -1029,18 +1042,6 @@ string tCNN::networkInfoString() const
     out << "i";
     for (u32 i = 0; i < m_numLayers; i++)
         out << '-' << m_layers[i].getPrimaryLayer().a.size();
-
-    // Receptive field sizes:
-    out << "__rf=";
-    out << "i";
-    for (u32 i = 0; i < m_numLayers; i++)
-        out << '-' << m_layers[i].getReceptiveFieldWidth() << "x" << m_layers[i].getReceptiveFieldHeight();
-
-    // Receptive field step sizes:
-    out << "__step=";
-    out << "i";
-    for (u32 i = 0; i < m_numLayers; i++)
-        out << '-' << m_layers[i].getStepSizeX() << "x" << m_layers[i].getStepSizeY();
 
     return out.str();
 }
