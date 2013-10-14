@@ -70,6 +70,7 @@ class tLayerCNN : public bNonCopyable
     vector<f64> m_pooled_da;
 
     vector<f64> m_fieldInput;
+    vector<u32> m_counts;
 
   private:
 
@@ -92,7 +93,7 @@ class tLayerCNN : public bNonCopyable
         }
     }
 
-    void m_reverseFillField(const vector<f64>& fieldInput, u32 x, u32 y, vector<f64>& input) const
+    void m_reverseFillField(const vector<f64>& fieldInput, u32 x, u32 y, vector<f64>& input, vector<u32>& counts) const
     {
         assert(input.size() == m_inputSize);
         assert(x+m_receptiveFieldWidth <= m_inputWidth);
@@ -106,6 +107,7 @@ class tLayerCNN : public bNonCopyable
             for (u32 xx = 0; xx < m_receptiveFieldWidth; xx++)
             {
                  input[inputIndex+xx] += fieldInput[fieldInputIndex++];
+                 counts[inputIndex+xx]++;
             }
             inputIndex += m_inputWidth;
         }
@@ -481,6 +483,8 @@ class tLayerCNN : public bNonCopyable
         {
             size_t outWidth = (m_stepsX+1) * m_numFeatureMapsInThisLayer;
             size_t pooledoutIndex = 0;
+            for (size_t i = 0; i < m_da.size(); i++)
+                m_da[i] = 0.0;
             for (u32 y = 0; y <= m_stepsY; y += m_poolHeight)
             {
                 for (u32 x = 0; x <= m_stepsX; x += m_poolWidth)
@@ -489,17 +493,23 @@ class tLayerCNN : public bNonCopyable
                     for (u32 m = 0; m < m_numFeatureMapsInThisLayer; m++)
                     {
                         size_t off = outputIndex + m;
+                        f64 maxval = m_output[off];
+                        size_t maxi = off;
                         for (u32 i = 0; i < m_poolHeight; i++)
                         {
                             size_t off2 = off;
                             for (u32 j = 0; j < m_poolWidth; j++)
                             {
-                                m_da[off2] = m_pooled_da[pooledoutIndex];
+                                if (maxval < m_output[off2])
+                                {
+                                    maxval = m_output[off2];
+                                    maxi = off2;
+                                }
                                 off2 += m_numFeatureMapsInThisLayer;
                             }
                             off += outWidth;
                         }
-                        pooledoutIndex++;
+                        m_da[maxi] = m_pooled_da[pooledoutIndex++];
                     }
                 }
             }
@@ -523,6 +533,12 @@ class tLayerCNN : public bNonCopyable
         for (size_t s = 0; s < prev_da.size(); s++)
             prev_da[s] = 0.0;
 
+        for (size_t s = 0; s < m_counts.size(); s++)
+            m_counts[s] = 0;
+
+        if (m_counts.size() != prev_da.size())
+            m_counts.resize(prev_da.size(), 0);
+
         u32 layerIndex = 0;
 
         for (u32 y = 0; y < m_inputHeight-m_receptiveFieldHeight+1; y += m_stepSizeY)
@@ -530,11 +546,15 @@ class tLayerCNN : public bNonCopyable
             for (u32 x = 0; x < m_inputWidth-m_receptiveFieldWidth+1; x += m_stepSizeX)
             {
                 m_layers[layerIndex++].backpropagate(m_fieldInput);
-                m_reverseFillField(m_fieldInput, x, y, prev_da);
+                m_reverseFillField(m_fieldInput, x, y, prev_da, m_counts);
             }
         }
 
         assert(layerIndex == (m_stepsX+1)*(m_stepsY+1));
+
+        for (size_t s = 0; s < prev_da.size(); s++)
+            if (m_counts[s] > 0)
+                prev_da[s] /= m_counts[s];
     }
 
     void updateWeights()
