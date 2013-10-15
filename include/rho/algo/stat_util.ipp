@@ -74,24 +74,3 @@ T stddev(const std::vector< std::vector<T> >& m)
 {
     return std::sqrt(variance(m));
 }
-
-f64 nrand(iLCG& lcg)
-{
-    // Uses the Central Limit Theorem to generate a random number
-    // from the Normal Distribution (mean-zero, stddev-one).
-    static const int kNumToSum = 40;
-
-    static const f64 kNumToSumDbl = (f64)kNumToSum;
-    static const f64 kSqrt12 = std::sqrt(12.0);
-    static const f64 kSqrtNum = std::sqrt(kNumToSumDbl);
-    static const f64 kMultVal = kSqrt12 * kSqrtNum / kNumToSumDbl;
-
-    f64 sum = 0.0;
-    for (int i = 0; i < kNumToSum; i++)
-    {
-        f64 r = ((f64)lcg.next()) / ((f64)lcg.randMax());
-        r -= 0.5;
-        sum += r;
-    }
-    return sum * kMultVal;
-}
