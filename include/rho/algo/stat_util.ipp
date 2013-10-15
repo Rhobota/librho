@@ -15,7 +15,7 @@ template <class T>
 T mean(const std::vector< std::vector<T> >& m)
 {
     T sum(0);
-    u32 count = 0;
+    size_t count = 0;
     for (size_t i = 0; i < m.size(); i++)
     {
         for (size_t j = 0; j < m[i].size(); j++)
@@ -47,7 +47,7 @@ template <class T>
 T variance(const std::vector< std::vector<T> >& m)
 {
     T sum(0);
-    u32 count = 0;
+    size_t count = 0;
     T av = mean(m);
     for (size_t i = 0; i < m.size(); i++)
     {

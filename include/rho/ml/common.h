@@ -6,6 +6,7 @@
 #include <rho/eRho.h>
 #include <rho/types.h>
 #include <rho/img/tImage.h>
+#include <rho/algo/stat_util.h>
 
 #include <cmath>
 #include <iostream>
@@ -102,6 +103,14 @@ tIO examplify(const img::tImage* image);
  */
 void un_examplify(const tIO& io, bool color, u32 width,
                   bool absolute, img::tImage* dest);
+
+/**
+ * Z-score the training set, and z-score the test set to match.
+ *
+ * Z-scoring is transforming the data so that its mean is zero
+ * and its standard deviation is one.
+ */
+void zscore(std::vector<tIO>& trainingInputs, std::vector<tIO>& testInputs);
 
 
 //////////////////////////////////////////////////////////////////////
