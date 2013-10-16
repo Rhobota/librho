@@ -267,6 +267,8 @@ class tLayer : public bNonCopyable
 
         for (u32 s = 0; s < input.size(); s++)
         {
+            if (input[s] == 0.0)
+                continue;
             for (u32 i = 0; i < A.size(); i++)
                 A[i] += w[s][i] * input[s];
         }
@@ -276,8 +278,9 @@ class tLayer : public bNonCopyable
 
         if (normalizeLayerInput)
         {
+            f64 mult = 1.0 / ((f64)input.size());
             for (u32 i = 0; i < A.size(); i++)
-                A[i] /= (f64) input.size();
+                A[i] *= mult;
         }
 
         if (layerType == tANN::kLayerTypeSoftmax)
@@ -302,34 +305,57 @@ class tLayer : public bNonCopyable
     {
         assertState(prev_a.size());
 
+        vector<u32> nz;
+
         if (layerType == tANN::kLayerTypeSoftmax)
         {
             for (u32 i = 0; i < dA.size(); i++)
+            {
+                if (da[i] != 0.0)
+                    nz.push_back(i);
                 dA[i] = da[i];
+            }
         }
         else
         {
             for (u32 i = 0; i < dA.size(); i++)
-                dA[i] = da[i] * s_derivative_of_squash(A[i], layerType);
+            {
+                if (da[i] == 0.0)
+                    dA[i] = 0.0;
+                else
+                {
+                    dA[i] = da[i] * s_derivative_of_squash(A[i], layerType);
+                    nz.push_back(i);
+                }
+            }
         }
 
         if (normalizeLayerInput)
         {
             f64 norm = 1.0 / ((f64)prev_a.size());
             for (u32 s = 0; s < prev_a.size(); s++)
-                for (u32 i = 0; i < dA.size(); i++)
-                    dw_accum[s][i] += dA[i] * prev_a[s] * norm;
-            for (u32 i = 0; i < dA.size(); i++)
-                dw_accum.back()[i] += dA[i] * 1.0 * norm;
+            {
+                if (prev_a[s] == 0.0)
+                    continue;
+                for (u32 i = 0; i < nz.size(); i++)
+                    dw_accum[s][nz[i]] += dA[nz[i]] * prev_a[s] * norm;
+            }
+            for (u32 i = 0; i < nz.size(); i++)
+                dw_accum.back()[nz[i]] += dA[nz[i]] * 1.0 * norm;
         }
         else
         {
             for (u32 s = 0; s < prev_a.size(); s++)
-                for (u32 i = 0; i < dA.size(); i++)
-                    dw_accum[s][i] += dA[i] * prev_a[s];
-            for (u32 i = 0; i < dA.size(); i++)
-                dw_accum.back()[i] += dA[i] * 1.0;
+            {
+                if (prev_a[s] == 0.0)
+                    continue;
+                for (u32 i = 0; i < nz.size(); i++)
+                    dw_accum[s][nz[i]] += dA[nz[i]] * prev_a[s];
+            }
+            for (u32 i = 0; i < nz.size(); i++)
+                dw_accum.back()[nz[i]] += dA[nz[i]] * 1.0;
         }
+
         batchSize++;
     }
 
@@ -337,12 +363,17 @@ class tLayer : public bNonCopyable
     {
         assertState(prev_da.size());
 
+        vector<u32> nz;
+        for (u32 i = 0; i < dA.size(); i++)
+            if (dA[i] != 0.0)
+                nz.push_back(i);
+
         for (u32 s = 0; s < prev_da.size(); s++)
         {
             prev_da[s] = 0.0;
 
-            for (u32 i = 0; i < dA.size(); i++)
-                prev_da[s] += w[s][i] * dA[i];
+            for (u32 i = 0; i < nz.size(); i++)
+                prev_da[s] += w[s][nz[i]] * dA[nz[i]];
         }
     }
 
