@@ -164,6 +164,7 @@ class tLayer : public bNonCopyable
 
     vector<f64> da;    // dE/da -- the error gradient wrt the output of each neuron
     vector<f64> dA;    // dE/dA -- the error gradient wrt the accumulated input of each neuron
+    vector<u32> nz;    // "non-zero" indices -- for optimizing the loops over dA
 
     vector< vector<f64> > w;   // <-- the weights connecting to the layer below
                                //                       (i.e. the previous layer)
@@ -204,6 +205,7 @@ class tLayer : public bNonCopyable
         A  = vector<f64>(mySize, 0.0);
         da = vector<f64>(mySize, 0.0);
         dA = vector<f64>(mySize, 0.0);
+        nz = vector<u32>(mySize, 0);
         w  = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
         dw_accum = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
         batchSize = 0;
@@ -247,6 +249,7 @@ class tLayer : public bNonCopyable
         assert(a.size() == A.size());
         assert(a.size() == da.size());
         assert(a.size() == dA.size());
+        assert(a.size() == nz.size());
 
         for (size_t s = 0; s < prevLayerSize+1; s++)
         {
@@ -305,14 +308,14 @@ class tLayer : public bNonCopyable
     {
         assertState(prev_a.size());
 
-        vector<u32> nz;
+        u32 nzCount = 0;
 
         if (layerType == tANN::kLayerTypeSoftmax)
         {
             for (u32 i = 0; i < dA.size(); i++)
             {
                 if (da[i] != 0.0)
-                    nz.push_back(i);
+                    nz[nzCount++] = i;
                 dA[i] = da[i];
             }
         }
@@ -325,7 +328,7 @@ class tLayer : public bNonCopyable
                 else
                 {
                     dA[i] = da[i] * s_derivative_of_squash(A[i], layerType);
-                    nz.push_back(i);
+                    nz[nzCount++] = i;
                 }
             }
         }
@@ -337,10 +340,10 @@ class tLayer : public bNonCopyable
             {
                 if (prev_a[s] == 0.0)
                     continue;
-                for (u32 i = 0; i < nz.size(); i++)
+                for (u32 i = 0; i < nzCount; i++)
                     dw_accum[s][nz[i]] += dA[nz[i]] * prev_a[s] * norm;
             }
-            for (u32 i = 0; i < nz.size(); i++)
+            for (u32 i = 0; i < nzCount; i++)
                 dw_accum.back()[nz[i]] += dA[nz[i]] * 1.0 * norm;
         }
         else
@@ -349,30 +352,30 @@ class tLayer : public bNonCopyable
             {
                 if (prev_a[s] == 0.0)
                     continue;
-                for (u32 i = 0; i < nz.size(); i++)
+                for (u32 i = 0; i < nzCount; i++)
                     dw_accum[s][nz[i]] += dA[nz[i]] * prev_a[s];
             }
-            for (u32 i = 0; i < nz.size(); i++)
+            for (u32 i = 0; i < nzCount; i++)
                 dw_accum.back()[nz[i]] += dA[nz[i]] * 1.0;
         }
 
         batchSize++;
     }
 
-    void backpropagate(vector<f64>& prev_da) const
+    void backpropagate(vector<f64>& prev_da)
     {
         assertState(prev_da.size());
 
-        vector<u32> nz;
+        u32 nzCount = 0;
         for (u32 i = 0; i < dA.size(); i++)
             if (dA[i] != 0.0)
-                nz.push_back(i);
+                nz[nzCount++] = i;
 
         for (u32 s = 0; s < prev_da.size(); s++)
         {
             prev_da[s] = 0.0;
 
-            for (u32 i = 0; i < nz.size(); i++)
+            for (u32 i = 0; i < nzCount; i++)
                 prev_da[s] += w[s][nz[i]] * dA[nz[i]];
         }
     }
