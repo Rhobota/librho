@@ -193,6 +193,8 @@ class tLayerCNN : public bNonCopyable
 
         assert(poolWidth > 0);
         assert(poolHeight > 0);
+        assert(poolWidth <= (m_stepsX+1));
+        assert(poolHeight <= (m_stepsY+1));
         m_poolWidth = poolWidth;
         m_poolHeight = poolHeight;
 
@@ -381,7 +383,7 @@ class tLayerCNN : public bNonCopyable
 
     void takeInput(const vector<f64>& input)
     {
-        assertState(input.size());
+        //assertState(input.size());
 
         u32 layerIndex = 0;
 
@@ -410,9 +412,9 @@ class tLayerCNN : public bNonCopyable
         {
             size_t outWidth = (m_stepsX+1) * m_numFeatureMapsInThisLayer;
             size_t pooledoutIndex = 0;
-            for (u32 y = 0; y <= m_stepsY; y += m_poolHeight)
+            for (u32 y = 0; y <= (m_stepsY+1-m_poolHeight); y += m_poolHeight)
             {
-                for (u32 x = 0; x <= m_stepsX; x += m_poolWidth)
+                for (u32 x = 0; x <= (m_stepsX+1-m_poolWidth); x += m_poolWidth)
                 {
                     size_t outputIndex = y*outWidth + x*m_numFeatureMapsInThisLayer;
                     for (u32 m = 0; m < m_numFeatureMapsInThisLayer; m++)
@@ -452,7 +454,7 @@ class tLayerCNN : public bNonCopyable
 
     void accumError(const vector<f64>& prev_a)
     {
-        assertState(prev_a.size());
+        //assertState(prev_a.size());
 
         u32 layerIndex = 0;
 
@@ -485,9 +487,9 @@ class tLayerCNN : public bNonCopyable
             size_t pooledoutIndex = 0;
             for (size_t i = 0; i < m_da.size(); i++)
                 m_da[i] = 0.0;
-            for (u32 y = 0; y <= m_stepsY; y += m_poolHeight)
+            for (u32 y = 0; y <= (m_stepsY+1-m_poolHeight); y += m_poolHeight)
             {
-                for (u32 x = 0; x <= m_stepsX; x += m_poolWidth)
+                for (u32 x = 0; x <= (m_stepsX+1-m_poolWidth); x += m_poolWidth)
                 {
                     size_t outputIndex = y*outWidth + x*m_numFeatureMapsInThisLayer;
                     for (u32 m = 0; m < m_numFeatureMapsInThisLayer; m++)
@@ -528,7 +530,7 @@ class tLayerCNN : public bNonCopyable
 
     void backpropagate(vector<f64>& prev_da)
     {
-        assertState(prev_da.size());
+        //assertState(prev_da.size());
 
         for (size_t s = 0; s < prev_da.size(); s++)
             prev_da[s] = 0.0;
