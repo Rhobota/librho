@@ -340,11 +340,12 @@ class tLayer : public bNonCopyable
             {
                 if (prev_a[s] == 0.0)
                     continue;
+                f64 mult = prev_a[s] * norm;
                 for (u32 i = 0; i < nzCount; i++)
-                    dw_accum[s][nz[i]] += dA[nz[i]] * prev_a[s] * norm;
+                    dw_accum[s][nz[i]] += dA[nz[i]] * mult;
             }
             for (u32 i = 0; i < nzCount; i++)
-                dw_accum.back()[nz[i]] += dA[nz[i]] * 1.0 * norm;
+                dw_accum.back()[nz[i]] += dA[nz[i]] * norm;   // * 1.0;
         }
         else
         {
@@ -356,7 +357,7 @@ class tLayer : public bNonCopyable
                     dw_accum[s][nz[i]] += dA[nz[i]] * prev_a[s];
             }
             for (u32 i = 0; i < nzCount; i++)
-                dw_accum.back()[nz[i]] += dA[nz[i]] * 1.0;
+                dw_accum.back()[nz[i]] += dA[nz[i]];   // * 1.0;
         }
 
         batchSize++;
@@ -377,6 +378,13 @@ class tLayer : public bNonCopyable
 
             for (u32 i = 0; i < nzCount; i++)
                 prev_da[s] += w[s][nz[i]] * dA[nz[i]];
+        }
+
+        if (normalizeLayerInput)
+        {
+            f64 mult = 1.0 / ((f64)prev_da.size());
+            for (u32 s = 0; s < prev_da.size(); s++)
+                prev_da[s] *= mult;
         }
     }
 
