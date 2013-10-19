@@ -66,11 +66,10 @@ class tLayerCNN : public bNonCopyable
     vector<f64> m_output;
     vector<f64> m_da;
 
-    vector<f64> m_pooledOutput;
-    vector<f64> m_pooled_da;
+    vector<f64> m_pooledOutput;  // Only used when (m_poolWidth > 1 || m_poolHeight > 1)
+    vector<f64> m_pooled_da;     // (same)
 
     vector<f64> m_fieldInput;
-    vector<u32> m_counts;
 
   private:
 
@@ -93,7 +92,7 @@ class tLayerCNN : public bNonCopyable
         }
     }
 
-    void m_reverseFillField(const vector<f64>& fieldInput, u32 x, u32 y, vector<f64>& input, vector<u32>& counts) const
+    void m_reverseFillField(const vector<f64>& fieldInput, u32 x, u32 y, vector<f64>& input) const
     {
         assert(input.size() == m_inputSize);
         assert(x+m_receptiveFieldWidth <= m_inputWidth);
@@ -107,7 +106,6 @@ class tLayerCNN : public bNonCopyable
             for (u32 xx = 0; xx < m_receptiveFieldWidth; xx++)
             {
                  input[inputIndex+xx] += fieldInput[fieldInputIndex++];
-                 counts[inputIndex+xx]++;
             }
             inputIndex += m_inputWidth;
         }
@@ -383,10 +381,8 @@ class tLayerCNN : public bNonCopyable
 
     void takeInput(const vector<f64>& input)
     {
-        //assertState(input.size());
-
+        // Give input to each filter.
         u32 layerIndex = 0;
-
         for (u32 y = 0; y < m_inputHeight-m_receptiveFieldHeight+1; y += m_stepSizeY)
         {
             for (u32 x = 0; x < m_inputWidth-m_receptiveFieldWidth+1; x += m_stepSizeX)
@@ -395,14 +391,14 @@ class tLayerCNN : public bNonCopyable
                 m_layers[layerIndex++].takeInput(m_fieldInput);
             }
         }
-
         assert(layerIndex == (m_stepsX+1)*(m_stepsY+1));
+        assert(layerIndex == m_numLayers);
 
         // Put the output of each filter into one output vector.
         size_t outputIndex = 0;
         for (u32 i = 0; i < m_numLayers; i++)
         {
-            for (u32 j = 0; j < m_numFeatureMapsInThisLayer; j++)
+            for (u32 j = 0; j < m_layers[i].a.size(); j++)
                 m_output[outputIndex++] = m_layers[i].a[j];
         }
         assert(outputIndex == m_output.size());
@@ -454,10 +450,7 @@ class tLayerCNN : public bNonCopyable
 
     void accumError(const vector<f64>& prev_a)
     {
-        //assertState(prev_a.size());
-
         u32 layerIndex = 0;
-
         for (u32 y = 0; y < m_inputHeight-m_receptiveFieldHeight+1; y += m_stepSizeY)
         {
             for (u32 x = 0; x < m_inputWidth-m_receptiveFieldWidth+1; x += m_stepSizeX)
@@ -466,7 +459,6 @@ class tLayerCNN : public bNonCopyable
                 m_layers[layerIndex++].accumError(m_fieldInput);
             }
         }
-
         assert(layerIndex == (m_stepsX+1)*(m_stepsY+1));
     }
 
@@ -522,7 +514,7 @@ class tLayerCNN : public bNonCopyable
         size_t daindex = 0;
         for (u32 i = 0; i < m_numLayers; i++)
         {
-            for (u32 j = 0; j < m_numFeatureMapsInThisLayer; j++)
+            for (u32 j = 0; j < m_layers[i].da.size(); j++)
                  m_layers[i].da[j] = m_da[daindex++];
         }
         assert(daindex == m_da.size());
@@ -530,33 +522,19 @@ class tLayerCNN : public bNonCopyable
 
     void backpropagate(vector<f64>& prev_da)
     {
-        //assertState(prev_da.size());
-
         for (size_t s = 0; s < prev_da.size(); s++)
             prev_da[s] = 0.0;
 
-        for (size_t s = 0; s < m_counts.size(); s++)
-            m_counts[s] = 0;
-
-        if (m_counts.size() != prev_da.size())
-            m_counts.resize(prev_da.size(), 0);
-
         u32 layerIndex = 0;
-
         for (u32 y = 0; y < m_inputHeight-m_receptiveFieldHeight+1; y += m_stepSizeY)
         {
             for (u32 x = 0; x < m_inputWidth-m_receptiveFieldWidth+1; x += m_stepSizeX)
             {
                 m_layers[layerIndex++].backpropagate(m_fieldInput);
-                m_reverseFillField(m_fieldInput, x, y, prev_da, m_counts);
+                m_reverseFillField(m_fieldInput, x, y, prev_da);
             }
         }
-
         assert(layerIndex == (m_stepsX+1)*(m_stepsY+1));
-
-        for (size_t s = 0; s < prev_da.size(); s++)
-            if (m_counts[s] > 0)
-                prev_da[s] /= m_counts[s];
     }
 
     void updateWeights()
@@ -566,7 +544,10 @@ class tLayerCNN : public bNonCopyable
         for (u32 i = 1; i < m_numLayers; i++)
             m_accum_dw(m_layers[0].dw_accum, m_layers[i].dw_accum);
 
-        m_norm_dw(m_layers[0].dw_accum);
+        // m_norm_dw(m_layers[0].dw_accum);    // !!!!!!!! This used to be
+                                               // active, so I'm leaving it
+                                               // here in case it is good
+                                               // to have I'll come back to it.
 
         m_layers[0].updateWeights();
 
@@ -1042,7 +1023,7 @@ string tCNN::networkInfoString() const
     }
 
     // Weight update rule:
-    out << "__rule=";
+    out << "__wrule=";
     out << "i";
     for (u32 i = 0; i < m_numLayers; i++)
     {
