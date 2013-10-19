@@ -58,7 +58,7 @@ trap gotSignal SIGTERM SIGINT
 
 somethingRun=0
 
-for testPath in $(find "$TEST_DIR" -name '*.cpp' -o -name '*.mm')
+for testPath in $(find "$TEST_DIR" -name '*.cpp' -o -name '*.mm' | sort)
 do
     somethingRun=1
     echo "---- $testPath ----"
