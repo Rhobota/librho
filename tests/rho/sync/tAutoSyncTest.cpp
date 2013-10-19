@@ -1,0 +1,90 @@
+#include <rho/sync/tAutoSync.h>
+#include <rho/sync/tMutex.h>
+#include <rho/sync/tThread.h>
+#include <rho/tCrashReporter.h>
+#include <rho/tTest.h>
+#include <rho/types.h>
+
+#include <cstdlib>
+#include <ctime>
+#include <vector>
+
+
+using namespace rho;
+
+
+const i32 kTestIterations = 30;
+
+const i32 kMaxThreads = 100;
+const i64 kMaxCount = 10000;
+
+i64 gCount = 0;
+
+
+class tCounter : public sync::iRunnable
+{
+    public:
+
+        tCounter(sync::tMutex* mutex, i64 count)
+            : m_mutex(mutex),
+              m_count(count)
+        {
+        }
+
+        void run()
+        {
+            for (int i = 0; i < m_count; i++)
+            {
+                sync::tAutoSync as(*m_mutex);
+                i64 currCount = gCount;
+                currCount += 1;
+                gCount = currCount;
+            }
+        }
+
+    private:
+
+        sync::tMutex* m_mutex;
+        i64           m_count;
+};
+
+
+void test(const tTest& t)
+{
+    sync::tMutex mutex;
+
+    gCount = 0;
+
+    i32 numThreads = rand() % kMaxThreads + 1;
+    i64 count = rand() % kMaxCount + 1;
+
+    i64 expectedEndCount = numThreads * count;
+
+    std::vector< refc<sync::tThread> > threads;
+
+    for (int i = 0; i < numThreads; i++)
+    {
+        refc<sync::iRunnable> counter = refc<sync::iRunnable>(new tCounter(&mutex, count));
+        refc<sync::tThread> thread = refc<sync::tThread>(new sync::tThread(counter));
+        threads.push_back(thread);
+    }
+
+    for (int i = 0; i < numThreads; i++)
+    {
+        threads[i]->join();
+    }
+
+    t.iseq(gCount, expectedEndCount);
+}
+
+
+int main()
+{
+    tCrashReporter::init();
+
+    srand((u32)time(0));
+
+    tTest("tAutoSync test", test, kTestIterations);
+
+    return 0;
+}
