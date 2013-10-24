@@ -1054,6 +1054,24 @@ u32 tCNN::getNumLayers() const
     return m_numLayers;
 }
 
+bool tCNN::isLayerPooled(u32 layerIndex) const
+{
+    if (layerIndex >= m_numLayers)
+        throw eInvalidArgument("No layer with that index.");
+
+    return (m_layers[layerIndex].getPoolWidth() > 1) ||
+           (m_layers[layerIndex].getPoolHeight() > 1);
+}
+
+bool tCNN::isLayerFullyConnected(u32 layerIndex) const
+{
+    if (layerIndex >= m_numLayers)
+        throw eInvalidArgument("No layer with that index.");
+
+    return (m_layers[layerIndex].getStepsX() > 0) ||
+           (m_layers[layerIndex].getStepsY() > 0);
+}
+
 u32 tCNN::getNumFeatureMaps(u32 layerIndex) const
 {
     if (layerIndex >= m_numLayers)
