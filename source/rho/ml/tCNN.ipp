@@ -627,6 +627,8 @@ u32 s_toInt(const string& str)
 
 
 tCNN::tCNN(string descriptionString)
+    : m_layers(NULL),
+      m_numLayers(0)
 {
     m_randWeightMin = -1.0;
     m_randWeightMax = 1.0;
@@ -735,6 +737,13 @@ tCNN::tCNN(string descriptionString)
         m_numLayers = 0;
         throw;
     }
+}
+
+tCNN::tCNN(iReadable* in)
+    : m_layers(NULL),
+      m_numLayers(0)
+{
+    this->unpack(in);
 }
 
 void tCNN::resetWeights()

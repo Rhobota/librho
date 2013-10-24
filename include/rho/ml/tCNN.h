@@ -49,6 +49,11 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
         tCNN(std::string descriptionString);
 
         /**
+         * Constructs a CNN by restoring from a readable stream.
+         */
+        tCNN(iReadable* in);
+
+        /**
          * Resets the weighs in the network to the initial random weights
          * set by the above constructor.
          *
