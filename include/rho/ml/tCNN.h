@@ -175,6 +175,17 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
         u32 getNumLayers() const;
 
         /**
+         * Returns true if the specified layer is pooled, false if not pooled.
+         */
+        bool isLayerPooled(u32 layerIndex) const;
+
+        /**
+         * Returns true if the specified layer is a fully connected layer,
+         * false if the specified layer is a convolutional layer.
+         */
+        bool isLayerFullyConnected(u32 layerIndex) const;
+
+        /**
          * Returns the number of feature maps in the specified layer. The given
          * parameter is interpreted as the layer index where 0 is the first
          * layer above the input, and all consecutive layers are higher in the
