@@ -76,7 +76,7 @@ vector<string> split(string str, string delim, int maxparts)
     // Handle the maxparts countdown.
     size_t countdown;
     if (maxparts < 1)
-        countdown = str.length();
+        countdown = str.length() + 1;
     else
         countdown = maxparts;     // countdown is always >= 1
 
