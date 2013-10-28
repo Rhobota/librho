@@ -10,7 +10,7 @@ namespace sync
 
 
 const static u64 kMinSleepTime = 300;    // 0.3 milliseconds
-const static u64 kMaxSleeptime = 2000;   // 2.0 milliseconds
+const static u64 kMaxSleeptime = 50000;  // 50.0 milliseconds
 
 
 class tTimerThread : public iRunnable, public bNonCopyable
