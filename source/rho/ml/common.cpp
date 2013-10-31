@@ -111,18 +111,21 @@ void un_examplify(const tIO& io, bool color, u32 width,
         minval = std::min(minval, weights[i]);
     }
     if (maxval == minval) maxval += 0.000001;
-    if (absolute)
+    f64 absmax = std::max(std::fabs(maxval), std::fabs(minval));
+    if (color)
     {
-        f64 absmax = std::max(std::fabs(maxval), std::fabs(minval));
-        for (u32 i = 0; i < weights.size(); i++)
-            weights[i] = (std::fabs(weights[i]) / absmax) * 255.0;
-    }
-    else
-    {
-        for (u32 i = 0; i < weights.size(); i++)
+        if (absolute)
         {
-            f64 val = ((weights[i] - minval) / (maxval - minval)) * 255.0;
-            weights[i] = val;
+            for (u32 i = 0; i < weights.size(); i++)
+                weights[i] = (std::fabs(weights[i]) / absmax) * 255.0;
+        }
+        else
+        {
+            for (u32 i = 0; i < weights.size(); i++)
+            {
+                f64 val = ((weights[i] - minval) / (maxval - minval)) * 255.0;
+                weights[i] = val;
+            }
         }
     }
 
@@ -156,9 +159,21 @@ void un_examplify(const tIO& io, bool color, u32 width,
             }
             else
             {
-                buf[bufIndex++] = (u8) weights[wIndex];
-                buf[bufIndex++] = (u8) weights[wIndex];
-                buf[bufIndex++] = (u8) weights[wIndex++];
+                u8 r = 0;     // <-- used if the weight is negative
+                u8 g = 0;     // <-- used if the weight is positive
+                u8 b = 0;     // <-- not used
+
+                f64 w = weights[wIndex++];
+
+                if (w > 0.0)
+                    g = (u8)(w / absmax * 255.0);
+
+                if (w < 0.0)
+                    r = (u8)(-w / absmax * 255.0);
+
+                buf[bufIndex++] = r;
+                buf[bufIndex++] = g;
+                buf[bufIndex++] = b;
             }
         }
     }
