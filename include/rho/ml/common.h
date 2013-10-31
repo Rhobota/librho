@@ -108,10 +108,17 @@ tIO examplify(const img::tImage* image);
  * equal to zero will not be black if there are any negative values
  * in 'io').
  *
+ * If the data has a finite range, you can specify that range
+ * so that un_examplify() can create an image that respects
+ * it. Otherwise, un_examplify() will use the min and max
+ * of the data itself as the range so that the generated
+ * image uses the full range of color.
+ *
  * The generated image is stored in 'dest'.
  */
 void un_examplify(const tIO& io, bool color, u32 width,
-                  bool absolute, img::tImage* dest);
+                  bool absolute, img::tImage* dest,
+                  const f64* minValue = NULL, const f64* maxValue = NULL);
 
 /**
  * Z-score the training set, and z-score the test set to match.

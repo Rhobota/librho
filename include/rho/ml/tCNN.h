@@ -177,10 +177,13 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * in the network are seen as indicators for the specified output
          * dimension.
          *
+         * Pass a negative value as outputDimensionIndex to put maximum error
+         * on every output dimension.
+         *
          * 'errorOnInput' is only an output parameter. It is the resulting error
          * on each of the input dimensions as a result of the backpropagation.
          */
-        void backpropagateMaxError(u32 outputDimensionIndex, tIO& errorOnInput);
+        void backpropagateMaxError(i32 outputDimensionIndex, tIO& errorOnInput);
 
         //////////////////////////////////////////////////////////////////////
         // Getters
@@ -240,8 +243,14 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * Returns the output value of the specified filter. This will be
          * the filter's output value from the last call to addExample() or
          * evaluate().
+         *
+         * If minValue and maxValue are not NULL, they are filled
+         * with the minimum and maximum possible values output by
+         * the specified neuron (determined by the squashing function
+         * used by that neuron).
          */
-        f64 getOutput(u32 layerIndex, u32 mapIndex, u32 filterIndex) const;
+        f64 getOutput(u32 layerIndex, u32 mapIndex, u32 filterIndex,
+                      f64* minValue = NULL, f64* maxValue = NULL) const;
 
         /**
          * Generates an image representation of the specified feature map.
