@@ -259,17 +259,9 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * the connections below the specified neuron, as well as the
          * neuron's most recent output value.
          *
-         * If the weights should be interpreted as an RGB image, set
-         * 'color' to true. If the weights should be interpreted as a
-         * grey image, set 'color' to false.
-         *
-         * Specify the 'width' of the image, and the height will be derived.
-         *
-         * If 'absolute' is set to true, the absolute value of the weights
-         * will be used when producing the image. Otherwise, the relative
-         * weights will be used to produce the image (meaning that weights
-         * of value zero will be some shade of grey if any negative weights
-         * are present).
+         * This method uses ml::un_examplify() to create the image
+         * from the weight under the specified neuron, so see that
+         * method for an explanation of the parameters.
          *
          * The generated image is stored in 'dest'.
          */

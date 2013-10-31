@@ -168,6 +168,20 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          */
         std::string networkInfoString() const;
 
+        /**
+         * Backpropagates the maximum output error on the specified output
+         * dimension though the network to the beginning. The error at each
+         * neuron is then copied to the neuron's output value so that you
+         * can then call getOutputImage() to see which neurons were "blamed"
+         * for the error at the output. You can use this to see which neurons
+         * in the network are seen as indicators for the specified output
+         * dimension.
+         *
+         * 'errorOnInput' is only an output parameter. It is the resulting error
+         * on each of the input dimensions as a result of the backpropagation.
+         */
+        void backpropagateMaxError(u32 outputDimensionIndex, tIO& errorOnInput);
+
         //////////////////////////////////////////////////////////////////////
         // Getters
         //////////////////////////////////////////////////////////////////////
@@ -234,15 +248,8 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * The image shows a visual representation of the weights of
          * the connections below the specified feature map.
          *
-         * If the weights should be interpreted as an RGB image, set
-         * 'color' to true. If the weights should be interpreted as a
-         * grey image, set 'color' to false.
-         *
-         * If 'absolute' is set to true, the absolute value of the weights
-         * will be used when producing the image. Otherwise, the relative
-         * weights will be used to produce the image (meaning that weights
-         * of value zero will be some shade of grey if any negative weights
-         * are present).
+         * This method uses ml::un_examplify() to create the image, so see
+         * that method for a description of the parameters.
          *
          * The generated image is stored in 'dest'.
          */

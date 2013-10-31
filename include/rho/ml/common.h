@@ -93,11 +93,20 @@ tIO examplify(const img::tImage* image);
  * You must specify the 'width' of the generated image. The
  * height will be derived by this function.
  *
- * If 'absolute' is set to true, the absolute value of the weights
+ * If 'color' is false, then the green channel of the output image
+ * is used to indicate positive values in 'io' and the red channel
+ * of the output image is used to indicate negative values in 'io'.
+ *
+ * If 'color' is true, the trick above cannot be used because we
+ * need each channel of the output image to represent itself. In
+ * this case, the 'absolute' parameter is used to help determine
+ * how to generate the output image.
+ *
+ * If 'absolute' is set to true, the absolute value of 'io'
  * will be used when producing the image. Otherwise, the relative
- * weights will be used to produce the image (meaning that weights
- * of value zero will be some shade of grey if any negative weights
- * are present).
+ * values will be used to produce the image (meaning that values
+ * equal to zero will not be black if there are any negative values
+ * in 'io').
  *
  * The generated image is stored in 'dest'.
  */

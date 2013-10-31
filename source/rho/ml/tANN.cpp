@@ -840,66 +840,9 @@ void tANN::getImage(u32 layerIndex, u32 neuronIndex,
     getWeights(layerIndex, neuronIndex, weights);
     assert(weights.size() > 0);
 
-    // Normalize the weights to [0.0, 255.0].
-    f64 maxval = weights[0];
-    f64 minval = weights[0];
-    for (u32 i = 1; i < weights.size(); i++)
-    {
-        maxval = std::max(maxval, weights[i]);
-        minval = std::min(minval, weights[i]);
-    }
-    if (maxval == minval) maxval += 0.000001;
-    if (absolute)
-    {
-        f64 absmax = std::max(std::fabs(maxval), std::fabs(minval));
-        for (u32 i = 0; i < weights.size(); i++)
-            weights[i] = (std::fabs(weights[i]) / absmax) * 255.0;
-    }
-    else
-    {
-        for (u32 i = 0; i < weights.size(); i++)
-        {
-            f64 val = ((weights[i] - minval) / (maxval - minval)) * 255.0;
-            weights[i] = val;
-        }
-    }
-
-    // Calculate some stuff.
-    u32 pixWidth = color ? 3 : 1;
-    if ((weights.size() % pixWidth) > 0)
-        throw eLogicError("Pixels do not align with the number of weights.");
-    u32 numPix = (u32) weights.size() / pixWidth;
-    if ((numPix % width) > 0)
-        throw eLogicError("Cannot build image of that width. Last row not filled.");
-    u32 height = numPix / width;
-
-    // Create the image.
-    dest->setFormat(img::kRGB24);
-    dest->setBufSize(width*height*3);
-    dest->setBufUsed(width*height*3);
-    dest->setWidth(width);
-    dest->setHeight(height);
-    u8* buf = dest->buf();
-    u32 bufIndex = 0;
-    u32 wIndex = 0;
-    for (u32 i = 0; i < height; i++)
-    {
-        for (u32 j = 0; j < width; j++)
-        {
-            if (color)
-            {
-                buf[bufIndex++] = (u8) weights[wIndex++];
-                buf[bufIndex++] = (u8) weights[wIndex++];
-                buf[bufIndex++] = (u8) weights[wIndex++];
-            }
-            else
-            {
-                buf[bufIndex++] = (u8) weights[wIndex];
-                buf[bufIndex++] = (u8) weights[wIndex];
-                buf[bufIndex++] = (u8) weights[wIndex++];
-            }
-        }
-    }
+    // Use the image creating method in ml::common to do the work.
+    un_examplify(weights, color, width, absolute, dest);
+    u32 height = dest->height();
 
     // Add an output indicator.
     nLayerType type = m_layers[layerIndex].layerType;
@@ -917,7 +860,7 @@ void tANN::getImage(u32 layerIndex, u32 neuronIndex,
     {
         for (u32 c = xStart; c < xStart+xSpan; c++)
         {
-            buf = dest->buf() + r*dest->width()*3 + c*3;
+            u8* buf = dest->buf() + r*dest->width()*3 + c*3;
             buf[0] = red;
             buf[1] = green;
             buf[2] = blue;
