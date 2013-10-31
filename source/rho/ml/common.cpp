@@ -94,7 +94,8 @@ tIO examplify(const img::tImage* image)
 }
 
 void un_examplify(const tIO& io, bool color, u32 width,
-                  bool absolute, img::tImage* dest)
+                  bool absolute, img::tImage* dest,
+                  const f64* minValue, const f64* maxValue)
 {
     if (io.size() == 0)
         throw eInvalidArgument("The example io must have at least one dimension!");
@@ -103,14 +104,29 @@ void un_examplify(const tIO& io, bool color, u32 width,
     std::vector<f64> weights = io;
 
     // Normalize the weights to [0.0, 255.0].
-    f64 maxval = weights[0];
-    f64 minval = weights[0];
-    for (u32 i = 1; i < weights.size(); i++)
+    f64 maxval;
+    f64 minval;
+    if (minValue && maxValue)
     {
-        maxval = std::max(maxval, weights[i]);
-        minval = std::min(minval, weights[i]);
+        maxval = *maxValue;
+        minval = *minValue;
+        if (minval > maxval)
+            throw eInvalidArgument("The minValue must be less than or equal to the maxValue.");
+        for (u32 i = 0; i < weights.size(); i++)
+            if (weights[i] < minval || weights[i] > maxval)
+                throw eInvalidArgument("The minValue and maxValue cannot be true given this input vector.");
     }
-    if (maxval == minval) maxval += 0.000001;
+    else
+    {
+        maxval = weights[0];
+        minval = weights[0];
+        for (u32 i = 1; i < weights.size(); i++)
+        {
+            maxval = std::max(maxval, weights[i]);
+            minval = std::min(minval, weights[i]);
+        }
+        if (maxval == minval) maxval += 0.000001;
+    }
     f64 absmax = std::max(std::fabs(maxval), std::fabs(minval));
     if (color)
     {

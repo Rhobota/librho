@@ -531,10 +531,46 @@ class tLayerCNN : public bNonCopyable
 
     void copy_da_to_output()
     {
+        // Copy da to output.
         for (size_t i = 0; i < m_da.size(); i++)
             m_output[i] = m_da[i];
-        for (size_t i = 0; i < m_pooled_da.size(); i++)
-            m_pooledOutput[i] = m_pooled_da[i];
+
+        // Normalize the output vector so that it actually looks like legitimate
+        // output.
+        assert(m_output.size() > 0);
+        f64 minval = m_output[0];
+        f64 maxval = m_output[0];
+        for (size_t i = 1; i < m_output.size(); i++)
+        {
+            minval = std::min(minval, m_output[i]);
+            maxval = std::max(maxval, m_output[i]);
+        }
+        f64 absmax = std::max(std::fabs(minval), std::fabs(maxval));
+        f64 minpos = s_squash_min(getPrimaryLayer().layerType);
+        f64 maxpos = s_squash_max(getPrimaryLayer().layerType);
+        assert(minpos <= 0.0);  // <-- the code in the loop below needs these
+        assert(maxpos > 0.0);   // <-- to be true
+        for (size_t i = 0; i < m_output.size(); i++)
+        {
+            if (m_output[i] < 0.0)
+                m_output[i] = m_output[i] / absmax * -minpos;
+            else
+                m_output[i] = m_output[i] / absmax * maxpos;
+            assert(m_output[i] >= minpos && m_output[i] <= maxpos);
+        }
+
+        // Pool the output.
+        m_poolOutput();   // <-- fills m_pooledOutput from the contents of m_output
+
+        // Put output back into the output of each filter.
+        // (Opposite operation that is done at the end of takeInput())
+        size_t outputIndex = 0;
+        for (u32 i = 0; i < m_numLayers; i++)
+        {
+            for (u32 j = 0; j < m_layers[i].a.size(); j++)
+                m_layers[i].a[j] = m_output[outputIndex++];
+        }
+        assert(outputIndex == m_output.size());
     }
 
     void accumError(const vector<f64>& prev_a)
@@ -1063,11 +1099,11 @@ void tCNN::printNetworkInfo(std::ostream& out) const
     out << endl;
 }
 
-void tCNN::backpropagateMaxError(u32 outputDimensionIndex, tIO& errorOnInput)
+void tCNN::backpropagateMaxError(i32 outputDimensionIndex, tIO& errorOnInput)
 {
     vector<f64>& top_da = m_layers[m_numLayers-1].get_da();
-    for (u32 i = 0; i < top_da.size(); i++)
-        top_da[i] = (i == outputDimensionIndex) ? 1.0 : 0.0;
+    for (size_t i = 0; i < top_da.size(); i++)
+        top_da[i] = (outputDimensionIndex < 0 || i == (size_t)outputDimensionIndex) ? -1.0 : 0.0;
     m_layers[m_numLayers-1].distribute_da(true);
     m_layers[m_numLayers-1].copy_da_to_output();
 
@@ -1190,13 +1226,19 @@ u32 tCNN::getNumReplicatedFilters(u32 layerIndex) const
     return m_layers[layerIndex].getNumLayers();
 }
 
-f64 tCNN::getOutput(u32 layerIndex, u32 mapIndex, u32 filterIndex) const
+f64 tCNN::getOutput(u32 layerIndex, u32 mapIndex, u32 filterIndex,
+                    f64* minValue, f64* maxValue) const
 {
     if (mapIndex >= getNumFeatureMaps(layerIndex))
         throw eInvalidArgument("No layer/map with that index.");
 
     if (filterIndex >= getNumReplicatedFilters(layerIndex))
         throw eInvalidArgument("No layer/filter with that index.");
+
+    if (minValue)
+        *minValue = s_squash_min(m_layers[layerIndex].getLayer(filterIndex).layerType);
+    if (maxValue)
+        *maxValue = s_squash_max(m_layers[layerIndex].getLayer(filterIndex).layerType);
 
     return m_layers[layerIndex].getLayer(filterIndex).a[mapIndex];
 }
@@ -1246,8 +1288,16 @@ void tCNN::getOutputImage(u32 layerIndex, u32 mapIndex,
         assert(width > 0);
     }
 
+    // Tell un_examplify() about the range of this data.
+    // (Note, when creating images from weight values, the range is (-inf, inf), so it
+    // is okay to let un_examplify() determine a good range itself, but here we know
+    // the range and we want the resulting image to represent the values relative to that
+    // range.
+    f64 minValue = s_squash_min(m_layers[layerIndex].getPrimaryLayer().layerType);
+    f64 maxValue = s_squash_max(m_layers[layerIndex].getPrimaryLayer().layerType);
+
     // Use the image creating method in ml::common to do the work.
-    un_examplify(weights, false, width, false, dest);
+    un_examplify(weights, false, width, false, dest, &minValue, &maxValue);
 }
 
 void tCNN::pack(iWritable* out) const
