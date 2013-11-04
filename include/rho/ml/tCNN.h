@@ -180,8 +180,14 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * Pass a negative value as outputDimensionIndex to put maximum error
          * on every output dimension.
          *
-         * 'errorOnInput' is only an output parameter. It is the resulting error
+         * 'errorOnInput' is an out-parameter. It is the resulting error
          * on each of the input dimensions as a result of the backpropagation.
+         *
+         * NOTE: This method is not "correct" in that it only estimates
+         * a backprop of max error. I'm not at this time even sure if this
+         * concept is possible to do accurately without an actual input on
+         * which you do the backprop. Can we create along the way some sort
+         * of virtual "exemplary" input to use for the backprop calculations?
          */
         void backpropagateMaxError(i32 outputDimensionIndex, tIO& errorOnInput);
 

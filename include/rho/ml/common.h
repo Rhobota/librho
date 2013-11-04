@@ -27,6 +27,7 @@ namespace ml
 
 f64 logistic_function(f64 z);
 f64 derivative_of_logistic_function(f64 z);
+f64 inverse_of_logistic_function(f64 y);
 f64 logistic_function_min();
 f64 logistic_function_max();
 
@@ -39,6 +40,7 @@ f64 logistic_function_max();
 
 f64 hyperbolic_function(f64 z);
 f64 derivative_of_hyperbolic_function(f64 z);
+f64 inverse_of_hyperbolic_function(f64 y);
 f64 hyperbolic_function_min();
 f64 hyperbolic_function_max();
 

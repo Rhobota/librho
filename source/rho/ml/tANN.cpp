@@ -388,6 +388,42 @@ class tLayer : public bNonCopyable
         }
     }
 
+    void copy_da_to_output()
+    {
+        // Copy da to output.
+        for (size_t i = 0; i < da.size(); i++)
+            a[i] = da[i];
+
+        // Normalize the output vector so that it actually looks like legitimate
+        // output.
+        assert(a.size() > 0);
+        f64 minval = a[0];
+        f64 maxval = a[0];
+        for (size_t i = 1; i < a.size(); i++)
+        {
+            minval = std::min(minval, a[i]);
+            maxval = std::max(maxval, a[i]);
+        }
+        f64 absmax = std::max(std::fabs(minval), std::fabs(maxval));
+        f64 minpos = s_squash_min(layerType);
+        f64 maxpos = s_squash_max(layerType);
+        assert(minpos <= 0.0);  // <-- the code in the loop below needs these
+        assert(maxpos > 0.0);   // <-- to be true
+        for (size_t i = 0; i < a.size(); i++)
+        {
+            if (a[i] < 0.0)
+                a[i] = a[i] / absmax * -minpos;
+            else
+                a[i] = a[i] / absmax * maxpos;
+            assert(a[i] >= minpos && a[i] <= maxpos);
+        }
+
+        // Set the A vector to some sort of estimate... because what else can we do
+        // without an actual input example?
+        for (size_t i = 0; i < a.size(); i++)
+            A[i] = 0.0;
+    }
+
     void updateWeights()
     {
         assertState(w.size()-1);
@@ -792,6 +828,25 @@ void tANN::printNeuronInfo(std::ostream& out) const
         }
     }
     out << endl;
+}
+
+void tANN::backpropagateMaxError(i32 outputDimensionIndex, tIO& errorOnInput)
+{
+    vector<f64>& top_da = m_layers[m_numLayers-1].da;
+    for (size_t i = 0; i < top_da.size(); i++)
+        top_da[i] = (outputDimensionIndex < 0 || i == (size_t)outputDimensionIndex) ? 1.0 : 0.0;
+    m_layers[m_numLayers-1].copy_da_to_output();
+
+    for (u32 i = m_numLayers-1; i > 0; i--)
+    {
+        m_layers[i].accumError(m_layers[i-1].a);
+        m_layers[i].backpropagate(m_layers[i-1].da);
+        m_layers[i-1].copy_da_to_output();
+    }
+
+    errorOnInput.resize(m_layers[0].w.size()-1, 0.0);
+    m_layers[0].accumError(errorOnInput);
+    m_layers[0].backpropagate(errorOnInput);
 }
 
 u32 tANN::getNumLayers() const
