@@ -26,6 +26,13 @@ f64 derivative_of_logistic_function(f64 z)
     return slope;
 }
 
+f64 inverse_of_logistic_function(f64 y)
+{
+    if (y < 0.0001) y = 0.0001;
+    if (y > 0.9999) y = 0.9999;
+    return -std::log((1.0 / y) - 1.0);
+}
+
 f64 logistic_function_min()
 {
     return 0.0;
@@ -47,6 +54,13 @@ f64 derivative_of_hyperbolic_function(f64 z)
 {
     f64 s = 1.0 / std::cosh(2.0/3.0 * z);
     return 1.14393 * s * s;
+}
+
+f64 inverse_of_hyperbolic_function(f64 y)
+{
+    if (y < -1.71589) y = -1.71589;
+    if (y > 1.71589) y = 1.71589;
+    return 1.5 * atanh(0.582785 * y);
 }
 
 f64 hyperbolic_function_min()

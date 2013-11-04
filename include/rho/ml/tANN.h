@@ -208,6 +208,29 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          */
         void printNeuronInfo(std::ostream& out) const;
 
+        /**
+         * Backpropagates the maximum output error on the specified output
+         * dimension though the network to the beginning. The error at each
+         * neuron is then copied to the neuron's output value so that you
+         * can then call getImage() to see which neurons were "blamed"
+         * for the error at the output. You can use this to see which neurons
+         * in the network are seen as indicators for the specified output
+         * dimension.
+         *
+         * Pass a negative value as outputDimensionIndex to put maximum error
+         * on every output dimension.
+         *
+         * 'errorOnInput' is an out-parameter. It is the resulting error
+         * on each of the input dimensions as a result of the backpropagation.
+         *
+         * NOTE: This method is not "correct" in that it only estimates
+         * a backprop of max error. I'm not at this time even sure if this
+         * concept is possible to do accurately without an actual input on
+         * which you do the backprop. Can we create along the way some sort
+         * of virtual "exemplary" input to use for the backprop calculations?
+         */
+        void backpropagateMaxError(i32 outputDimensionIndex, tIO& errorOnInput);
+
         //////////////////////////////////////////////////////////////////////
         // Getters
         //////////////////////////////////////////////////////////////////////

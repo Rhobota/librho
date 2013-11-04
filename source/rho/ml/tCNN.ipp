@@ -568,7 +568,10 @@ class tLayerCNN : public bNonCopyable
         for (u32 i = 0; i < m_numLayers; i++)
         {
             for (u32 j = 0; j < m_layers[i].a.size(); j++)
+            {
                 m_layers[i].a[j] = m_output[outputIndex++];
+                m_layers[i].A[j] = 0.0;
+            }
         }
         assert(outputIndex == m_output.size());
     }
@@ -1103,7 +1106,7 @@ void tCNN::backpropagateMaxError(i32 outputDimensionIndex, tIO& errorOnInput)
 {
     vector<f64>& top_da = m_layers[m_numLayers-1].get_da();
     for (size_t i = 0; i < top_da.size(); i++)
-        top_da[i] = (outputDimensionIndex < 0 || i == (size_t)outputDimensionIndex) ? -1.0 : 0.0;
+        top_da[i] = (outputDimensionIndex < 0 || i == (size_t)outputDimensionIndex) ? 1.0 : 0.0;
     m_layers[m_numLayers-1].distribute_da(true);
     m_layers[m_numLayers-1].copy_da_to_output();
 
