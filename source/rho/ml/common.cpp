@@ -801,11 +801,45 @@ void visualize(iLearner* learner, const tIO& example,
 
     if (ann)
     {
-        throw eNotImplemented("I need to do this...");
+        tIO output;
+        ann->evaluate(example, output);
+
+        u8 bgColor[3] = { 0, 0, 205 };    // "Medium Blue" from http://www.tayloredmktg.com/rgb/
+        img::tCanvas canvas(img::kRGB24, bgColor, 3);
+
+        u32 numHoriz = (u32) std::ceil(std::sqrt(3.0 * ann->getNumNeuronsInLayer(0)));
+        if (numHoriz < 2) numHoriz = 2;
+        u32 horizCount = 0;
+        u32 currWidth = 0;
+        u32 currHeight = 0;
+
+        img::tImage image;
+        ml::un_examplify(example, color, width, absolute, &image);
+        canvas.drawImage(&image, currWidth, currHeight);
+        horizCount++;
+        currWidth += image.width();
+
+        for (u32 n = 0; n < ann->getNumNeuronsInLayer(0); n++)
+        {
+            ann->getImage(0, n, color, width, absolute, &image);
+            canvas.drawImage(&image, currWidth, currHeight);
+            currWidth += image.width();
+            if (++horizCount == numHoriz)
+            {
+                horizCount = 0;
+                currWidth = 0;
+                currHeight += image.height();
+            }
+        }
+
+        canvas.genImage(dest);
     }
 
     else if (cnn)
     {
+        tIO output;
+        cnn->evaluate(example, output);
+
         u8 bgColor[3] = { 0, 0, 205 };    // "Medium Blue" from http://www.tayloredmktg.com/rgb/
         img::tCanvas canvas(img::kRGB24, bgColor, 3);
 
