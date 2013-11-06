@@ -5,6 +5,10 @@
 #include <rho/ml/common.h>
 #include <rho/img/tCanvas.h>
 
+#include <rho/ml/tANN.h>
+#include <rho/ml/tCNN.h>
+
+#include <cassert>
 #include <iomanip>
 
 
@@ -601,6 +605,232 @@ void evaluate(iLearner* learner, const std::vector<tIO>& inputs,
     for (size_t i = 0; i < inputs.size(); i++)
     {
         learner->evaluate(inputs[i], outputs[i]);
+    }
+}
+
+/*
+ * This function is used "deinterlace" ("deinterleave" is the correct
+ * term, actually) a vector of repeating component.
+ *
+ * For example, say you have a vector with the contents: a1b2c3d4
+ * And you want to convert that to a vector: abcd1234
+ * To do that call this function with numComponents=2 and unitLength=1.
+ *
+ * Or, say you have a vector with the contents: ab12cd34ef56
+ * And you want to convert that to a vector: abcdef123456
+ * To do that call this function with numComponents=2 and unitLength=2.
+ *
+ * Or, say you have a vector with the contents: RGBRGBRGBRGB
+ * And you want to convert that to a vector: RRRRGGGGBBBB
+ * To do that call this function with numComponents=3 and unitLength=1.
+ *
+ * 'output' must be allocated by the caller, and of course delete by
+ * the caller as well.
+ */
+template <class T>
+void deinterlace(const T* input, T* output, u32 arrayLen, u32 numComponents, u32 unitLength=1)
+{
+    assert((arrayLen % unitLength) == 0);
+    u32 numUnits = arrayLen / unitLength;
+
+    assert((numUnits % numComponents) == 0);
+    u32 groupSize = numUnits / numComponents;
+
+    u32 stride = groupSize * unitLength;
+
+    u32 s = 0;
+
+    for (u32 g = 0; g < groupSize; g++)
+    {
+        u32 d = g * unitLength;
+
+        for (u32 c = 0; c < numComponents; c++)
+        {
+            for (u32 u = 0; u < unitLength; u++)
+                output[d+u] = input[s+u];
+
+            s += unitLength;
+            d += stride;
+        }
+    }
+}
+
+/*
+ * This function is used to re-order the components of a CNN hidden layer weight
+ * image. The issue is that in the image, weights to each of the previous receptive
+ * fields are interlaced together, but when we view that image we'd rather see
+ * the weights to the same previous receptive field together. So this function
+ * fixes that.
+ */
+static
+void s_fixHiddenLayerImage(img::tImage& image, u32 numComponents)
+{
+    u32 width = 0;
+    u32 unitLength = 0;
+
+    switch (image.format())
+    {
+        case img::kRGB24:
+            width = image.width() * 3;
+            unitLength = 3;
+            break;
+
+        case img::kGrey:
+            width = image.width();
+            unitLength = 1;
+            break;
+
+        default:
+            assert(false);
+            break;
+    }
+
+    u8* temp = new u8[width];
+
+    for (u32 h = 0; h < image.height(); h++)
+    {
+        u8* row = image[h][0];
+        deinterlace(row, temp, width, numComponents, unitLength);
+        for (u32 i = 0; i < width; i++)
+            row[i] = temp[i];
+    }
+
+    delete [] temp;
+}
+
+static
+void s_drawLayer(const ml::tCNN* cnn, u32 layerIndex,
+                 bool color, bool absolute,
+                 u32& currX, img::tCanvas& canvas)
+{
+    const u32 padding = 10;
+    const u32 weigthImageScale = 5;
+
+    u32 currY = padding;
+
+    for (u32 n = 0; n < cnn->getNumFeatureMaps(layerIndex); n++)
+    {
+        u32 heightHere = 0;
+        u32 xHere = currX;
+
+        if (cnn->isLayerFullyConnected(layerIndex))
+        {
+            {
+                img::tImage wImage;
+                cnn->getFeatureMapImage(layerIndex, n, layerIndex == 0 ? color : false, absolute, &wImage);
+                if (layerIndex > 0)
+                    s_fixHiddenLayerImage(wImage, cnn->getNumFeatureMaps(layerIndex-1));
+                img::tImage wImageScaled;
+                wImage.scale(wImage.width()*weigthImageScale, wImage.height()*weigthImageScale, &wImageScaled);
+                canvas.drawImage(&wImageScaled, xHere, currY);
+                heightHere = wImageScaled.height();
+                xHere += wImageScaled.width();
+            }
+            {
+                xHere += padding;
+                img::tImage image;
+                image.setFormat(img::kRGB24); image.setWidth(padding*2); image.setHeight(heightHere);
+                image.setBufSize(image.width() * image.height() * 3);
+                image.setBufUsed(image.bufSize());
+                f64 minpossible, maxpossible;
+                f64 val = cnn->getOutput(layerIndex, n, 0, &minpossible, &maxpossible);
+                for (u32 i = 0; i < image.bufUsed(); i += 3)
+                {
+                    u8 r = 0;   // <-- used if val is negative
+                    u8 g = 0;   // <-- used if val is positive
+                    u8 b = 0;   // <-- not used
+                    if (val < 0.0)
+                        r = (u8) (val / minpossible * 255.0);
+                    else if (val > 0.0)
+                        g = (u8) (val / maxpossible * 255.0);
+                    image.buf()[i+0] = r;
+                    image.buf()[i+1] = g;
+                    image.buf()[i+2] = b;
+                }
+                canvas.drawImage(&image, xHere, currY);
+                xHere += image.width();
+            }
+        }
+
+        else
+        {
+            {
+                img::tImage wImage;
+                cnn->getFeatureMapImage(layerIndex, n, layerIndex == 0 ? color : false, absolute, &wImage);
+                if (layerIndex > 0)
+                    s_fixHiddenLayerImage(wImage, cnn->getNumFeatureMaps(layerIndex-1));
+                img::tImage wImageScaled;
+                wImage.scale(wImage.width()*weigthImageScale, wImage.height()*weigthImageScale, &wImageScaled);
+                canvas.drawImage(&wImageScaled, xHere, currY);
+                heightHere = std::max(heightHere, wImageScaled.height());
+                xHere += wImageScaled.width();
+            }
+            {
+                xHere += padding;
+                img::tImage layerImage;
+                cnn->getOutputImage(layerIndex, n, false, &layerImage);   // <-- false for "not pooled"
+                canvas.drawImage(&layerImage, xHere, currY);
+                heightHere = std::max(heightHere, layerImage.height());
+                xHere += layerImage.width();
+            }
+            if (cnn->isLayerPooled(layerIndex))
+            {
+                xHere += padding;
+                img::tImage layerImage;
+                cnn->getOutputImage(layerIndex, n, true, &layerImage);   // <-- true for "pooled"
+                canvas.drawImage(&layerImage, xHere, currY);
+                heightHere = std::max(heightHere, layerImage.height());
+                xHere += layerImage.width();
+            }
+        }
+
+        currY += heightHere + padding;
+        if (n+1 == cnn->getNumFeatureMaps(layerIndex))
+            currX = xHere;
+
+        canvas.expandToIncludePoint(currX, currY);
+    }
+}
+
+void visualize(iLearner* learner, const tIO& example,
+               bool color, u32 width, bool absolute,
+               img::tImage* dest)
+{
+    tANN* ann = dynamic_cast<tANN*>(learner);
+    tCNN* cnn = dynamic_cast<tCNN*>(learner);
+
+    if (ann)
+    {
+        throw eNotImplemented("I need to do this...");
+    }
+
+    else if (cnn)
+    {
+        u8 bgColor[3] = { 0, 0, 205 };    // "Medium Blue" from http://www.tayloredmktg.com/rgb/
+        img::tCanvas canvas(img::kRGB24, bgColor, 3);
+
+        const u32 padding = 50;
+        u32 currX = 10;
+
+        img::tImage exampleImage;
+        ml::un_examplify(example, color, width, absolute, &exampleImage);
+        canvas.drawImage(&exampleImage, currX, currX);
+        currX += exampleImage.width() + padding;
+
+        for (u32 i = 0; i < cnn->getNumLayers(); i++)
+        {
+            s_drawLayer(cnn, i, color, absolute, currX, canvas);
+            currX += padding;
+        }
+
+        canvas.expandToIncludePoint(0, 0);
+        canvas.expandToIncludePoint(currX, 0);
+        canvas.genImage(dest);
+    }
+
+    else
+    {
+        throw eNotImplemented("Is there some type of learner that I don't know how to draw?");
     }
 }
 

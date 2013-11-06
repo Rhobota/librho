@@ -277,6 +277,14 @@ bool train(iLearner* learner, const std::vector<tIO>& inputs,
 void evaluate(iLearner* learner, const std::vector<tIO>& inputs,
                                        std::vector<tIO>& outputs);
 
+/**
+ * Creates a visual of the learner processing the example provided.
+ * The visual is stored as an image in 'dest'.
+ */
+void visualize(iLearner* learner, const tIO& example,
+               bool color, u32 width, bool absolute,
+               img::tImage* dest);
+
 
 }    // namespace ml
 }    // namespace rho
