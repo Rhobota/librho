@@ -174,6 +174,27 @@ void buildConfusionMatrix(const std::vector<tIO>& outputs,
                                 tConfusionMatrix& confusionMatrix);
 
 /**
+ * Same as buildConfusionMatrix() above, but this function
+ * does not simply count the entries in each cell of the
+ * confusion matrix, it actually draws the input examples in
+ * the cells of the confusion matrix! This gives you a
+ * visual representation of the confusion matrix.
+ *
+ * The inputs are assumed to be images, for how else could
+ * we draw them!? The inputs are transformed into images
+ * by calling un_examplify() on them. See the comments
+ * of un_examplify() for details on 'color', 'width', and
+ * 'absolute'.
+ *
+ * The resulting image is stored in 'dest'.
+ */
+void buildVisualConfusionMatrix(const std::vector<tIO>& inputs,
+                                bool color, u32 width, bool absolute,
+                                const std::vector<tIO>& outputs,
+                                const std::vector<tIO>& targets,
+                                      img::tImage* dest);
+
+/**
  * Prints the confusion matrix in a pretty format.
  */
 void print(const tConfusionMatrix& confusionMatrix, std::ostream& out);
