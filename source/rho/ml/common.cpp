@@ -3,6 +3,7 @@
 #endif
 
 #include <rho/ml/common.h>
+#include <rho/img/tCanvas.h>
 
 #include <iomanip>
 
@@ -311,6 +312,100 @@ void buildConfusionMatrix(const std::vector<tIO>& outputs,
         u32 output = un_examplify(outputs[i]);
         confusionMatrix[target][output]++;
     }
+}
+
+static
+void s_drawGrid(img::tCanvas& canvas, u32 gridSize, u32 distBetweenLines)
+{
+    {
+        img::tImage horiz;
+        horiz.setFormat(img::kRGB24);
+        horiz.setWidth(gridSize*distBetweenLines);
+        horiz.setHeight(1);
+        horiz.setBufSize(horiz.width() * horiz.height() * 3);
+        horiz.setBufUsed(horiz.bufSize());
+        for (u32 i = 0; i < horiz.bufUsed(); i++) horiz.buf()[i] = 255;
+        for (u32 i = 0; i <= gridSize; i++)
+            canvas.drawImage(&horiz, 0, i*distBetweenLines);
+    }
+
+    {
+        img::tImage vert;
+        vert.setFormat(img::kRGB24);
+        vert.setWidth(1);
+        vert.setHeight(gridSize*distBetweenLines);
+        vert.setBufSize(vert.width() * vert.height() * 3);
+        vert.setBufUsed(vert.bufSize());
+        for (u32 i = 0; i < vert.bufUsed(); i++) vert.buf()[i] = 255;
+        for (u32 i = 0; i <= gridSize; i++)
+            canvas.drawImage(&vert, i*distBetweenLines, 0);
+    }
+}
+
+void buildVisualConfusionMatrix(const std::vector<tIO>& inputs,
+                                bool color, u32 width, bool absolute,
+                                const std::vector<tIO>& outputs,
+                                const std::vector<tIO>& targets,
+                                      img::tImage* dest)
+{
+    if (outputs.size() != targets.size())
+    {
+        throw eInvalidArgument("The number of examples in outputs and targets must "
+                "be the same!");
+    }
+
+    if (outputs.size() != inputs.size())
+    {
+        throw eInvalidArgument("The number of examples in outputs and inputs must "
+                "be the same!");
+    }
+
+    if (outputs.size() == 0)
+    {
+        throw eInvalidArgument("There must be at least one output/target pair!");
+    }
+
+    for (size_t i = 0; i < outputs.size(); i++)
+    {
+        if (outputs[i].size() != targets[i].size() ||
+            outputs[i].size() != outputs[0].size())
+        {
+            throw eInvalidArgument("Every output/target pair must have the same dimensionality!");
+        }
+    }
+
+    if (outputs[0].size() == 0)
+    {
+        throw eInvalidArgument("The output/target pairs must have at least one dimension!");
+    }
+
+    u32 numClasses = (u32) targets[0].size();      // same as outputs[0].size()
+    u32 boxWidth = 5 * width;
+
+    u8 bgColor[3] = { 0, 0, 205 };    // "Medium Blue" from http://www.tayloredmktg.com/rgb/
+    img::tCanvas canvas(img::kRGB24, bgColor, 3);
+
+    algo::tKnuthLCG lcg;
+
+    img::tImage image;
+
+    for (size_t i = 0; i < outputs.size(); i++)
+    {
+        u32 target = un_examplify(targets[i]);
+        u32 output = un_examplify(outputs[i]);
+
+        f64 rx = ((f64)lcg.next()) / ((f64)lcg.randMax()) * (boxWidth-width) + output*boxWidth;
+        f64 ry = ((f64)lcg.next()) / ((f64)lcg.randMax()) * (boxWidth-width) + target*boxWidth;
+
+        un_examplify(inputs[i], color, width, absolute, &image);
+
+        canvas.drawImage(&image, (i32) round(rx), (i32) round(ry));
+    }
+
+    canvas.expandToIncludePoint(0, 0);
+    canvas.expandToIncludePoint(numClasses*boxWidth, numClasses*boxWidth);
+    s_drawGrid(canvas, numClasses, boxWidth);
+    canvas.genImage(dest);
 }
 
 static
