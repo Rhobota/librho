@@ -730,7 +730,7 @@ void tANN::evaluate(const tIO& input, tIO& output) const
     output = m_layers[m_numLayers-1].a;
 }
 
-void tANN::printNetworkInfo(std::ostream& out) const
+void tANN::printLearnerInfo(std::ostream& out) const
 {
     int colw = 20;
 
@@ -777,7 +777,7 @@ void tANN::printNetworkInfo(std::ostream& out) const
     out << endl << endl;
 }
 
-string tANN::networkInfoString() const
+string tANN::learnerInfoString() const
 {
     std::ostringstream out;
 
