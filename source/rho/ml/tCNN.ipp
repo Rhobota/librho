@@ -991,7 +991,7 @@ void tCNN::evaluate(const tIO& input, tIO& output) const
     output = m_layers[m_numLayers-1].getOutput();
 }
 
-void tCNN::printNetworkInfo(std::ostream& out) const
+void tCNN::printLearnerInfo(std::ostream& out) const
 {
     int colw = 20;
 
@@ -1123,7 +1123,7 @@ void tCNN::backpropagateMaxError(i32 outputDimensionIndex, tIO& errorOnInput)
     m_layers[0].backpropagate(errorOnInput);
 }
 
-string tCNN::networkInfoString() const
+string tCNN::learnerInfoString() const
 {
     std::ostringstream out;
 

@@ -186,21 +186,21 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          */
         void evaluate(const tIO& input, tIO& output) const;
 
-        //////////////////////////////////////////////////////////////////////
-        // Debugging
-        //////////////////////////////////////////////////////////////////////
-
         /**
          * Prints the network's configuration in a readable format.
          */
-        void printNetworkInfo(std::ostream& out) const;
+        void printLearnerInfo(std::ostream& out) const;
 
         /**
-         * Returns a single-line version of printNetworkInfo().
+         * Returns a single-line version of printLearnerInfo().
          *
          * Useful for generating file names for storing ANN-related data.
          */
-        std::string networkInfoString() const;
+        std::string learnerInfoString() const;
+
+        //////////////////////////////////////////////////////////////////////
+        // Debugging
+        //////////////////////////////////////////////////////////////////////
 
         /**
          * Prints the most recently calculated error rates for every neuron and

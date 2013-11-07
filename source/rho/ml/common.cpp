@@ -3,10 +3,11 @@
 #endif
 
 #include <rho/ml/common.h>
-#include <rho/img/tCanvas.h>
-
 #include <rho/ml/tANN.h>
 #include <rho/ml/tCNN.h>
+#include <rho/img/tCanvas.h>
+#include <rho/algo/vector_util.h>
+#include <rho/sync/tTimer.h>
 
 #include <cassert>
 #include <iomanip>
@@ -699,7 +700,7 @@ void s_fixHiddenLayerImage(img::tImage& image, u32 numComponents)
 }
 
 static
-void s_drawLayer(const ml::tCNN* cnn, u32 layerIndex,
+void s_drawLayer(const tCNN* cnn, u32 layerIndex,
                  bool color, bool absolute,
                  u32& currX, img::tCanvas& canvas)
 {
@@ -814,7 +815,7 @@ void visualize(iLearner* learner, const tIO& example,
         u32 currHeight = 0;
 
         img::tImage image;
-        ml::un_examplify(example, color, width, absolute, &image);
+        un_examplify(example, color, width, absolute, &image);
         canvas.drawImage(&image, currWidth, currHeight);
         horizCount++;
         currWidth += image.width();
@@ -847,7 +848,7 @@ void visualize(iLearner* learner, const tIO& example,
         u32 currX = 10;
 
         img::tImage exampleImage;
-        ml::un_examplify(example, color, width, absolute, &exampleImage);
+        un_examplify(example, color, width, absolute, &exampleImage);
         canvas.drawImage(&exampleImage, currX, currX);
         currX += exampleImage.width() + padding;
 
@@ -866,6 +867,89 @@ void visualize(iLearner* learner, const tIO& example,
     {
         throw eNotImplemented("Is there some type of learner that I don't know how to draw?");
     }
+}
+
+
+bool ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& trainingSet,
+                                const std::vector< std::pair<tIO, tIO> >& testSet,
+                                u32 batchSize, u32 numEpochs,
+                                train_didUpdate_callback updateCallback,
+                                void* updateCallbackContext,
+                                eztrain_didFinishEpoch_callback epochCallback,
+                                void* epochCallbackContext)
+{
+    if (trainingSet.size() == 0 || testSet.size() == 0)
+        throw eInvalidArgument("The training and test sets must each be non-empty.");
+    if (batchSize == 0)
+        throw eInvalidArgument("The batch size must be non-zero.");
+    if (numEpochs == 0)
+        throw eInvalidArgument("The number of training epochs must be non-zero.");
+
+    std::vector<tIO> trainInputs, trainTargets, trainOutputs;
+    tConfusionMatrix trainCM;
+
+    std::vector<tIO> testInputs, testTargets, testOutputs;
+    algo::unzip(testSet, testInputs, testTargets);
+    tConfusionMatrix testCM;
+
+    algo::tKnuthLCG lcg;
+
+    for (u32 epochs = 0; epochs <= numEpochs; epochs++)
+    {
+        // Note the start time of this epoch.
+        u64 startTime = sync::tTimer::usecTime();
+
+        // Train if this is not the zero'th epoch. This is so that the user will get a
+        // callback before any training has happened, so that the user knows what the
+        // initial state of the learner looks like.
+        algo::unzip(trainingSet, trainInputs, trainTargets);
+        if (epochs > 0)
+        {
+            if (! train(learner, trainInputs, trainTargets,
+                        batchSize, updateCallback, updateCallbackContext))
+            {
+                return false;
+            }
+        }
+
+        // Evaluate the network on the training set.
+        evaluate(learner, trainInputs, trainOutputs);
+        buildConfusionMatrix(trainOutputs, trainTargets, trainCM);
+        f64 trainSqrdError = standardSquaredError(trainOutputs, trainTargets);
+
+        // Evaluate the network on the test set.
+        evaluate(learner, testInputs, testOutputs);
+        buildConfusionMatrix(testOutputs, testTargets, testCM);
+        f64 testSqrdError = standardSquaredError(testOutputs, testTargets);
+
+        // Shuffle the training data for the next iteration.
+        algo::shuffle(trainingSet, lcg);
+
+        // Calculate the elapsed time.
+        f64 elapsedTime = (f64)(sync::tTimer::usecTime() - startTime);
+        elapsedTime /= 1000000;  // usecs to secs
+
+        // Call the epoch observer.
+        if (epochCallback)
+        {
+            if (! epochCallback(learner, epochs, numEpochs-epochs,
+                                trainingSet,
+                                testSet,
+                                trainOutputs,
+                                testOutputs,
+                                trainCM,
+                                testCM,
+                                trainSqrdError,
+                                testSqrdError,
+                                elapsedTime,
+                                epochCallbackContext))
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 

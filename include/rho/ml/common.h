@@ -232,7 +232,7 @@ f64  recall(const tConfusionMatrix& confusionMatrix);
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
-// Training helpers:
+// Training and visualization low-level helpers:
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
@@ -284,6 +284,33 @@ void evaluate(iLearner* learner, const std::vector<tIO>& inputs,
 void visualize(iLearner* learner, const tIO& example,
                bool color, u32 width, bool absolute,
                img::tImage* dest);
+
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+// Training high-level helper:
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+typedef bool (*eztrain_didFinishEpoch_callback)(iLearner* learner, u32 epochsCompleted, u32 epochsLeft,
+                                                const std::vector< std::pair<tIO, tIO> >& trainingSet,
+                                                const std::vector< std::pair<tIO, tIO> >& testSet,
+                                                const std::vector< tIO >& trainOutputs,
+                                                const std::vector< tIO >& testOutputs,
+                                                const tConfusionMatrix& trainCM,
+                                                const tConfusionMatrix& testCM,
+                                                f64 trainSqrdError,
+                                                f64 testSqrdError,
+                                                f64 epochTrainTimeInSeconds,
+                                                void* context);
+
+bool ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& trainingSet,
+                                const std::vector< std::pair<tIO, tIO> >& testSet,
+                                u32 batchSize, u32 numEpochs,
+                                train_didUpdate_callback updateCallback = NULL,
+                                void* updateCallbackContext = NULL,
+                                eztrain_didFinishEpoch_callback epochCallback = NULL,
+                                void* epochCallbackContext = NULL);
 
 
 }    // namespace ml
