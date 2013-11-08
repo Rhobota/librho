@@ -870,13 +870,15 @@ void visualize(iLearner* learner, const tIO& example,
 }
 
 
-bool ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& trainingSet,
-                                const std::vector< std::pair<tIO, tIO> >& testSet,
-                                u32 batchSize, u32 numEpochs,
-                                train_didUpdate_callback updateCallback,
-                                void* updateCallbackContext,
-                                eztrain_didFinishEpoch_callback epochCallback,
-                                void* epochCallbackContext)
+static
+bool s_ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& trainingSet,
+                                  const std::vector< std::pair<tIO, tIO> >& testSet,
+                                  u32 batchSize, u32 numEpochs,
+                                  train_didUpdate_callback updateCallback,
+                                  void* updateCallbackContext,
+                                  eztrain_didFinishEpoch_callback epochCallback,
+                                  void* epochCallbackContext,
+                                  u32 foldIndex, u32 numFolds)
 {
     if (trainingSet.size() == 0 || testSet.size() == 0)
         throw eInvalidArgument("The training and test sets must each be non-empty.");
@@ -934,7 +936,7 @@ bool ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& traini
 
             if (! epochCallback(learner,
                                 epochs, numEpochs-epochs,
-                                0, 1,
+                                foldIndex, numFolds,
                                 trainingSet,
                                 testSet,
                                 trainOutputs,
@@ -954,14 +956,62 @@ bool ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& traini
     return true;
 }
 
-bool ezTrain(iLearner* learner, std::vector< std::pair<tIO, tIO> >& allExamples,
+bool ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& trainingSet,
+                                const std::vector< std::pair<tIO, tIO> >& testSet,
+                                u32 batchSize, u32 numEpochs,
+                                train_didUpdate_callback updateCallback,
+                                void* updateCallbackContext,
+                                eztrain_didFinishEpoch_callback epochCallback,
+                                void* epochCallbackContext)
+{
+    return s_ezTrain(learner,
+                     trainingSet,
+                     testSet,
+                     batchSize,
+                     numEpochs,
+                     updateCallback,
+                     updateCallbackContext,
+                     epochCallback,
+                     epochCallbackContext,
+                     0, 1);
+}
+
+bool ezTrain(iLearner* learner, const std::vector< std::pair<tIO, tIO> >& allExamples,
                                 u32 batchSize, u32 numEpochsPerFold, u32 numFolds,
                                 train_didUpdate_callback updateCallback,
                                 void* updateCallbackContext,
                                 eztrain_didFinishEpoch_callback epochCallback,
                                 void* epochCallbackContext)
 {
-    return false;
+    f64 frac = 1.0 / numFolds;
+
+    for (u32 i = 0; i < numFolds; i++)
+    {
+        learner->reset();
+
+        // Get the training and test sets for this iteration:
+        u32 start = (u32) round((f64)allExamples.size() * frac*i);
+        u32 end   = (u32) round((f64)allExamples.size() * frac*(i+1));
+        std::vector< std::pair<tIO,tIO> > trainingSet = allExamples;
+        trainingSet.erase(trainingSet.begin()+start, trainingSet.begin()+end);
+        std::vector< std::pair<tIO,tIO> > testSet(allExamples.begin()+start, allExamples.begin()+end);
+
+        // Train!
+        bool cont = s_ezTrain(learner,
+                              trainingSet,
+                              testSet,
+                              batchSize,
+                              numEpochsPerFold,
+                              updateCallback,
+                              updateCallbackContext,
+                              epochCallback,
+                              epochCallbackContext,
+                              i, numFolds);
+        if (! cont)
+            return false;
+    }
+
+    return true;
 }
 
 

@@ -360,7 +360,7 @@ bool ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& traini
  * replace calling train() in most application where straight-forward
  * x-fold cross-validation training is needed.
  */
-bool ezTrain(iLearner* learner, std::vector< std::pair<tIO, tIO> >& allExamples,
+bool ezTrain(iLearner* learner, const std::vector< std::pair<tIO, tIO> >& allExamples,
                                 u32 batchSize, u32 numEpochsPerFold, u32 numFolds,
                                 train_didUpdate_callback updateCallback = NULL,
                                 void* updateCallbackContext = NULL,
