@@ -187,6 +187,12 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
         void evaluate(const tIO& input, tIO& output) const;
 
         /**
+         * Resets the learner to its initial state.
+         * (This just calls resetWeights().)
+         */
+        void reset();
+
+        /**
          * Prints the network's configuration in a readable format.
          */
         void printLearnerInfo(std::ostream& out) const;

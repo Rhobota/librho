@@ -991,6 +991,11 @@ void tCNN::evaluate(const tIO& input, tIO& output) const
     output = m_layers[m_numLayers-1].getOutput();
 }
 
+void tCNN::reset()
+{
+    resetWeights();
+}
+
 void tCNN::printLearnerInfo(std::ostream& out) const
 {
     int colw = 20;

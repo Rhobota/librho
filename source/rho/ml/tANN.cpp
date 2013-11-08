@@ -730,6 +730,11 @@ void tANN::evaluate(const tIO& input, tIO& output) const
     output = m_layers[m_numLayers-1].a;
 }
 
+void tANN::reset()
+{
+    resetWeights();
+}
+
 void tANN::printLearnerInfo(std::ostream& out) const
 {
     int colw = 20;
