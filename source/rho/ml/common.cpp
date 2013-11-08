@@ -910,29 +910,31 @@ bool ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& traini
             {
                 return false;
             }
+
+            // Shuffle the training data for the next iteration.
+            algo::shuffle(trainingSet, lcg);
         }
-
-        // Evaluate the network on the training set.
-        evaluate(learner, trainInputs, trainOutputs);
-        buildConfusionMatrix(trainOutputs, trainTargets, trainCM);
-        f64 trainSqrdError = standardSquaredError(trainOutputs, trainTargets);
-
-        // Evaluate the network on the test set.
-        evaluate(learner, testInputs, testOutputs);
-        buildConfusionMatrix(testOutputs, testTargets, testCM);
-        f64 testSqrdError = standardSquaredError(testOutputs, testTargets);
-
-        // Shuffle the training data for the next iteration.
-        algo::shuffle(trainingSet, lcg);
-
-        // Calculate the elapsed time.
-        f64 elapsedTime = (f64)(sync::tTimer::usecTime() - startTime);
-        elapsedTime /= 1000000;  // usecs to secs
 
         // Call the epoch observer.
         if (epochCallback)
         {
-            if (! epochCallback(learner, epochs, numEpochs-epochs,
+            // Evaluate the network on the training set.
+            evaluate(learner, trainInputs, trainOutputs);
+            buildConfusionMatrix(trainOutputs, trainTargets, trainCM);
+            f64 trainSqrdError = standardSquaredError(trainOutputs, trainTargets);
+
+            // Evaluate the network on the test set.
+            evaluate(learner, testInputs, testOutputs);
+            buildConfusionMatrix(testOutputs, testTargets, testCM);
+            f64 testSqrdError = standardSquaredError(testOutputs, testTargets);
+
+            // Calculate the elapsed time.
+            f64 elapsedTime = (f64)(sync::tTimer::usecTime() - startTime);
+            elapsedTime /= 1000000;  // usecs to secs
+
+            if (! epochCallback(learner,
+                                epochs, numEpochs-epochs,
+                                0, 1,
                                 trainingSet,
                                 testSet,
                                 trainOutputs,
@@ -950,6 +952,16 @@ bool ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& traini
     }
 
     return true;
+}
+
+bool ezTrain(iLearner* learner, std::vector< std::pair<tIO, tIO> >& allExamples,
+                                u32 batchSize, u32 numEpochsPerFold, u32 numFolds,
+                                train_didUpdate_callback updateCallback,
+                                void* updateCallbackContext,
+                                eztrain_didFinishEpoch_callback epochCallback,
+                                void* epochCallbackContext)
+{
+    return false;
 }
 
 
