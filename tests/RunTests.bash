@@ -7,7 +7,7 @@ OUT_FILE="a.out"
 
 CC="$TARGET""g++"
 CC_FLAGS_LOCAL="$CC_FLAGS \
-    -g -O0 -fno-inline -Wall -Wextra \
+    -g -O0 -fvisibility=hidden -fno-inline -Wall -Wextra \
     -Wno-unused-parameter -Wno-long-long -Werror -pedantic \
     -I $INCLUDE_DIR"
 CC_LIB_FLAGS="$LIBRHO_PATH -lpthread $CC_LIB_FLAGS"
