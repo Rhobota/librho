@@ -152,21 +152,50 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          */
         void evaluate(const tIO& input, tIO& output) const;
 
+        /**
+         * Resets the learner to its initial state.
+         * (This just calls resetWeights().)
+         */
+        void reset();
+
+        /**
+         * Prints the network's configuration in a readable format.
+         */
+        void printLearnerInfo(std::ostream& out) const;
+
+        /**
+         * Returns a single-line version of printLearnerInfo().
+         *
+         * Useful for generating file names for storing CNN-related data.
+         */
+        std::string learnerInfoString() const;
+
         //////////////////////////////////////////////////////////////////////
         // Debugging
         //////////////////////////////////////////////////////////////////////
 
         /**
-         * Prints the network's configuration in a readable format.
-         */
-        void printNetworkInfo(std::ostream& out) const;
-
-        /**
-         * Returns a single-line version of printNetworkInfo().
+         * Backpropagates the maximum output error on the specified output
+         * dimension though the network to the beginning. The error at each
+         * neuron is then copied to the neuron's output value so that you
+         * can then call getOutputImage() to see which neurons were "blamed"
+         * for the error at the output. You can use this to see which neurons
+         * in the network are seen as indicators for the specified output
+         * dimension.
          *
-         * Useful for generating file names for storing CNN-related data.
+         * Pass a negative value as outputDimensionIndex to put maximum error
+         * on every output dimension.
+         *
+         * 'errorOnInput' is an out-parameter. It is the resulting error
+         * on each of the input dimensions as a result of the backpropagation.
+         *
+         * NOTE: This method is not "correct" in that it only estimates
+         * a backprop of max error. I'm not at this time even sure if this
+         * concept is possible to do accurately without an actual input on
+         * which you do the backprop. Can we create along the way some sort
+         * of virtual "exemplary" input to use for the backprop calculations?
          */
-        std::string networkInfoString() const;
+        void backpropagateMaxError(i32 outputDimensionIndex, tIO& errorOnInput);
 
         //////////////////////////////////////////////////////////////////////
         // Getters
@@ -226,23 +255,22 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * Returns the output value of the specified filter. This will be
          * the filter's output value from the last call to addExample() or
          * evaluate().
+         *
+         * If minValue and maxValue are not NULL, they are filled
+         * with the minimum and maximum possible values output by
+         * the specified neuron (determined by the squashing function
+         * used by that neuron).
          */
-        f64 getOutput(u32 layerIndex, u32 mapIndex, u32 filterIndex) const;
+        f64 getOutput(u32 layerIndex, u32 mapIndex, u32 filterIndex,
+                      f64* minValue = NULL, f64* maxValue = NULL) const;
 
         /**
          * Generates an image representation of the specified feature map.
          * The image shows a visual representation of the weights of
          * the connections below the specified feature map.
          *
-         * If the weights should be interpreted as an RGB image, set
-         * 'color' to true. If the weights should be interpreted as a
-         * grey image, set 'color' to false.
-         *
-         * If 'absolute' is set to true, the absolute value of the weights
-         * will be used when producing the image. Otherwise, the relative
-         * weights will be used to produce the image (meaning that weights
-         * of value zero will be some shade of grey if any negative weights
-         * are present).
+         * This method uses ml::un_examplify() to create the image, so see
+         * that method for a description of the parameters.
          *
          * The generated image is stored in 'dest'.
          */

@@ -28,7 +28,7 @@ class tMainLoopGLFW;
  *
  * See tMainLoopGLFW for how to handle the application's main thread.
  */
-class tWindowGLFW
+class tWindowGLFW : public bNonCopyable
 {
     public:
 
@@ -88,6 +88,17 @@ class tWindowGLFW
          * Sets the title of this window.
          */
         void setTitle(std::string newTitle);
+
+        /**
+         * Sets the window size.
+         */
+        void setWindowSize(u32 width, u32 height);
+
+        /**
+         * Gets the current window width and height.
+         */
+        u32 currWindowWidth() const;
+        u32 currWindowHeight() const;
 
         /**
          * Sets the cursor mode of this window.
@@ -151,7 +162,9 @@ class tWindowGLFW
         // You must call postEvents() from windowMain() in order to receive
         // these callbacks.
         //
-        // (Override only what you need.)
+        // (Override only what you need. In each method that you override,
+        //  you should call the super method, because some of the super
+        //  methods actually do stuff.)
         //
         //////////////////////////////////////////////////////////////////////
 
@@ -247,11 +260,17 @@ class tWindowGLFW
         bool m_isDone();
         void m_close();
         bool m_hasNewTitle(std::string& newTitle);
+        bool m_hasNewSize(u32& width, u32& height);
 
     private:
 
         u32 m_initWidth;
         u32 m_initHeight;
+        u32 m_desiredWidth;
+        u32 m_desiredHeight;
+        bool m_newSize;
+        u32 m_currWidth;
+        u32 m_currHeight;
         std::string m_initTitle;
         bool m_initFullscreen;
         u8 m_initMonitorIndex;

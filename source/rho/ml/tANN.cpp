@@ -388,6 +388,42 @@ class tLayer : public bNonCopyable
         }
     }
 
+    void copy_da_to_output()
+    {
+        // Copy da to output.
+        for (size_t i = 0; i < da.size(); i++)
+            a[i] = da[i];
+
+        // Normalize the output vector so that it actually looks like legitimate
+        // output.
+        assert(a.size() > 0);
+        f64 minval = a[0];
+        f64 maxval = a[0];
+        for (size_t i = 1; i < a.size(); i++)
+        {
+            minval = std::min(minval, a[i]);
+            maxval = std::max(maxval, a[i]);
+        }
+        f64 absmax = std::max(std::fabs(minval), std::fabs(maxval));
+        f64 minpos = s_squash_min(layerType);
+        f64 maxpos = s_squash_max(layerType);
+        assert(minpos <= 0.0);  // <-- the code in the loop below needs these
+        assert(maxpos > 0.0);   // <-- to be true
+        for (size_t i = 0; i < a.size(); i++)
+        {
+            if (a[i] < 0.0)
+                a[i] = a[i] / absmax * -minpos;
+            else
+                a[i] = a[i] / absmax * maxpos;
+            assert(a[i] >= minpos && a[i] <= maxpos);
+        }
+
+        // Set the A vector to some sort of estimate... because what else can we do
+        // without an actual input example?
+        for (size_t i = 0; i < a.size(); i++)
+            A[i] = 0.0;
+    }
+
     void updateWeights()
     {
         assertState(w.size()-1);
@@ -694,7 +730,12 @@ void tANN::evaluate(const tIO& input, tIO& output) const
     output = m_layers[m_numLayers-1].a;
 }
 
-void tANN::printNetworkInfo(std::ostream& out) const
+void tANN::reset()
+{
+    resetWeights();
+}
+
+void tANN::printLearnerInfo(std::ostream& out) const
 {
     int colw = 20;
 
@@ -741,7 +782,7 @@ void tANN::printNetworkInfo(std::ostream& out) const
     out << endl << endl;
 }
 
-string tANN::networkInfoString() const
+string tANN::learnerInfoString() const
 {
     std::ostringstream out;
 
@@ -794,6 +835,25 @@ void tANN::printNeuronInfo(std::ostream& out) const
     out << endl;
 }
 
+void tANN::backpropagateMaxError(i32 outputDimensionIndex, tIO& errorOnInput)
+{
+    vector<f64>& top_da = m_layers[m_numLayers-1].da;
+    for (size_t i = 0; i < top_da.size(); i++)
+        top_da[i] = (outputDimensionIndex < 0 || i == (size_t)outputDimensionIndex) ? 1.0 : 0.0;
+    m_layers[m_numLayers-1].copy_da_to_output();
+
+    for (u32 i = m_numLayers-1; i > 0; i--)
+    {
+        m_layers[i].accumError(m_layers[i-1].a);
+        m_layers[i].backpropagate(m_layers[i-1].da);
+        m_layers[i-1].copy_da_to_output();
+    }
+
+    errorOnInput.resize(m_layers[0].w.size()-1, 0.0);
+    m_layers[0].accumError(errorOnInput);
+    m_layers[0].backpropagate(errorOnInput);
+}
+
 u32 tANN::getNumLayers() const
 {
     return m_numLayers;
@@ -840,66 +900,9 @@ void tANN::getImage(u32 layerIndex, u32 neuronIndex,
     getWeights(layerIndex, neuronIndex, weights);
     assert(weights.size() > 0);
 
-    // Normalize the weights to [0.0, 255.0].
-    f64 maxval = weights[0];
-    f64 minval = weights[0];
-    for (u32 i = 1; i < weights.size(); i++)
-    {
-        maxval = std::max(maxval, weights[i]);
-        minval = std::min(minval, weights[i]);
-    }
-    if (maxval == minval) maxval += 0.000001;
-    if (absolute)
-    {
-        f64 absmax = std::max(std::fabs(maxval), std::fabs(minval));
-        for (u32 i = 0; i < weights.size(); i++)
-            weights[i] = (std::fabs(weights[i]) / absmax) * 255.0;
-    }
-    else
-    {
-        for (u32 i = 0; i < weights.size(); i++)
-        {
-            f64 val = ((weights[i] - minval) / (maxval - minval)) * 255.0;
-            weights[i] = val;
-        }
-    }
-
-    // Calculate some stuff.
-    u32 pixWidth = color ? 3 : 1;
-    if ((weights.size() % pixWidth) > 0)
-        throw eLogicError("Pixels do not align with the number of weights.");
-    u32 numPix = (u32) weights.size() / pixWidth;
-    if ((numPix % width) > 0)
-        throw eLogicError("Cannot build image of that width. Last row not filled.");
-    u32 height = numPix / width;
-
-    // Create the image.
-    dest->setFormat(img::kRGB24);
-    dest->setBufSize(width*height*3);
-    dest->setBufUsed(width*height*3);
-    dest->setWidth(width);
-    dest->setHeight(height);
-    u8* buf = dest->buf();
-    u32 bufIndex = 0;
-    u32 wIndex = 0;
-    for (u32 i = 0; i < height; i++)
-    {
-        for (u32 j = 0; j < width; j++)
-        {
-            if (color)
-            {
-                buf[bufIndex++] = (u8) weights[wIndex++];
-                buf[bufIndex++] = (u8) weights[wIndex++];
-                buf[bufIndex++] = (u8) weights[wIndex++];
-            }
-            else
-            {
-                buf[bufIndex++] = (u8) weights[wIndex];
-                buf[bufIndex++] = (u8) weights[wIndex];
-                buf[bufIndex++] = (u8) weights[wIndex++];
-            }
-        }
-    }
+    // Use the image creating method in ml::common to do the work.
+    un_examplify(weights, color, width, absolute, dest);
+    u32 height = dest->height();
 
     // Add an output indicator.
     nLayerType type = m_layers[layerIndex].layerType;
@@ -917,7 +920,7 @@ void tANN::getImage(u32 layerIndex, u32 neuronIndex,
     {
         for (u32 c = xStart; c < xStart+xSpan; c++)
         {
-            buf = dest->buf() + r*dest->width()*3 + c*3;
+            u8* buf = dest->buf() + r*dest->width()*3 + c*3;
             buf[0] = red;
             buf[1] = green;
             buf[2] = blue;

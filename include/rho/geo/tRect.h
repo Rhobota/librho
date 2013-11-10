@@ -22,14 +22,20 @@ class tRect : public bDrawableByArtist
         tRect(f64 x,     f64 y,
               f64 width, f64 height);
 
+        void beNull();
+        bool isNull() const;
+
         void normalize();
 
         tRect inset(f64 dx, f64 dy) const;
 
-        tBox toBox() const;
+        tRect intersect(tRect other) const;
+        tRect unionn(tRect other) const;
 
         tRect operator* (f64 a) const;
         tRect operator/ (f64 a) const;
+
+        tBox toBox() const;
 
         void drawWithArtist(iArtist& artist);
 
