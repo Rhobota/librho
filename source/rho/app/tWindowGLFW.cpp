@@ -150,6 +150,8 @@ u8 tWindowGLFW::numMonitors()
 
 tWindowGLFW::tWindowGLFW(u32 width, u32 height, string title)
     : m_initWidth(width), m_initHeight(height),
+      m_desiredWidth(width), m_desiredHeight(height), m_newSize(false),
+      m_currWidth(width), m_currHeight(height),
       m_initTitle(title), m_initFullscreen(false),
       m_initMonitorIndex(0),
       m_mainLoop(NULL), m_window(NULL),
@@ -161,6 +163,8 @@ tWindowGLFW::tWindowGLFW(u32 width, u32 height, string title)
 
 tWindowGLFW::tWindowGLFW(u8 monitorIndex, string title)
     : m_initWidth(0), m_initHeight(0),
+      m_desiredWidth(0), m_desiredHeight(0), m_newSize(false),
+      m_currWidth(0), m_currHeight(0),
       m_initTitle(title), m_initFullscreen(true),
       m_initMonitorIndex(monitorIndex),
       m_mainLoop(NULL), m_window(NULL),
@@ -190,6 +194,39 @@ bool tWindowGLFW::m_hasNewTitle(string& newTitle)
         return true;
     }
     return false;
+}
+
+void tWindowGLFW::setWindowSize(u32 width, u32 height)
+{
+    sync::tAutoSync as(m_mux);
+    if (width != m_desiredWidth || height != m_desiredHeight)
+    {
+        m_desiredWidth = width;
+        m_desiredHeight = height;
+        m_newSize = true;
+    }
+}
+
+bool tWindowGLFW::m_hasNewSize(u32& width, u32& height)
+{
+    sync::tAutoSync as(m_mux);
+    width = m_desiredWidth;
+    height = m_desiredHeight;
+    bool newSize = m_newSize;
+    m_newSize = false;
+    return newSize;
+}
+
+u32 tWindowGLFW::currWindowWidth() const
+{
+    sync::tAutoSync as(m_mux);
+    return m_currWidth;
+}
+
+u32 tWindowGLFW::currWindowHeight() const
+{
+    sync::tAutoSync as(m_mux);
+    return m_currHeight;
 }
 
 void tWindowGLFW::setCursorMode(int mode)
@@ -320,6 +357,11 @@ void tWindowGLFW::windowPosCallback(i32 xpos, i32 ypos)
 
 void tWindowGLFW::windowResizedCallback(u32 newWidth, u32 newHeight)
 {
+    sync::tAutoSync as(m_mux);
+    m_currWidth = newWidth;
+    m_currHeight = newHeight;
+    m_desiredWidth = newWidth;
+    m_desiredHeight = newHeight;
 }
 
 void tWindowGLFW::framebufferResizedCallback(u32 newWidth, u32 newHeight)
@@ -365,6 +407,10 @@ void tWindowGLFW::m_open(tMainLoopGLFW* mainLoop)
         const GLFWvidmode* vidmode = glfwGetVideoMode(monitor);
         m_initWidth = (u32)vidmode->width;
         m_initHeight = (u32)vidmode->height;
+        m_desiredWidth = m_initWidth;
+        m_desiredHeight = m_initHeight;
+        m_currWidth = m_initWidth;
+        m_currHeight = m_initHeight;
         m_window = glfwCreateWindow((int)m_initWidth, (int)m_initHeight, m_initTitle.c_str(),
                                      monitor, NULL);
     }

@@ -57,6 +57,21 @@ class iLearner
         virtual void evaluate(const tIO& input, tIO& output) const = 0;
 
         /**
+         * Resets the learner to its initial state.
+         */
+        virtual void reset() = 0;
+
+        /**
+         * Prints the learner's configuration in a readable format.
+         */
+        virtual void printLearnerInfo(std::ostream& out) const = 0;
+
+        /**
+         * Returns a single-line version of printLearnerInfo().
+         */
+        virtual std::string learnerInfoString() const = 0;
+
+        /**
          * Virtual dtor...
          */
         virtual ~iLearner() { }

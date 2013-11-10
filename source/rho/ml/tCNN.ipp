@@ -111,6 +111,104 @@ class tLayerCNN : public bNonCopyable
         }
     }
 
+    void m_poolOutput()
+    {
+        size_t outWidth = (m_stepsX+1) * m_numFeatureMapsInThisLayer;
+        size_t pooledoutIndex = 0;
+        for (u32 y = 0; y <= (m_stepsY+1-m_poolHeight); y += m_poolHeight)
+        {
+            for (u32 x = 0; x <= (m_stepsX+1-m_poolWidth); x += m_poolWidth)
+            {
+                size_t outputIndex = y*outWidth + x*m_numFeatureMapsInThisLayer;
+                for (u32 m = 0; m < m_numFeatureMapsInThisLayer; m++)
+                {
+                    size_t off = outputIndex + m;
+                    f64 maxval = m_output[off];
+                    for (u32 i = 0; i < m_poolHeight; i++)
+                    {
+                        size_t off2 = off;
+                        for (u32 j = 0; j < m_poolWidth; j++)
+                        {
+                            maxval = std::max(maxval, m_output[off2]);
+                            off2 += m_numFeatureMapsInThisLayer;
+                        }
+                        off += outWidth;
+                    }
+                    m_pooledOutput[pooledoutIndex++] = maxval;
+                }
+            }
+        }
+        assert(pooledoutIndex == m_pooledOutput.size());
+    }
+
+    void m_unpool_da_sparse()
+    {
+        size_t outWidth = (m_stepsX+1) * m_numFeatureMapsInThisLayer;
+        size_t pooledoutIndex = 0;
+        for (size_t i = 0; i < m_da.size(); i++)
+            m_da[i] = 0.0;
+        for (u32 y = 0; y <= (m_stepsY+1-m_poolHeight); y += m_poolHeight)
+        {
+            for (u32 x = 0; x <= (m_stepsX+1-m_poolWidth); x += m_poolWidth)
+            {
+                size_t outputIndex = y*outWidth + x*m_numFeatureMapsInThisLayer;
+                for (u32 m = 0; m < m_numFeatureMapsInThisLayer; m++)
+                {
+                    size_t off = outputIndex + m;
+                    f64 maxval = m_output[off];
+                    size_t maxi = off;
+                    for (u32 i = 0; i < m_poolHeight; i++)
+                    {
+                        size_t off2 = off;
+                        for (u32 j = 0; j < m_poolWidth; j++)
+                        {
+                            if (maxval < m_output[off2])
+                            {
+                                maxval = m_output[off2];
+                                maxi = off2;
+                            }
+                            off2 += m_numFeatureMapsInThisLayer;
+                        }
+                        off += outWidth;
+                    }
+                    m_da[maxi] = m_pooled_da[pooledoutIndex++];
+                }
+            }
+        }
+        assert(pooledoutIndex == m_pooled_da.size());
+    }
+
+    void m_unpool_da_dense()
+    {
+        size_t outWidth = (m_stepsX+1) * m_numFeatureMapsInThisLayer;
+        size_t pooledoutIndex = 0;
+        for (size_t i = 0; i < m_da.size(); i++)
+            m_da[i] = 0.0;
+        for (u32 y = 0; y <= m_stepsY; y += m_poolHeight)
+        {
+            for (u32 x = 0; x <= m_stepsX; x += m_poolWidth)
+            {
+                size_t outputIndex = y*outWidth + x*m_numFeatureMapsInThisLayer;
+                for (u32 m = 0; m < m_numFeatureMapsInThisLayer; m++)
+                {
+                    size_t off = outputIndex + m;
+                    for (u32 i = 0; i < m_poolHeight; i++)
+                    {
+                        size_t off2 = off;
+                        for (u32 j = 0; j < m_poolWidth; j++)
+                        {
+                            m_da[off2] = m_pooled_da[pooledoutIndex];
+                            off2 += m_numFeatureMapsInThisLayer;
+                        }
+                        off += outWidth;
+                    }
+                    pooledoutIndex++;
+                }
+            }
+        }
+        assert(pooledoutIndex == m_pooled_da.size());
+    }
+
     void m_accum_dw(vector< vector<f64> >& accum, vector< vector<f64> >& vals)
     {
         for (size_t s = 0; s < accum.size(); s++)
@@ -403,35 +501,10 @@ class tLayerCNN : public bNonCopyable
         }
         assert(outputIndex == m_output.size());
 
-        // Pool the output vector.
+        // Pool the output vector (only if we do pooling in this layer)
         if (m_poolWidth > 1 || m_poolHeight > 1)
         {
-            size_t outWidth = (m_stepsX+1) * m_numFeatureMapsInThisLayer;
-            size_t pooledoutIndex = 0;
-            for (u32 y = 0; y <= (m_stepsY+1-m_poolHeight); y += m_poolHeight)
-            {
-                for (u32 x = 0; x <= (m_stepsX+1-m_poolWidth); x += m_poolWidth)
-                {
-                    size_t outputIndex = y*outWidth + x*m_numFeatureMapsInThisLayer;
-                    for (u32 m = 0; m < m_numFeatureMapsInThisLayer; m++)
-                    {
-                        size_t off = outputIndex + m;
-                        f64 maxval = m_output[off];
-                        for (u32 i = 0; i < m_poolHeight; i++)
-                        {
-                            size_t off2 = off;
-                            for (u32 j = 0; j < m_poolWidth; j++)
-                            {
-                                maxval = std::max(maxval, m_output[off2]);
-                                off2 += m_numFeatureMapsInThisLayer;
-                            }
-                            off += outWidth;
-                        }
-                        m_pooledOutput[pooledoutIndex++] = maxval;
-                    }
-                }
-            }
-            assert(pooledoutIndex == m_pooledOutput.size());
+            m_poolOutput();   // <-- fills m_pooledOutput from the contents of m_output
         }
     }
 
@@ -448,6 +521,61 @@ class tLayerCNN : public bNonCopyable
         return m_output;
     }
 
+    vector<f64>& get_da()
+    {
+        if (m_poolWidth > 1 || m_poolHeight > 1)
+            return m_pooled_da;
+        else
+            return m_da;
+    }
+
+    void copy_da_to_output()
+    {
+        // Copy da to output.
+        for (size_t i = 0; i < m_da.size(); i++)
+            m_output[i] = m_da[i];
+
+        // Normalize the output vector so that it actually looks like legitimate
+        // output.
+        assert(m_output.size() > 0);
+        f64 minval = m_output[0];
+        f64 maxval = m_output[0];
+        for (size_t i = 1; i < m_output.size(); i++)
+        {
+            minval = std::min(minval, m_output[i]);
+            maxval = std::max(maxval, m_output[i]);
+        }
+        f64 absmax = std::max(std::fabs(minval), std::fabs(maxval));
+        f64 minpos = s_squash_min(getPrimaryLayer().layerType);
+        f64 maxpos = s_squash_max(getPrimaryLayer().layerType);
+        assert(minpos <= 0.0);  // <-- the code in the loop below needs these
+        assert(maxpos > 0.0);   // <-- to be true
+        for (size_t i = 0; i < m_output.size(); i++)
+        {
+            if (m_output[i] < 0.0)
+                m_output[i] = m_output[i] / absmax * -minpos;
+            else
+                m_output[i] = m_output[i] / absmax * maxpos;
+            assert(m_output[i] >= minpos && m_output[i] <= maxpos);
+        }
+
+        // Pool the output.
+        m_poolOutput();   // <-- fills m_pooledOutput from the contents of m_output
+
+        // Put output back into the output of each filter.
+        // (Opposite operation that is done at the end of takeInput())
+        size_t outputIndex = 0;
+        for (u32 i = 0; i < m_numLayers; i++)
+        {
+            for (u32 j = 0; j < m_layers[i].a.size(); j++)
+            {
+                m_layers[i].a[j] = m_output[outputIndex++];
+                m_layers[i].A[j] = 0.0;
+            }
+        }
+        assert(outputIndex == m_output.size());
+    }
+
     void accumError(const vector<f64>& prev_a)
     {
         u32 layerIndex = 0;
@@ -462,52 +590,15 @@ class tLayerCNN : public bNonCopyable
         assert(layerIndex == (m_stepsX+1)*(m_stepsY+1));
     }
 
-    vector<f64>& get_da()
-    {
-        if (m_poolWidth > 1 || m_poolHeight > 1)
-            return m_pooled_da;
-        else
-            return m_da;
-    }
-
-    void distribute_da()
+    void distribute_da(bool dense)
     {
         // If we do max pooling, we will need to expand the pooled da.
         if (m_poolWidth > 1 || m_poolHeight > 1)
         {
-            size_t outWidth = (m_stepsX+1) * m_numFeatureMapsInThisLayer;
-            size_t pooledoutIndex = 0;
-            for (size_t i = 0; i < m_da.size(); i++)
-                m_da[i] = 0.0;
-            for (u32 y = 0; y <= (m_stepsY+1-m_poolHeight); y += m_poolHeight)
-            {
-                for (u32 x = 0; x <= (m_stepsX+1-m_poolWidth); x += m_poolWidth)
-                {
-                    size_t outputIndex = y*outWidth + x*m_numFeatureMapsInThisLayer;
-                    for (u32 m = 0; m < m_numFeatureMapsInThisLayer; m++)
-                    {
-                        size_t off = outputIndex + m;
-                        f64 maxval = m_output[off];
-                        size_t maxi = off;
-                        for (u32 i = 0; i < m_poolHeight; i++)
-                        {
-                            size_t off2 = off;
-                            for (u32 j = 0; j < m_poolWidth; j++)
-                            {
-                                if (maxval < m_output[off2])
-                                {
-                                    maxval = m_output[off2];
-                                    maxi = off2;
-                                }
-                                off2 += m_numFeatureMapsInThisLayer;
-                            }
-                            off += outWidth;
-                        }
-                        m_da[maxi] = m_pooled_da[pooledoutIndex++];
-                    }
-                }
-            }
-            assert(pooledoutIndex == m_pooled_da.size());
+            if (dense)
+                m_unpool_da_dense();   // <-- fills m_da from the contents of m_pooled_da
+            else
+                m_unpool_da_sparse();  // <-- fills m_da from the contents of m_pooled_da
         }
 
         // Distribute.
@@ -866,13 +957,13 @@ void tCNN::addExample(const tIO& input, const tIO& target,
         assert(top_da.size() == actualOutput.size());
         for (u32 i = 0; i < top_da.size(); i++)
             top_da[i] = actualOutput[i] - target[i];
-        m_layers[m_numLayers-1].distribute_da();
+        m_layers[m_numLayers-1].distribute_da(false);
 
         for (u32 i = m_numLayers-1; i > 0; i--)
         {
             m_layers[i].accumError(m_layers[i-1].getOutput());
             m_layers[i].backpropagate(m_layers[i-1].get_da());
-            m_layers[i-1].distribute_da();
+            m_layers[i-1].distribute_da(false);
         }
 
         m_layers[0].accumError(input);
@@ -900,7 +991,12 @@ void tCNN::evaluate(const tIO& input, tIO& output) const
     output = m_layers[m_numLayers-1].getOutput();
 }
 
-void tCNN::printNetworkInfo(std::ostream& out) const
+void tCNN::reset()
+{
+    resetWeights();
+}
+
+void tCNN::printLearnerInfo(std::ostream& out) const
 {
     int colw = 20;
 
@@ -1011,7 +1107,28 @@ void tCNN::printNetworkInfo(std::ostream& out) const
     out << endl;
 }
 
-string tCNN::networkInfoString() const
+void tCNN::backpropagateMaxError(i32 outputDimensionIndex, tIO& errorOnInput)
+{
+    vector<f64>& top_da = m_layers[m_numLayers-1].get_da();
+    for (size_t i = 0; i < top_da.size(); i++)
+        top_da[i] = (outputDimensionIndex < 0 || i == (size_t)outputDimensionIndex) ? 1.0 : 0.0;
+    m_layers[m_numLayers-1].distribute_da(true);
+    m_layers[m_numLayers-1].copy_da_to_output();
+
+    for (u32 i = m_numLayers-1; i > 0; i--)
+    {
+        m_layers[i].accumError(m_layers[i-1].getOutput());
+        m_layers[i].backpropagate(m_layers[i-1].get_da());
+        m_layers[i-1].distribute_da(true);
+        m_layers[i-1].copy_da_to_output();
+    }
+
+    errorOnInput.resize(m_layers[0].getInputSize(), 0.0);
+    m_layers[0].accumError(errorOnInput);
+    m_layers[0].backpropagate(errorOnInput);
+}
+
+string tCNN::learnerInfoString() const
 {
     std::ostringstream out;
 
@@ -1117,13 +1234,19 @@ u32 tCNN::getNumReplicatedFilters(u32 layerIndex) const
     return m_layers[layerIndex].getNumLayers();
 }
 
-f64 tCNN::getOutput(u32 layerIndex, u32 mapIndex, u32 filterIndex) const
+f64 tCNN::getOutput(u32 layerIndex, u32 mapIndex, u32 filterIndex,
+                    f64* minValue, f64* maxValue) const
 {
     if (mapIndex >= getNumFeatureMaps(layerIndex))
         throw eInvalidArgument("No layer/map with that index.");
 
     if (filterIndex >= getNumReplicatedFilters(layerIndex))
         throw eInvalidArgument("No layer/filter with that index.");
+
+    if (minValue)
+        *minValue = s_squash_min(m_layers[layerIndex].getLayer(filterIndex).layerType);
+    if (maxValue)
+        *maxValue = s_squash_max(m_layers[layerIndex].getLayer(filterIndex).layerType);
 
     return m_layers[layerIndex].getLayer(filterIndex).a[mapIndex];
 }
@@ -1145,66 +1268,8 @@ void tCNN::getFeatureMapImage(u32 layerIndex, u32 mapIndex,
         width /= 3;
     }
 
-    // Normalize the weights to [0.0, 255.0].
-    f64 maxval = weights[0];
-    f64 minval = weights[0];
-    for (u32 i = 1; i < weights.size(); i++)
-    {
-        maxval = std::max(maxval, weights[i]);
-        minval = std::min(minval, weights[i]);
-    }
-    if (maxval == minval) maxval += 0.000001;
-    if (absolute)
-    {
-        f64 absmax = std::max(std::fabs(maxval), std::fabs(minval));
-        for (u32 i = 0; i < weights.size(); i++)
-            weights[i] = (std::fabs(weights[i]) / absmax) * 255.0;
-    }
-    else
-    {
-        for (u32 i = 0; i < weights.size(); i++)
-        {
-            f64 val = ((weights[i] - minval) / (maxval - minval)) * 255.0;
-            weights[i] = val;
-        }
-    }
-
-    // Calculate some stuff.
-    u32 pixWidth = color ? 3 : 1;
-    if ((weights.size() % pixWidth) > 0)
-        throw eLogicError("Pixels do not align with the number of weights.");
-    u32 numPix = (u32) weights.size() / pixWidth;
-    if ((numPix % width) > 0)
-        throw eLogicError("Cannot build image of that width. Last row not filled.");
-    u32 height = numPix / width;
-
-    // Create the image.
-    dest->setFormat(img::kRGB24);
-    dest->setBufSize(width*height*3);
-    dest->setBufUsed(width*height*3);
-    dest->setWidth(width);
-    dest->setHeight(height);
-    u8* buf = dest->buf();
-    u32 bufIndex = 0;
-    u32 wIndex = 0;
-    for (u32 i = 0; i < height; i++)
-    {
-        for (u32 j = 0; j < width; j++)
-        {
-            if (color)
-            {
-                buf[bufIndex++] = (u8) weights[wIndex++];
-                buf[bufIndex++] = (u8) weights[wIndex++];
-                buf[bufIndex++] = (u8) weights[wIndex++];
-            }
-            else
-            {
-                buf[bufIndex++] = (u8) weights[wIndex];
-                buf[bufIndex++] = (u8) weights[wIndex];
-                buf[bufIndex++] = (u8) weights[wIndex++];
-            }
-        }
-    }
+    // Use the image creating method in ml::common to do the work.
+    un_examplify(weights, color, width, absolute, dest);
 }
 
 void tCNN::getOutputImage(u32 layerIndex, u32 mapIndex,
@@ -1231,53 +1296,16 @@ void tCNN::getOutputImage(u32 layerIndex, u32 mapIndex,
         assert(width > 0);
     }
 
-    // Normalize the weights to [0.0, 255.0].
-    tANN::nLayerType type = m_layers[layerIndex].getPrimaryLayer().layerType;
-    f64 maxval = s_squash_max(type);
-    f64 minval = s_squash_min(type);
-    for (u32 i = 0; i < weights.size(); i++)
-    {
-        f64 val = ((weights[i] - minval) / (maxval - minval)) * 255.0;
-        weights[i] = val;
-    }
+    // Tell un_examplify() about the range of this data.
+    // (Note, when creating images from weight values, the range is (-inf, inf), so it
+    // is okay to let un_examplify() determine a good range itself, but here we know
+    // the range and we want the resulting image to represent the values relative to that
+    // range.
+    f64 minValue = s_squash_min(m_layers[layerIndex].getPrimaryLayer().layerType);
+    f64 maxValue = s_squash_max(m_layers[layerIndex].getPrimaryLayer().layerType);
 
-    // Calculate some stuff.
-    bool color = false;
-    u32 pixWidth = color ? 3 : 1;
-    if ((weights.size() % pixWidth) > 0)
-        throw eLogicError("Pixels do not align with the number of weights.");
-    u32 numPix = (u32) weights.size() / pixWidth;
-    if ((numPix % width) > 0)
-        throw eLogicError("Cannot build image of that width. Last row not filled.");
-    u32 height = numPix / width;
-
-    // Create the image.
-    dest->setFormat(img::kRGB24);
-    dest->setBufSize(width*height*3);
-    dest->setBufUsed(width*height*3);
-    dest->setWidth(width);
-    dest->setHeight(height);
-    u8* buf = dest->buf();
-    u32 bufIndex = 0;
-    u32 wIndex = 0;
-    for (u32 i = 0; i < height; i++)
-    {
-        for (u32 j = 0; j < width; j++)
-        {
-            if (color)
-            {
-                buf[bufIndex++] = (u8) weights[wIndex++];
-                buf[bufIndex++] = (u8) weights[wIndex++];
-                buf[bufIndex++] = (u8) weights[wIndex++];
-            }
-            else
-            {
-                buf[bufIndex++] = (u8) weights[wIndex];
-                buf[bufIndex++] = (u8) weights[wIndex];
-                buf[bufIndex++] = (u8) weights[wIndex++];
-            }
-        }
-    }
+    // Use the image creating method in ml::common to do the work.
+    un_examplify(weights, false, width, false, dest, &minValue, &maxValue);
 }
 
 void tCNN::pack(iWritable* out) const
