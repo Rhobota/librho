@@ -871,8 +871,10 @@ void visualize(iLearner* learner, const tIO& example,
 
 
 static
-bool s_ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& trainingSet,
-                                  const std::vector< std::pair<tIO, tIO> >& testSet,
+bool s_ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
+                                        std::vector< tIO >& trainTargets,
+                                  const std::vector< tIO >& testInputs,
+                                  const std::vector< tIO >& testTargets,
                                   u32 batchSize, u32 numEpochs,
                                   train_didUpdate_callback updateCallback,
                                   void* updateCallbackContext,
@@ -880,18 +882,21 @@ bool s_ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& trai
                                   void* epochCallbackContext,
                                   u32 foldIndex, u32 numFolds)
 {
-    if (trainingSet.size() == 0 || testSet.size() == 0)
+    if (trainInputs.size() != trainTargets.size())
+        throw eInvalidArgument("The number of training inputs does not match the number of training targets.");
+    if (testInputs.size() != testTargets.size())
+        throw eInvalidArgument("The number of testing inputs does not match the number of testing targets.");
+    if (trainInputs.size() == 0 || testInputs.size() == 0)
         throw eInvalidArgument("The training and test sets must each be non-empty.");
     if (batchSize == 0)
         throw eInvalidArgument("The batch size must be non-zero.");
     if (numEpochs == 0)
         throw eInvalidArgument("The number of training epochs must be non-zero.");
 
-    std::vector<tIO> trainInputs, trainTargets, trainOutputs;
+    std::vector<tIO> trainOutputs;
     tConfusionMatrix trainCM;
 
-    std::vector<tIO> testInputs, testTargets, testOutputs;
-    algo::unzip(testSet, testInputs, testTargets);
+    std::vector<tIO> testOutputs;
     tConfusionMatrix testCM;
 
     algo::tKnuthLCG lcg;
@@ -904,7 +909,6 @@ bool s_ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& trai
         // Train if this is not the zero'th epoch. This is so that the user will get a
         // callback before any training has happened, so that the user knows what the
         // initial state of the learner looks like.
-        algo::unzip(trainingSet, trainInputs, trainTargets);
         if (epochs > 0)
         {
             if (! train(learner, trainInputs, trainTargets,
@@ -914,7 +918,7 @@ bool s_ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& trai
             }
 
             // Shuffle the training data for the next iteration.
-            algo::shuffle(trainingSet, lcg);
+            algo::shuffle(trainInputs, trainTargets, lcg);
         }
 
         // Call the epoch observer.
@@ -937,14 +941,8 @@ bool s_ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& trai
             if (! epochCallback(learner,
                                 epochs, numEpochs-epochs,
                                 foldIndex, numFolds,
-                                trainingSet,
-                                testSet,
-                                trainOutputs,
-                                testOutputs,
-                                trainCM,
-                                testCM,
-                                trainSqrdError,
-                                testSqrdError,
+                                trainInputs, trainTargets, trainOutputs, trainCM, trainSqrdError,
+                                testInputs, testTargets, testOutputs, testCM, testSqrdError,
                                 elapsedTime,
                                 epochCallbackContext))
             {
@@ -956,8 +954,10 @@ bool s_ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& trai
     return true;
 }
 
-bool ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& trainingSet,
-                                const std::vector< std::pair<tIO, tIO> >& testSet,
+bool ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
+                                      std::vector< tIO >& trainTargets,
+                                const std::vector< tIO >& testInputs,
+                                const std::vector< tIO >& testTargets,
                                 u32 batchSize, u32 numEpochs,
                                 train_didUpdate_callback updateCallback,
                                 void* updateCallbackContext,
@@ -965,8 +965,8 @@ bool ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& traini
                                 void* epochCallbackContext)
 {
     return s_ezTrain(learner,
-                     trainingSet,
-                     testSet,
+                     trainInputs, trainTargets,
+                     testInputs, testTargets,
                      batchSize,
                      numEpochs,
                      updateCallback,
@@ -976,30 +976,47 @@ bool ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& traini
                      0, 1);
 }
 
-bool ezTrain(iLearner* learner, const std::vector< std::pair<tIO, tIO> >& allExamples,
+bool ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
+                                const std::vector< tIO >& allTargets,
                                 u32 batchSize, u32 numEpochsPerFold, u32 numFolds,
                                 train_didUpdate_callback updateCallback,
                                 void* updateCallbackContext,
                                 eztrain_didFinishEpoch_callback epochCallback,
                                 void* epochCallbackContext)
 {
+    if (allInputs.size() != allTargets.size())
+        throw eInvalidArgument("The number of input and target vectors must be the same!");
+    if (allInputs.size() == 0)
+        throw eInvalidArgument("There must be at least one example.");
+    if (numFolds == 0)
+        throw eInvalidArgument("Zero folds makes no sense.");
+    if (numFolds == 1)
+        throw eInvalidArgument("One fold makes no sense.");
+
     f64 frac = 1.0 / numFolds;
 
     for (u32 i = 0; i < numFolds; i++)
     {
         learner->reset();
 
-        // Get the training and test sets for this iteration:
-        u32 start = (u32) round((f64)allExamples.size() * frac*i);
-        u32 end   = (u32) round((f64)allExamples.size() * frac*(i+1));
-        std::vector< std::pair<tIO,tIO> > trainingSet = allExamples;
-        trainingSet.erase(trainingSet.begin()+start, trainingSet.begin()+end);
-        std::vector< std::pair<tIO,tIO> > testSet(allExamples.begin()+start, allExamples.begin()+end);
+        // Calculate the range of the test set.
+        u32 start = (u32) round((f64)allInputs.size() * frac*i);
+        u32 end   = (u32) round((f64)allInputs.size() * frac*(i+1));
+
+        // Build the training and test inputs.
+        std::vector< tIO > trainInputs = allInputs;
+        trainInputs.erase(trainInputs.begin()+start, trainInputs.begin()+end);
+        std::vector< tIO > testInputs(allInputs.begin()+start, allInputs.begin()+end);
+
+        // Build the training and test targets.
+        std::vector< tIO > trainTargets = allTargets;
+        trainTargets.erase(trainTargets.begin()+start, trainTargets.begin()+end);
+        std::vector< tIO > testTargets(allTargets.begin()+start, allTargets.begin()+end);
 
         // Train!
         bool cont = s_ezTrain(learner,
-                              trainingSet,
-                              testSet,
+                              trainInputs, trainTargets,
+                              testInputs, testTargets,
                               batchSize,
                               numEpochsPerFold,
                               updateCallback,

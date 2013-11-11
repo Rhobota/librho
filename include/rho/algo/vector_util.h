@@ -30,6 +30,9 @@ void unzip(const std::vector< std::pair<A,B> >& zipped, std::vector<A>& firstPar
 template <class A>
 void shuffle(std::vector<A>& v, iLCG& lcg = gDefaultLCG);
 
+template <class A, class B>
+void shuffle(std::vector<A>& a, std::vector<B>& b, iLCG& lcg = gDefaultLCG);   // <-- shuffles a and b in the same way
+
 template <class A>
 std::vector<A> mix(const std::vector<A>& a,
                    const std::vector<A>& b,

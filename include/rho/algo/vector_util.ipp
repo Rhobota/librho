@@ -57,6 +57,23 @@ void shuffle(std::vector<A>& v, iLCG& lcg)
 }
 
 
+template <class A, class B>
+void shuffle(std::vector<A>& a, std::vector<B>& b, iLCG& lcg)
+{
+    if (a.size() != b.size())
+        throw eInvalidArgument("The vectors must be the same size to shuffle them in the same way.");
+    if (a.size() == 0)
+        return;
+    for (std::size_t i = a.size()-1; i > 0; i--)
+    {
+        u64 rr = lcg.next();
+        u32 r = (u32)(rr % (i+1));
+        swap(a[i], a[r]);
+        swap(b[i], b[r]);
+    }
+}
+
+
 template <class A>
 std::vector<A> mix(const std::vector<A>& a, const std::vector<A>& b, iLCG& lcg)
 {

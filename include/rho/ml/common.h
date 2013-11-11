@@ -302,13 +302,15 @@ void visualize(iLearner* learner, const tIO& example,
 typedef bool (*eztrain_didFinishEpoch_callback)(iLearner* learner,
                                                 u32 epochsCompleted, u32 epochsRemaining,
                                                 u32 foldIndex, u32 numFolds,
-                                                const std::vector< std::pair<tIO, tIO> >& trainingSet,
-                                                const std::vector< std::pair<tIO, tIO> >& testSet,
+                                                const std::vector< tIO >& trainInputs,
+                                                const std::vector< tIO >& trainTargets,
                                                 const std::vector< tIO >& trainOutputs,
-                                                const std::vector< tIO >& testOutputs,
                                                 const tConfusionMatrix& trainCM,
-                                                const tConfusionMatrix& testCM,
                                                 f64 trainSqrdError,
+                                                const std::vector< tIO >& testInputs,
+                                                const std::vector< tIO >& testTargets,
+                                                const std::vector< tIO >& testOutputs,
+                                                const tConfusionMatrix& testCM,
                                                 f64 testSqrdError,
                                                 f64 epochTrainTimeInSeconds,
                                                 void* context);
@@ -330,8 +332,10 @@ typedef bool (*eztrain_didFinishEpoch_callback)(iLearner* learner,
  * This function is intended to replace calling train() in most
  * application where straight-forward training is needed.
  */
-bool ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& trainingSet,
-                                const std::vector< std::pair<tIO, tIO> >& testSet,
+bool ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
+                                      std::vector< tIO >& trainTargets,
+                                const std::vector< tIO >& testInputs,
+                                const std::vector< tIO >& testTargets,
                                 u32 batchSize, u32 numEpochs,
                                 train_didUpdate_callback updateCallback = NULL,
                                 void* updateCallbackContext = NULL,
@@ -360,7 +364,8 @@ bool ezTrain(iLearner* learner,       std::vector< std::pair<tIO, tIO> >& traini
  * replace calling train() in most application where straight-forward
  * x-fold cross-validation training is needed.
  */
-bool ezTrain(iLearner* learner, const std::vector< std::pair<tIO, tIO> >& allExamples,
+bool ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
+                                const std::vector< tIO >& allTargets,
                                 u32 batchSize, u32 numEpochsPerFold, u32 numFolds,
                                 train_didUpdate_callback updateCallback = NULL,
                                 void* updateCallbackContext = NULL,
