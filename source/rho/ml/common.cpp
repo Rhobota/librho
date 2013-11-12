@@ -871,7 +871,7 @@ void visualize(iLearner* learner, const tIO& example,
 
 
 static
-bool s_ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
+u32  s_ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
                                         std::vector< tIO >& trainTargets,
                                   const std::vector< tIO >& testInputs,
                                   const std::vector< tIO >& testTargets,
@@ -914,7 +914,7 @@ bool s_ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
             if (! train(learner, trainInputs, trainTargets,
                         batchSize, updateCallback, updateCallbackContext))
             {
-                return false;
+                return epochs-1;
             }
 
             // Shuffle the training data for the next iteration.
@@ -946,15 +946,15 @@ bool s_ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
                                 elapsedTime,
                                 epochCallbackContext))
             {
-                return false;
+                return epochs;
             }
         }
     }
 
-    return true;
+    return numEpochs;
 }
 
-bool ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
+u32  ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
                                       std::vector< tIO >& trainTargets,
                                 const std::vector< tIO >& testInputs,
                                 const std::vector< tIO >& testTargets,
@@ -976,7 +976,7 @@ bool ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
                      0, 1);
 }
 
-bool ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
+u32  ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
                                 const std::vector< tIO >& allTargets,
                                 u32 batchSize, u32 numEpochsPerFold, u32 numFolds,
                                 train_didUpdate_callback updateCallback,
@@ -994,6 +994,8 @@ bool ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
         throw eInvalidArgument("One fold makes no sense.");
 
     f64 frac = 1.0 / numFolds;
+
+    u32 accumEpochs = 0;
 
     for (u32 i = 0; i < numFolds; i++)
     {
@@ -1014,21 +1016,19 @@ bool ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
         std::vector< tIO > testTargets(allTargets.begin()+start, allTargets.begin()+end);
 
         // Train!
-        bool cont = s_ezTrain(learner,
-                              trainInputs, trainTargets,
-                              testInputs, testTargets,
-                              batchSize,
-                              numEpochsPerFold,
-                              updateCallback,
-                              updateCallbackContext,
-                              epochCallback,
-                              epochCallbackContext,
-                              i, numFolds);
-        if (! cont)
-            return false;
+        accumEpochs += s_ezTrain(learner,
+                                 trainInputs, trainTargets,
+                                 testInputs, testTargets,
+                                 batchSize,
+                                 numEpochsPerFold,
+                                 updateCallback,
+                                 updateCallbackContext,
+                                 epochCallback,
+                                 epochCallbackContext,
+                                 i, numFolds);
     }
 
-    return true;
+    return accumEpochs;
 }
 
 

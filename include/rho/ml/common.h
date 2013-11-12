@@ -288,7 +288,7 @@ void visualize(iLearner* learner, const tIO& example,
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
-// Training high-level helper:
+// Training medium-level helper:
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
@@ -297,7 +297,8 @@ void visualize(iLearner* learner, const tIO& example,
  * It should return true if all is well and training should continue.
  * It should return false if the training process should halt. This
  * is useful if you need to cancel training due to user input, or
- * something like that.
+ * if you detect that the network has been trained enough and is ready
+ * to be used.
  */
 typedef bool (*eztrain_didFinishEpoch_callback)(iLearner* learner,
                                                 u32 epochsCompleted, u32 epochsRemaining,
@@ -322,17 +323,17 @@ typedef bool (*eztrain_didFinishEpoch_callback)(iLearner* learner,
  * function above to train the learner on each epoch. This
  * function takes a callback function which it calls (if not
  * null) after each epoch with the most recent training results.
- * This function will aways pass foldIndex=0 and numFolds=1 to
+ * This function will always pass foldIndex=0 and numFolds=1 to
  * the callback function.
  *
- * This function returns true if the training process completed
- * fully, and it returns false if the callback function indicated
- * that training should halt.
+ * This function returns the number of epochs of training which
+ * were completed. This will equal 'numEpochs' unless the callback
+ * function indicates that training should halt early.
  *
  * This function is intended to replace calling train() in most
  * application where straight-forward training is needed.
  */
-bool ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
+u32  ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
                                       std::vector< tIO >& trainTargets,
                                 const std::vector< tIO >& testInputs,
                                 const std::vector< tIO >& testTargets,
@@ -360,11 +361,17 @@ bool ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
  * equal to numFolds passed into this function, and it will set
  * foldIndex equal to the index of the current fold (zero-indexed).
  *
+ * This function returns the number of epochs of training which
+ * were completed (accumulated over all the training folds). This
+ * will equal 'numEpochs * numFolds' unless the callback function
+ * indicates that training should halt early on one or more of the
+ * folds.
+ *
  * Like the above ezTrain() function, this function is intended to
  * replace calling train() in most application where straight-forward
  * x-fold cross-validation training is needed.
  */
-bool ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
+u32  ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
                                 const std::vector< tIO >& allTargets,
                                 u32 batchSize, u32 numEpochsPerFold, u32 numFolds,
                                 train_didUpdate_callback updateCallback = NULL,
