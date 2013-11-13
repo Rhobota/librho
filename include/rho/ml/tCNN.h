@@ -111,6 +111,9 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          *
          *    - kWeightUpRuleFixedLearningRate
          *         -- requires setAlpha()
+         *
+         *    - kWeightUpRuleMomentum
+         *         -- requires setAlpha() and setViscosity()
          */
         void setWeightUpRule(tANN::nWeightUpRule rule, u32 layerIndex);
         void setWeightUpRule(tANN::nWeightUpRule rule);
@@ -120,9 +123,20 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * all layers (second method). The alpha parameter is the
          * "fixed learning rate" parameter, used when the weight update
          * rule is kWeightUpRuleFixedLearningRate.
+         * This parameter is also used when the weight update rule
+         * is kWeightUpRuleMomentum.
          */
         void setAlpha(f64 alpha, u32 layerIndex);
         void setAlpha(f64 alpha);
+
+        /**
+         * Sets the viscosity of the network's weight velocities when using
+         * the momentum weight update rule (kWeightUpRuleMomentum).
+         * Sets the viscosity of one layer (first method) or all layers
+         * (second method).
+         */
+        void setViscosity(f64 viscosity, u32 layerIndex);
+        void setViscosity(f64 viscosity);
 
         //////////////////////////////////////////////////////////////////////
         // Training -- this is the iLearner interface
