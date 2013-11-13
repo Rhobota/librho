@@ -63,6 +63,8 @@ string s_weightUpRuleToString(tANN::nWeightUpRule rule)
             return "none";
         case tANN::kWeightUpRuleFixedLearningRate:
             return "fixedrate";
+        case tANN::kWeightUpRuleMomentum:
+            return "mmntm";
         default:
             assert(false);
     }
@@ -78,6 +80,8 @@ char s_weightUpRuleToChar(tANN::nWeightUpRule rule)
             return 'n';
         case tANN::kWeightUpRuleFixedLearningRate:
             return 'f';
+        case tANN::kWeightUpRuleMomentum:
+            return 'm';
         default:
             assert(false);
     }
@@ -168,6 +172,7 @@ class tLayer : public bNonCopyable
 
     vector< vector<f64> > w;   // <-- the weights connecting to the layer below
                                //                       (i.e. the previous layer)
+    vector< vector<f64> > vel; // <-- the weight velocities (when using momentum)
 
     vector< vector<f64> > dw_accum;   // dE/dw -- the error gradient wrt each weight
     u32 batchSize;                    // number of dE/dw inside dw_accum
@@ -185,6 +190,7 @@ class tLayer : public bNonCopyable
 
     tANN::nWeightUpRule weightUpRule;
     f64 alpha;
+    f64 viscosity;     // <-- used only with the momentum weight update rule
 
     /////////////////////////////////////////////////////////////////////////////////////
     // Methods...
@@ -207,6 +213,7 @@ class tLayer : public bNonCopyable
         dA = vector<f64>(mySize, 0.0);
         nz = vector<u32>(mySize, 0);
         w  = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
+        vel = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
         dw_accum = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
         batchSize = 0;
 
@@ -215,6 +222,7 @@ class tLayer : public bNonCopyable
         normalizeLayerInput = 1;
         weightUpRule = tANN::kWeightUpRuleNone;
         alpha = 0.0;
+        viscosity = 0.0;
 
         // Make sure all is well. (Of course it should be...)
         assertState(prevSize);
@@ -456,6 +464,26 @@ class tLayer : public bNonCopyable
                 break;
             }
 
+            case tANN::kWeightUpRuleMomentum:
+            {
+                if (alpha <= 0.0)
+                    throw eLogicError("When using the momentum update rule, alpha must be set.");
+                if (viscosity <= 0.0 || viscosity >= 1.0)
+                    throw eLogicError("When using the momentum update rule, viscosity must be set.");
+                f64 mult = (10.0 / batchSize) * alpha;
+                for (u32 s = 0; s < w.size(); s++)
+                {
+                    for (u32 i = 0; i < w[s].size(); i++)
+                    {
+                        vel[s][i] = viscosity*vel[s][i] - mult*dw_accum[s][i];
+                        w[s][i] += vel[s][i];
+                        dw_accum[s][i] = 0.0;
+                    }
+                }
+                batchSize = 0;
+                break;
+            }
+
             default:
             {
                 assert(false);
@@ -484,6 +512,12 @@ class tLayer : public bNonCopyable
 
             case tANN::kWeightUpRuleFixedLearningRate:
                 rho::pack(out, alpha);
+                break;
+
+            case tANN::kWeightUpRuleMomentum:
+                rho::pack(out, alpha);
+                rho::pack(out, viscosity);
+                // I'm not packing vel on purpose. I'll let it be all zeros on unpack().
                 break;
 
             default:
@@ -525,6 +559,12 @@ class tLayer : public bNonCopyable
 
             case tANN::kWeightUpRuleFixedLearningRate:
                 rho::unpack(in, alpha);
+                break;
+
+            case tANN::kWeightUpRuleMomentum:
+                rho::unpack(in, alpha);
+                rho::unpack(in, viscosity);
+                // Not unpacking vel, because it was not packed.
                 break;
 
             default:
@@ -661,6 +701,23 @@ void tANN::setAlpha(f64 alpha)
         setAlpha(alpha, i);
 }
 
+void tANN::setViscosity(f64 viscosity, u32 layerIndex)
+{
+    if (layerIndex >= m_numLayers)
+        throw eInvalidArgument("No layer with that index.");
+    if (viscosity <= 0.0 || viscosity >= 1.0)
+        throw eInvalidArgument("Viscosity must be greater than zero and less than one.");
+    m_layers[layerIndex].viscosity = viscosity;
+}
+
+void tANN::setViscosity(f64 viscosity)
+{
+    if (viscosity <= 0.0 || viscosity >= 1.0)
+        throw eInvalidArgument("Viscosity must be greater than zero and less than one.");
+    for (u32 i = 0; i < m_numLayers; i++)
+        setViscosity(viscosity, i);
+}
+
 void tANN::addExample(const tIO& input, const tIO& target,
                 tIO& actualOutput)
 {
@@ -774,6 +831,10 @@ void tANN::printLearnerInfo(std::ostream& out) const
             case kWeightUpRuleFixedLearningRate:
                 ss << "(a=" << m_layers[i].alpha << ")";
                 break;
+            case kWeightUpRuleMomentum:
+                ss << "(a=" << m_layers[i].alpha
+                   << ",v=" << m_layers[i].viscosity << ")";
+                break;
             default:
                 assert(false);
         }
@@ -808,6 +869,9 @@ string tANN::learnerInfoString() const
                 break;
             case kWeightUpRuleFixedLearningRate:
                 out << m_layers[i].alpha;
+                break;
+            case kWeightUpRuleMomentum:
+                out << m_layers[i].alpha << ',' << m_layers[i].viscosity;
                 break;
             default:
                 assert(false);

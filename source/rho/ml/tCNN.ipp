@@ -370,6 +370,7 @@ class tLayerCNN : public bNonCopyable
             assert(m_layers[i].normalizeLayerInput == m_layers[0].normalizeLayerInput);
             assert(m_layers[i].weightUpRule == m_layers[0].weightUpRule);
             assert(m_layers[i].alpha == m_layers[0].alpha);
+            assert(m_layers[i].viscosity == m_layers[0].viscosity);
         }
     }
 
@@ -398,6 +399,13 @@ class tLayerCNN : public bNonCopyable
         assert(alpha > 0.0);
         for (u32 i = 0; i < m_numLayers; i++)
             m_layers[i].alpha = alpha;
+    }
+
+    void setLayerViscosity(f64 viscosity)
+    {
+        assert(viscosity > 0.0 && viscosity < 1.0);
+        for (u32 i = 0; i < m_numLayers; i++)
+            m_layers[i].viscosity = viscosity;
     }
 
     tLayer& getPrimaryLayer()
@@ -922,6 +930,23 @@ void tCNN::setAlpha(f64 alpha)
         setAlpha(alpha, i);
 }
 
+void tCNN::setViscosity(f64 viscosity, u32 layerIndex)
+{
+    if (layerIndex >= m_numLayers)
+        throw eInvalidArgument("No layer with that index.");
+    if (viscosity <= 0.0 || viscosity >= 1.0)
+        throw eInvalidArgument("Viscosity must be greater than zero and less than one.");
+    m_layers[layerIndex].setLayerViscosity(viscosity);
+}
+
+void tCNN::setViscosity(f64 viscosity)
+{
+    if (viscosity <= 0.0 || viscosity >= 1.0)
+        throw eInvalidArgument("Viscosity must be greater than zero and less than one.");
+    for (u32 i = 0; i < m_numLayers; i++)
+        setViscosity(viscosity, i);
+}
+
 void tCNN::addExample(const tIO& input, const tIO& target,
                       tIO& actualOutput)
 {
@@ -1027,6 +1052,10 @@ void tCNN::printLearnerInfo(std::ostream& out) const
                 break;
             case tANN::kWeightUpRuleFixedLearningRate:
                 ss << "(a=" << m_layers[i].getPrimaryLayer().alpha << ")";
+                break;
+            case tANN::kWeightUpRuleMomentum:
+                ss << "(a=" << m_layers[i].getPrimaryLayer().alpha
+                   << ",v=" << m_layers[i].getPrimaryLayer().viscosity << ")";
                 break;
             default:
                 assert(false);
@@ -1160,6 +1189,10 @@ string tCNN::learnerInfoString() const
                 break;
             case tANN::kWeightUpRuleFixedLearningRate:
                 out << m_layers[i].getPrimaryLayer().alpha;
+                break;
+            case tANN::kWeightUpRuleMomentum:
+                out << m_layers[i].getPrimaryLayer().alpha << ','
+                    << m_layers[i].getPrimaryLayer().viscosity;
                 break;
             default:
                 assert(false);

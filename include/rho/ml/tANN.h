@@ -43,7 +43,8 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
         enum nWeightUpRule {
             kWeightUpRuleNone              = 0,  // no changes will be made to the weights
             kWeightUpRuleFixedLearningRate = 1,  // the standard fixed learning rate method
-            kWeightUpRuleMax               = 2   // marks the max of this enum (do not use)
+            kWeightUpRuleMomentum          = 2,  // the momentum learning rate method
+            kWeightUpRuleMax               = 3   // marks the max of this enum (do not use)
         };
 
         //////////////////////////////////////////////////////////////////////
@@ -145,6 +146,9 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          *
          *    - kWeightUpRuleFixedLearningRate
          *         -- requires setAlpha()
+         *
+         *    - kWeightUpRuleMomentum
+         *         -- requires setAlpha() and setViscosity()
          */
         void setWeightUpRule(nWeightUpRule rule, u32 layerIndex);
         void setWeightUpRule(nWeightUpRule rule);
@@ -154,9 +158,20 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * all layers (second method). The alpha parameter is the
          * "fixed learning rate" parameter, used when the weight update
          * rule is kWeightUpRuleFixedLearningRate.
+         * This parameter is also used when the weight update rule
+         * is kWeightUpRuleMomentum.
          */
         void setAlpha(f64 alpha, u32 layerIndex);
         void setAlpha(f64 alpha);
+
+        /**
+         * Sets the viscosity of the network's weight velocities when using
+         * the momentum weight update rule (kWeightUpRuleMomentum).
+         * Sets the viscosity of one layer (first method) or all layers
+         * (second method).
+         */
+        void setViscosity(f64 viscosity, u32 layerIndex);
+        void setViscosity(f64 viscosity);
 
         //////////////////////////////////////////////////////////////////////
         // Training -- this is the iLearner interface
