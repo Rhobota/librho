@@ -44,7 +44,8 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
             kWeightUpRuleNone              = 0,  // no changes will be made to the weights
             kWeightUpRuleFixedLearningRate = 1,  // the standard fixed learning rate method
             kWeightUpRuleMomentum          = 2,  // the momentum learning rate method
-            kWeightUpRuleMax               = 3   // marks the max of this enum (do not use)
+            kWeightUpRuleAdaptiveRates     = 3,  // the adaptive learning rates method (for full- or large-batch)
+            kWeightUpRuleMax               = 4   // marks the max of this enum (do not use)
         };
 
         //////////////////////////////////////////////////////////////////////
@@ -149,6 +150,10 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          *
          *    - kWeightUpRuleMomentum
          *         -- requires setAlpha() and setViscosity()
+         *
+         *    - kWeightUpRuleAdaptiveRates
+         *         -- requires setAlpha()
+         *         -- requires using full- or large-batch learning
          */
         void setWeightUpRule(nWeightUpRule rule, u32 layerIndex);
         void setWeightUpRule(nWeightUpRule rule);
@@ -158,8 +163,14 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * all layers (second method). The alpha parameter is the
          * "fixed learning rate" parameter, used when the weight update
          * rule is kWeightUpRuleFixedLearningRate.
+         *
          * This parameter is also used when the weight update rule
          * is kWeightUpRuleMomentum.
+         *
+         * This parameter is also used when the weight update rule
+         * is kWeightUpRuleAdaptiveRates for the "base rate".
+         * Note: If you use kWeightUpRuleAdaptiveRates, you must
+         * use full- or large-batch learning.
          */
         void setAlpha(f64 alpha, u32 layerIndex);
         void setAlpha(f64 alpha);
