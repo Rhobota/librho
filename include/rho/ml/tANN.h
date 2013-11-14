@@ -45,7 +45,8 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
             kWeightUpRuleFixedLearningRate = 1,  // the standard fixed learning rate method
             kWeightUpRuleMomentum          = 2,  // the momentum learning rate method
             kWeightUpRuleAdaptiveRates     = 3,  // the adaptive learning rates method (for full- or large-batch)
-            kWeightUpRuleMax               = 4   // marks the max of this enum (do not use)
+            kWeightUpRuleRPROP             = 4,  // the rprop full-batch method
+            kWeightUpRuleMax               = 5   // marks the max of this enum (do not use)
         };
 
         //////////////////////////////////////////////////////////////////////
@@ -154,6 +155,10 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          *    - kWeightUpRuleAdaptiveRates
          *         -- requires setAlpha()
          *         -- requires using full- or large-batch learning
+         *
+         *    - kWeightUpRuleRPROP
+         *         -- no extra parameters needed
+         *         -- requires full-batch learning
          */
         void setWeightUpRule(nWeightUpRule rule, u32 layerIndex);
         void setWeightUpRule(nWeightUpRule rule);
