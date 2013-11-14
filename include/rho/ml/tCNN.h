@@ -122,6 +122,10 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          *    - kWeightUpRuleRPROP
          *         -- no extra parameters needed
          *         -- requires full-batch learning
+         *
+         *    - kWeightUpRuleRMSPROP
+         *         -- requires setAlpha()
+         *         -- this is a mini-batch version of the rprop method
          */
         void setWeightUpRule(tANN::nWeightUpRule rule, u32 layerIndex);
         void setWeightUpRule(tANN::nWeightUpRule rule);
@@ -139,6 +143,9 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * is kWeightUpRuleAdaptiveRates for the "base rate".
          * Note: If you use kWeightUpRuleAdaptiveRates, you must
          * use full- or large-batch learning.
+         *
+         * This parameter is also used when the weight update rule
+         * is kWeightUpRuleRMSPROP.
          */
         void setAlpha(f64 alpha, u32 layerIndex);
         void setAlpha(f64 alpha);
