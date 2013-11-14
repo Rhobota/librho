@@ -65,6 +65,8 @@ string s_weightUpRuleToString(tANN::nWeightUpRule rule)
             return "fixedrate";
         case tANN::kWeightUpRuleMomentum:
             return "mmntm";
+        case tANN::kWeightUpRuleAdaptiveRates:
+            return "adptvrates";
         default:
             assert(false);
     }
@@ -82,6 +84,8 @@ char s_weightUpRuleToChar(tANN::nWeightUpRule rule)
             return 'f';
         case tANN::kWeightUpRuleMomentum:
             return 'm';
+        case tANN::kWeightUpRuleAdaptiveRates:
+            return 'a';
         default:
             assert(false);
     }
@@ -177,6 +181,9 @@ class tLayer : public bNonCopyable
     vector< vector<f64> > dw_accum;   // dE/dw -- the error gradient wrt each weight
     u32 batchSize;                    // number of dE/dw inside dw_accum
 
+    vector< vector<f64> > gain;            // learning rate gain for each weight (when using adaptive rates)
+    vector< vector<f64> > dw_accum_prev;   // previous dE/dw -- (when using adaptive rates)
+
     /////////////////////////////////////////////////////////////////////////////////////
     // Behavioral state -- defines the squashing function and derivative calculations
     /////////////////////////////////////////////////////////////////////////////////////
@@ -215,6 +222,8 @@ class tLayer : public bNonCopyable
         w  = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
         vel = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
         dw_accum = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
+        gain = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 1.0));
+        dw_accum_prev = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
         batchSize = 0;
 
         // Setup behavioral state to the default values.
@@ -484,6 +493,26 @@ class tLayer : public bNonCopyable
                 break;
             }
 
+            case tANN::kWeightUpRuleAdaptiveRates:
+            {
+                if (alpha <= 0.0)
+                    throw eLogicError("When using the adaptive learning rates rule, alpha must be set.");
+                f64 mult = (10.0 / batchSize) * alpha;
+                for (u32 s = 0; s < w.size(); s++)
+                {
+                    for (u32 i = 0; i < w[s].size(); i++)
+                    {
+                        gain[s][i] = (dw_accum[s][i] * dw_accum_prev[s][i] > 0.0) ? (gain[s][i] + 0.05)
+                                                                                  : (gain[s][i] * 0.95);
+                        w[s][i] -= mult * gain[s][i] * dw_accum[s][i];
+                        dw_accum_prev[s][i] = dw_accum[s][i];
+                        dw_accum[s][i] = 0.0;
+                    }
+                }
+                batchSize = 0;
+                break;
+            }
+
             default:
             {
                 assert(false);
@@ -511,6 +540,7 @@ class tLayer : public bNonCopyable
                 break;
 
             case tANN::kWeightUpRuleFixedLearningRate:
+            case tANN::kWeightUpRuleAdaptiveRates:
                 rho::pack(out, alpha);
                 break;
 
@@ -558,6 +588,7 @@ class tLayer : public bNonCopyable
                 break;
 
             case tANN::kWeightUpRuleFixedLearningRate:
+            case tANN::kWeightUpRuleAdaptiveRates:
                 rho::unpack(in, alpha);
                 break;
 
@@ -829,6 +860,7 @@ void tANN::printLearnerInfo(std::ostream& out) const
             case kWeightUpRuleNone:
                 break;
             case kWeightUpRuleFixedLearningRate:
+            case kWeightUpRuleAdaptiveRates:
                 ss << "(a=" << m_layers[i].alpha << ")";
                 break;
             case kWeightUpRuleMomentum:
@@ -868,6 +900,7 @@ string tANN::learnerInfoString() const
             case kWeightUpRuleNone:
                 break;
             case kWeightUpRuleFixedLearningRate:
+            case kWeightUpRuleAdaptiveRates:
                 out << m_layers[i].alpha;
                 break;
             case kWeightUpRuleMomentum:

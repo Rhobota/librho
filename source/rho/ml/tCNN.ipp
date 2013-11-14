@@ -1051,6 +1051,7 @@ void tCNN::printLearnerInfo(std::ostream& out) const
             case tANN::kWeightUpRuleNone:
                 break;
             case tANN::kWeightUpRuleFixedLearningRate:
+            case tANN::kWeightUpRuleAdaptiveRates:
                 ss << "(a=" << m_layers[i].getPrimaryLayer().alpha << ")";
                 break;
             case tANN::kWeightUpRuleMomentum:
@@ -1188,6 +1189,7 @@ string tCNN::learnerInfoString() const
             case tANN::kWeightUpRuleNone:
                 break;
             case tANN::kWeightUpRuleFixedLearningRate:
+            case tANN::kWeightUpRuleAdaptiveRates:
                 out << m_layers[i].getPrimaryLayer().alpha;
                 break;
             case tANN::kWeightUpRuleMomentum:
