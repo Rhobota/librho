@@ -118,6 +118,10 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          *    - kWeightUpRuleAdaptiveRates
          *         -- requires setAlpha()
          *         -- requires using full- or large-batch learning
+         *
+         *    - kWeightUpRuleRPROP
+         *         -- no extra parameters needed
+         *         -- requires full-batch learning
          */
         void setWeightUpRule(tANN::nWeightUpRule rule, u32 layerIndex);
         void setWeightUpRule(tANN::nWeightUpRule rule);

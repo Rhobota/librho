@@ -67,6 +67,8 @@ string s_weightUpRuleToString(tANN::nWeightUpRule rule)
             return "mmntm";
         case tANN::kWeightUpRuleAdaptiveRates:
             return "adptvrates";
+        case tANN::kWeightUpRuleRPROP:
+            return "rprop";
         default:
             assert(false);
     }
@@ -86,6 +88,8 @@ char s_weightUpRuleToChar(tANN::nWeightUpRule rule)
             return 'm';
         case tANN::kWeightUpRuleAdaptiveRates:
             return 'a';
+        case tANN::kWeightUpRuleRPROP:
+            return 'r';
         default:
             assert(false);
     }
@@ -182,7 +186,8 @@ class tLayer : public bNonCopyable
     u32 batchSize;                    // number of dE/dw inside dw_accum
 
     vector< vector<f64> > gain;            // learning rate gain for each weight (when using adaptive rates)
-    vector< vector<f64> > dw_accum_prev;   // previous dE/dw -- (when using adaptive rates)
+    vector< vector<f64> > step;            // step size for each weight (when using rprop)
+    vector< vector<f64> > dw_accum_prev;   // previous dE/dw -- (when using adaptive rates or when using rprop)
 
     /////////////////////////////////////////////////////////////////////////////////////
     // Behavioral state -- defines the squashing function and derivative calculations
@@ -247,6 +252,12 @@ class tLayer : public bNonCopyable
                 w[s][i] += rmin;                              // [rmin, rmax]
             }
         }
+
+        // Reset the state used to update the weight, in case it's applicable.
+        vel.clear();
+        gain.clear();
+        step.clear();
+        dw_accum_prev.clear();
     }
 
     void init(u32 prevSize, u32 mySize,
@@ -508,9 +519,34 @@ class tLayer : public bNonCopyable
                     {
                         gain[s][i] = (dw_accum[s][i] * dw_accum_prev[s][i] > 0.0) ? (gain[s][i] + 0.05)
                                                                                   : (gain[s][i] * 0.95);
-                        if (gain[s][i] > 100.0) gain[s][i] = 100.0;
-                        if (gain[s][i] < 0.01)  gain[s][i] = 0.01;
+                        if (gain[s][i] > 10.0) gain[s][i] = 10.0;
+                        if (gain[s][i] < 0.1)  gain[s][i] = 0.1;
                         w[s][i] -= mult * gain[s][i] * dw_accum[s][i];
+                        dw_accum_prev[s][i] = dw_accum[s][i];
+                        dw_accum[s][i] = 0.0;
+                    }
+                }
+                batchSize = 0;
+                break;
+            }
+
+            case tANN::kWeightUpRuleRPROP:
+            {
+                if (step.size() == 0)
+                {
+                    step = vector< vector<f64> >(w.size(), vector<f64>(w[0].size(), 0.001));
+                    dw_accum_prev = vector< vector<f64> >(w.size(), vector<f64>(w[0].size(), 0.0));
+                }
+                for (u32 s = 0; s < w.size(); s++)
+                {
+                    for (u32 i = 0; i < w[s].size(); i++)
+                    {
+                        step[s][i] = (dw_accum[s][i] * dw_accum_prev[s][i] > 0.0) ? (step[s][i] * 1.2)
+                                                                                  : (step[s][i] * 0.5);
+                        if (step[s][i] > 1.0) step[s][i] = 1.0;
+                        if (step[s][i] < 0.000001)  step[s][i] = 0.000001;
+                        w[s][i] = (dw_accum[s][i] > 0.0) ? (w[s][i] - step[s][i])
+                                                         : (w[s][i] + step[s][i]);
                         dw_accum_prev[s][i] = dw_accum[s][i];
                         dw_accum[s][i] = 0.0;
                     }
@@ -543,6 +579,7 @@ class tLayer : public bNonCopyable
         switch (weightUpRule)
         {
             case tANN::kWeightUpRuleNone:
+            case tANN::kWeightUpRuleRPROP:
                 break;
 
             case tANN::kWeightUpRuleFixedLearningRate:
@@ -591,6 +628,7 @@ class tLayer : public bNonCopyable
         switch (weightUpRule)
         {
             case tANN::kWeightUpRuleNone:
+            case tANN::kWeightUpRuleRPROP:
                 break;
 
             case tANN::kWeightUpRuleFixedLearningRate:
@@ -864,6 +902,7 @@ void tANN::printLearnerInfo(std::ostream& out) const
         switch (m_layers[i].weightUpRule)
         {
             case kWeightUpRuleNone:
+            case kWeightUpRuleRPROP:
                 break;
             case kWeightUpRuleFixedLearningRate:
             case kWeightUpRuleAdaptiveRates:
@@ -904,6 +943,7 @@ string tANN::learnerInfoString() const
         switch (m_layers[i].weightUpRule)
         {
             case kWeightUpRuleNone:
+            case kWeightUpRuleRPROP:
                 break;
             case kWeightUpRuleFixedLearningRate:
             case kWeightUpRuleAdaptiveRates:
