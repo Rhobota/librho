@@ -220,10 +220,7 @@ class tLayer : public bNonCopyable
         dA = vector<f64>(mySize, 0.0);
         nz = vector<u32>(mySize, 0);
         w  = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
-        vel = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
         dw_accum = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
-        gain = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 1.0));
-        dw_accum_prev = vector< vector<f64> >(prevSize+1, vector<f64>(mySize, 0.0));
         batchSize = 0;
 
         // Setup behavioral state to the default values.
@@ -479,6 +476,8 @@ class tLayer : public bNonCopyable
                     throw eLogicError("When using the momentum update rule, alpha must be set.");
                 if (viscosity <= 0.0 || viscosity >= 1.0)
                     throw eLogicError("When using the momentum update rule, viscosity must be set.");
+                if (vel.size() == 0)
+                    vel = vector< vector<f64> >(w.size(), vector<f64>(w[0].size(), 0.0));
                 f64 mult = (10.0 / batchSize) * alpha;
                 for (u32 s = 0; s < w.size(); s++)
                 {
@@ -498,12 +497,19 @@ class tLayer : public bNonCopyable
                 if (alpha <= 0.0)
                     throw eLogicError("When using the adaptive learning rates rule, alpha must be set.");
                 f64 mult = (10.0 / batchSize) * alpha;
+                if (gain.size() == 0)
+                {
+                    gain = vector< vector<f64> >(w.size(), vector<f64>(w[0].size(), 1.0));
+                    dw_accum_prev = vector< vector<f64> >(w.size(), vector<f64>(w[0].size(), 0.0));
+                }
                 for (u32 s = 0; s < w.size(); s++)
                 {
                     for (u32 i = 0; i < w[s].size(); i++)
                     {
                         gain[s][i] = (dw_accum[s][i] * dw_accum_prev[s][i] > 0.0) ? (gain[s][i] + 0.05)
                                                                                   : (gain[s][i] * 0.95);
+                        if (gain[s][i] > 100.0) gain[s][i] = 100.0;
+                        if (gain[s][i] < 0.01)  gain[s][i] = 0.01;
                         w[s][i] -= mult * gain[s][i] * dw_accum[s][i];
                         dw_accum_prev[s][i] = dw_accum[s][i];
                         dw_accum[s][i] = 0.0;
