@@ -69,6 +69,8 @@ string s_weightUpRuleToString(tANN::nWeightUpRule rule)
             return "adptvrates";
         case tANN::kWeightUpRuleRPROP:
             return "rprop";
+        case tANN::kWeightUpRuleRMSPROP:
+            return "rmsprop";
         default:
             assert(false);
     }
@@ -90,6 +92,8 @@ char s_weightUpRuleToChar(tANN::nWeightUpRule rule)
             return 'a';
         case tANN::kWeightUpRuleRPROP:
             return 'r';
+        case tANN::kWeightUpRuleRMSPROP:
+            return 'R';
         default:
             assert(false);
     }
@@ -189,6 +193,8 @@ class tLayer : public bNonCopyable
     vector< vector<f64> > step;            // step size for each weight (when using rprop)
     vector< vector<f64> > dw_accum_prev;   // previous dE/dw -- (when using adaptive rates or when using rprop)
 
+    vector< vector<f64> > dw_accum_avg;   // moving average of dE/dw -- (when using rmsprop)
+
     /////////////////////////////////////////////////////////////////////////////////////
     // Behavioral state -- defines the squashing function and derivative calculations
     /////////////////////////////////////////////////////////////////////////////////////
@@ -258,6 +264,7 @@ class tLayer : public bNonCopyable
         gain.clear();
         step.clear();
         dw_accum_prev.clear();
+        dw_accum_avg.clear();
     }
 
     void init(u32 prevSize, u32 mySize,
@@ -555,6 +562,26 @@ class tLayer : public bNonCopyable
                 break;
             }
 
+            case tANN::kWeightUpRuleRMSPROP:
+            {
+                if (alpha <= 0.0)
+                    throw eLogicError("When using the rmsprop rule, alpha must be set.");
+                f64 mult = (10.0 / batchSize) * alpha;
+                if (dw_accum_avg.size() == 0)
+                    dw_accum_avg = vector< vector<f64> >(w.size(), vector<f64>(w[0].size(), 1000.0));
+                for (u32 s = 0; s < w.size(); s++)
+                {
+                    for (u32 i = 0; i < w[s].size(); i++)
+                    {
+                        dw_accum_avg[s][i] = 0.9*dw_accum_avg[s][i] + 0.1*dw_accum[s][i]*dw_accum[s][i];
+                        w[s][i] -= mult * dw_accum[s][i] / std::sqrt(dw_accum_avg[s][i]);
+                        dw_accum[s][i] = 0.0;
+                    }
+                }
+                batchSize = 0;
+                break;
+            }
+
             default:
             {
                 assert(false);
@@ -584,6 +611,7 @@ class tLayer : public bNonCopyable
 
             case tANN::kWeightUpRuleFixedLearningRate:
             case tANN::kWeightUpRuleAdaptiveRates:
+            case tANN::kWeightUpRuleRMSPROP:
                 rho::pack(out, alpha);
                 break;
 
@@ -633,6 +661,7 @@ class tLayer : public bNonCopyable
 
             case tANN::kWeightUpRuleFixedLearningRate:
             case tANN::kWeightUpRuleAdaptiveRates:
+            case tANN::kWeightUpRuleRMSPROP:
                 rho::unpack(in, alpha);
                 break;
 
@@ -906,6 +935,7 @@ void tANN::printLearnerInfo(std::ostream& out) const
                 break;
             case kWeightUpRuleFixedLearningRate:
             case kWeightUpRuleAdaptiveRates:
+            case kWeightUpRuleRMSPROP:
                 ss << "(a=" << m_layers[i].alpha << ")";
                 break;
             case kWeightUpRuleMomentum:
@@ -947,6 +977,7 @@ string tANN::learnerInfoString() const
                 break;
             case kWeightUpRuleFixedLearningRate:
             case kWeightUpRuleAdaptiveRates:
+            case kWeightUpRuleRMSPROP:
                 out << m_layers[i].alpha;
                 break;
             case kWeightUpRuleMomentum:
