@@ -553,6 +553,7 @@ class tLayerCNN : public bNonCopyable
             minval = std::min(minval, m_output[i]);
             maxval = std::max(maxval, m_output[i]);
         }
+        if (minval == maxval) maxval += 0.000001;
         f64 absmax = std::max(std::fabs(minval), std::fabs(maxval));
         f64 minpos = s_squash_min(getPrimaryLayer().layerType);
         f64 maxpos = s_squash_max(getPrimaryLayer().layerType);
