@@ -119,6 +119,8 @@ void un_examplify(const tIO& io, bool color, u32 width,
 {
     if (io.size() == 0)
         throw eInvalidArgument("The example io must have at least one dimension!");
+    if (width == 0)
+        throw eInvalidArgument("Width may not be zero.");
 
     // Create a copy of io that can be modified.
     std::vector<f64> weights = io;
@@ -220,13 +222,26 @@ void zscore(std::vector<tIO>& trainingInputs, std::vector<tIO>& testInputs)
     f64 mean = algo::mean(trainingInputs);
     f64 stddev = algo::stddev(trainingInputs);
 
-    for (size_t i = 0; i < trainingInputs.size(); i++)
-        for (size_t j = 0; j < trainingInputs[i].size(); j++)
-            trainingInputs[i][j] = (trainingInputs[i][j]-mean) / stddev;
+    if (stddev != 0.0)
+    {
+        for (size_t i = 0; i < trainingInputs.size(); i++)
+            for (size_t j = 0; j < trainingInputs[i].size(); j++)
+                trainingInputs[i][j] = (trainingInputs[i][j]-mean) / stddev;
 
-    for (size_t i = 0; i < testInputs.size(); i++)
-        for (size_t j = 0; j < testInputs[i].size(); j++)
-            testInputs[i][j] = (testInputs[i][j]-mean) / stddev;
+        for (size_t i = 0; i < testInputs.size(); i++)
+            for (size_t j = 0; j < testInputs[i].size(); j++)
+                testInputs[i][j] = (testInputs[i][j]-mean) / stddev;
+    }
+    else
+    {
+        for (size_t i = 0; i < trainingInputs.size(); i++)
+            for (size_t j = 0; j < trainingInputs[i].size(); j++)
+                trainingInputs[i][j] = 0.0;
+
+        for (size_t i = 0; i < testInputs.size(); i++)
+            for (size_t j = 0; j < testInputs[i].size(); j++)
+                testInputs[i][j] = 0.0;
+    }
 }
 
 

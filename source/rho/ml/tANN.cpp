@@ -326,8 +326,17 @@ class tLayer : public bNonCopyable
                 a[i] = std::min(std::exp(A[i]), 1e100);
                 denom += a[i];
             }
-            for (u32 i = 0; i < a.size(); i++)
-                a[i] /= denom;
+            if (denom != 0.0)
+            {
+                for (u32 i = 0; i < a.size(); i++)
+                    a[i] /= denom;
+            }
+            else
+            {
+                f64 val = 1.0 / ((f64)a.size());
+                for (u32 i = 0; i < a.size(); i++)
+                    a[i] = val;
+            }
         }
         else
         {
@@ -436,6 +445,7 @@ class tLayer : public bNonCopyable
             minval = std::min(minval, a[i]);
             maxval = std::max(maxval, a[i]);
         }
+        if (minval == maxval) maxval += 0.000001;
         f64 absmax = std::max(std::fabs(minval), std::fabs(maxval));
         f64 minpos = s_squash_min(layerType);
         f64 maxpos = s_squash_max(layerType);
@@ -458,6 +468,9 @@ class tLayer : public bNonCopyable
 
     void updateWeights()
     {
+        if (batchSize == 0)
+            throw eLogicError("You must add at least one example before updating the weights.");
+
         assertState(w.size()-1);
 
         switch (weightUpRule)
@@ -574,7 +587,8 @@ class tLayer : public bNonCopyable
                     for (u32 i = 0; i < w[s].size(); i++)
                     {
                         dw_accum_avg[s][i] = 0.9*dw_accum_avg[s][i] + 0.1*dw_accum[s][i]*dw_accum[s][i];
-                        w[s][i] -= mult * dw_accum[s][i] / std::sqrt(dw_accum_avg[s][i]);
+                        if (dw_accum_avg[s][i] != 0.0)
+                            w[s][i] -= mult * dw_accum[s][i] / std::sqrt(dw_accum_avg[s][i]);
                         dw_accum[s][i] = 0.0;
                     }
                 }
