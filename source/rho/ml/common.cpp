@@ -890,7 +890,7 @@ u32  s_ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
                                         std::vector< tIO >& trainTargets,
                                   const std::vector< tIO >& testInputs,
                                   const std::vector< tIO >& testTargets,
-                                  u32 batchSize, u32 numEpochs,
+                                  u32 batchSize,
                                   train_didUpdate_callback updateCallback,
                                   void* updateCallbackContext,
                                   eztrain_didFinishEpoch_callback epochCallback,
@@ -905,8 +905,6 @@ u32  s_ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
         throw eInvalidArgument("The training and test sets must each be non-empty.");
     if (batchSize == 0)
         throw eInvalidArgument("The batch size must be non-zero.");
-    if (numEpochs == 0)
-        throw eInvalidArgument("The number of training epochs must be non-zero.");
 
     std::vector<tIO> trainOutputs;
     tConfusionMatrix trainCM;
@@ -916,7 +914,7 @@ u32  s_ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
 
     algo::tKnuthLCG lcg;
 
-    for (u32 epochs = 0; epochs <= numEpochs; epochs++)
+    for (u32 epochs = 0; true; epochs++)
     {
         // Note the start time of this epoch.
         u64 startTime = sync::tTimer::usecTime();
@@ -942,22 +940,20 @@ u32  s_ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
             // Evaluate the network on the training set.
             evaluate(learner, trainInputs, trainOutputs);
             buildConfusionMatrix(trainOutputs, trainTargets, trainCM);
-            f64 trainSqrdError = standardSquaredError(trainOutputs, trainTargets);
 
             // Evaluate the network on the test set.
             evaluate(learner, testInputs, testOutputs);
             buildConfusionMatrix(testOutputs, testTargets, testCM);
-            f64 testSqrdError = standardSquaredError(testOutputs, testTargets);
 
             // Calculate the elapsed time.
             f64 elapsedTime = (f64)(sync::tTimer::usecTime() - startTime);
             elapsedTime /= 1000000;  // usecs to secs
 
             if (! epochCallback(learner,
-                                epochs, numEpochs-epochs,
+                                epochs,
                                 foldIndex, numFolds,
-                                trainInputs, trainTargets, trainOutputs, trainCM, trainSqrdError,
-                                testInputs, testTargets, testOutputs, testCM, testSqrdError,
+                                trainInputs, trainTargets, trainOutputs, trainCM,
+                                testInputs, testTargets, testOutputs, testCM,
                                 elapsedTime,
                                 epochCallbackContext))
             {
@@ -965,15 +961,13 @@ u32  s_ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
             }
         }
     }
-
-    return numEpochs;
 }
 
 u32  ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
                                       std::vector< tIO >& trainTargets,
                                 const std::vector< tIO >& testInputs,
                                 const std::vector< tIO >& testTargets,
-                                u32 batchSize, u32 numEpochs,
+                                u32 batchSize,
                                 train_didUpdate_callback updateCallback,
                                 void* updateCallbackContext,
                                 eztrain_didFinishEpoch_callback epochCallback,
@@ -983,7 +977,6 @@ u32  ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
                      trainInputs, trainTargets,
                      testInputs, testTargets,
                      batchSize,
-                     numEpochs,
                      updateCallback,
                      updateCallbackContext,
                      epochCallback,
@@ -993,7 +986,7 @@ u32  ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
 
 u32  ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
                                 const std::vector< tIO >& allTargets,
-                                u32 batchSize, u32 numEpochsPerFold, u32 numFolds,
+                                u32 batchSize, u32 numFolds,
                                 train_didUpdate_callback updateCallback,
                                 void* updateCallbackContext,
                                 eztrain_didFinishEpoch_callback epochCallback,
@@ -1035,7 +1028,6 @@ u32  ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
                                  trainInputs, trainTargets,
                                  testInputs, testTargets,
                                  batchSize,
-                                 numEpochsPerFold,
                                  updateCallback,
                                  updateCallbackContext,
                                  epochCallback,
