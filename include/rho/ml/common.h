@@ -236,32 +236,37 @@ f64  recall(const tConfusionMatrix& confusionMatrix);
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-/**
- * This callback function is used by train(). It should
- * return true if all is well and training should continue.
- * It should return false if the training process should
- * halt. This is useful if you need to cancel training
- * due to user input, or something like that.
- */
-typedef bool (*train_didUpdate_callback)(iLearner* learner,
-                                         const std::vector<tIO>& mostRecentBatch,
-                                         void* context);
+class iTrainObserver
+{
+    public:
+
+        /**
+         * This method is called by the train() function below after
+         * update() has been called on the given learner. It should
+         * return true if all is well and training should continue.
+         * It should return false if the training process should
+         * halt. This is useful if you need to cancel training
+         * due to user input, or something like that.
+         */
+        virtual bool didUpdate(iLearner* learner, const std::vector<tIO>& mostRecentBatch) = 0;
+
+        virtual ~iTrainObserver() { }
+};
 
 /**
  * This function trains the leaner on the given examples,
- * calling the callback function after each batch has been
+ * calling the training observer after each batch has been
  * processed by the learner. This function returns true if
  * the training process completed fully, and it returns false
- * if the callback function indicated that training should
- * halt.
+ * if the training observer indicated that training should
+ * halt early.
  *
  * Use this for training on the training-set.
  */
 bool train(iLearner* learner, const std::vector<tIO>& inputs,
                               const std::vector<tIO>& targets,
                               u32 batchSize,
-                              train_didUpdate_callback callback = NULL,
-                              void* callbackContext = NULL);
+                              iTrainObserver* trainObserver = NULL);
 
 /**
  * This function tests the learner on the given examples.
@@ -292,41 +297,48 @@ void visualize(iLearner* learner, const tIO& example,
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-/**
- * This callback function is used by both ezTrain() functions.
- * It should return true if all is well and training should continue.
- * It should return false if the training process should halt. This
- * is useful if you need to cancel training due to user input, or
- * if you detect that the network has been trained enough and is ready
- * to be used.
- */
-typedef bool (*eztrain_didFinishEpoch_callback)(iLearner* learner,
-                                                u32 epochsCompleted,
-                                                u32 foldIndex, u32 numFolds,
-                                                const std::vector< tIO >& trainInputs,
-                                                const std::vector< tIO >& trainTargets,
-                                                const std::vector< tIO >& trainOutputs,
-                                                const tConfusionMatrix& trainCM,
-                                                const std::vector< tIO >& testInputs,
-                                                const std::vector< tIO >& testTargets,
-                                                const std::vector< tIO >& testOutputs,
-                                                const tConfusionMatrix& testCM,
-                                                f64 epochTrainTimeInSeconds,
-                                                void* context);
+class iEZTrainObserver : public iTrainObserver
+{
+    public:
+
+        /**
+         * This method is called by both ezTrain() functions below after
+         * a full epoch of training has been done on the given learner.
+         * It should return true if all is well and training should continue.
+         * It should return false if the training process should halt. This
+         * is useful if you need to cancel training due to user input, or
+         * if you detect that the learner has been trained enough and is ready
+         * to be used.
+         */
+        virtual bool epochComplete(iLearner* learner,
+                                   u32 epochsCompleted,
+                                   u32 foldIndex, u32 numFolds,
+                                   const std::vector< tIO >& trainInputs,
+                                   const std::vector< tIO >& trainTargets,
+                                   const std::vector< tIO >& trainOutputs,
+                                   const tConfusionMatrix& trainCM,
+                                   const std::vector< tIO >& testInputs,
+                                   const std::vector< tIO >& testTargets,
+                                   const std::vector< tIO >& testOutputs,
+                                   const tConfusionMatrix& testCM,
+                                   f64 epochTrainTimeInSeconds) = 0;
+
+        virtual ~iEZTrainObserver() { }
+};
 
 /**
  * This function trains the leaner on the given training set,
  * and tests the learner on the given test set. It trains
- * for 'numEpochs' number of epochs by calling the train()
+ * for as many epochs are needed by calling the train()
  * function above to train the learner on each epoch. This
- * function takes a callback function which it calls (if not
+ * function takes a train observer which it notifies (if not
  * null) after each epoch with the most recent training results.
  * This function will always pass foldIndex=0 and numFolds=1 to
- * the callback function.
+ * the train observer. This function will not return until the
+ * observer indicates that training can halt.
  *
  * This function returns the number of epochs of training which
- * were completed. This will equal 'numEpochs' unless the callback
- * function indicates that training should halt early.
+ * were completed.
  *
  * This function is intended to replace calling train() in most
  * application where straight-forward training is needed.
@@ -336,10 +348,7 @@ u32  ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
                                 const std::vector< tIO >& testInputs,
                                 const std::vector< tIO >& testTargets,
                                 u32 batchSize,
-                                train_didUpdate_callback updateCallback = NULL,
-                                void* updateCallbackContext = NULL,
-                                eztrain_didFinishEpoch_callback epochCallback = NULL,
-                                void* epochCallbackContext = NULL);
+                                iEZTrainObserver* trainObserver = NULL);
 
 /**
  * This function is a lot like the ezTrain() function above,
@@ -350,20 +359,17 @@ u32  ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
  * This function behaves exactly like ezTrain() above, but it
  * trains the learner fresh over-and-over with a different test
  * set (aka "hold-out set") on each iteration. You should use
- * the callback function to accumulate the hold-out error after
+ * the train observer to accumulate the hold-out error after
  * each fold iteration so that you have a complete idea of the
  * learner's generalization error.
  *
- * This function sets foldIndex and numFolds appropriately in the
- * callback function. It will always set numFolds in the callback
+ * This function sets foldIndex and numFolds appropriately to the
+ * train observer. It will always set numFolds to the observer
  * equal to numFolds passed into this function, and it will set
  * foldIndex equal to the index of the current fold (zero-indexed).
  *
  * This function returns the number of epochs of training which
- * were completed (accumulated over all the training folds). This
- * will equal 'numEpochs * numFolds' unless the callback function
- * indicates that training should halt early on one or more of the
- * folds.
+ * were completed (accumulated over all the training folds).
  *
  * Like the above ezTrain() function, this function is intended to
  * replace calling train() in most application where straight-forward
@@ -372,10 +378,7 @@ u32  ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
 u32  ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
                                 const std::vector< tIO >& allTargets,
                                 u32 batchSize, u32 numFolds,
-                                train_didUpdate_callback updateCallback = NULL,
-                                void* updateCallbackContext = NULL,
-                                eztrain_didFinishEpoch_callback epochCallback = NULL,
-                                void* epochCallbackContext = NULL);
+                                iEZTrainObserver* trainObserver = NULL);
 
 
 }    // namespace ml
