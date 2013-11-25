@@ -579,16 +579,17 @@ class tLayer : public bNonCopyable
             {
                 if (alpha <= 0.0)
                     throw eLogicError("When using the rmsprop rule, alpha must be set.");
-                f64 mult = (10.0 / batchSize) * alpha;
+                f64 batchNormMult = 1.0 / batchSize;
                 if (dw_accum_avg.size() == 0)
                     dw_accum_avg = vector< vector<f64> >(w.size(), vector<f64>(w[0].size(), 1000.0));
                 for (u32 s = 0; s < w.size(); s++)
                 {
                     for (u32 i = 0; i < w[s].size(); i++)
                     {
+                        dw_accum[s][i] *= batchNormMult;  // <--- makes dw_accum an average gradient over the batch
                         dw_accum_avg[s][i] = 0.9*dw_accum_avg[s][i] + 0.1*dw_accum[s][i]*dw_accum[s][i];
                         if (dw_accum_avg[s][i] != 0.0)
-                            w[s][i] -= mult * dw_accum[s][i] / std::sqrt(dw_accum_avg[s][i]);
+                            w[s][i] -= alpha * dw_accum[s][i] / std::sqrt(dw_accum_avg[s][i]);
                         dw_accum[s][i] = 0.0;
                     }
                 }
