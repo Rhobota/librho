@@ -68,8 +68,8 @@ tIO examplify(u32 highDimension, u32 numDimensions);
  * It does so by determining which dimension has the highest
  * value, and returns the index to that dimension.
  *
- * If 'error' is not NULL, the std error between the given output
- * and the "correct" output is calculated and stored in 'error'.
+ * If 'error' is not NULL, the std squared error between the given
+ * output and the "correct" output is calculated and stored in 'error'.
  * The "correct" output is obtained by calling the examplify()
  * function above. The assumption is made that the returned
  * index for the highest dimension is correct, thus the method
@@ -138,17 +138,30 @@ void zscore(std::vector<tIO>& trainingInputs, std::vector<tIO>& testInputs);
 //////////////////////////////////////////////////////////////////////
 
 /**
- * Calculates and returns the standard error between the given
+ * Calculates and returns the standard squared error between the given
  * output and the given target.
  */
 f64 standardSquaredError(const tIO& output, const tIO& target);
 
 /**
- * Calculates the average standard error between each output/target
+ * Calculates the average standard squared error between each output/target
  * pair.
  */
 f64 standardSquaredError(const std::vector<tIO>& outputs,
                          const std::vector<tIO>& targets);
+
+/**
+ * Calculates and returns the cross-entropy cost between the given
+ * output and the given target.
+ */
+f64 crossEntropyCost(const tIO& output, const tIO& target);
+
+/**
+ * Calculates the average cross-entropy cost between each output/target
+ * pair.
+ */
+f64 crossEntropyCost(const std::vector<tIO>& outputs,
+                     const std::vector<tIO>& targets);
 
 
 //////////////////////////////////////////////////////////////////////
