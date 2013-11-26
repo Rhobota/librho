@@ -188,6 +188,23 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
         void evaluate(const tIO& input, tIO& output) const;
 
         /**
+         * Calculates the standard squared error if the output layer of
+         * the network is logistic or hyperbolic.
+         * Calculates the cross-entropy cost if the output layer of the
+         * network is a softmax group.
+         */
+        f64 calculateError(const tIO& output, const tIO& target);
+
+        /**
+         * Calculates the average standard squared error if the output layer of
+         * the network is logistic or hyperbolic.
+         * Calculates the average cross-entropy cost if the output layer of the
+         * network is a softmax group.
+         */
+        f64 calculateError(const std::vector<tIO>& outputs,
+                           const std::vector<tIO>& targets);
+
+        /**
          * Resets the learner to its initial state.
          * (This just calls resetWeights().)
          */

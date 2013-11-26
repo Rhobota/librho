@@ -906,6 +906,23 @@ void tANN::evaluate(const tIO& input, tIO& output) const
     output = m_layers[m_numLayers-1].a;
 }
 
+f64 tANN::calculateError(const tIO& output, const tIO& target)
+{
+    if (m_layers[m_numLayers-1].layerType == kLayerTypeSoftmax)
+        return crossEntropyCost(output, target);
+    else
+        return standardSquaredError(output, target);
+}
+
+f64 tANN::calculateError(const std::vector<tIO>& outputs,
+                         const std::vector<tIO>& targets)
+{
+    if (m_layers[m_numLayers-1].layerType == kLayerTypeSoftmax)
+        return crossEntropyCost(outputs, targets);
+    else
+        return standardSquaredError(outputs, targets);
+}
+
 void tANN::reset()
 {
     resetWeights();
