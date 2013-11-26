@@ -1017,6 +1017,23 @@ void tCNN::evaluate(const tIO& input, tIO& output) const
     output = m_layers[m_numLayers-1].getOutput();
 }
 
+f64 tCNN::calculateError(const tIO& output, const tIO& target)
+{
+    if (m_layers[m_numLayers-1].getPrimaryLayer().layerType == tANN::kLayerTypeSoftmax)
+        return crossEntropyCost(output, target);
+    else
+        return standardSquaredError(output, target);
+}
+
+f64 tCNN::calculateError(const std::vector<tIO>& outputs,
+                         const std::vector<tIO>& targets)
+{
+    if (m_layers[m_numLayers-1].getPrimaryLayer().layerType == tANN::kLayerTypeSoftmax)
+        return crossEntropyCost(outputs, targets);
+    else
+        return standardSquaredError(outputs, targets);
+}
+
 void tCNN::reset()
 {
     resetWeights();

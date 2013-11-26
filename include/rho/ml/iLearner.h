@@ -57,6 +57,24 @@ class iLearner
         virtual void evaluate(const tIO& input, tIO& output) const = 0;
 
         /**
+         * Asks the learner to calculate the error between the given output
+         * and the given target. For example, the learner may calculate
+         * the standard squared error or the cross-entropy loss, if one of
+         * those is appropriate. Or the learner may do something else.
+         */
+        virtual f64 calculateError(const tIO& output, const tIO& target) = 0;
+
+        /**
+         * Asks the learner to calculate the error between all the given
+         * output/target pairs. For example, the learner may calculate
+         * the average standard squared error or the average cross-entropy
+         * loss, if one of those is appropriate. Or the learner may do
+         * something else.
+         */
+        virtual f64 calculateError(const std::vector<tIO>& outputs,
+                                   const std::vector<tIO>& targets) = 0;
+
+        /**
          * Resets the learner to its initial state.
          */
         virtual void reset() = 0;
