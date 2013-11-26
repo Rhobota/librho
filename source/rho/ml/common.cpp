@@ -292,6 +292,53 @@ f64 standardSquaredError(const std::vector<tIO>& outputs,
     return error / ((f64)outputs.size());
 }
 
+f64 crossEntropyCost(const tIO& output, const tIO& target)
+{
+    if (output.size() != target.size())
+        throw eInvalidArgument(
+                "The output vector must have the same dimensionality as the target vector!");
+    if (output.size() == 0)
+        throw eInvalidArgument("The output and target vectors must have at least one dimension!");
+    f64 error = 0.0;
+    for (size_t i = 0; i < output.size(); i++)
+        error += target[i] * std::log(output[i]);
+    return -error;
+}
+
+f64 crossEntropyCost(const std::vector<tIO>& outputs,
+                     const std::vector<tIO>& targets)
+{
+    if (outputs.size() != targets.size())
+    {
+        throw eInvalidArgument("The number of examples in outputs and targets must "
+                "be the same!");
+    }
+
+    if (outputs.size() == 0)
+    {
+        throw eInvalidArgument("There must be at least one output/target pair!");
+    }
+
+    for (size_t i = 0; i < outputs.size(); i++)
+    {
+        if (outputs[i].size() != targets[i].size() ||
+            outputs[i].size() != outputs[0].size())
+        {
+            throw eInvalidArgument("Every output/target pair must have the same dimensionality!");
+        }
+    }
+
+    if (outputs[0].size() == 0)
+    {
+        throw eInvalidArgument("The output/target pairs must have at least one dimension!");
+    }
+
+    f64 error = 0.0;
+    for (size_t i = 0; i < outputs.size(); i++)
+        error += crossEntropyCost(outputs[i], targets[i]);
+    return error / ((f64)outputs.size());
+}
+
 
 void buildConfusionMatrix(const std::vector<tIO>& outputs,
                           const std::vector<tIO>& targets,
