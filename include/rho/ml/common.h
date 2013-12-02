@@ -306,7 +306,7 @@ void visualize(iLearner* learner, const tIO& example,
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
-// Training medium-level helper:
+// Training medium-level helpers:
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
@@ -399,6 +399,52 @@ u32  ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
                                 const std::vector< tIO >& allTargets,
                                 u32 batchSize, u32 numFolds,
                                 iEZTrainObserver* trainObserver = NULL);
+
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+// Training high-level helpers:
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+class tSmartStoppingWrapper : public iEZTrainObserver
+{
+    public:
+
+        tSmartStoppingWrapper(u32 patience=50, f64 sigChange=0.95, u32 maxEpochs=300,
+                              iEZTrainObserver* wrappedObserver=NULL);
+
+    public:
+
+        // iTrainObserver interface:
+        bool didUpdate(iLearner* learner, const std::vector<tIO>& mostRecentBatch);
+
+        // iEZTrainObserver interface:
+        bool didFinishEpoch(iLearner* learner,
+                            u32 epochsCompleted,
+                            u32 foldIndex, u32 numFolds,
+                            const std::vector< tIO >& trainInputs,
+                            const std::vector< tIO >& trainTargets,
+                            const std::vector< tIO >& trainOutputs,
+                            const tConfusionMatrix& trainCM,
+                            const std::vector< tIO >& testInputs,
+                            const std::vector< tIO >& testTargets,
+                            const std::vector< tIO >& testOutputs,
+                            const tConfusionMatrix& testCM,
+                            f64 epochTrainTimeInSeconds);
+        void didFinishTraining(iLearner* learner,
+                               u32 epochsCompleted,
+                               u32 foldIndex, u32 numFolds,
+                               f64 trainingTimeInSeconds);
+
+    private:
+
+        u32 m_patience;
+        f64 m_sigChange;
+        u32 m_maxEpochs;
+
+        iEZTrainObserver* m_obs;
+};
 
 
 }    // namespace ml

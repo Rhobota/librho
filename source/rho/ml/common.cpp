@@ -1080,5 +1080,62 @@ u32  ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
 }
 
 
+tSmartStoppingWrapper::tSmartStoppingWrapper(u32 patience, f64 sigChange, u32 maxEpochs,
+                                             iEZTrainObserver* wrappedObserver)
+    : m_patience(patience),
+      m_sigChange(sigChange),
+      m_maxEpochs(maxEpochs),
+      m_obs(wrappedObserver)
+{
+}
+
+bool tSmartStoppingWrapper::didUpdate(iLearner* learner, const std::vector<tIO>& mostRecentBatch)
+{
+    return (!m_obs || m_obs->didUpdate(learner, mostRecentBatch));
+}
+
+bool tSmartStoppingWrapper::didFinishEpoch(iLearner* learner,
+                                           u32 epochsCompleted,
+                                           u32 foldIndex, u32 numFolds,
+                                           const std::vector< tIO >& trainInputs,
+                                           const std::vector< tIO >& trainTargets,
+                                           const std::vector< tIO >& trainOutputs,
+                                           const tConfusionMatrix& trainCM,
+                                           const std::vector< tIO >& testInputs,
+                                           const std::vector< tIO >& testTargets,
+                                           const std::vector< tIO >& testOutputs,
+                                           const tConfusionMatrix& testCM,
+                                           f64 epochTrainTimeInSeconds)
+{
+    if (m_obs && !m_obs->didFinishEpoch(learner,
+                                        epochsCompleted,
+                                        foldIndex,
+                                        numFolds,
+                                        trainInputs,
+                                        trainTargets,
+                                        trainOutputs,
+                                        trainCM,
+                                        testInputs,
+                                        testTargets,
+                                        testOutputs,
+                                        testCM,
+                                        epochTrainTimeInSeconds))
+    {
+        return false;
+    }
+
+    // todo
+    return true;
+}
+
+void tSmartStoppingWrapper::didFinishTraining(iLearner* learner,
+                                              u32 epochsCompleted,
+                                              u32 foldIndex, u32 numFolds,
+                                              f64 trainingTimeInSeconds)
+{
+    if (m_obs) m_obs->didFinishTraining(learner, epochsCompleted, foldIndex, numFolds, trainingTimeInSeconds);
+}
+
+
 }   // namespace ml
 }   // namespace rho
