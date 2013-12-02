@@ -323,20 +323,27 @@ class iEZTrainObserver : public iTrainObserver
          * if you detect that the learner has been trained enough and is ready
          * to be used.
          */
-        virtual bool epochComplete(iLearner* learner,
-                                   u32 epochsCompleted,
-                                   u32 foldIndex, u32 numFolds,
-                                   const std::vector< tIO >& trainInputs,
-                                   const std::vector< tIO >& trainTargets,
-                                   const std::vector< tIO >& trainOutputs,
-                                   const tConfusionMatrix& trainCM,
-                                   const std::vector< tIO >& testInputs,
-                                   const std::vector< tIO >& testTargets,
-                                   const std::vector< tIO >& testOutputs,
-                                   const tConfusionMatrix& testCM,
-                                   f64 epochTrainTimeInSeconds) = 0;
+        virtual bool didFinishEpoch(iLearner* learner,
+                                    u32 epochsCompleted,
+                                    u32 foldIndex, u32 numFolds,
+                                    const std::vector< tIO >& trainInputs,
+                                    const std::vector< tIO >& trainTargets,
+                                    const std::vector< tIO >& trainOutputs,
+                                    const tConfusionMatrix& trainCM,
+                                    const std::vector< tIO >& testInputs,
+                                    const std::vector< tIO >& testTargets,
+                                    const std::vector< tIO >& testOutputs,
+                                    const tConfusionMatrix& testCM,
+                                    f64 epochTrainTimeInSeconds) = 0;
 
-        virtual ~iEZTrainObserver() { }
+        /**
+         * This method is called after training completes, meaning that
+         * didFinishEpoch() will not be called anymore for this foldIndex.
+         */
+        virtual void didFinishTraining(iLearner* learner,
+                                       u32 epochsCompleted,
+                                       u32 foldIndex, u32 numFolds,
+                                       f64 trainingTimeInSeconds) = 0;
 };
 
 /**
