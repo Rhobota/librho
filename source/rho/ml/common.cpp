@@ -949,6 +949,8 @@ u32  s_ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
     if (batchSize == 0)
         throw eInvalidArgument("The batch size must be non-zero.");
 
+    u64 trainStartTime = sync::tTimer::usecTime();
+
     std::vector<tIO> trainOutputs;
     tConfusionMatrix trainCM;
 
@@ -970,6 +972,12 @@ u32  s_ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
             if (! train(learner, trainInputs, trainTargets,
                         batchSize, trainObserver))
             {
+                if (trainObserver)
+                {
+                    f64 trainElapsedTime = (f64)(sync::tTimer::usecTime() - trainStartTime);
+                    trainElapsedTime /= 1000000;  // usecs to secs
+                    trainObserver->didFinishTraining(learner, epochs-1, foldIndex, numFolds, trainElapsedTime);
+                }
                 return epochs-1;
             }
 
@@ -992,13 +1000,16 @@ u32  s_ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
             f64 elapsedTime = (f64)(sync::tTimer::usecTime() - startTime);
             elapsedTime /= 1000000;  // usecs to secs
 
-            if (! trainObserver->epochComplete(learner,
-                                               epochs,
-                                               foldIndex, numFolds,
-                                               trainInputs, trainTargets, trainOutputs, trainCM,
-                                               testInputs, testTargets, testOutputs, testCM,
-                                               elapsedTime))
+            if (! trainObserver->didFinishEpoch(learner,
+                                                epochs,
+                                                foldIndex, numFolds,
+                                                trainInputs, trainTargets, trainOutputs, trainCM,
+                                                testInputs, testTargets, testOutputs, testCM,
+                                                elapsedTime))
             {
+                f64 trainElapsedTime = (f64)(sync::tTimer::usecTime() - trainStartTime);
+                trainElapsedTime /= 1000000;  // usecs to secs
+                trainObserver->didFinishTraining(learner, epochs, foldIndex, numFolds, trainElapsedTime);
                 return epochs;
             }
         }
