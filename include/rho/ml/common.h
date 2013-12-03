@@ -411,7 +411,32 @@ class tSmartStoppingWrapper : public iEZTrainObserver
 {
     public:
 
-        tSmartStoppingWrapper(u32 patience=50, f64 sigChange=0.95, u32 maxEpochs=300,
+        /**
+         * This class defines an early stopping condition for training
+         * a learner.
+         *
+         * It guarantees that the learner will be trained for at least
+         * 'minEpochs' number of epochs, even if no progress is seen.
+         *
+         * It guarantees that the learner will be trained for at most
+         * 'maxEpochs' number of epochs, even if progress is seen the
+         * entire time.
+         *
+         * The algorithm respects significant improvements in performance
+         * and may increase the allowed training time when a significant
+         * improvement is encountered. If performance increases by
+         * 'significantThreshold' or more, the increase is considered
+         * significant. When a significant improvement happens, the allowed
+         * training time is extended to be at least the current duration of
+         * training time multiplied by 'patienceIncrease'.
+         *
+         * This class wraps another iEZTrainObserver so that observers
+         * can be decorated by objects of this type.
+         */
+        tSmartStoppingWrapper(u32 minEpochs=50,
+                              u32 maxEpochs=1000,
+                              f64 significantThreshold=0.005,   // <-- half a percent
+                              f64 patienceIncrease=1.5,
                               iEZTrainObserver* wrappedObserver=NULL);
 
     public:
@@ -439,9 +464,10 @@ class tSmartStoppingWrapper : public iEZTrainObserver
 
     private:
 
-        u32 m_patience;
-        f64 m_sigChange;
+        u32 m_minEpochs;
         u32 m_maxEpochs;
+        f64 m_significantThreshold;
+        f64 m_patienceIncrease;
 
         iEZTrainObserver* m_obs;
 };

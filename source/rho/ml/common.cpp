@@ -1080,11 +1080,15 @@ u32  ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
 }
 
 
-tSmartStoppingWrapper::tSmartStoppingWrapper(u32 patience, f64 sigChange, u32 maxEpochs,
+tSmartStoppingWrapper::tSmartStoppingWrapper(u32 minEpochs,
+                                             u32 maxEpochs,
+                                             f64 significantThreshold,
+                                             f64 patienceIncrease,
                                              iEZTrainObserver* wrappedObserver)
-    : m_patience(patience),
-      m_sigChange(sigChange),
+    : m_minEpochs(minEpochs),
       m_maxEpochs(maxEpochs),
+      m_significantThreshold(significantThreshold),
+      m_patienceIncrease(patienceIncrease),
       m_obs(wrappedObserver)
 {
 }
