@@ -1091,6 +1091,17 @@ tSmartStoppingWrapper::tSmartStoppingWrapper(u32 minEpochs,
       m_patienceIncrease(patienceIncrease),
       m_obs(wrappedObserver)
 {
+    if (m_minEpochs == 0)
+        throw eInvalidArgument("You must train for at least one epoch minimum.");
+    if (m_maxEpochs < m_minEpochs)
+        throw eInvalidArgument("max epochs must be >= min epochs");
+    if (m_significantThreshold < 0.0)
+        throw eInvalidArgument("The significance threshold cannot be less than zero.");
+    if (m_significantThreshold >= 1.0)
+        throw eInvalidArgument("The significance threshold must be less than 1.0.");
+    if (m_patienceIncrease <= 1.0)
+        throw eInvalidArgument("The patience increase must be greater than 1.0.");
+    m_reset();
 }
 
 bool tSmartStoppingWrapper::didUpdate(iLearner* learner, const std::vector<tIO>& mostRecentBatch)
@@ -1128,7 +1139,16 @@ bool tSmartStoppingWrapper::didFinishEpoch(iLearner* learner,
         return false;
     }
 
-    // todo
+    if (epochsCompleted >= m_allowedEpochs || epochsCompleted >= m_maxEpochs)
+        return false;
+
+    f64 testError = learner->calculateError(testOutputs, testTargets);
+    if (testError <= m_bestTestErrorYet * (1.0 - m_significantThreshold))
+    {
+        m_bestTestErrorYet = testError;
+        m_allowedEpochs = (u32)std::ceil(std::max((f64)m_minEpochs, epochsCompleted * m_patienceIncrease));
+    }
+
     return true;
 }
 
@@ -1138,6 +1158,13 @@ void tSmartStoppingWrapper::didFinishTraining(iLearner* learner,
                                               f64 trainingTimeInSeconds)
 {
     if (m_obs) m_obs->didFinishTraining(learner, epochsCompleted, foldIndex, numFolds, trainingTimeInSeconds);
+    m_reset();
+}
+
+void tSmartStoppingWrapper::m_reset()
+{
+    m_bestTestErrorYet = 1.0;
+    m_allowedEpochs = m_minEpochs;
 }
 
 
