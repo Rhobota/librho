@@ -11,6 +11,7 @@
 
 #include <cassert>
 #include <iomanip>
+#include <sstream>
 
 
 namespace rho
@@ -1175,6 +1176,136 @@ void tSmartStoppingWrapper::m_reset()
 {
     m_bestTestErrorYet = 1e100;
     m_allowedEpochs = m_minEpochs;
+}
+
+
+tLoggingWrapper::tLoggingWrapper(u32 logInterval, bool isInputImageColor,
+                                 u32 inputImageWidth, bool shouldDisplayAbsoluteValues,
+                                 iEZTrainObserver* wrappedObserver)
+    : m_logInterval(logInterval),
+      m_isColorInput(isInputImageColor),
+      m_imageWidth(inputImageWidth),
+      m_absoluteImage(shouldDisplayAbsoluteValues),
+      m_obs(wrappedObserver)
+{
+    if (m_logInterval == 0)
+        throw eInvalidArgument("The log interval cannot be zero...");
+}
+
+tLoggingWrapper::~tLoggingWrapper()
+{
+    m_logfile.close();
+    m_datafile.close();
+}
+
+bool tLoggingWrapper::didUpdate(iLearner* learner, const std::vector<tIO>& mostRecentBatch)
+{
+    return (!m_obs || m_obs->didUpdate(learner, mostRecentBatch));
+}
+
+bool tLoggingWrapper::didFinishEpoch(iLearner* learner,
+                                     u32 epochsCompleted,
+                                     u32 foldIndex, u32 numFolds,
+                                     const std::vector< tIO >& trainInputs,
+                                     const std::vector< tIO >& trainTargets,
+                                     const std::vector< tIO >& trainOutputs,
+                                     const tConfusionMatrix& trainCM,
+                                     const std::vector< tIO >& testInputs,
+                                     const std::vector< tIO >& testTargets,
+                                     const std::vector< tIO >& testOutputs,
+                                     const tConfusionMatrix& testCM,
+                                     f64 epochTrainTimeInSeconds)
+{
+    // If this is the first callback, open the log files.
+    if (epochsCompleted == 0 && foldIndex == 0)
+    {
+        m_logfile.open((learner->learnerInfoString() + ".log").c_str());
+        m_datafile.open((learner->learnerInfoString() + ".data").c_str());
+        learner->printLearnerInfo(m_logfile);
+    }
+
+    // Calculate error rates and output error measures for both
+    // the training and test sets.
+    f64 trainErrorRate = errorRate(trainCM);
+    f64 testErrorRate  = errorRate(testCM);
+    f64 trainError = learner->calculateError(trainOutputs, trainTargets);
+    f64 testError = learner->calculateError(testOutputs, testTargets);
+
+    // Print the training and test error to the human-readable log.
+    m_logfile << "Train error:             " << trainErrorRate*100 << "% "
+                                             << trainError << std::endl;
+    m_logfile << "Test error:              " << testErrorRate*100 << "% "
+                                             << testError << std::endl;
+    m_logfile << std::endl;
+
+    // Print the training and test error to the simplified data log.
+    m_datafile << trainErrorRate*100 << " " << trainError << std::endl;
+    m_datafile << testErrorRate*100 << " " << testError << std::endl;
+    m_datafile << std::endl;
+
+    // Save visuals every so many epochs.
+    if ((epochsCompleted % m_logInterval) == 0)
+    {
+        // Save the learner.
+        iPackable* packable = dynamic_cast<iPackable*>(learner);
+        if (packable)
+        {
+            std::ostringstream out;
+            out << learner->learnerInfoString() << "--" << epochsCompleted << ".learner";
+            tFileWritable file(out.str());
+            packable->pack(&file);
+        }
+
+        // Save a visual confusion matrix.
+        {
+            img::tImage visualCM;
+            ml::buildVisualConfusionMatrix(testInputs, m_isColorInput, m_imageWidth, m_absoluteImage,
+                                           testOutputs,
+                                           testTargets,
+                                           &visualCM);
+            std::ostringstream out;
+            out << learner->learnerInfoString() << "--" << epochsCompleted << "cm.png";
+            visualCM.saveToFile(out.str());
+        }
+
+        // Save a visual of the learner itself.
+        {
+            img::tImage image;
+            ml::visualize(learner, trainInputs.front(), m_isColorInput, m_imageWidth, m_absoluteImage, &image);
+            std::ostringstream out;
+            out << learner->learnerInfoString() << "--" << epochsCompleted << "viz.png";
+            image.saveToFile(out.str());
+        }
+    }
+
+    // Delegate to the wrapped object whether or not to quit training.
+    return (!m_obs || m_obs->didFinishEpoch(learner,
+                                            epochsCompleted,
+                                            foldIndex,
+                                            numFolds,
+                                            trainInputs,
+                                            trainTargets,
+                                            trainOutputs,
+                                            trainCM,
+                                            testInputs,
+                                            testTargets,
+                                            testOutputs,
+                                            testCM,
+                                            epochTrainTimeInSeconds));
+}
+
+void tLoggingWrapper::didFinishTraining(iLearner* learner,
+                                        u32 epochsCompleted,
+                                        u32 foldIndex, u32 numFolds,
+                                        const std::vector< tIO >& trainInputs,
+                                        const std::vector< tIO >& trainTargets,
+                                        const std::vector< tIO >& testInputs,
+                                        const std::vector< tIO >& testTargets,
+                                        f64 trainingTimeInSeconds)
+{
+    if (m_obs) m_obs->didFinishTraining(learner, epochsCompleted, foldIndex, numFolds,
+                                        trainInputs, trainTargets, testInputs, testTargets,
+                                        trainingTimeInSeconds);
 }
 
 

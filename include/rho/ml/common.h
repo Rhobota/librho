@@ -9,6 +9,7 @@
 #include <rho/algo/stat_util.h>
 
 #include <cmath>
+#include <fstream>
 #include <iostream>
 #include <vector>
 
@@ -485,6 +486,57 @@ class tSmartStoppingWrapper : public iEZTrainObserver
 
         f64 m_bestTestErrorYet;
         u32 m_allowedEpochs;
+};
+
+
+class tLoggingWrapper : public iEZTrainObserver
+{
+    public:
+
+        tLoggingWrapper(u32 logInterval, bool isInputImageColor,
+                        u32 inputImageWidth, bool shouldDisplayAbsoluteValues,
+                        iEZTrainObserver* wrappedObserver=NULL);
+
+        ~tLoggingWrapper();
+
+    public:
+
+        // iTrainObserver interface:
+        bool didUpdate(iLearner* learner, const std::vector<tIO>& mostRecentBatch);
+
+        // iEZTrainObserver interface:
+        bool didFinishEpoch(iLearner* learner,
+                            u32 epochsCompleted,
+                            u32 foldIndex, u32 numFolds,
+                            const std::vector< tIO >& trainInputs,
+                            const std::vector< tIO >& trainTargets,
+                            const std::vector< tIO >& trainOutputs,
+                            const tConfusionMatrix& trainCM,
+                            const std::vector< tIO >& testInputs,
+                            const std::vector< tIO >& testTargets,
+                            const std::vector< tIO >& testOutputs,
+                            const tConfusionMatrix& testCM,
+                            f64 epochTrainTimeInSeconds);
+        void didFinishTraining(iLearner* learner,
+                               u32 epochsCompleted,
+                               u32 foldIndex, u32 numFolds,
+                               const std::vector< tIO >& trainInputs,
+                               const std::vector< tIO >& trainTargets,
+                               const std::vector< tIO >& testInputs,
+                               const std::vector< tIO >& testTargets,
+                               f64 trainingTimeInSeconds);
+
+    private:
+
+        u32  m_logInterval;
+        bool m_isColorInput;
+        u32  m_imageWidth;
+        bool m_absoluteImage;
+
+        iEZTrainObserver* m_obs;
+
+        std::ofstream m_logfile;
+        std::ofstream m_datafile;
 };
 
 
