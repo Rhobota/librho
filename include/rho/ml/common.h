@@ -343,6 +343,10 @@ class iEZTrainObserver : public iTrainObserver
         virtual void didFinishTraining(iLearner* learner,
                                        u32 epochsCompleted,
                                        u32 foldIndex, u32 numFolds,
+                                       const std::vector< tIO >& trainInputs,
+                                       const std::vector< tIO >& trainTargets,
+                                       const std::vector< tIO >& testInputs,
+                                       const std::vector< tIO >& testTargets,
                                        f64 trainingTimeInSeconds) = 0;
 };
 
@@ -460,6 +464,10 @@ class tSmartStoppingWrapper : public iEZTrainObserver
         void didFinishTraining(iLearner* learner,
                                u32 epochsCompleted,
                                u32 foldIndex, u32 numFolds,
+                               const std::vector< tIO >& trainInputs,
+                               const std::vector< tIO >& trainTargets,
+                               const std::vector< tIO >& testInputs,
+                               const std::vector< tIO >& testTargets,
                                f64 trainingTimeInSeconds);
 
     private:

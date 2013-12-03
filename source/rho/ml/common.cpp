@@ -976,7 +976,9 @@ u32  s_ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
                 {
                     f64 trainElapsedTime = (f64)(sync::tTimer::usecTime() - trainStartTime);
                     trainElapsedTime /= 1000000;  // usecs to secs
-                    trainObserver->didFinishTraining(learner, epochs-1, foldIndex, numFolds, trainElapsedTime);
+                    trainObserver->didFinishTraining(learner, epochs-1, foldIndex, numFolds,
+                                                     trainInputs, trainTargets, testInputs, testTargets,
+                                                     trainElapsedTime);
                 }
                 return epochs-1;
             }
@@ -1009,7 +1011,9 @@ u32  s_ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
             {
                 f64 trainElapsedTime = (f64)(sync::tTimer::usecTime() - trainStartTime);
                 trainElapsedTime /= 1000000;  // usecs to secs
-                trainObserver->didFinishTraining(learner, epochs, foldIndex, numFolds, trainElapsedTime);
+                trainObserver->didFinishTraining(learner, epochs, foldIndex, numFolds,
+                                                 trainInputs, trainTargets, testInputs, testTargets,
+                                                 trainElapsedTime);
                 return epochs;
             }
         }
@@ -1155,15 +1159,21 @@ bool tSmartStoppingWrapper::didFinishEpoch(iLearner* learner,
 void tSmartStoppingWrapper::didFinishTraining(iLearner* learner,
                                               u32 epochsCompleted,
                                               u32 foldIndex, u32 numFolds,
+                                              const std::vector< tIO >& trainInputs,
+                                              const std::vector< tIO >& trainTargets,
+                                              const std::vector< tIO >& testInputs,
+                                              const std::vector< tIO >& testTargets,
                                               f64 trainingTimeInSeconds)
 {
-    if (m_obs) m_obs->didFinishTraining(learner, epochsCompleted, foldIndex, numFolds, trainingTimeInSeconds);
+    if (m_obs) m_obs->didFinishTraining(learner, epochsCompleted, foldIndex, numFolds,
+                                        trainInputs, trainTargets, testInputs, testTargets,
+                                        trainingTimeInSeconds);
     m_reset();
 }
 
 void tSmartStoppingWrapper::m_reset()
 {
-    m_bestTestErrorYet = 1.0;
+    m_bestTestErrorYet = 1e100;
     m_allowedEpochs = m_minEpochs;
 }
 
