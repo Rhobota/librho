@@ -464,12 +464,19 @@ class tSmartStoppingWrapper : public iEZTrainObserver
 
     private:
 
+        void m_reset();
+
+    private:
+
         u32 m_minEpochs;
         u32 m_maxEpochs;
         f64 m_significantThreshold;
         f64 m_patienceIncrease;
 
         iEZTrainObserver* m_obs;
+
+        f64 m_bestTestErrorYet;
+        u32 m_allowedEpochs;
 };
 
 
