@@ -93,6 +93,22 @@ class iLearner
          * Virtual dtor...
          */
         virtual ~iLearner() { }
+
+    public:
+
+        /**
+         * Deserialize the given vector into a new copy of an iLearner
+         * object.
+         *
+         * The caller of this method must call delete on the returned
+         * value when they are finished using it.
+         */
+        static iLearner* newDeserializedLearner(const std::vector<u8>& serializedLearner);
+
+        /**
+         * Serializes a learner to a flat vector.
+         */
+        static void serializeLearner(iLearner* learner, std::vector<u8>& serializedLearner);
 };
 
 
