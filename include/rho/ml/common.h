@@ -511,6 +511,8 @@ class tBestRememberingWrapper : public iEZTrainObserver
         const tConfusionMatrix& bestTestCM()      const;
         const tConfusionMatrix& matchingTrainCM() const;
 
+        void newBestLearner(iLearner*& learner)   const;   // <-- caller must "delete learner;" when finished with it
+
     public:
 
         // iTrainObserver interface:
@@ -546,6 +548,8 @@ class tBestRememberingWrapper : public iEZTrainObserver
         std::vector<tIO> m_bestTestOutputs;
         tConfusionMatrix m_bestTestCM;
         tConfusionMatrix m_matchingTrainCM;
+
+        std::vector<u8> m_serializedLearner;
 
         iEZTrainObserver * const m_obs;
 };

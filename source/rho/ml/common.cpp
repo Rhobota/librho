@@ -1192,6 +1192,7 @@ void tBestRememberingWrapper::reset()
     m_bestTestOutputs.clear();
     m_bestTestCM.clear();
     m_matchingTrainCM.clear();
+    m_serializedLearner.clear();
 }
 
 u32 tBestRememberingWrapper::bestTestEpochNum()  const
@@ -1217,6 +1218,11 @@ const tConfusionMatrix& tBestRememberingWrapper::bestTestCM()      const
 const tConfusionMatrix& tBestRememberingWrapper::matchingTrainCM() const
 {
     return m_matchingTrainCM;
+}
+
+void tBestRememberingWrapper::newBestLearner(iLearner*& learner)   const
+{
+    learner = iLearner::newDeserializedLearner(m_serializedLearner);
 }
 
 bool tBestRememberingWrapper::didUpdate(iLearner* learner, const std::vector<tIO>& mostRecentBatch)
@@ -1267,6 +1273,7 @@ bool tBestRememberingWrapper::didFinishEpoch(iLearner* learner,
         m_bestTestOutputs = testOutputs;
         m_bestTestCM = testCM;
         m_matchingTrainCM = trainCM;
+        iLearner::serializeLearner(learner, m_serializedLearner);
     }
 
     return retVal;
@@ -1411,6 +1418,10 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
                                                trainInputs, trainTargets, testInputs, testTargets,
                                                trainingTimeInSeconds);
 
+    // Get a copy of the best found learner.
+    iLearner* bestLearner = NULL;
+    newBestLearner(bestLearner);
+
     // Accumulate the test set vectors and the CM from the best epoch.
     m_accumTestInputs.insert(m_accumTestInputs.end(), testInputs.begin(), testInputs.end());
     m_accumTestTargets.insert(m_accumTestTargets.end(), testTargets.begin(), testTargets.end());
@@ -1428,8 +1439,8 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
         m_logfile << "Test Set CM (fold=" << foldIndex+1 << '/' << numFolds << "):" << std::endl;
         print(bestTestCM(), m_logfile);
         std::ostringstream out;
-        out << learner->learnerInfoString() << "__fold" << foldIndex+1 << "__epoch" << bestTestEpochNum();
-        m_save(out.str(), learner, trainInputs, testInputs, testTargets, bestTestOutputs());
+        out << bestLearner->learnerInfoString() << "__fold" << foldIndex+1 << "__epoch" << bestTestEpochNum();
+        m_save(out.str(), bestLearner, trainInputs, testInputs, testTargets, bestTestOutputs());
     }
 
     // If this is the last fold, log the accumulated stuff.
@@ -1446,9 +1457,12 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
                                    m_accumTestTargets,
                                    &visualCM);
         std::ostringstream out;
-        out << learner->learnerInfoString() << "__accum__cm.png";
+        out << bestLearner->learnerInfoString() << "__accum__cm.png";
         visualCM.saveToFile(out.str());
     }
+
+    // Delete the copy of the best learner.
+    delete bestLearner;
 }
 
 void tLoggingWrapper::m_save(std::string filebasename,
