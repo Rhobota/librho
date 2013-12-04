@@ -1372,39 +1372,29 @@ bool tLoggingWrapper::didFinishEpoch(iLearner* learner,
     // Save visuals every so many epochs.
     if ((epochsCompleted % m_logInterval) == 0)
     {
-        // Save the learner.
-        iPackable* packable = dynamic_cast<iPackable*>(learner);
-        if (packable)
-        {
-            std::ostringstream out;
-            out << learner->learnerInfoString() << "--" << epochsCompleted << ".learner";
-            tFileWritable file(out.str());
-            packable->pack(&file);
-        }
-
-        // Save a visual confusion matrix.
-        {
-            img::tImage visualCM;
-            ml::buildVisualConfusionMatrix(testInputs, m_isColorInput, m_imageWidth, m_absoluteImage,
-                                           testOutputs,
-                                           testTargets,
-                                           &visualCM);
-            std::ostringstream out;
-            out << learner->learnerInfoString() << "--" << epochsCompleted << "cm.png";
-            visualCM.saveToFile(out.str());
-        }
-
-        // Save a visual of the learner.
-        {
-            img::tImage image;
-            ml::visualize(learner, trainInputs.front(), m_isColorInput, m_imageWidth, m_absoluteImage, &image);
-            std::ostringstream out;
-            out << learner->learnerInfoString() << "--" << epochsCompleted << "viz.png";
-            image.saveToFile(out.str());
-        }
+        std::ostringstream out;
+        out << learner->learnerInfoString() << "__fold" << foldIndex+1 << "__epoch" << epochsCompleted;
+        m_save(out.str(), learner, trainInputs, testInputs, testTargets, testOutputs);
     }
 
     return retVal;
+}
+
+static
+void s_accumCM(ml::tConfusionMatrix& accumCM, const ml::tConfusionMatrix& newCM)
+{
+    if (accumCM.size() != newCM.size())
+    {
+        accumCM = newCM;
+    }
+    else
+    {
+        for (size_t i = 0; i < accumCM.size(); i++)
+        {
+            for (size_t j = 0; j < accumCM[i].size(); j++)
+                accumCM[i][j] += newCM[i][j];
+        }
+    }
 }
 
 void tLoggingWrapper::didFinishTraining(iLearner* learner,
@@ -1416,11 +1406,82 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
                                         const std::vector< tIO >& testTargets,
                                         f64 trainingTimeInSeconds)
 {
-    // Nothing special to do here, so just call the super method.
     // The super method will call into the wrapped object.
     tBestRememberingWrapper::didFinishTraining(learner, epochsCompleted, foldIndex, numFolds,
                                                trainInputs, trainTargets, testInputs, testTargets,
                                                trainingTimeInSeconds);
+
+    // Accumulate the test set vectors and the CM from the best epoch.
+    m_accumTestInputs.insert(m_accumTestInputs.end(), testInputs.begin(), testInputs.end());
+    m_accumTestTargets.insert(m_accumTestTargets.end(), testTargets.begin(), testTargets.end());
+    m_accumTestOutputs.insert(m_accumTestOutputs.end(), bestTestOutputs().begin(), bestTestOutputs().end());
+    s_accumCM(m_accumTestCM, bestTestCM());
+    s_accumCM(m_accumTrainCM, matchingTrainCM());
+
+    // Log the results of this fold.
+    {
+        m_logfile << "Best test error rate of " << bestTestErrorRate() * 100 << "% "
+                  << "found after epoch " << bestTestEpochNum()
+                  << "." << std::endl << std::endl;
+        m_logfile << "Training Set CM (fold=" << foldIndex+1 << '/' << numFolds << "):" << std::endl;
+        print(matchingTrainCM(), m_logfile);
+        m_logfile << "Test Set CM (fold=" << foldIndex+1 << '/' << numFolds << "):" << std::endl;
+        print(bestTestCM(), m_logfile);
+        std::ostringstream out;
+        out << learner->learnerInfoString() << "__fold" << foldIndex+1 << "__epoch" << bestTestEpochNum();
+        m_save(out.str(), learner, trainInputs, testInputs, testTargets, bestTestOutputs());
+    }
+
+    // If this is the last fold, log the accumulated stuff.
+    if (foldIndex+1 == numFolds)
+    {
+        m_logfile << "Accumulated Training Set CM:" << std::endl;
+        print(m_accumTrainCM, m_logfile);
+        m_logfile << "Accumulated Test Set CM:" << std::endl;
+        print(m_accumTestCM, m_logfile);
+
+        img::tImage visualCM;
+        buildVisualConfusionMatrix(m_accumTestInputs, m_isColorInput, m_imageWidth, m_absoluteImage,
+                                   m_accumTestOutputs,
+                                   m_accumTestTargets,
+                                   &visualCM);
+        std::ostringstream out;
+        out << learner->learnerInfoString() << "__accum__cm.png";
+        visualCM.saveToFile(out.str());
+    }
+}
+
+void tLoggingWrapper::m_save(std::string filebasename,
+                             iLearner* learner,
+                             const std::vector<tIO>& trainInputs,
+                             const std::vector<tIO>& testInputs,
+                             const std::vector<tIO>& testTargets,
+                             const std::vector<tIO>& testOutputs)
+{
+    // Save the learner.
+    iPackable* packable = dynamic_cast<iPackable*>(learner);
+    if (packable)
+    {
+        tFileWritable file(filebasename + ".learner");
+        packable->pack(&file);
+    }
+
+    // Save a visual confusion matrix.
+    {
+        img::tImage visualCM;
+        buildVisualConfusionMatrix(testInputs, m_isColorInput, m_imageWidth, m_absoluteImage,
+                                   testOutputs,
+                                   testTargets,
+                                   &visualCM);
+        visualCM.saveToFile(filebasename + "__cm.png");
+    }
+
+    // Save a visual of the learner.
+    {
+        img::tImage image;
+        visualize(learner, trainInputs.front(), m_isColorInput, m_imageWidth, m_absoluteImage, &image);
+        image.saveToFile(filebasename + "__viz.png");
+    }
 }
 
 
