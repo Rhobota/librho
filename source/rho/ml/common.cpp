@@ -1179,14 +1179,122 @@ void tSmartStoppingWrapper::m_reset()
 }
 
 
+tBestRememberingWrapper::tBestRememberingWrapper(iEZTrainObserver* wrappedObserver)
+    : m_obs(wrappedObserver)
+{
+    reset();
+}
+
+void tBestRememberingWrapper::reset()
+{
+    m_bestTestEpochNum = 0;
+    m_bestTestErrorRate = 1e100;
+    m_bestTestOutputs.clear();
+    m_bestTestCM.clear();
+    m_matchingTrainCM.clear();
+}
+
+u32 tBestRememberingWrapper::bestTestEpochNum()  const
+{
+    return m_bestTestEpochNum;
+}
+
+f64 tBestRememberingWrapper::bestTestErrorRate() const
+{
+    return m_bestTestErrorRate;
+}
+
+const std::vector<tIO>& tBestRememberingWrapper::bestTestOutputs() const
+{
+    return m_bestTestOutputs;
+}
+
+const tConfusionMatrix& tBestRememberingWrapper::bestTestCM()      const
+{
+    return m_bestTestCM;
+}
+
+const tConfusionMatrix& tBestRememberingWrapper::matchingTrainCM() const
+{
+    return m_matchingTrainCM;
+}
+
+bool tBestRememberingWrapper::didUpdate(iLearner* learner, const std::vector<tIO>& mostRecentBatch)
+{
+    return (!m_obs || m_obs->didUpdate(learner, mostRecentBatch));
+}
+
+bool tBestRememberingWrapper::didFinishEpoch(iLearner* learner,
+                                             u32 epochsCompleted,
+                                             u32 foldIndex, u32 numFolds,
+                                             const std::vector< tIO >& trainInputs,
+                                             const std::vector< tIO >& trainTargets,
+                                             const std::vector< tIO >& trainOutputs,
+                                             const tConfusionMatrix& trainCM,
+                                             const std::vector< tIO >& testInputs,
+                                             const std::vector< tIO >& testTargets,
+                                             const std::vector< tIO >& testOutputs,
+                                             const tConfusionMatrix& testCM,
+                                             f64 epochTrainTimeInSeconds)
+{
+    // Delegate to the wrapped object whether or not to quit training.
+    bool retVal = (!m_obs || m_obs->didFinishEpoch(learner,
+                                                   epochsCompleted,
+                                                   foldIndex,
+                                                   numFolds,
+                                                   trainInputs,
+                                                   trainTargets,
+                                                   trainOutputs,
+                                                   trainCM,
+                                                   testInputs,
+                                                   testTargets,
+                                                   testOutputs,
+                                                   testCM,
+                                                   epochTrainTimeInSeconds));
+
+    // If this is the zero'th epoch, reset myself in case there was a fold that
+    // happened before this point, in which case the state will still be for that
+    // training sequence.
+    if (epochsCompleted == 0)
+        reset();
+
+    // Evaluate the error rate on the test set and see if it's the best yet.
+    f64 testErrorRate = errorRate(testCM);
+    if (testErrorRate < m_bestTestErrorRate)
+    {
+        m_bestTestEpochNum = epochsCompleted;
+        m_bestTestErrorRate = testErrorRate;
+        m_bestTestOutputs = testOutputs;
+        m_bestTestCM = testCM;
+        m_matchingTrainCM = trainCM;
+    }
+
+    return retVal;
+}
+
+void tBestRememberingWrapper::didFinishTraining(iLearner* learner,
+                                                u32 epochsCompleted,
+                                                u32 foldIndex, u32 numFolds,
+                                                const std::vector< tIO >& trainInputs,
+                                                const std::vector< tIO >& trainTargets,
+                                                const std::vector< tIO >& testInputs,
+                                                const std::vector< tIO >& testTargets,
+                                                f64 trainingTimeInSeconds)
+{
+    if (m_obs) m_obs->didFinishTraining(learner, epochsCompleted, foldIndex, numFolds,
+                                        trainInputs, trainTargets, testInputs, testTargets,
+                                        trainingTimeInSeconds);
+}
+
+
 tLoggingWrapper::tLoggingWrapper(u32 logInterval, bool isInputImageColor,
                                  u32 inputImageWidth, bool shouldDisplayAbsoluteValues,
                                  iEZTrainObserver* wrappedObserver)
-    : m_logInterval(logInterval),
+    : tBestRememberingWrapper(wrappedObserver),
+      m_logInterval(logInterval),
       m_isColorInput(isInputImageColor),
       m_imageWidth(inputImageWidth),
-      m_absoluteImage(shouldDisplayAbsoluteValues),
-      m_obs(wrappedObserver)
+      m_absoluteImage(shouldDisplayAbsoluteValues)
 {
     if (m_logInterval == 0)
         throw eInvalidArgument("The log interval cannot be zero...");
@@ -1200,7 +1308,9 @@ tLoggingWrapper::~tLoggingWrapper()
 
 bool tLoggingWrapper::didUpdate(iLearner* learner, const std::vector<tIO>& mostRecentBatch)
 {
-    return (!m_obs || m_obs->didUpdate(learner, mostRecentBatch));
+    // Nothing special to do here, so just call the super method.
+    // The super method will call into the wrapped object.
+    return tBestRememberingWrapper::didUpdate(learner, mostRecentBatch);
 }
 
 bool tLoggingWrapper::didFinishEpoch(iLearner* learner,
@@ -1216,6 +1326,22 @@ bool tLoggingWrapper::didFinishEpoch(iLearner* learner,
                                      const tConfusionMatrix& testCM,
                                      f64 epochTrainTimeInSeconds)
 {
+    // Delegate to the super object whether or not to quit training.
+    // The super method will call into the wrapped object.
+    bool retVal = tBestRememberingWrapper::didFinishEpoch(learner,
+                                                          epochsCompleted,
+                                                          foldIndex,
+                                                          numFolds,
+                                                          trainInputs,
+                                                          trainTargets,
+                                                          trainOutputs,
+                                                          trainCM,
+                                                          testInputs,
+                                                          testTargets,
+                                                          testOutputs,
+                                                          testCM,
+                                                          epochTrainTimeInSeconds);
+
     // If this is the first callback, open the log files.
     if (epochsCompleted == 0 && foldIndex == 0)
     {
@@ -1268,7 +1394,7 @@ bool tLoggingWrapper::didFinishEpoch(iLearner* learner,
             visualCM.saveToFile(out.str());
         }
 
-        // Save a visual of the learner itself.
+        // Save a visual of the learner.
         {
             img::tImage image;
             ml::visualize(learner, trainInputs.front(), m_isColorInput, m_imageWidth, m_absoluteImage, &image);
@@ -1278,20 +1404,7 @@ bool tLoggingWrapper::didFinishEpoch(iLearner* learner,
         }
     }
 
-    // Delegate to the wrapped object whether or not to quit training.
-    return (!m_obs || m_obs->didFinishEpoch(learner,
-                                            epochsCompleted,
-                                            foldIndex,
-                                            numFolds,
-                                            trainInputs,
-                                            trainTargets,
-                                            trainOutputs,
-                                            trainCM,
-                                            testInputs,
-                                            testTargets,
-                                            testOutputs,
-                                            testCM,
-                                            epochTrainTimeInSeconds));
+    return retVal;
 }
 
 void tLoggingWrapper::didFinishTraining(iLearner* learner,
@@ -1303,9 +1416,11 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
                                         const std::vector< tIO >& testTargets,
                                         f64 trainingTimeInSeconds)
 {
-    if (m_obs) m_obs->didFinishTraining(learner, epochsCompleted, foldIndex, numFolds,
-                                        trainInputs, trainTargets, testInputs, testTargets,
-                                        trainingTimeInSeconds);
+    // Nothing special to do here, so just call the super method.
+    // The super method will call into the wrapped object.
+    tBestRememberingWrapper::didFinishTraining(learner, epochsCompleted, foldIndex, numFolds,
+                                               trainInputs, trainTargets, testInputs, testTargets,
+                                               trainingTimeInSeconds);
 }
 
 

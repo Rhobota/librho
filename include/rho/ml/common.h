@@ -441,7 +441,7 @@ class tSmartStoppingWrapper : public iEZTrainObserver
         tSmartStoppingWrapper(u32 minEpochs=50,
                               u32 maxEpochs=1000,
                               f64 significantThreshold=0.005,   // <-- half a percent
-                              f64 patienceIncrease=1.5,
+                              f64 patienceIncrease=2.0,
                               iEZTrainObserver* wrappedObserver=NULL);
 
     public:
@@ -477,22 +477,108 @@ class tSmartStoppingWrapper : public iEZTrainObserver
 
     private:
 
-        u32 m_minEpochs;
-        u32 m_maxEpochs;
-        f64 m_significantThreshold;
-        f64 m_patienceIncrease;
+        const u32 m_minEpochs;
+        const u32 m_maxEpochs;
+        const f64 m_significantThreshold;
+        const f64 m_patienceIncrease;
 
-        iEZTrainObserver* m_obs;
+        iEZTrainObserver * const m_obs;
 
         f64 m_bestTestErrorYet;
         u32 m_allowedEpochs;
 };
 
 
-class tLoggingWrapper : public iEZTrainObserver
+class tBestRememberingWrapper : public iEZTrainObserver
 {
     public:
 
+        /**
+         * This class wraps a iEZTrainObserver to add the ability to
+         * remember the learner and the output values which performed
+         * best on the test set during training. This allows you to identify
+         * which point in the learning process gave you the best generalization
+         * error estimate, and then to report that point at the end of training.
+         */
+        tBestRememberingWrapper(iEZTrainObserver* wrappedObserver=NULL);
+
+        void reset();
+
+        u32 bestTestEpochNum()  const;
+        f64 bestTestErrorRate() const;
+
+        const std::vector<tIO>& bestTestOutputs() const;
+        const tConfusionMatrix& bestTestCM()      const;
+        const tConfusionMatrix& matchingTrainCM() const;
+
+    public:
+
+        // iTrainObserver interface:
+        bool didUpdate(iLearner* learner, const std::vector<tIO>& mostRecentBatch);
+
+        // iEZTrainObserver interface:
+        bool didFinishEpoch(iLearner* learner,
+                            u32 epochsCompleted,
+                            u32 foldIndex, u32 numFolds,
+                            const std::vector< tIO >& trainInputs,
+                            const std::vector< tIO >& trainTargets,
+                            const std::vector< tIO >& trainOutputs,
+                            const tConfusionMatrix& trainCM,
+                            const std::vector< tIO >& testInputs,
+                            const std::vector< tIO >& testTargets,
+                            const std::vector< tIO >& testOutputs,
+                            const tConfusionMatrix& testCM,
+                            f64 epochTrainTimeInSeconds);
+        void didFinishTraining(iLearner* learner,
+                               u32 epochsCompleted,
+                               u32 foldIndex, u32 numFolds,
+                               const std::vector< tIO >& trainInputs,
+                               const std::vector< tIO >& trainTargets,
+                               const std::vector< tIO >& testInputs,
+                               const std::vector< tIO >& testTargets,
+                               f64 trainingTimeInSeconds);
+
+    private:
+
+        u32 m_bestTestEpochNum;
+        f64 m_bestTestErrorRate;
+
+        std::vector<tIO> m_bestTestOutputs;
+        tConfusionMatrix m_bestTestCM;
+        tConfusionMatrix m_matchingTrainCM;
+
+        iEZTrainObserver * const m_obs;
+};
+
+
+class tLoggingWrapper : public tBestRememberingWrapper
+{
+    public:
+
+        /**
+         * This class provides a wrapper around another iEZTrainObserver
+         * to decorate it with logging ability. Note that this class
+         * extends tBestRememberingWrapper, so if you need the functionality
+         * of tBestRememberingWrapper you do not need to add it to the
+         * decoration chain yourself because it comes free when you use this
+         * class.
+         *
+         * Error rates are logged every epoch to a human-readable log file
+         * and to a simplified data log file.
+         *
+         * Every 'logInterval' number of epochs, the learner itself is
+         * serialized to a file, and visualization of the learner and its
+         * progress are also saved.
+         *
+         * See un_examplify() for a description of 'isInputImageColor',
+         * 'inputImageWidth', and 'shouldDisplayAbsoluteValues'. These
+         * parameters are needed for creating the visualization which occur
+         * every 'logInterval' number of epochs.
+         *
+         * This logging wrapper works well when used with both versions of
+         * ezTrain() above. That is, it works for normal train/test sets,
+         * and it works for x-fold cross-validation sets.
+         */
         tLoggingWrapper(u32 logInterval, bool isInputImageColor,
                         u32 inputImageWidth, bool shouldDisplayAbsoluteValues,
                         iEZTrainObserver* wrappedObserver=NULL);
@@ -528,12 +614,10 @@ class tLoggingWrapper : public iEZTrainObserver
 
     private:
 
-        u32  m_logInterval;
-        bool m_isColorInput;
-        u32  m_imageWidth;
-        bool m_absoluteImage;
-
-        iEZTrainObserver* m_obs;
+        const u32  m_logInterval;
+        const bool m_isColorInput;
+        const u32  m_imageWidth;
+        const bool m_absoluteImage;
 
         std::ofstream m_logfile;
         std::ofstream m_datafile;
