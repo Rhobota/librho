@@ -614,6 +614,15 @@ class tLoggingWrapper : public tBestRememberingWrapper
 
     private:
 
+        void m_save(std::string filebasename,
+                    iLearner* learner,
+                    const std::vector<tIO>& trainInputs,
+                    const std::vector<tIO>& testInputs,
+                    const std::vector<tIO>& testTargets,
+                    const std::vector<tIO>& testOutputs);
+
+    private:
+
         const u32  m_logInterval;
         const bool m_isColorInput;
         const u32  m_imageWidth;
@@ -621,6 +630,12 @@ class tLoggingWrapper : public tBestRememberingWrapper
 
         std::ofstream m_logfile;
         std::ofstream m_datafile;
+
+        std::vector<tIO> m_accumTestInputs;
+        std::vector<tIO> m_accumTestTargets;
+        std::vector<tIO> m_accumTestOutputs;
+        tConfusionMatrix m_accumTestCM;
+        tConfusionMatrix m_accumTrainCM;
 };
 
 
