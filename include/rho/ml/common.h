@@ -549,7 +549,7 @@ class tBestRememberingWrapper : public iEZTrainObserver
         tConfusionMatrix m_bestTestCM;
         tConfusionMatrix m_matchingTrainCM;
 
-        std::vector<u8> m_serializedLearner;
+        tByteWritable m_serializedLearner;
 
         iEZTrainObserver * const m_obs;
 };
