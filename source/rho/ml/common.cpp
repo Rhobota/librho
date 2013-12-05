@@ -392,7 +392,7 @@ void s_drawGrid(img::tCanvas& canvas, u32 gridSize, u32 distBetweenLines)
         horiz.setHeight(1);
         horiz.setBufSize(horiz.width() * horiz.height() * 3);
         horiz.setBufUsed(horiz.bufSize());
-        for (u32 i = 0; i < horiz.bufUsed(); i++) horiz.buf()[i] = 255;
+        for (u32 i = 0; i < horiz.bufUsed(); i++) horiz.buf()[i] = 0;  // <-- makes the lines black
         for (u32 i = 0; i <= gridSize; i++)
             canvas.drawImage(&horiz, 0, i*distBetweenLines);
     }
@@ -404,7 +404,7 @@ void s_drawGrid(img::tCanvas& canvas, u32 gridSize, u32 distBetweenLines)
         vert.setHeight(gridSize*distBetweenLines);
         vert.setBufSize(vert.width() * vert.height() * 3);
         vert.setBufUsed(vert.bufSize());
-        for (u32 i = 0; i < vert.bufUsed(); i++) vert.buf()[i] = 255;
+        for (u32 i = 0; i < vert.bufUsed(); i++) vert.buf()[i] = 0;  // <-- makes the lines black
         for (u32 i = 0; i <= gridSize; i++)
             canvas.drawImage(&vert, i*distBetweenLines, 0);
     }
@@ -450,7 +450,7 @@ void buildVisualConfusionMatrix(const std::vector<tIO>& inputs,
     u32 numClasses = (u32) targets[0].size();      // same as outputs[0].size()
     u32 boxWidth = 5 * width;
 
-    u8 bgColor[3] = { 0, 0, 205 };    // "Medium Blue" from http://www.tayloredmktg.com/rgb/
+    u8 bgColor[3] = { 255, 255, 255 };    // white
     img::tCanvas canvas(img::kRGB24, bgColor, 3);
 
     algo::tKnuthLCG lcg;
@@ -1390,7 +1390,7 @@ bool tLoggingWrapper::didFinishEpoch(iLearner* learner,
 }
 
 static
-void s_accumCM(ml::tConfusionMatrix& accumCM, const ml::tConfusionMatrix& newCM)
+void s_accumCM(tConfusionMatrix& accumCM, const tConfusionMatrix& newCM)
 {
     if (accumCM.size() != newCM.size())
     {
