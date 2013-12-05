@@ -1422,12 +1422,16 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
     iLearner* bestLearner = NULL;
     newBestLearner(bestLearner);
 
-    // Accumulate the test set vectors and the CM from the best epoch.
-    m_accumTestInputs.insert(m_accumTestInputs.end(), testInputs.begin(), testInputs.end());
-    m_accumTestTargets.insert(m_accumTestTargets.end(), testTargets.begin(), testTargets.end());
-    m_accumTestOutputs.insert(m_accumTestOutputs.end(), bestTestOutputs().begin(), bestTestOutputs().end());
-    s_accumCM(m_accumTestCM, bestTestCM());
-    s_accumCM(m_accumTrainCM, matchingTrainCM());
+    // Accumulate the test set vectors and the CM from the best epoch if there will be
+    // many folds.
+    if (numFolds > 1)
+    {
+        m_accumTestInputs.insert(m_accumTestInputs.end(), testInputs.begin(), testInputs.end());
+        m_accumTestTargets.insert(m_accumTestTargets.end(), testTargets.begin(), testTargets.end());
+        m_accumTestOutputs.insert(m_accumTestOutputs.end(), bestTestOutputs().begin(), bestTestOutputs().end());
+        s_accumCM(m_accumTestCM, bestTestCM());
+        s_accumCM(m_accumTrainCM, matchingTrainCM());
+    }
 
     // Log the results of this fold.
     {
@@ -1439,17 +1443,23 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
         m_logfile << "Test Set CM (fold=" << foldIndex+1 << '/' << numFolds << "):" << std::endl;
         print(bestTestCM(), m_logfile);
         std::ostringstream out;
-        out << bestLearner->learnerInfoString() << "__fold" << foldIndex+1 << "__epoch" << bestTestEpochNum();
+        out << bestLearner->learnerInfoString() << "__fold" << foldIndex+1 << "__best";
         m_save(out.str(), bestLearner, trainInputs, testInputs, testTargets, bestTestOutputs());
     }
 
-    // If this is the last fold, log the accumulated stuff.
-    if (foldIndex+1 == numFolds)
+    // If this is the last of many fold, log the accumulated stuff.
+    if (foldIndex+1 == numFolds && numFolds > 1)
     {
+        m_logfile << std::endl;
         m_logfile << "Accumulated Training Set CM:" << std::endl;
         print(m_accumTrainCM, m_logfile);
         m_logfile << "Accumulated Test Set CM:" << std::endl;
         print(m_accumTestCM, m_logfile);
+        m_logfile << std::endl;
+
+        m_logfile << "Num accumulated test examples: " << m_accumTestInputs.size() << std::endl;
+        m_logfile << "Accumulated test error rate:   " << errorRate(m_accumTestCM)*100 << "%" << std::endl;
+        m_logfile << std::endl;
 
         img::tImage visualCM;
         buildVisualConfusionMatrix(m_accumTestInputs, m_isColorInput, m_imageWidth, m_absoluteImage,
