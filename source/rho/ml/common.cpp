@@ -1192,7 +1192,7 @@ void tBestRememberingWrapper::reset()
     m_bestTestOutputs.clear();
     m_bestTestCM.clear();
     m_matchingTrainCM.clear();
-    m_serializedLearner.clear();
+    m_serializedLearner.reset();
 }
 
 u32 tBestRememberingWrapper::bestTestEpochNum()  const
@@ -1222,7 +1222,8 @@ const tConfusionMatrix& tBestRememberingWrapper::matchingTrainCM() const
 
 void tBestRememberingWrapper::newBestLearner(iLearner*& learner)   const
 {
-    learner = iLearner::newDeserializedLearner(m_serializedLearner);
+    tByteReadable readable(m_serializedLearner.getBuf());
+    learner = iLearner::newDeserializedLearner(&readable);
 }
 
 bool tBestRememberingWrapper::didUpdate(iLearner* learner, const std::vector<tIO>& mostRecentBatch)
@@ -1273,7 +1274,8 @@ bool tBestRememberingWrapper::didFinishEpoch(iLearner* learner,
         m_bestTestOutputs = testOutputs;
         m_bestTestCM = testCM;
         m_matchingTrainCM = trainCM;
-        iLearner::serializeLearner(learner, m_serializedLearner);
+        m_serializedLearner.reset();
+        iLearner::serializeLearner(learner, &m_serializedLearner);
     }
 
     return retVal;
@@ -1447,7 +1449,7 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
         m_save(out.str(), bestLearner, trainInputs, testInputs, testTargets, bestTestOutputs());
     }
 
-    // If this is the last of many fold, log the accumulated stuff.
+    // If this is the last of many folds, log the accumulated stuff.
     if (foldIndex+1 == numFolds && numFolds > 1)
     {
         m_logfile << std::endl;
@@ -1483,11 +1485,9 @@ void tLoggingWrapper::m_save(std::string filebasename,
                              const std::vector<tIO>& testOutputs)
 {
     // Save the learner.
-    iPackable* packable = dynamic_cast<iPackable*>(learner);
-    if (packable)
     {
         tFileWritable file(filebasename + ".learner");
-        packable->pack(&file);
+        iLearner::serializeLearner(learner, &file);
     }
 
     // Save a visual confusion matrix.

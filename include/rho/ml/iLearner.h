@@ -3,6 +3,7 @@
 
 
 #include <rho/types.h>
+#include <rho/iPackable.h>
 
 #include <vector>
 
@@ -97,18 +98,18 @@ class iLearner
     public:
 
         /**
-         * Deserialize the given vector into a new copy of an iLearner
+         * Deserialize from the input stream a new copy of an iLearner
          * object.
          *
          * The caller of this method must call delete on the returned
          * value when they are finished using it.
          */
-        static iLearner* newDeserializedLearner(const std::vector<u8>& serializedLearner);
+        static iLearner* newDeserializedLearner(iReadable* readable);
 
         /**
-         * Serializes a learner to a flat vector.
+         * Serializes a learner to the given output stream.
          */
-        static void serializeLearner(iLearner* learner, std::vector<u8>& serializedLearner);
+        static void serializeLearner(iLearner* learner, iWritable* writable);
 };
 
 
