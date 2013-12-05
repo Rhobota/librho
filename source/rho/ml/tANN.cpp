@@ -934,13 +934,6 @@ void tANN::printLearnerInfo(std::ostream& out) const
 
     out << "Artificial Neural Network Info:" << endl;
 
-    // Network size:
-    out << "   (bottom-to-top) size:";
-    out << std::right << std::setw(colw) << m_layers[0].w.size()-1;
-    for (u32 i = 0; i < m_numLayers; i++)
-        out << std::right << std::setw(colw) << m_layers[i].a.size();
-    out << endl;
-
     // Layer type (and normalizeLayerInput):
     out << "             layer type:";
     out << std::right << std::setw(colw) << "input";
@@ -955,7 +948,7 @@ void tANN::printLearnerInfo(std::ostream& out) const
 
     // Weight update rule:
     out << "     weight update rule:";
-    out << std::right << std::setw(colw) << "N/A";
+    out << std::right << std::setw(colw) << "-";
     for (u32 i = 0; i < m_numLayers; i++)
     {
         std::ostringstream ss;
@@ -979,7 +972,23 @@ void tANN::printLearnerInfo(std::ostream& out) const
         }
         out << std::right << std::setw(colw) << ss.str();
     }
-    out << endl << endl;
+    out << endl;
+
+    // Network size:
+    out << "             layer size:";
+    out << std::right << std::setw(colw) << m_layers[0].w.size()-1;
+    for (u32 i = 0; i < m_numLayers; i++)
+        out << std::right << std::setw(colw) << m_layers[i].a.size();
+    out << endl;
+
+    // Num free parameters:
+    out << "    num free parameters:";
+    out << std::right << std::setw(colw) << "-";
+    for (u32 i = 0; i < m_numLayers; i++)
+        out << std::right << std::setw(colw) << m_layers[i].w.size()*m_layers[i].w[0].size();
+    out << endl;
+
+    out << endl;
 }
 
 string tANN::learnerInfoString() const

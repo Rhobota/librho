@@ -485,6 +485,11 @@ class tLayerCNN : public bNonCopyable
         return m_poolHeight;
     }
 
+    u32 getNumFreeParameters() const
+    {
+        return (u32)(m_layers[0].w.size() * m_layers[0].w[0].size());
+    }
+
     void takeInput(const vector<f64>& input)
     {
         // Give input to each filter.
@@ -1103,6 +1108,13 @@ void tCNN::printLearnerInfo(std::ostream& out) const
            << m_layers[i].getReceptiveFieldHeight();
         out << std::right << std::setw(colw) << ss.str();
     }
+    out << endl;
+
+    // Num free parameters:
+    out << "        num free parameters:";
+    out << std::right << std::setw(colw) << "-";
+    for (u32 i = 0; i < m_numLayers; i++)
+        out << std::right << std::setw(colw) << m_layers[i].getNumFreeParameters();
     out << endl;
 
     // Receptive field step sizes:
