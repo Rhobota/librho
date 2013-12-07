@@ -991,11 +991,11 @@ u32  s_ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
         // Call the epoch observer.
         if (trainObserver)
         {
-            // Evaluate the network on the training set.
+            // Evaluate the learner using the training set.
             evaluate(learner, trainInputs, trainOutputs);
             buildConfusionMatrix(trainOutputs, trainTargets, trainCM);
 
-            // Evaluate the network on the test set.
+            // Evaluate the learner using the test set.
             evaluate(learner, testInputs, testOutputs);
             buildConfusionMatrix(testOutputs, testTargets, testCM);
 
@@ -1471,6 +1471,20 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
         std::ostringstream out;
         out << bestLearner->learnerInfoString() << "__accum__cm.png";
         visualCM.saveToFile(out.str());
+    }
+
+    // If this is the last fold (even if there was only one fold), save the outputs
+    // of the learner. This is useful for doing post processing, such as for creating
+    // ROC curves, or something like that.
+    if (foldIndex+1 == numFolds)
+    {
+        const std::vector< tIO >& saveTheseTestInputs  = (numFolds > 1) ? m_accumTestInputs  : testInputs;
+        const std::vector< tIO >& saveTheseTestTargets = (numFolds > 1) ? m_accumTestTargets : testTargets;
+        const std::vector< tIO >& saveTheseTestOutputs = (numFolds > 1) ? m_accumTestOutputs : bestTestOutputs();
+        tFileWritable outfile(bestLearner->learnerInfoString() + "__outputs.bin");
+        rho::pack(&outfile, saveTheseTestInputs);
+        rho::pack(&outfile, saveTheseTestTargets);
+        rho::pack(&outfile, saveTheseTestOutputs);
     }
 
     // Delete the copy of the best learner.
