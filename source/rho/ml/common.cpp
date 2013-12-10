@@ -383,6 +383,62 @@ void buildConfusionMatrix(const std::vector<tIO>& outputs,
 }
 
 static
+void s_fill_cell(const std::vector<u32>& indices, const std::vector<tIO>& inputs,
+                 bool color, u32 width, bool absolute,
+                 u32 boxWidth, double ox, double oy,
+                 algo::iLCG& lcg, img::tCanvas& canvas)
+{
+    const u32 kPadding = 5;
+
+    img::tImage image;
+
+    u8 bgColor[3] = { 255, 255, 255 };    // white
+    img::tCanvas subcanvas(img::kRGB24, bgColor, 3);
+    u32 subcanvX = 0;
+    u32 subcanvY = 0;
+    bool subcanvFull = false;
+
+    for (size_t i = 0; i < indices.size(); i++)
+    {
+        un_examplify(inputs[indices[i]], color, width, absolute, &image);
+
+        if (!subcanvFull)
+        {
+            subcanvas.drawImage(&image, subcanvX, subcanvY);
+            subcanvX += image.width() + kPadding;
+            if (subcanvX + image.width() + kPadding > boxWidth)
+            {
+                subcanvX = 0;
+                subcanvY += image.height() + kPadding;
+                if (subcanvY + image.height() + kPadding > boxWidth)
+                {
+                    subcanvFull = true;
+                    subcanvas.genImage(&image);
+                    f64 rx = ox + boxWidth / 2.0 - image.width() / 2.0;
+                    f64 ry = oy + boxWidth / 2.0 - image.height() / 2.0;
+                    canvas.drawImage(&image, (i32) round(rx), (i32) round(ry));
+                }
+            }
+        }
+
+        else
+        {
+            f64 rx = ((f64)lcg.next()) / ((f64)lcg.randMax()) * (boxWidth-width) + ox;
+            f64 ry = ((f64)lcg.next()) / ((f64)lcg.randMax()) * (boxWidth-width) + oy;
+            canvas.drawImage(&image, (i32) round(rx), (i32) round(ry));
+        }
+    }
+
+    if (!subcanvFull)
+    {
+        subcanvas.genImage(&image);
+        f64 rx = ox + boxWidth / 2.0 - image.width() / 2.0;
+        f64 ry = oy + boxWidth / 2.0 - image.height() / 2.0;
+        canvas.drawImage(&image, (i32) round(rx), (i32) round(ry));
+    }
+}
+
+static
 void s_drawGrid(img::tCanvas& canvas, u32 gridSize, u32 distBetweenLines)
 {
     {
@@ -448,26 +504,32 @@ void buildVisualConfusionMatrix(const std::vector<tIO>& inputs,
     }
 
     u32 numClasses = (u32) targets[0].size();      // same as outputs[0].size()
-    u32 boxWidth = 5 * width;
 
-    u8 bgColor[3] = { 255, 255, 255 };    // white
-    img::tCanvas canvas(img::kRGB24, bgColor, 3);
+    std::vector< std::vector< std::vector<u32> > > holding(numClasses,
+            std::vector< std::vector<u32> >(numClasses, std::vector<u32>()));
 
-    algo::tKnuthLCG lcg;
-
-    img::tImage image;
-
-    for (size_t i = 0; i < outputs.size(); i++)
+    for (size_t i = 0; i < outputs.size(); i++)    // same as targets.size()
     {
         u32 target = un_examplify(targets[i]);
         u32 output = un_examplify(outputs[i]);
+        holding[target][output].push_back((u32)i);
+    }
 
-        f64 rx = ((f64)lcg.next()) / ((f64)lcg.randMax()) * (boxWidth-width) + output*boxWidth;
-        f64 ry = ((f64)lcg.next()) / ((f64)lcg.randMax()) * (boxWidth-width) + target*boxWidth;
+    algo::tKnuthLCG lcg;
 
-        un_examplify(inputs[i], color, width, absolute, &image);
+    u32 boxWidth = 5 * width;
+    u8 bgColor[3] = { 255, 255, 255 };    // white
+    img::tCanvas canvas(img::kRGB24, bgColor, 3);
 
-        canvas.drawImage(&image, (i32) round(rx), (i32) round(ry));
+    for (size_t i = 0; i < holding.size(); i++)
+    {
+        for (size_t j = 0; j < holding[i].size(); j++)
+        {
+            s_fill_cell(holding[i][j], inputs,
+                        color, width, absolute,
+                        boxWidth, (f64)(j*boxWidth), (f64)(i*boxWidth),
+                        lcg, canvas);
+        }
     }
 
     canvas.expandToIncludePoint(0, 0);
