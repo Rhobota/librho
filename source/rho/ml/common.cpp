@@ -300,9 +300,29 @@ f64 crossEntropyCost(const tIO& output, const tIO& target)
                 "The output vector must have the same dimensionality as the target vector!");
     if (output.size() == 0)
         throw eInvalidArgument("The output and target vectors must have at least one dimension!");
+    f64 osum = 0.0;
+    f64 tsum = 0.0;
+    for (size_t i = 0; i < output.size(); i++)
+    {
+        if (output[i] > 1.0)
+            throw eInvalidArgument("The output value cannot be >1.0 when it represents a probability.");
+        if (output[i] < 0.0)
+            throw eInvalidArgument("The output value cannot be <0.0 when it represents a probability.");
+        if (target[i] > 1.0)
+            throw eInvalidArgument("The target value cannot be >1.0 when it represents a probability.");
+        if (target[i] < 0.0)
+            throw eInvalidArgument("The target value cannot be <0.0 when it represents a probability.");
+        osum += output[i];
+        tsum += target[i];
+    }
+    if (osum > 1.0001 || osum < 0.9999)
+        throw eInvalidArgument("The sum of the outputs must be 1.0.");
+    if (tsum > 1.0001 || tsum < 0.9999)
+        throw eInvalidArgument("The sum of the targets must be 1.0.");
     f64 error = 0.0;
     for (size_t i = 0; i < output.size(); i++)
-        error += target[i] * std::log(output[i]);
+        if (target[i] > 0.0)
+            error += target[i] * std::log(output[i]);
     return -error;
 }
 
