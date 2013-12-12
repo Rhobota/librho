@@ -79,7 +79,6 @@ class tLearnerWindowWrapper : public iEZTrainObserver
             out << "epoch: " << epochsCompleted << "    ";
             out << "(last epoch took " << epochTrainTimeInSeconds << " seconds)";
             window.setTitle(out.str());
-            std::cout << out.str() << std::endl;
 
             // Set the window contents.
             img::tImage image;
