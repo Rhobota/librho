@@ -5,6 +5,7 @@
 #include <rho/refc.h>
 #include <rho/ml/common.h>
 #include <rho/ml/iLearner.h>
+#include <rho/sync/tThreadPool.h>
 
 #include <vector>
 
@@ -23,6 +24,18 @@ class tLearnerCommittee : public iLearner
          * Constructs a committee of trained learners.
          */
         tLearnerCommittee(const std::vector< refc<iLearner> >& committee);
+
+        /**
+         * Constructs a committee of trained learners, and uses a thread
+         * pool of the given size for evalutate().
+         */
+        tLearnerCommittee(const std::vector< refc<iLearner> >& committee,
+                          u32 threadPoolSize);
+
+        /**
+         * D'tor
+         */
+        ~tLearnerCommittee();
 
         /////////////////////////////////////////////////////////////////////
         // iLearner interface
@@ -76,6 +89,8 @@ class tLearnerCommittee : public iLearner
     private:
 
         std::vector< refc<iLearner> > m_committee;
+
+        sync::tThreadPool* m_threadPool;
 };
 
 

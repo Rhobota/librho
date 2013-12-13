@@ -8,10 +8,27 @@ namespace ml
 
 
 tLearnerCommittee::tLearnerCommittee(const std::vector< refc<iLearner> >& committee)
-    : m_committee(committee)
+    : m_committee(committee),
+      m_threadPool(NULL)
 {
     if (m_committee.size() < 2)
         throw eInvalidArgument("A committee must be two or more learners.");
+}
+
+tLearnerCommittee::tLearnerCommittee(const std::vector< refc<iLearner> >& committee,
+                                     u32 threadPoolSize)
+    : m_committee(committee),
+      m_threadPool(NULL)
+{
+    if (m_committee.size() < 2)
+        throw eInvalidArgument("A committee must be two or more learners.");
+    m_threadPool = new sync::tThreadPool(threadPoolSize);
+}
+
+tLearnerCommittee::~tLearnerCommittee()
+{
+    delete m_threadPool;
+    m_threadPool = NULL;
 }
 
 static
@@ -23,16 +40,69 @@ void s_accum(tIO& accum, const tIO& out)
         accum[i] += out[i];
 }
 
+class tEvalWorker : public sync::iRunnable, public bNonCopyable
+{
+    public:
+
+        tEvalWorker(const iLearner* learner, const tIO& input)
+            : m_learner(learner),
+              m_input(input)
+        {
+        }
+
+        void run()
+        {
+            m_learner->evaluate(m_input, m_output);
+        }
+
+        const tIO& getOutput() const
+        {
+            return m_output;
+        }
+
+    private:
+
+        const iLearner* m_learner;
+        const tIO& m_input;
+        tIO m_output;
+};
+
 void tLearnerCommittee::evaluate(const tIO& input, tIO& output) const
 {
-    tIO accumOutput; m_committee[0]->evaluate(input, accumOutput);
-    for (size_t i = 1; i < m_committee.size(); i++)
+    if (m_threadPool)
     {
-        tIO outHere; m_committee[i]->evaluate(input, outHere);
-        s_accum(accumOutput, outHere);
+        std::vector< refc<sync::iRunnable> > runnables;
+        std::vector<sync::tThreadPool::tTaskKey> taskKeys;
+        for (size_t i = 0; i < m_committee.size(); i++)
+        {
+            refc<sync::iRunnable> runnable(new tEvalWorker(m_committee[i], input));
+            taskKeys.push_back(m_threadPool->push(runnable));
+            runnables.push_back(runnable);
+        }
+        for (size_t i = 0; i < taskKeys.size(); i++)
+        {
+            m_threadPool->wait(taskKeys[i]);
+        }
+        for (size_t i = 0; i < runnables.size(); i++)
+        {
+            sync::iRunnable* runnable = runnables[i];
+            tEvalWorker* worker = dynamic_cast<tEvalWorker*>(runnable);
+            if (i == 0) output = worker->getOutput();
+            else        s_accum(output, worker->getOutput());
+        }
     }
-    for (size_t i = 0; i < accumOutput.size(); i++)
-        accumOutput[i] /= ((f64)m_committee.size());
+    else
+    {
+        m_committee[0]->evaluate(input, output);
+        for (size_t i = 1; i < m_committee.size(); i++)
+        {
+            tIO outHere;
+            m_committee[i]->evaluate(input, outHere);
+            s_accum(output, outHere);
+        }
+        for (size_t i = 0; i < output.size(); i++)
+            output[i] /= ((f64)m_committee.size());
+    }
 }
 
 void tLearnerCommittee::printLearnerInfo(std::ostream& out) const
