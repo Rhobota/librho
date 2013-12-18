@@ -104,7 +104,7 @@ vector< vector<u32> > kmeans_pp(const vector< vector<f64> >& points, u32 k,
 
         f64 ran = ((f64)lcg.next()) / ((f64)lcg.randMax()) * cumDists.back();
         size_t d;
-        for (d = 0; ran > cumDists[d]; d++);
+        for (d = 0; ran > cumDists[d]; d++) { }
         centers[i] = points[d];
     }
 
