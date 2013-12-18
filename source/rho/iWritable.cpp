@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sstream>
 #include <fcntl.h>
+#include <unistd.h>
 
 
 namespace rho
