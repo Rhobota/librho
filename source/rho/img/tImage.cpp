@@ -667,10 +667,12 @@ void s_sobel(const img::tImage* orig, img::tImage* edges, u32 clipAtValue)
                 u32 i = (*orig)[row+2][col+2][k];
                 u32 gx = 1*a + 2*d + 1*g - 1*c - 2*f - 1*i;
                 u32 gy = 1*a + 2*b + 1*c - 1*g - 2*h - 1*i;
-                u32 grad = (u32) round(
-                        std::sqrt(gx*gx + gy*gy) * 255.0 / clipAtValue);
+                u32 grad = (u32) round(std::sqrt(gx*gx + gy*gy));
+                if (grad > clipAtValue) grad = clipAtValue;
+                if (clipAtValue != 255)
+                    grad = grad * 255 / clipAtValue;
+                (*edges)[row][col][k] = grad;
                 //f64 gradAngle = std::atan2(gy, gx);
-                (*edges)[row][col][k] = ((grad > 255) ? 255 : grad);
             }
         }
     }
