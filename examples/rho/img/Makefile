@@ -22,6 +22,7 @@ all : $(EXECUTABLES)
 
 %.exec : %.cpp
 	$(TARGET)g++ -fvisibility=hidden -Wall -Werror -I../../../include $^ ../../../objects/librho.a $(LIB_FLAGS) -o $@
+	@echo
 
 clean :
 	@rm -f *.exec
