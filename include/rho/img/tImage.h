@@ -72,6 +72,11 @@ class tImage : public bNonCopyable, public iPackable
                                i32 t = 5,
                                i32 b = 127) const;
 
+        /**
+         * Finds edges using the Sobel operator.
+         */
+        void sobel(tImage* dest) const;
+
     public:
 
         struct tRow
