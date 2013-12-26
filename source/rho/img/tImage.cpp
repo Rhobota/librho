@@ -639,6 +639,46 @@ void tImage::adaptiveThreshold(tImage* dest,
     s_adaptiveThreshold(dest, (u32)s, (u32)t, (u32)b);
 }
 
+static
+void s_sobel(const img::tImage* orig, img::tImage* edges)
+{
+    u32 bpp = img::getBPP(orig->format());
+
+    edges->setFormat(orig->format());
+    edges->setWidth(orig->width() - 2);
+    edges->setHeight(orig->height() - 2);
+    edges->setBufSize(edges->width() * edges->height() * bpp);
+    edges->setBufUsed(edges->bufSize());
+
+    for (u32 row = 0; row < edges->height(); row++)
+    {
+        for (u32 col = 0; col < edges->width(); col++)
+        {
+            for (u32 k = 0; k < bpp; k++)
+            {
+                u32 a = (*orig)[row+0][col+0][k];
+                u32 b = (*orig)[row+0][col+1][k];
+                u32 c = (*orig)[row+0][col+2][k];
+                u32 d = (*orig)[row+1][col+0][k];
+                //u32 e = (*orig)[row+1][col+1][k];
+                u32 f = (*orig)[row+1][col+2][k];
+                u32 g = (*orig)[row+2][col+0][k];
+                u32 h = (*orig)[row+2][col+1][k];
+                u32 i = (*orig)[row+2][col+2][k];
+                u32 gx = 1*a + 2*d + 1*g - 1*c - 2*f - 1*i;
+                u32 gy = 1*a + 2*b + 1*c - 1*g - 2*h - 1*i;
+                u32 grad = (u32) std::sqrt(gx*gx + gy*gy);
+                (*edges)[row][col][k] = ((grad > 255) ? 255 : grad);
+            }
+        }
+    }
+}
+
+void tImage::sobel(tImage* dest) const
+{
+    s_sobel(this, dest);
+}
+
 u8* tImage::tRow::operator[] (size_t index)
 {
     return m_rowbuf+index*m_bpp;
