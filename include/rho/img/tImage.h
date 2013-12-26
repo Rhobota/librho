@@ -73,9 +73,18 @@ class tImage : public bNonCopyable, public iPackable
                                i32 b = 127) const;
 
         /**
-         * Finds edges using the Sobel operator.
+         * Finds edges using the Sobel operator, as described by:
+         *     http://en.wikipedia.org/wiki/Sobel_operator
+         *
+         * The 'clipAtValue' parameter is used to specify the
+         * maximum gradient value which can be represented in
+         * the returned image. Any gradient value more than it
+         * will be clipped to that max value. That is, all values
+         * of the gradients will be clipped to be in [0, clipAtValue].
+         * After clipping, the range will be normalized to [0, 255]
+         * so that the full range of the returned image is utilized.
          */
-        void sobel(tImage* dest) const;
+        void sobel(tImage* dest, u32 clipAtValue=255) const;
 
     public:
 

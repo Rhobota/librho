@@ -640,7 +640,7 @@ void tImage::adaptiveThreshold(tImage* dest,
 }
 
 static
-void s_sobel(const img::tImage* orig, img::tImage* edges)
+void s_sobel(const img::tImage* orig, img::tImage* edges, u32 clipAtValue)
 {
     u32 bpp = img::getBPP(orig->format());
 
@@ -667,16 +667,18 @@ void s_sobel(const img::tImage* orig, img::tImage* edges)
                 u32 i = (*orig)[row+2][col+2][k];
                 u32 gx = 1*a + 2*d + 1*g - 1*c - 2*f - 1*i;
                 u32 gy = 1*a + 2*b + 1*c - 1*g - 2*h - 1*i;
-                u32 grad = (u32) std::sqrt(gx*gx + gy*gy);
+                u32 grad = (u32) round(
+                        std::sqrt(gx*gx + gy*gy) * 255.0 / clipAtValue);
+                //f64 gradAngle = std::atan2(gy, gx);
                 (*edges)[row][col][k] = ((grad > 255) ? 255 : grad);
             }
         }
     }
 }
 
-void tImage::sobel(tImage* dest) const
+void tImage::sobel(tImage* dest, u32 clipAtValue) const
 {
-    s_sobel(this, dest);
+    s_sobel(this, dest, clipAtValue);
 }
 
 u8* tImage::tRow::operator[] (size_t index)
