@@ -18,42 +18,22 @@ using std::cin;
 refc<img::iImageCap> gImageCap;
 
 img::tImage gImage;
-
-
-void verticalFlip(img::tImage* image)
-{
-    u8* buf     = image->buf();
-    u32 bufUsed = image->bufUsed();
-    u32 width   = image->width();
-    u32 height  = image->height();
-
-    u32 bpp = bufUsed / (width * height);   // bytes-per-pixel
-
-    for (u32 h = 0; h < height; h++)
-    {
-        u8* row = buf + (h * width * bpp);
-        for (u32 l=0, r=width-1; l < width/2; l++, r--)
-        {
-            u8* lp = row + (l * bpp);
-            u8* rp = row + (r * bpp);
-            for (u32 i = 0; i < bpp; i++)
-                std::swap(lp[i], rp[i]);
-        }
-    }
-}
+img::tImage gImageEdges;
 
 
 void display()
 {
     gImageCap->getFrame(&gImage);
-    verticalFlip(&gImage);
+    gImage.verticalFlip();
+    gImage.sobel(&gImageEdges);
 
     glRasterPos2i(-1, 1);
     glPixelZoom(1.0, -1.0);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     glClear(GL_COLOR_BUFFER_BIT);
-    glDrawPixels(gImage.width(), gImage.height(),
-                 GL_RGB, GL_UNSIGNED_BYTE, gImage.buf());
+    glDrawPixels(gImageEdges.width(), gImageEdges.height(),
+                 GL_RGB, GL_UNSIGNED_BYTE, gImageEdges.buf());
 
     glutSwapBuffers();
     glutPostRedisplay();
