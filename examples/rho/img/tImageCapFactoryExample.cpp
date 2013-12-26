@@ -19,13 +19,14 @@ refc<img::iImageCap> gImageCap;
 
 img::tImage gImage;
 img::tImage gImageEdges;
+u32 gClipAtValue = 255;
 
 
 void display()
 {
     gImageCap->getFrame(&gImage);
     gImage.verticalFlip();
-    gImage.sobel(&gImageEdges);
+    gImage.sobel(&gImageEdges, gClipAtValue);
 
     glRasterPos2i(-1, 1);
     glPixelZoom(1.0, -1.0);
@@ -37,6 +38,15 @@ void display()
 
     glutSwapBuffers();
     glutPostRedisplay();
+}
+
+
+void keyboard(unsigned char key, int x, int y)
+{
+    if (key == 'w')
+        gClipAtValue += 10;
+    if (key == 's')
+        gClipAtValue -= 10;
 }
 
 
@@ -74,6 +84,7 @@ void setupWindow(int argc, char* argv[])
     glutCreateWindow("Glut webcam window");
 
     glutDisplayFunc(display);
+    glutKeyboardFunc(keyboard);
 
     glutMainLoop();
 }
