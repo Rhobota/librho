@@ -15,7 +15,7 @@ using std::endl;
 using std::cin;
 
 
-img::tImage gImage("31.png", img::kRGB24);
+img::tImage gImage("eyes/eye_example_leuk.png", img::kRGB24);
 
 
 void display()
