@@ -639,10 +639,77 @@ void tImage::adaptiveThreshold(tImage* dest,
     s_adaptiveThreshold(dest, (u32)s, (u32)t, (u32)b);
 }
 
-static
-void s_sobel(const img::tImage* orig, img::tImage* edges, u32 clipAtValue)
+template<class T>
+T s_median(const std::vector<T>& arr)
 {
-    u32 bpp = img::getBPP(orig->format());
+    // If the array size is even:
+    if ((arr.size() & 1) == 0)
+    {
+        return (arr[(arr.size()-1) / 2] + arr[arr.size() / 2]) / 2;
+    }
+    // Else, the array size is odd:
+    else
+    {
+        return arr[arr.size() / 2];
+    }
+}
+
+void tImage::medianFilter(tImage* dest, u32 windowWidth, u32 windowHeight) const
+{
+    if ((windowWidth % 2) == 0 || (windowHeight % 2) == 0)
+    {
+        throw eInvalidArgument("The window size most have odd dimensions.");
+    }
+
+    const tImage* orig = this;
+
+    u32 bpp = getBPP(orig->format());
+
+    dest->setFormat(orig->format());
+    dest->setWidth(orig->width());
+    dest->setHeight(orig->height());
+    dest->setBufSize(dest->width() * dest->height() * bpp);
+    dest->setBufUsed(dest->bufSize());
+
+    std::vector<u8> arr;
+    u32 halfWidth = windowWidth / 2;
+    u32 halfHeight = windowHeight / 2;
+
+    for (u32 row = 0; row < dest->height(); row++)
+    {
+        for (u32 col = 0; col < dest->width(); col++)
+        {
+            u32 minr = (row > halfHeight) ? (row - halfHeight) : 0;
+            u32 maxr = (row + halfHeight < dest->height()) ? (row + halfHeight) : (dest->height() - 1);
+            u32 minc = (col > halfWidth) ? (col - halfWidth) : 0;
+            u32 maxc = (col + halfWidth < dest->width()) ? (col + halfWidth) : (dest->width() - 1);
+            for (u32 k = 0; k < bpp; k++)
+            {
+                arr.clear();
+                for (u32 r = minr; r <= maxr; r++)
+                    for (u32 c = minc; c <= maxc; c++)
+                        arr.push_back((*orig)[r][c][k]);
+                std::sort(arr.begin(), arr.end());
+                (*dest)[row][col][k] = s_median(arr);
+            }
+        }
+    }
+}
+
+static
+void s_sobel(const tImage* orig, tImage* edges, u32 clipAtValue)
+{
+    if (orig->width() < 3 || orig->height() < 3)
+    {
+        throw eInvalidArgument("Cannot run the Sobel operator on an image "
+                "that is less than 3x3 pixels.");
+    }
+    if (clipAtValue == 0)
+    {
+        throw eInvalidArgument("Clip value must be positive.");
+    }
+
+    u32 bpp = getBPP(orig->format());
 
     edges->setFormat(orig->format());
     edges->setWidth(orig->width() - 2);

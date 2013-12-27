@@ -32,12 +32,16 @@ int main(int argc, char* argv[])
     for (int i = 1; i < argc; i++)
     {
         string path = argv[i];
-        img::tImage orig(path, img::kRGB24);
+        img::tImage orig(path, img::kGrey);
+        orig.saveToFile(path + "_a.png");
+
+        img::tImage filtered;
+        orig.medianFilter(&filtered);
+        filtered.saveToFile(path + "_filtered.png");
 
         img::tImage edges;
-        orig.sobel(&edges);
-
-        edges.saveToFile(path + ".png");
+        filtered.sobel(&edges);
+        edges.saveToFile(path + "_filtered_edges.png");
     }
 
     cout << "Finished!" << endl;

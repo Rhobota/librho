@@ -73,6 +73,14 @@ class tImage : public bNonCopyable, public iPackable
                                i32 b = 127) const;
 
         /**
+         * Applies a median filter to the image with the specified window
+         * size.
+         */
+        void medianFilter(tImage* dest,
+                          u32 windowWidth=5,
+                          u32 windowHeight=5) const;
+
+        /**
          * Finds edges using the Sobel operator, as described by:
          *     http://en.wikipedia.org/wiki/Sobel_operator
          *
