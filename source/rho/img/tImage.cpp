@@ -645,7 +645,7 @@ T s_median(const std::vector<T>& arr)
     // If the array size is even:
     if ((arr.size() & 1) == 0)
     {
-        return (arr[(arr.size()-1) / 2] + arr[arr.size() / 2]) / 2;
+        return (T) ( (arr[(arr.size()-1) / 2] + arr[arr.size() / 2]) / 2 );
     }
     // Else, the array size is odd:
     else
@@ -738,7 +738,7 @@ void s_sobel(const tImage* orig, tImage* edges, u32 clipAtValue)
                 if (grad > clipAtValue) grad = clipAtValue;
                 if (clipAtValue != 255)
                     grad = grad * 255 / clipAtValue;
-                (*edges)[row][col][k] = grad;
+                (*edges)[row][col][k] = (u8) grad;
                 //f64 gradAngle = std::atan2(gy, gx);
             }
         }
