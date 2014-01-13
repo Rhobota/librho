@@ -313,7 +313,7 @@ class tLayer : public bNonCopyable
 
         if (normalizeLayerInput)
         {
-            f64 mult = 1.0 / ((f64)input.size());
+            f64 mult = 1.0 / ((f64)input.size()+1);
             for (u32 i = 0; i < A.size(); i++)
                 A[i] *= mult;
         }
@@ -376,7 +376,7 @@ class tLayer : public bNonCopyable
 
         if (normalizeLayerInput)
         {
-            f64 norm = 1.0 / ((f64)prev_a.size());
+            f64 norm = 1.0 / ((f64)prev_a.size()+1);
             for (u32 s = 0; s < prev_a.size(); s++)
             {
                 if (prev_a[s] == 0.0)
@@ -423,7 +423,7 @@ class tLayer : public bNonCopyable
 
         if (normalizeLayerInput)
         {
-            f64 mult = 1.0 / ((f64)prev_da.size());
+            f64 mult = 1.0 / ((f64)prev_da.size()+1);
             for (u32 s = 0; s < prev_da.size(); s++)
                 prev_da[s] *= mult;
         }
