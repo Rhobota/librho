@@ -11,8 +11,8 @@ tLearnerCommittee::tLearnerCommittee(const std::vector< refc<iLearner> >& commit
     : m_committee(committee),
       m_threadPool(NULL)
 {
-    if (m_committee.size() < 2)
-        throw eInvalidArgument("A committee must be two or more learners.");
+    if (m_committee.size() == 0)
+        throw eInvalidArgument("A committee must be one or more learners.");
 }
 
 tLearnerCommittee::tLearnerCommittee(const std::vector< refc<iLearner> >& committee,
@@ -20,8 +20,8 @@ tLearnerCommittee::tLearnerCommittee(const std::vector< refc<iLearner> >& commit
     : m_committee(committee),
       m_threadPool(NULL)
 {
-    if (m_committee.size() < 2)
-        throw eInvalidArgument("A committee must be two or more learners.");
+    if (m_committee.size() == 0)
+        throw eInvalidArgument("A committee must be one or more learners.");
     m_threadPool = new sync::tThreadPool(threadPoolSize);
 }
 

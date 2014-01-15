@@ -1226,9 +1226,6 @@ bool tSmartStoppingWrapper::didFinishEpoch(iLearner* learner,
         return false;
     }
 
-    if (epochsCompleted >= m_allowedEpochs || epochsCompleted >= m_maxEpochs)
-        return false;
-
     f64 testError = learner->calculateError(testOutputs, testTargets);
     if (testError <= m_bestTestErrorYet * (1.0 - m_significantThreshold))
     {
@@ -1236,7 +1233,7 @@ bool tSmartStoppingWrapper::didFinishEpoch(iLearner* learner,
         m_allowedEpochs = (u32)std::ceil(std::max((f64)m_minEpochs, epochsCompleted * m_patienceIncrease));
     }
 
-    return true;
+    return (epochsCompleted < m_allowedEpochs && epochsCompleted < m_maxEpochs);
 }
 
 void tSmartStoppingWrapper::didFinishTraining(iLearner* learner,
