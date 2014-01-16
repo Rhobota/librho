@@ -7,21 +7,27 @@ namespace ml
 {
 
 
-tLearnerCommittee::tLearnerCommittee(const std::vector< refc<iLearner> >& committee)
+tLearnerCommittee::tLearnerCommittee(const std::vector< refc<iLearner> >& committee, nCommitteeType type)
     : m_committee(committee),
+      m_type(type),
       m_threadPool(NULL)
 {
     if (m_committee.size() == 0)
         throw eInvalidArgument("A committee must be one or more learners.");
+    if (m_type < 0 || m_type >= kCommitteeTypeMaxValue)
+        throw eInvalidArgument("Invalid committee type enum value.");
 }
 
 tLearnerCommittee::tLearnerCommittee(const std::vector< refc<iLearner> >& committee,
-                                     u32 threadPoolSize)
+                                     u32 threadPoolSize, nCommitteeType type)
     : m_committee(committee),
+      m_type(type),
       m_threadPool(NULL)
 {
     if (m_committee.size() == 0)
         throw eInvalidArgument("A committee must be one or more learners.");
+    if (m_type < 0 || m_type >= kCommitteeTypeMaxValue)
+        throw eInvalidArgument("Invalid committee type enum value.");
     m_threadPool = new sync::tThreadPool(threadPoolSize);
 }
 
@@ -38,6 +44,17 @@ void s_accum(tIO& accum, const tIO& out)
         throw eLogicError("The learners of a committee must have the same output dimensionality.");
     for (size_t i = 0; i < accum.size(); i++)
         accum[i] += out[i];
+}
+
+template <class T>
+T s_max(const std::vector<T>& vect)
+{
+    if (vect.size() == 0)
+        throw eLogicError("To calculate the max of a vector it cannot be zero-length.");
+    T ma = vect[0];
+    for (size_t i = 1; i < vect.size(); i++)
+        ma = std::max(ma, vect[i]);
+    return ma;
 }
 
 class tEvalWorker : public sync::iRunnable, public bNonCopyable
@@ -69,6 +86,7 @@ class tEvalWorker : public sync::iRunnable, public bNonCopyable
 
 void tLearnerCommittee::evaluate(const tIO& input, tIO& output) const
 {
+    std::vector<tIO> outputs;
     if (m_threadPool)
     {
         std::vector< refc<sync::iRunnable> > runnables;
@@ -87,21 +105,38 @@ void tLearnerCommittee::evaluate(const tIO& input, tIO& output) const
         {
             sync::iRunnable* runnable = runnables[i];
             tEvalWorker* worker = dynamic_cast<tEvalWorker*>(runnable);
-            if (i == 0) output = worker->getOutput();
-            else        s_accum(output, worker->getOutput());
+            outputs.push_back(worker->getOutput());
         }
     }
     else
     {
-        m_committee[0]->evaluate(input, output);
-        for (size_t i = 1; i < m_committee.size(); i++)
+        for (size_t i = 0; i < m_committee.size(); i++)
         {
             tIO outHere;
             m_committee[i]->evaluate(input, outHere);
-            s_accum(output, outHere);
+            outputs.push_back(outHere);
         }
+    }
+
+    if (m_type == kCommitteeAverage)
+    {
+        output = outputs[0];
+        for (size_t i = 1; i < outputs.size(); i++)
+            s_accum(output, outputs[i]);
         for (size_t i = 0; i < output.size(); i++)
             output[i] /= ((f64)m_committee.size());
+    }
+    else if (m_type == kCommitteeMostConfident)
+    {
+        size_t mostConfidentIndex = 0;
+        for (size_t i = 1; i < outputs.size(); i++)
+            if (s_max(outputs[i]) > s_max(outputs[mostConfidentIndex]))
+                mostConfidentIndex = i;
+        output = outputs[mostConfidentIndex];
+    }
+    else
+    {
+        throw eNotImplemented("Is there a new enum value I haven't handled here yet?");
     }
 }
 
