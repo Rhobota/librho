@@ -21,16 +21,29 @@ class tLearnerCommittee : public iLearner
     public:
 
         /**
+         * An enum for the types of scoring within the committee that will
+         * be used.
+         */
+        enum nCommitteeType
+        {
+            kCommitteeAverage,           // average the outputs of each learner
+            kCommitteeMostConfident,     // trust the learner with the largest output value (largest confidence)
+            kCommitteeTypeMaxValue       // marks the end of this enum; do not use this
+        };
+
+        /**
          * Constructs a committee of trained learners.
          */
-        tLearnerCommittee(const std::vector< refc<iLearner> >& committee);
+        tLearnerCommittee(const std::vector< refc<iLearner> >& committee,
+                          nCommitteeType type=kCommitteeAverage);
 
         /**
          * Constructs a committee of trained learners, and uses a thread
          * pool of the given size for evalutate().
          */
         tLearnerCommittee(const std::vector< refc<iLearner> >& committee,
-                          u32 threadPoolSize);
+                          u32 threadPoolSize,
+                          nCommitteeType type=kCommitteeAverage);
 
         /**
          * D'tor
@@ -89,6 +102,7 @@ class tLearnerCommittee : public iLearner
     private:
 
         std::vector< refc<iLearner> > m_committee;
+        nCommitteeType m_type;
 
         sync::tThreadPool* m_threadPool;
 };
