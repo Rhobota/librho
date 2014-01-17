@@ -47,7 +47,8 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
             kWeightUpRuleAdaptiveRates     = 3,  // the adaptive learning rates method (for full- or large-batch)
             kWeightUpRuleRPROP             = 4,  // the rprop full-batch method
             kWeightUpRuleRMSPROP           = 5,  // the rmsprop mini-batch method (a mini-batch version of rprop)
-            kWeightUpRuleMax               = 6   // marks the max of this enum (do not use)
+            kWeightUpRuleARMS              = 6,  // the adaptive rmsprop method
+            kWeightUpRuleMax               = 7   // marks the max of this enum (do not use)
         };
 
         //////////////////////////////////////////////////////////////////////
@@ -164,6 +165,10 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          *    - kWeightUpRuleRMSPROP
          *         -- requires setAlpha()
          *         -- this is a mini-batch version of the rprop method
+         *
+         *    - kWeightUpRuleARMS
+         *         -- requires setAlpha()
+         *         -- very similar to RMSPROP, but has an addaptive alpha
          */
         void setWeightUpRule(nWeightUpRule rule, u32 layerIndex);
         void setWeightUpRule(nWeightUpRule rule);
@@ -183,7 +188,7 @@ class tANN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * use full- or large-batch learning.
          *
          * This parameter is also used when the weight update rule
-         * is kWeightUpRuleRMSPROP.
+         * is kWeightUpRuleRMSPROP or kWeightUpRuleARMS.
          */
         void setAlpha(f64 alpha, u32 layerIndex);
         void setAlpha(f64 alpha);

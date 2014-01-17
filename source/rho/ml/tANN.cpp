@@ -71,6 +71,8 @@ string s_weightUpRuleToString(tANN::nWeightUpRule rule)
             return "rprop";
         case tANN::kWeightUpRuleRMSPROP:
             return "rmsprop";
+        case tANN::kWeightUpRuleARMS:
+            return "arms";
         default:
             assert(false);
     }
@@ -94,6 +96,8 @@ char s_weightUpRuleToChar(tANN::nWeightUpRule rule)
             return 'r';
         case tANN::kWeightUpRuleRMSPROP:
             return 'R';
+        case tANN::kWeightUpRuleARMS:
+            return 'A';
         default:
             assert(false);
     }
@@ -528,7 +532,7 @@ class tLayer : public bNonCopyable
                 if (alpha <= 0.0)
                     throw eLogicError("When using the adaptive learning rates rule, alpha must be set.");
                 f64 mult = (10.0 / batchSize) * alpha;
-                if (gain.size() == 0)
+                if (gain.size() == 0 || dw_accum_prev.size() == 0)
                 {
                     gain = vector< vector<f64> >(w.size(), vector<f64>(w[0].size(), 1.0));
                     dw_accum_prev = vector< vector<f64> >(w.size(), vector<f64>(w[0].size(), 0.0));
@@ -552,7 +556,7 @@ class tLayer : public bNonCopyable
 
             case tANN::kWeightUpRuleRPROP:
             {
-                if (step.size() == 0)
+                if (step.size() == 0 || dw_accum_prev.size() == 0)
                 {
                     step = vector< vector<f64> >(w.size(), vector<f64>(w[0].size(), 0.001));
                     dw_accum_prev = vector< vector<f64> >(w.size(), vector<f64>(w[0].size(), 0.0));
@@ -597,6 +601,40 @@ class tLayer : public bNonCopyable
                 break;
             }
 
+            case tANN::kWeightUpRuleARMS:
+            {
+                if (alpha <= 0.0)
+                    throw eLogicError("When using the arms rule, alpha must be set.");
+                f64 batchNormMult = 1.0 / batchSize;
+                if (dw_accum_avg.size() == 0)
+                    dw_accum_avg = vector< vector<f64> >(w.size(), vector<f64>(w[0].size(), 1000.0));
+                if (step.size() == 0)
+                    step = vector< vector<f64> >(w.size(), vector<f64>(w[0].size(), alpha));
+                if (dw_accum_prev.size() == 0)
+                    dw_accum_prev = vector< vector<f64> >(w.size(), vector<f64>(w[0].size(), 0.0));
+                for (u32 s = 0; s < w.size(); s++)
+                {
+                    for (u32 i = 0; i < w[s].size(); i++)
+                    {
+                        // Decrease the step size if the gradient changed direction.
+                        if (dw_accum[s][i] * dw_accum_prev[s][i] < 0.0)
+                            step[s][i] *= 0.9;
+                        else
+                            step[s][i] += alpha * 0.01;
+                        dw_accum_prev[s][i] = dw_accum[s][i];
+
+                        // The following is the same as in RMSPROP, except we use step[s][i] here instead of alpha.
+                        dw_accum[s][i] *= batchNormMult;  // <--- makes dw_accum an average gradient over the batch
+                        dw_accum_avg[s][i] = 0.9*dw_accum_avg[s][i] + 0.1*dw_accum[s][i]*dw_accum[s][i];
+                        if (dw_accum_avg[s][i] != 0.0)
+                            w[s][i] -= step[s][i] * dw_accum[s][i] / std::sqrt(dw_accum_avg[s][i]);
+                        dw_accum[s][i] = 0.0;
+                    }
+                }
+                batchSize = 0;
+                break;
+            }
+
             default:
             {
                 assert(false);
@@ -627,6 +665,7 @@ class tLayer : public bNonCopyable
             case tANN::kWeightUpRuleFixedLearningRate:
             case tANN::kWeightUpRuleAdaptiveRates:
             case tANN::kWeightUpRuleRMSPROP:
+            case tANN::kWeightUpRuleARMS:
                 rho::pack(out, alpha);
                 break;
 
@@ -677,6 +716,7 @@ class tLayer : public bNonCopyable
             case tANN::kWeightUpRuleFixedLearningRate:
             case tANN::kWeightUpRuleAdaptiveRates:
             case tANN::kWeightUpRuleRMSPROP:
+            case tANN::kWeightUpRuleARMS:
                 rho::unpack(in, alpha);
                 break;
 
@@ -961,6 +1001,7 @@ void tANN::printLearnerInfo(std::ostream& out) const
             case kWeightUpRuleFixedLearningRate:
             case kWeightUpRuleAdaptiveRates:
             case kWeightUpRuleRMSPROP:
+            case kWeightUpRuleARMS:
                 ss << "(a=" << m_layers[i].alpha << ")";
                 break;
             case kWeightUpRuleMomentum:
@@ -1019,6 +1060,7 @@ string tANN::learnerInfoString() const
             case kWeightUpRuleFixedLearningRate:
             case kWeightUpRuleAdaptiveRates:
             case kWeightUpRuleRMSPROP:
+            case kWeightUpRuleARMS:
                 out << m_layers[i].alpha;
                 break;
             case kWeightUpRuleMomentum:
