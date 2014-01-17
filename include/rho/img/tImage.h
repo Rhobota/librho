@@ -94,6 +94,44 @@ class tImage : public bNonCopyable, public iPackable
          */
         void sobel(tImage* dest, u32 clipAtValue=255) const;
 
+        /**
+         * A struct used in the houghCircles() method below.
+         */
+        struct tHoughCircle
+        {
+            tHoughCircle(u32 x, u32 y, u32 r, u32 b, u32 v) : x(x), y(y), r(r), b(b), v(v) { }
+
+            u32 x;     // the x-coord of this circle
+            u32 y;     // the y-coord of this circle
+            u32 r;     // the radius of this circle
+            u32 b;     // the index of the channel this circle was found on
+            u32 v;     // the number of "votes" for this circle
+        };
+
+        /**
+         * The Hough Transform for Circles.
+         *
+         * The search space is defined by x_min, x_max, x_step, y_min,
+         * y_max, y_step, r_min, r_max, and r_step. So, be careful that
+         * you don't define a search space that is too big, or this method
+         * will run for a very long time.
+         *
+         * 'allRadiiAccumulator' is an out-param. On return, it will have dimensions:
+         *     ((y_max - y_min) / y_step + 1, (x_max - x_min) / x_step + 1)
+         *
+         * Each cell in 'allRadiiAccumulator' will contain the number of "votes"
+         * that center received for ALL the radii tested on ALL channels of the image.
+         *
+         * An array of tHoughCircle objects will be returned, sorted from "most likely
+         * a circle" to "least likely a circle". A circle is only put into this array
+         * if it gets greater than or equal "votes" than 'voteThresh'.
+         */
+        std::vector<tHoughCircle> houghCircles(std::vector< std::vector<u32> >& allRadiiAccumulator,
+                                               u32 x_min, u32 x_max, u32 x_step,
+                                               u32 y_min, u32 y_max, u32 y_step,
+                                               u32 r_min, u32 r_max, u32 r_step,
+                                               u32 voteThresh) const;
+
     public:
 
         struct tRow

@@ -750,6 +750,99 @@ void tImage::sobel(tImage* dest, u32 clipAtValue) const
     s_sobel(this, dest, clipAtValue);
 }
 
+static
+bool s_houghCircleSortCompare(const tImage::tHoughCircle& a, const tImage::tHoughCircle& b)
+{
+    return a.v > b.v;
+}
+
+static
+u32 s_countAround(const tImage& image, u32 x, u32 y, u32 r, u32 b)
+{
+    if (r == 0) return (image[y][x][b] > 127) ? 1 : 0;
+    u32 pointsToCheck = (u32) ceil(geo::kPI*r);   // <-- equals half the circumference
+    f64 delta = 2.0*geo::kPI / pointsToCheck;     // <-- amount to rotate per point check
+    f64 curr = 0.0;
+    u32 count = 0;
+    for (u32 i = 0; i < pointsToCheck; i++)
+    {
+        i32 xx = (i32) round(r * std::cos(curr) + x);
+        i32 yy = (i32) round(r * std::sin(curr) + y);
+        curr += delta;
+        if (xx < 0 || yy < 0 || xx >= (i32)image.width() || yy >= (i32)image.height())
+            continue;
+        if (image[yy][xx][b] > 127)
+            count++;
+    }
+    return count * 2;   // times two because we only looked at half the circumference (we left holes in our search)
+}
+
+static
+std::vector<tImage::tHoughCircle> s_houghCircles(const tImage* image,
+                                                 std::vector< std::vector<u32> >& allRadiiAccumulator,
+                                                 u32 x_min, u32 x_max, u32 x_step,
+                                                 u32 y_min, u32 y_max, u32 y_step,
+                                                 u32 r_min, u32 r_max, u32 r_step,
+                                                 u32 voteThresh)
+{
+    if (x_min > x_max)   throw eInvalidArgument("x_min must be less than or equal to x_max");
+    if (y_min > y_max)   throw eInvalidArgument("y_min must be less than or equal to y_max");
+    if (r_min > r_max)   throw eInvalidArgument("r_min must be less than or equal to r_max");
+    if (voteThresh == 0) throw eInvalidArgument("The cicle vote threshold must be greater than 0.");
+    if (x_min >= image->width() || x_max >= image->width())
+        throw eInvalidArgument("x_min and x_max must be within the width of the image");
+    if (y_min >= image->height() || y_max >= image->height())
+        throw eInvalidArgument("y_min and y_max must be within the height of the image");
+    if (x_step == 0 || y_step == 0 || r_step == 0)
+        throw eInvalidArgument("No step length can be zero.");
+    u32 maxPossibleRadius = (u32) std::floor( hypot(image->width(), image->height()) );
+    r_min = std::min(r_min, maxPossibleRadius);
+    r_max = std::min(r_max, maxPossibleRadius);
+
+    u32 accumWidth = (x_max-x_min)/x_step + 1;
+    u32 accumHeight = (y_max-y_min)/y_step + 1;
+    allRadiiAccumulator = std::vector< std::vector<u32> >(accumHeight, std::vector<u32>(accumWidth, 0));
+
+    u32 bpp = getBPP(image->format());
+
+    std::vector<tImage::tHoughCircle> circleList;
+
+    for (u32 y = y_min, j = 0; y <= y_max; y += y_step, j++)
+    {
+        for (u32 x = x_min, i = 0; x <= x_max; x += x_step, i++)
+        {
+            u32 voteSum = 0;
+            for (u32 r = r_min; r <= r_max; r += r_step)
+            {
+                for (u32 b = 0; b < bpp; b++)
+                {
+                    u32 votesHere = s_countAround(*image, x, y, r, b);
+                    voteSum += votesHere;
+                    if (votesHere >= voteThresh)
+                        circleList.push_back(tImage::tHoughCircle(x, y, r, b, votesHere));
+                }
+            }
+            allRadiiAccumulator[j][i] = voteSum;
+        }
+    }
+
+    std::sort(circleList.begin(), circleList.end(), s_houghCircleSortCompare);
+    return circleList;
+}
+
+std::vector<tImage::tHoughCircle> tImage::houghCircles(std::vector< std::vector<u32> >& allRadiiAccumulator,
+                                                       u32 x_min, u32 x_max, u32 x_step,
+                                                       u32 y_min, u32 y_max, u32 y_step,
+                                                       u32 r_min, u32 r_max, u32 r_step,
+                                                       u32 voteThresh) const
+{
+    return s_houghCircles(this, allRadiiAccumulator,
+                          x_min, x_max, x_step,
+                          y_min, y_max, y_step,
+                          r_min, r_max, r_step,
+                          voteThresh);
+}
+
 u8* tImage::tRow::operator[] (size_t index)
 {
     return m_rowbuf+index*m_bpp;
