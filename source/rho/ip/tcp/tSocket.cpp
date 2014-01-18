@@ -12,23 +12,23 @@ namespace tcp
 {
 
 
-tSocket::tSocket(const tAddr& addr, u16 port)
+tSocket::tSocket(const tAddr& addr, u16 port, u32 timeoutMS)
     : m_fd(-1), m_readEOF(false), m_writeEOF(false)
 {
-    m_init(addr, port);
+    m_init(addr, port, timeoutMS);
 }
 
-tSocket::tSocket(const tAddrGroup& addrGroup, u16 port)
+tSocket::tSocket(const tAddrGroup& addrGroup, u16 port, u32 timeoutMS)
     : m_fd(-1), m_readEOF(false), m_writeEOF(false)
 {
-    m_init(addrGroup, port);
+    m_init(addrGroup, port, timeoutMS);
 }
 
-tSocket::tSocket(std::string hostStr, u16 port)
+tSocket::tSocket(std::string hostStr, u16 port, u32 timeoutMS)
     : m_fd(-1), m_readEOF(false), m_writeEOF(false)
 {
     tAddrGroup addrGroup(hostStr);
-    m_init(addrGroup, port);
+    m_init(addrGroup, port, timeoutMS);
 }
 
 tSocket::tSocket(int fd, const tAddr& addr)
@@ -36,7 +36,7 @@ tSocket::tSocket(int fd, const tAddr& addr)
 {
 }
 
-void tSocket::m_init(const tAddr& addr, u16 port)
+void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
 {
     m_finalize();
 
@@ -73,13 +73,13 @@ void tSocket::m_init(const tAddr& addr, u16 port)
     }
 }
 
-void tSocket::m_init(const tAddrGroup& addrGroup, u16 port)
+void tSocket::m_init(const tAddrGroup& addrGroup, u16 port, u32 timeoutMS)
 {
     for (int i = 0; i < addrGroup.size(); i++)
     {
         try
         {
-            m_init(addrGroup[i], port);
+            m_init(addrGroup[i], port, timeoutMS);
             break;
         }
         catch (ebIP& e)

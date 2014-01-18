@@ -32,20 +32,26 @@ class tSocket :
         /**
          * Tries to connects to the host described by 'addr'.
          * Tries to connect on 'port'.
+         * You can set the timeout if you'd like, but the default
+         * is 5 seconds.
          */
-        tSocket(const tAddr& addr, u16 port);
+        tSocket(const tAddr& addr, u16 port, u32 timeoutMS=5000);
 
         /**
          * Tries to connect to each host described in 'addrGroup' until
          * one connects successfully. Tries each connection on 'port'.
+         * You can set the timeout if you'd like, but the default
+         * is 5 seconds.
          */
-        tSocket(const tAddrGroup& addrGroup, u16 port);
+        tSocket(const tAddrGroup& addrGroup, u16 port, u32 timeoutMS=5000);
 
         /**
          * Tries to connect to the host described by 'hostStr'.
          * Tries to connect on 'port'.
+         * You can set the timeout if you'd like, but the default
+         * is 5 seconds.
          */
-        tSocket(std::string hostStr, u16 port);
+        tSocket(std::string hostStr, u16 port, u32 timeoutMS=5000);
 
         /**
          * Closes and destroys the socket.
@@ -119,8 +125,8 @@ class tSocket :
 
         tSocket(int fd, const tAddr& addr);
 
-        void m_init(const tAddr& addr, u16 port);
-        void m_init(const tAddrGroup& addrGroup, u16 port);
+        void m_init(const tAddr& addr, u16 port, u32 timeoutMS);
+        void m_init(const tAddrGroup& addrGroup, u16 port, u32 timeoutMS);
         void m_finalize();
 
         friend class tServer;
