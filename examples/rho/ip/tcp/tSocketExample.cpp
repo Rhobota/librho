@@ -13,8 +13,8 @@ int main()
 {
     try
     {
-        ip::tAddrGroup addrGroup(ip::tAddrGroup::kLocalhostConnect);
-        ip::tcp::tSocket sock(addrGroup, 8080);
+        ip::tAddrGroup addrGroup("rhobox.com");
+        ip::tcp::tSocket sock(addrGroup, 22, 1000);  // <-- 1 second timeout
 
         ip::tAddr addr = sock.getForeignAddress();
         u16       port = sock.getForeignPort();
