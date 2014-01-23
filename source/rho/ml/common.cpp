@@ -1171,12 +1171,14 @@ tSmartStoppingWrapper::tSmartStoppingWrapper(u32 minEpochs,
                                              u32 maxEpochs,
                                              f64 significantThreshold,
                                              f64 patienceIncrease,
-                                             iEZTrainObserver* wrappedObserver)
+                                             iEZTrainObserver* wrappedObserver,
+                                             nPerformanceAttribute performanceAttribute)
     : m_minEpochs(minEpochs),
       m_maxEpochs(maxEpochs),
       m_significantThreshold(significantThreshold),
       m_patienceIncrease(patienceIncrease),
-      m_obs(wrappedObserver)
+      m_obs(wrappedObserver),
+      m_performanceAttribute(performanceAttribute)
 {
     if (m_minEpochs == 0)
         throw eInvalidArgument("You must train for at least one epoch minimum.");
@@ -1226,7 +1228,18 @@ bool tSmartStoppingWrapper::didFinishEpoch(iLearner* learner,
         return false;
     }
 
-    f64 testError = learner->calculateError(testOutputs, testTargets);
+    f64 testError;
+    switch (m_performanceAttribute)
+    {
+        case kClassificationErrorRate:
+            testError = errorRate(testCM);
+            break;
+        case kOutputErrorMeasure:
+            testError = learner->calculateError(testOutputs, testTargets);
+            break;
+        default:
+            throw eLogicError("Unknown performance attribute");
+    }
     if (testError <= m_bestTestErrorYet * (1.0 - m_significantThreshold))
     {
         m_bestTestErrorYet = testError;
@@ -1258,8 +1271,10 @@ void tSmartStoppingWrapper::m_reset()
 }
 
 
-tBestRememberingWrapper::tBestRememberingWrapper(iEZTrainObserver* wrappedObserver)
-    : m_obs(wrappedObserver)
+tBestRememberingWrapper::tBestRememberingWrapper(iEZTrainObserver* wrappedObserver,
+                                                 nPerformanceAttribute performanceAttribute)
+    : m_obs(wrappedObserver),
+      m_performanceAttribute(performanceAttribute)
 {
     reset();
 }
@@ -1345,7 +1360,18 @@ bool tBestRememberingWrapper::didFinishEpoch(iLearner* learner,
         reset();
 
     // Evaluate the error rate on the test set and see if it's the best yet.
-    f64 testErrorRate = errorRate(testCM);
+    f64 testErrorRate;
+    switch (m_performanceAttribute)
+    {
+        case kClassificationErrorRate:
+            testErrorRate = errorRate(testCM);
+            break;
+        case kOutputErrorMeasure:
+            testErrorRate = learner->calculateError(testOutputs, testTargets);
+            break;
+        default:
+            throw eLogicError("Unknown performance attribute");
+    }
     if (testErrorRate < m_bestTestErrorRate)
     {
         m_bestTestEpochNum = epochsCompleted;
@@ -1377,8 +1403,9 @@ void tBestRememberingWrapper::didFinishTraining(iLearner* learner,
 
 tLoggingWrapper::tLoggingWrapper(u32 logInterval, bool isInputImageColor,
                                  u32 inputImageWidth, bool shouldDisplayAbsoluteValues,
-                                 iEZTrainObserver* wrappedObserver)
-    : tBestRememberingWrapper(wrappedObserver),
+                                 iEZTrainObserver* wrappedObserver,
+                                 nPerformanceAttribute performanceAttribute)
+    : tBestRememberingWrapper(wrappedObserver, performanceAttribute),
       m_logInterval(logInterval),
       m_isColorInput(isInputImageColor),
       m_imageWidth(inputImageWidth),

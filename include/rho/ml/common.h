@@ -412,6 +412,12 @@ u32  ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
+enum nPerformanceAttribute
+{
+    kClassificationErrorRate      = 1,
+    kOutputErrorMeasure           = 2
+};
+
 class tSmartStoppingWrapper : public iEZTrainObserver
 {
     public:
@@ -437,12 +443,16 @@ class tSmartStoppingWrapper : public iEZTrainObserver
          *
          * This class wraps another iEZTrainObserver so that observers
          * can be decorated by objects of this type.
+         *
+         * You can choose which performance measure is used to determine
+         * when to stop with the last parameter.
          */
         tSmartStoppingWrapper(u32 minEpochs=50,
                               u32 maxEpochs=1000,
                               f64 significantThreshold=0.005,   // <-- half a percent
                               f64 patienceIncrease=2.0,
-                              iEZTrainObserver* wrappedObserver=NULL);
+                              iEZTrainObserver* wrappedObserver=NULL,
+                              nPerformanceAttribute performanceAttribute=kOutputErrorMeasure);
 
     public:
 
@@ -486,6 +496,8 @@ class tSmartStoppingWrapper : public iEZTrainObserver
 
         f64 m_bestTestErrorYet;
         u32 m_allowedEpochs;
+
+        nPerformanceAttribute m_performanceAttribute;
 };
 
 
@@ -499,8 +511,12 @@ class tBestRememberingWrapper : public iEZTrainObserver
          * best on the test set during training. This allows you to identify
          * which point in the learning process gave you the best generalization
          * error estimate, and then to report that point at the end of training.
+         *
+         * Using 'performanceAttribute', you can choose which performance measure
+         * is used for determining the best network observed.
          */
-        tBestRememberingWrapper(iEZTrainObserver* wrappedObserver=NULL);
+        tBestRememberingWrapper(iEZTrainObserver* wrappedObserver=NULL,
+                                nPerformanceAttribute performanceAttribute=kClassificationErrorRate);
 
         void reset();
 
@@ -552,6 +568,8 @@ class tBestRememberingWrapper : public iEZTrainObserver
         tByteWritable m_serializedLearner;
 
         iEZTrainObserver * const m_obs;
+
+        nPerformanceAttribute m_performanceAttribute;
 };
 
 
@@ -579,13 +597,16 @@ class tLoggingWrapper : public tBestRememberingWrapper
          * parameters are needed for creating the visualization which occur
          * every 'logInterval' number of epochs.
          *
+         * See tBestRememberingWrapper for a description of 'performanceAttribute'.
+         *
          * This logging wrapper works well when used with both versions of
          * ezTrain() above. That is, it works for normal train/test sets,
          * and it works for x-fold cross-validation sets.
          */
         tLoggingWrapper(u32 logInterval, bool isInputImageColor,
                         u32 inputImageWidth, bool shouldDisplayAbsoluteValues,
-                        iEZTrainObserver* wrappedObserver=NULL);
+                        iEZTrainObserver* wrappedObserver=NULL,
+                        nPerformanceAttribute performanceAttribute=kClassificationErrorRate);
 
         ~tLoggingWrapper();
 
