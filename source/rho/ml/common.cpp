@@ -1138,11 +1138,58 @@ u32  ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
 
     for (u32 i = 0; i < numFolds; i++)
     {
-        learner->reset();
+        if (i > 0)
+            learner->reset();
 
         // Calculate the range of the test set.
         u32 start = (u32) round((f64)allInputs.size() * frac*i);
         u32 end   = (u32) round((f64)allInputs.size() * frac*(i+1));
+
+        // Build the training and test inputs.
+        std::vector< tIO > trainInputs = allInputs;
+        trainInputs.erase(trainInputs.begin()+start, trainInputs.begin()+end);
+        std::vector< tIO > testInputs(allInputs.begin()+start, allInputs.begin()+end);
+
+        // Build the training and test targets.
+        std::vector< tIO > trainTargets = allTargets;
+        trainTargets.erase(trainTargets.begin()+start, trainTargets.begin()+end);
+        std::vector< tIO > testTargets(allTargets.begin()+start, allTargets.begin()+end);
+
+        // Train!
+        accumEpochs += s_ezTrain(learner,
+                                 trainInputs, trainTargets,
+                                 testInputs, testTargets,
+                                 batchSize,
+                                 trainObserver,
+                                 i, numFolds);
+    }
+
+    return accumEpochs;
+}
+
+u32  ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
+                                const std::vector< tIO >& allTargets,
+                                u32 batchSize, std::vector<u32> foldSplitPoints,
+                                iEZTrainObserver* trainObserver)
+{
+    if (allInputs.size() != allTargets.size())
+        throw eInvalidArgument("The number of input and target vectors must be the same!");
+    if (allInputs.size() == 0)
+        throw eInvalidArgument("There must be at least one example.");
+    u32 numFolds = (u32)foldSplitPoints.size() + 1;
+    if (numFolds == 1)
+        throw eInvalidArgument("One fold makes no sense.");
+
+    u32 accumEpochs = 0;
+
+    for (u32 i = 0; i < numFolds; i++)
+    {
+        if (i > 0)
+            learner->reset();
+
+        // Calculate the range of the test set.
+        u32 start = (i == 0) ? 0 : foldSplitPoints[i-1];
+        u32 end   = (i == numFolds-1) ? (u32)allInputs.size() : foldSplitPoints[i];
 
         // Build the training and test inputs.
         std::vector< tIO > trainInputs = allInputs;

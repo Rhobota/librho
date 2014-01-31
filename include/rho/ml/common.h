@@ -405,6 +405,35 @@ u32  ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
                                 u32 batchSize, u32 numFolds,
                                 iEZTrainObserver* trainObserver = NULL);
 
+/**
+ * This is also a version of ezTrain() for doing x-fold cross-validation,
+ * but this version is used when you want to tell the function where
+ * to split the dataset for each fold.
+ *
+ * This is necessary when you have created "extra" training data by
+ * duplicating examples (with mutation). For example, you may have scaled
+ * and/or translated example images to create more examples and inject
+ * prior-knowledge into the system.
+ * The results would be misleading if you let ezTrain() split such a dataset
+ * anywhere it wanted, for you don't want to train with some data and test
+ * on data which is a duplication of the training data. Instead, you should
+ * tell ezTrain() where to split the dataset so that each duplicated example is
+ * entirely in the training portion or the test portion, but does not overlap
+ * the two.
+ *
+ * In this function, the number of training folds will equal:
+ *          foldSplitPoints.size() + 1
+ *
+ * Each entry in foldSplitPoints indicates the first index of a fold.
+ * Do not specify index-0 in your foldSplitPoints array. It is assumed
+ * that the first fold will begin at index 0 and continue until the
+ * index found in foldSplitPoints[0].
+ */
+u32  ezTrain(iLearner* learner, const std::vector< tIO >& allInputs,
+                                const std::vector< tIO >& allTargets,
+                                u32 batchSize, std::vector<u32> foldSplitPoints,
+                                iEZTrainObserver* trainObserver = NULL);
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
