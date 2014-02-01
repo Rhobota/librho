@@ -12,23 +12,23 @@ namespace tcp
 {
 
 
-tSocket::tSocket(const tAddr& addr, u16 port)
+tSocket::tSocket(const tAddr& addr, u16 port, u32 timeoutMS)
     : m_fd(-1), m_readEOF(false), m_writeEOF(false)
 {
-    m_init(addr, port);
+    m_init(addr, port, timeoutMS);
 }
 
-tSocket::tSocket(const tAddrGroup& addrGroup, u16 port)
+tSocket::tSocket(const tAddrGroup& addrGroup, u16 port, u32 timeoutMS)
     : m_fd(-1), m_readEOF(false), m_writeEOF(false)
 {
-    m_init(addrGroup, port);
+    m_init(addrGroup, port, timeoutMS);
 }
 
-tSocket::tSocket(std::string hostStr, u16 port)
+tSocket::tSocket(std::string hostStr, u16 port, u32 timeoutMS)
     : m_fd(-1), m_readEOF(false), m_writeEOF(false)
 {
     tAddrGroup addrGroup(hostStr);
-    m_init(addrGroup, port);
+    m_init(addrGroup, port, timeoutMS);
 }
 
 tSocket::tSocket(int fd, const tAddr& addr)
@@ -36,7 +36,7 @@ tSocket::tSocket(int fd, const tAddr& addr)
 {
 }
 
-void tSocket::m_init(const tAddr& addr, u16 port)
+void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
 {
     m_finalize();
 
@@ -56,14 +56,42 @@ void tSocket::m_init(const tAddr& addr, u16 port)
     }
 
     #if __APPLE__ || __CYGWIN__ || __MINGW32__
-    if (fcntl(m_fd, F_SETFD, FD_CLOEXEC) == -1)
+    if (::fcntl(m_fd, F_SETFD, FD_CLOEXEC) == -1)
     {
         m_finalize();
         throw eSocketCreationError("Cannot set close-on-exec on the new socket.");
     }
     #endif
 
-    if (::connect(m_fd, m_addr.m_sockaddr, m_addr.m_sockaddrlen) == -1)
+    int currentFlags = ::fcntl(m_fd, F_GETFL);
+    if (currentFlags < 0)
+    {
+        m_finalize();
+        throw eSocketCreationError("Cannot get the current file status flags.");
+    }
+    currentFlags |= O_NONBLOCK;
+    if (::fcntl(m_fd, F_SETFL, currentFlags) < 0)
+    {
+        m_finalize();
+        throw eSocketCreationError("Cannot set the socket to be non-blocking during the connect phase.");
+    }
+
+    int connectStatus = ::connect(m_fd, m_addr.m_sockaddr, m_addr.m_sockaddrlen);
+    if (connectStatus != -1 || errno != EINPROGRESS)
+    {
+        m_finalize();
+        throw eSocketCreationError("Connect behaved weirdly. It should indicate the socket is nonblocking...");
+    }
+
+    fd_set myfdset;
+    FD_ZERO(&myfdset);
+    FD_SET(m_fd, &myfdset);
+    struct timeval tv;
+    tv.tv_sec = (timeoutMS / 1000);
+    tv.tv_usec = ((timeoutMS % 1000) * 1000);
+    int selectStatus = ::select(m_fd+1, NULL, &myfdset, NULL, &tv);
+
+    if (selectStatus != 1)
     {
         m_finalize();
         std::ostringstream errorStr;
@@ -71,15 +99,39 @@ void tSocket::m_init(const tAddr& addr, u16 port)
         errorStr << "or host rejected connection on port (" << port << ").";
         throw eHostUnreachableError(errorStr.str());
     }
+
+    unsigned int argLen = sizeof(int);
+    if (::getsockopt(m_fd, SOL_SOCKET, SO_ERROR, (void*)(&connectStatus), &argLen) < 0)
+    {
+        m_finalize();
+        throw eSocketCreationError("Cannot get socket error status after select.");
+    }
+
+    if (connectStatus != 0)
+    {
+        m_finalize();
+        std::ostringstream errorStr;
+        errorStr << "Host (" << addr.toString() << ") unreachable, ";
+        errorStr << "or host rejected connection on port (" << port << "). ";
+        errorStr << "Error: " << strerror(connectStatus);
+        throw eHostUnreachableError(errorStr.str());
+    }
+
+    currentFlags &= (~O_NONBLOCK);
+    if (::fcntl(m_fd, F_SETFL, currentFlags) < 0)
+    {
+        m_finalize();
+        throw eSocketCreationError("Cannot set the socket back to blocking mode after connect.");
+    }
 }
 
-void tSocket::m_init(const tAddrGroup& addrGroup, u16 port)
+void tSocket::m_init(const tAddrGroup& addrGroup, u16 port, u32 timeoutMS)
 {
     for (int i = 0; i < addrGroup.size(); i++)
     {
         try
         {
-            m_init(addrGroup[i], port);
+            m_init(addrGroup[i], port, timeoutMS);
             break;
         }
         catch (ebIP& e)
