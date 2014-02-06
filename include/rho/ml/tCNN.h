@@ -172,10 +172,11 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * gradients for each weight in the network, then add those gradients
          * to the accumulated error gradients for each weight.
          *
-         * The network's weights will not be updated by this method.
+         * The network's weights will not be updated by this method,
+         * and this example will not actually be pushed through the
+         * network at this point either.
          */
-        void addExample(const tIO& input, const tIO& target,
-                        tIO& actualOutput);
+        void addExample(const tIO& input, const tIO& target);
 
         /**
          * Updates the network's weights using the accumulated error
@@ -190,6 +191,22 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
          * Uses the network's current weights to evaluate the given input.
          */
         void evaluate(const tIO& input, tIO& output) const;
+
+        /**
+         * Uses the network's current weights to evaluate the given input.
+         *
+         * This is more efficient than calling the above version of evaluate()
+         * over-and-over.
+         */
+        void evaluateBatch(const std::vector<tIO>& inputs,
+                                 std::vector<tIO>& outputs) const;
+
+        /**
+         * Same as above, but using iterators.
+         */
+        void evaluateBatch(std::vector<tIO>::const_iterator inputStart,
+                           std::vector<tIO>::const_iterator inputEnd,
+                           std::vector<tIO>::iterator outputStart) const;
 
         /**
          * Calculates the standard squared error if the output layer of
@@ -229,29 +246,6 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
         //////////////////////////////////////////////////////////////////////
         // Debugging
         //////////////////////////////////////////////////////////////////////
-
-        /**
-         * Backpropagates the maximum output error on the specified output
-         * dimension though the network to the beginning. The error at each
-         * neuron is then copied to the neuron's output value so that you
-         * can then call getOutputImage() to see which neurons were "blamed"
-         * for the error at the output. You can use this to see which neurons
-         * in the network are seen as indicators for the specified output
-         * dimension.
-         *
-         * Pass a negative value as outputDimensionIndex to put maximum error
-         * on every output dimension.
-         *
-         * 'errorOnInput' is an out-parameter. It is the resulting error
-         * on each of the input dimensions as a result of the backpropagation.
-         *
-         * NOTE: This method is not "correct" in that it only estimates
-         * a backprop of max error. I'm not at this time even sure if this
-         * concept is possible to do accurately without an actual input on
-         * which you do the backprop. Can we create along the way some sort
-         * of virtual "exemplary" input to use for the backprop calculations?
-         */
-        void backpropagateMaxError(i32 outputDimensionIndex, tIO& errorOnInput);
 
         //////////////////////////////////////////////////////////////////////
         // Getters
@@ -308,9 +302,10 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
         u32 getNumReplicatedFilters(u32 layerIndex) const;
 
         /**
-         * Returns the output value of the specified filter. This will be
-         * the filter's output value from the last call to addExample() or
-         * evaluate().
+         * Returns the output value of the specified neuron. This will be
+         * the neuron's output value from the last example which was
+         * pushed through this network. Note, examples are not pushed
+         * through by addExample(). Only evaluate() and update().
          *
          * If minValue and maxValue are not NULL, they are filled
          * with the minimum and maximum possible values output by

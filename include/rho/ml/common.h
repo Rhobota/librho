@@ -294,7 +294,8 @@ bool train(iLearner* learner, const std::vector<tIO>& inputs,
  * on each is vital.
  */
 void evaluate(iLearner* learner, const std::vector<tIO>& inputs,
-                                       std::vector<tIO>& outputs);
+                                       std::vector<tIO>& outputs,
+                                 u32 batchSize=100);
 
 /**
  * Creates a visual of the learner processing the example provided.

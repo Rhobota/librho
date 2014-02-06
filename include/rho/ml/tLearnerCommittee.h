@@ -60,6 +60,22 @@ class tLearnerCommittee : public iLearner
         void evaluate(const tIO& input, tIO& output) const;
 
         /**
+         * Evaluate the input using the committee.
+         *
+         * This is more efficient than calling the above version of evaluate()
+         * over-and-over.
+         */
+        void evaluateBatch(const std::vector<tIO>& inputs,
+                                 std::vector<tIO>& outputs) const;
+
+        /**
+         * Same as above, but using iterators.
+         */
+        void evaluateBatch(std::vector<tIO>::const_iterator inputStart,
+                           std::vector<tIO>::const_iterator inputEnd,
+                           std::vector<tIO>::iterator outputStart) const;
+
+        /**
          * Prints the each of the committee's learner's configuration.
          */
         void printLearnerInfo(std::ostream& out) const;
@@ -84,8 +100,7 @@ class tLearnerCommittee : public iLearner
          * Do not call this. You cannot train a committee. They must be
          * already trained...
          */
-        void addExample(const tIO& input, const tIO& target,
-                              tIO& actualOutput);
+        void addExample(const tIO& input, const tIO& target);
 
         /**
          * Do not call this. You cannot train a committee. They must be
