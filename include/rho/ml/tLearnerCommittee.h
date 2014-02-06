@@ -16,7 +16,7 @@ namespace ml
 {
 
 
-class tLearnerCommittee : public iLearner
+class tLearnerCommittee : public iLearner, public bNonCopyable
 {
     public:
 
