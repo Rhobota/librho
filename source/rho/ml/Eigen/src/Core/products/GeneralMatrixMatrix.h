@@ -10,7 +10,7 @@
 #ifndef EIGEN_GENERAL_MATRIX_MATRIX_H
 #define EIGEN_GENERAL_MATRIX_MATRIX_H
 
-namespace Eigen { 
+namespace Eigen {
 
 namespace internal {
 
@@ -79,12 +79,12 @@ static void run(Index rows, Index cols, Index depth,
     // this is the parallel version!
     Index tid = omp_get_thread_num();
     Index threads = omp_get_num_threads();
-    
+
     std::size_t sizeA = kc*mc;
     std::size_t sizeW = kc*Traits::WorkSpaceFactor;
     ei_declare_aligned_stack_constructed_variable(LhsScalar, blockA, sizeA, 0);
     ei_declare_aligned_stack_constructed_variable(RhsScalar, w, sizeW, 0);
-    
+
     RhsScalar* blockB = blocking.blockB();
     eigen_internal_assert(blockB!=0);
 
@@ -104,12 +104,12 @@ static void run(Index rows, Index cols, Index depth,
       // i.e., we test that info[tid].users equals 0.
       // Then, we set info[tid].users to the number of threads to mark that all other threads are going to use it.
       while(info[tid].users!=0) {}
-      info[tid].users += threads;
+      info[tid].users += (int)threads;
 
       pack_rhs(blockB+info[tid].rhs_start*actual_kc, &rhs(k,info[tid].rhs_start), rhsStride, actual_kc, info[tid].rhs_length);
 
       // Notify the other threads that the part B'_j is ready to go.
-      info[tid].sync = k;
+      info[tid].sync = (int)k;
 
       // Computes C_i += A' * B' per B'_j
       for(Index shift=0; shift<threads; ++shift)
@@ -383,7 +383,7 @@ class GeneralProduct<Lhs, Rhs, GemmProduct>
     };
   public:
     EIGEN_PRODUCT_PUBLIC_INTERFACE(GeneralProduct)
-    
+
     typedef typename  Lhs::Scalar LhsScalar;
     typedef typename  Rhs::Scalar RhsScalar;
     typedef           Scalar      ResScalar;
