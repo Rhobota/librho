@@ -140,6 +140,19 @@ void tLearnerCommittee::evaluate(const tIO& input, tIO& output) const
     }
 }
 
+void tLearnerCommittee::evaluateBatch(const std::vector<tIO>& inputs,
+                                            std::vector<tIO>& outputs) const
+{
+    throw eNotImplemented("For later...");
+}
+
+void tLearnerCommittee::evaluateBatch(std::vector<tIO>::const_iterator inputStart,
+                                      std::vector<tIO>::const_iterator inputEnd,
+                                      std::vector<tIO>::iterator outputStart) const
+{
+    throw eNotImplemented("For later...");
+}
+
 void tLearnerCommittee::printLearnerInfo(std::ostream& out) const
 {
     for (size_t i = 0; i < m_committee.size(); i++)
@@ -179,8 +192,7 @@ f64 tLearnerCommittee::calculateError(const std::vector<tIO>& outputs,
     return sum / ((f64)m_committee.size());
 }
 
-void tLearnerCommittee::addExample(const tIO& input, const tIO& target,
-                                         tIO& actualOutput)
+void tLearnerCommittee::addExample(const tIO& input, const tIO& target)
 {
     throw eLogicError("Do not call this method. You cannot train a committee of learners.");
 }

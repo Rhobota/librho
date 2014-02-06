@@ -63,22 +63,22 @@ class tLayerCNN : public bNonCopyable
     // The following is state to make calculations faster so that you don't
     // have to reallocate vectors all the time.
 
-    vector<f64> m_output;
-    vector<f64> m_da;
+    Eigen::MatrixXd m_output;
+    Eigen::MatrixXd m_da;
 
-    vector<f64> m_pooledOutput;  // Only used when (m_poolWidth > 1 || m_poolHeight > 1)
-    vector<f64> m_pooled_da;     // (same)
+    Eigen::MatrixXd m_pooledOutput;  // Only used when (m_poolWidth > 1 || m_poolHeight > 1)
+    Eigen::MatrixXd m_pooled_da;     // (same)
 
-    vector<f64> m_fieldInput;
+    Eigen::MatrixXd m_fieldInput;
 
   private:
 
-    void m_fillField(const vector<f64>& input, u32 x, u32 y, vector<f64>& fieldInput) const
+    void m_fillField(const Eigen::MatrixXd& input, u32 x, u32 y, Eigen::MatrixXd& fieldInput) const
     {
-        assert(input.size() == m_inputSize);
+        assert((u32)input.cols() == m_inputSize);
         assert(x+m_receptiveFieldWidth <= m_inputWidth);
         assert(y+m_receptiveFieldHeight <= m_inputHeight);
-        assert(fieldInput.size() == m_receptiveFieldWidth * m_receptiveFieldHeight);
+        assert((u32)fieldInput.cols() == m_receptiveFieldWidth * m_receptiveFieldHeight);
 
         u32 inputIndex = y*m_inputWidth + x;
         u32 fieldInputIndex = 0;
@@ -86,18 +86,18 @@ class tLayerCNN : public bNonCopyable
         {
             for (u32 xx = 0; xx < m_receptiveFieldWidth; xx++)
             {
-                fieldInput[fieldInputIndex++] = input[inputIndex+xx];
+                fieldInput(0,fieldInputIndex++) = input(0,inputIndex+xx);
             }
             inputIndex += m_inputWidth;
         }
     }
 
-    void m_reverseFillField(const vector<f64>& fieldInput, u32 x, u32 y, vector<f64>& input) const
+    void m_reverseFillField(const Eigen::MatrixXd& fieldInput, u32 x, u32 y, Eigen::MatrixXd& input) const
     {
-        assert(input.size() == m_inputSize);
+        assert((u32)input.cols() == m_inputSize);
         assert(x+m_receptiveFieldWidth <= m_inputWidth);
         assert(y+m_receptiveFieldHeight <= m_inputHeight);
-        assert(fieldInput.size() == m_receptiveFieldWidth * m_receptiveFieldHeight);
+        assert((u32)fieldInput.cols() == m_receptiveFieldWidth * m_receptiveFieldHeight);
 
         u32 inputIndex = y*m_inputWidth + x;
         u32 fieldInputIndex = 0;
@@ -105,7 +105,7 @@ class tLayerCNN : public bNonCopyable
         {
             for (u32 xx = 0; xx < m_receptiveFieldWidth; xx++)
             {
-                 input[inputIndex+xx] += fieldInput[fieldInputIndex++];
+                 input(0,inputIndex+xx) += fieldInput(0,fieldInputIndex++);
             }
             inputIndex += m_inputWidth;
         }
@@ -123,30 +123,30 @@ class tLayerCNN : public bNonCopyable
                 for (u32 m = 0; m < m_numFeatureMapsInThisLayer; m++)
                 {
                     size_t off = outputIndex + m;
-                    f64 maxval = m_output[off];
+                    f64 maxval = m_output(0,off);
                     for (u32 i = 0; i < m_poolHeight; i++)
                     {
                         size_t off2 = off;
                         for (u32 j = 0; j < m_poolWidth; j++)
                         {
-                            maxval = std::max(maxval, m_output[off2]);
+                            maxval = std::max(maxval, m_output(0,off2));
                             off2 += m_numFeatureMapsInThisLayer;
                         }
                         off += outWidth;
                     }
-                    m_pooledOutput[pooledoutIndex++] = maxval;
+                    m_pooledOutput(0,pooledoutIndex++) = maxval;
                 }
             }
         }
-        assert(pooledoutIndex == m_pooledOutput.size());
+        assert(pooledoutIndex == (u32)m_pooledOutput.cols());
     }
 
     void m_unpool_da_sparse()
     {
         size_t outWidth = (m_stepsX+1) * m_numFeatureMapsInThisLayer;
         size_t pooledoutIndex = 0;
-        for (size_t i = 0; i < m_da.size(); i++)
-            m_da[i] = 0.0;
+        for (i32 i = 0; i < m_da.cols(); i++)
+            m_da(0,i) = 0.0;
         for (u32 y = 0; y <= (m_stepsY+1-m_poolHeight); y += m_poolHeight)
         {
             for (u32 x = 0; x <= (m_stepsX+1-m_poolWidth); x += m_poolWidth)
@@ -155,35 +155,35 @@ class tLayerCNN : public bNonCopyable
                 for (u32 m = 0; m < m_numFeatureMapsInThisLayer; m++)
                 {
                     size_t off = outputIndex + m;
-                    f64 maxval = m_output[off];
+                    f64 maxval = m_output(0,off);
                     size_t maxi = off;
                     for (u32 i = 0; i < m_poolHeight; i++)
                     {
                         size_t off2 = off;
                         for (u32 j = 0; j < m_poolWidth; j++)
                         {
-                            if (maxval < m_output[off2])
+                            if (maxval < m_output(0,off2))
                             {
-                                maxval = m_output[off2];
+                                maxval = m_output(0,off2);
                                 maxi = off2;
                             }
                             off2 += m_numFeatureMapsInThisLayer;
                         }
                         off += outWidth;
                     }
-                    m_da[maxi] = m_pooled_da[pooledoutIndex++];
+                    m_da(0,maxi) = m_pooled_da(0,pooledoutIndex++);
                 }
             }
         }
-        assert(pooledoutIndex == m_pooled_da.size());
+        assert(pooledoutIndex == (u32)m_pooled_da.cols());
     }
 
     void m_unpool_da_dense()
     {
         size_t outWidth = (m_stepsX+1) * m_numFeatureMapsInThisLayer;
         size_t pooledoutIndex = 0;
-        for (size_t i = 0; i < m_da.size(); i++)
-            m_da[i] = 0.0;
+        for (i32 i = 0; i < m_da.cols(); i++)
+            m_da(0,i) = 0.0;
         for (u32 y = 0; y <= m_stepsY; y += m_poolHeight)
         {
             for (u32 x = 0; x <= m_stepsX; x += m_poolWidth)
@@ -197,7 +197,7 @@ class tLayerCNN : public bNonCopyable
                         size_t off2 = off;
                         for (u32 j = 0; j < m_poolWidth; j++)
                         {
-                            m_da[off2] = m_pooled_da[pooledoutIndex];
+                            m_da(0,off2) = m_pooled_da(0,pooledoutIndex);
                             off2 += m_numFeatureMapsInThisLayer;
                         }
                         off += outWidth;
@@ -206,41 +206,18 @@ class tLayerCNN : public bNonCopyable
                 }
             }
         }
-        assert(pooledoutIndex == m_pooled_da.size());
+        assert(pooledoutIndex == (u32)m_pooled_da.cols());
     }
 
-    void m_accum_dw(vector< vector<f64> >& accum, vector< vector<f64> >& vals)
+    void m_accum_dw(Eigen::MatrixXd& accum, Eigen::MatrixXd& vals)
     {
-        for (size_t s = 0; s < accum.size(); s++)
-        {
-            for (size_t i = 0; i < accum[s].size(); i++)
-            {
-                accum[s][i] += vals[s][i];
-                vals[s][i] = 0.0;
-            }
-        }
+        accum += vals;
+        vals.setZero();
     }
 
-    void m_norm_dw(vector< vector<f64> >& accum)
+    void m_set(Eigen::MatrixXd& dest, const Eigen::MatrixXd& source)
     {
-        if (m_numLayers == 1)
-            return;
-        f64 div = (f64)m_numLayers;
-        f64 mul = 1.0 / div;
-        for (size_t s = 0; s < accum.size(); s++)
-            for (size_t i = 0; i < accum[s].size(); i++)
-                accum[s][i] *= mul;
-    }
-
-    void m_set(vector< vector<f64> >& dest, const vector< vector<f64> >& source)
-    {
-        for (size_t s = 0; s < dest.size(); s++)
-        {
-            for (size_t i = 0; i < dest[s].size(); i++)
-            {
-                dest[s][i] = source[s][i];
-            }
-        }
+        dest = source;
     }
 
   public:
@@ -321,13 +298,13 @@ class tLayerCNN : public bNonCopyable
         }
 
         // Init the fast data members.
-        m_output = vector<f64>((m_stepsX+1)*(m_stepsY+1) * m_numFeatureMapsInThisLayer, 0.0);
+        m_output = Eigen::MatrixXd::Zero(1, (m_stepsX+1)*(m_stepsY+1) * m_numFeatureMapsInThisLayer);
         m_da = m_output;
 
-        m_pooledOutput = vector<f64>(((m_stepsX+1)/m_poolWidth) * ((m_stepsY+1)/m_poolHeight) * m_numFeatureMapsInThisLayer, 0.0);
+        m_pooledOutput = Eigen::MatrixXd::Zero(1, ((m_stepsX+1)/m_poolWidth) * ((m_stepsY+1)/m_poolHeight) * m_numFeatureMapsInThisLayer);
         m_pooled_da = m_pooledOutput;
 
-        m_fieldInput = vector<f64>(m_receptiveFieldWidth * m_receptiveFieldHeight, 0.0);
+        m_fieldInput = Eigen::MatrixXd::Zero(1, m_receptiveFieldWidth * m_receptiveFieldHeight);
     }
 
     void resetWeights(f64 rmin, f64 rmax, algo::iLCG& lcg)
@@ -336,7 +313,7 @@ class tLayerCNN : public bNonCopyable
         {
             if (i == 0)
             {
-                m_layers[i].init_weights(rmin, rmax, lcg);
+                m_layers[i].reset(rmin, rmax, lcg);
             }
 
             else
@@ -363,8 +340,7 @@ class tLayerCNN : public bNonCopyable
 
         for (u32 i = 0; i < m_numLayers; i++)
         {
-            m_layers[i].assertState(m_receptiveFieldWidth * m_receptiveFieldHeight);
-            assert(m_layers[i].a.size() == m_numFeatureMapsInThisLayer);
+            assert((u32)m_layers[i].a.cols() == m_numFeatureMapsInThisLayer);
             assert(m_layers[i].w == m_layers[0].w);
             assert(m_layers[i].layerType == m_layers[0].layerType);
             assert(m_layers[i].normalizeLayerInput == m_layers[0].normalizeLayerInput);
@@ -487,10 +463,10 @@ class tLayerCNN : public bNonCopyable
 
     u32 getNumFreeParameters() const
     {
-        return (u32)(m_layers[0].w.size() * m_layers[0].w[0].size());
+        return (u32)(m_layers[0].w.rows() * m_layers[0].w.cols());
     }
 
-    void takeInput(const vector<f64>& input)
+    void takeInput(const Eigen::MatrixXd& input)
     {
         // Give input to each filter.
         u32 layerIndex = 0;
@@ -509,10 +485,10 @@ class tLayerCNN : public bNonCopyable
         size_t outputIndex = 0;
         for (u32 i = 0; i < m_numLayers; i++)
         {
-            for (u32 j = 0; j < m_layers[i].a.size(); j++)
-                m_output[outputIndex++] = m_layers[i].a[j];
+            for (u32 j = 0; j < m_layers[i].a.cols(); j++)
+                m_output(0,outputIndex++) = m_layers[i].a(0,j);
         }
-        assert(outputIndex == m_output.size());
+        assert(outputIndex == (u32)m_output.cols());
 
         // Pool the output vector (only if we do pooling in this layer)
         if (m_poolWidth > 1 || m_poolHeight > 1)
@@ -521,7 +497,7 @@ class tLayerCNN : public bNonCopyable
         }
     }
 
-    vector<f64>& getOutput()
+    Eigen::MatrixXd& getOutput()
     {
         if (m_poolWidth > 1 || m_poolHeight > 1)
             return m_pooledOutput;
@@ -529,12 +505,12 @@ class tLayerCNN : public bNonCopyable
             return m_output;
     }
 
-    vector<f64>& getRealOutput()
+    Eigen::MatrixXd& getRealOutput()
     {
         return m_output;
     }
 
-    vector<f64>& get_da()
+    Eigen::MatrixXd& get_da()
     {
         if (m_poolWidth > 1 || m_poolHeight > 1)
             return m_pooled_da;
@@ -542,55 +518,7 @@ class tLayerCNN : public bNonCopyable
             return m_da;
     }
 
-    void copy_da_to_output()
-    {
-        // Copy da to output.
-        for (size_t i = 0; i < m_da.size(); i++)
-            m_output[i] = m_da[i];
-
-        // Normalize the output vector so that it actually looks like legitimate
-        // output.
-        assert(m_output.size() > 0);
-        f64 minval = m_output[0];
-        f64 maxval = m_output[0];
-        for (size_t i = 1; i < m_output.size(); i++)
-        {
-            minval = std::min(minval, m_output[i]);
-            maxval = std::max(maxval, m_output[i]);
-        }
-        if (minval == maxval) maxval += 0.000001;
-        f64 absmax = std::max(std::fabs(minval), std::fabs(maxval));
-        f64 minpos = s_squash_min(getPrimaryLayer().layerType);
-        f64 maxpos = s_squash_max(getPrimaryLayer().layerType);
-        assert(minpos <= 0.0);  // <-- the code in the loop below needs these
-        assert(maxpos > 0.0);   // <-- to be true
-        for (size_t i = 0; i < m_output.size(); i++)
-        {
-            if (m_output[i] < 0.0)
-                m_output[i] = m_output[i] / absmax * -minpos;
-            else
-                m_output[i] = m_output[i] / absmax * maxpos;
-            assert(m_output[i] >= minpos && m_output[i] <= maxpos);
-        }
-
-        // Pool the output.
-        m_poolOutput();   // <-- fills m_pooledOutput from the contents of m_output
-
-        // Put output back into the output of each filter.
-        // (Opposite operation that is done at the end of takeInput())
-        size_t outputIndex = 0;
-        for (u32 i = 0; i < m_numLayers; i++)
-        {
-            for (u32 j = 0; j < m_layers[i].a.size(); j++)
-            {
-                m_layers[i].a[j] = m_output[outputIndex++];
-                m_layers[i].A[j] = 0.0;
-            }
-        }
-        assert(outputIndex == m_output.size());
-    }
-
-    void accumError(const vector<f64>& prev_a)
+    void accumError(const Eigen::MatrixXd& prev_a)
     {
         u32 layerIndex = 0;
         for (u32 y = 0; y < m_inputHeight-m_receptiveFieldHeight+1; y += m_stepSizeY)
@@ -619,23 +547,23 @@ class tLayerCNN : public bNonCopyable
         size_t daindex = 0;
         for (u32 i = 0; i < m_numLayers; i++)
         {
-            for (u32 j = 0; j < m_layers[i].da.size(); j++)
-                 m_layers[i].da[j] = m_da[daindex++];
+            for (u32 j = 0; j < m_layers[i].da.cols(); j++)
+                 m_layers[i].da(0,j) = m_da(0,daindex++);
         }
-        assert(daindex == m_da.size());
+        assert(daindex == (u32)m_da.cols());
     }
 
-    void backpropagate(vector<f64>& prev_da)
+    void backpropagate(Eigen::MatrixXd& prev_da)
     {
-        for (size_t s = 0; s < prev_da.size(); s++)
-            prev_da[s] = 0.0;
+        for (i32 s = 0; s < prev_da.cols(); s++)
+            prev_da(0,s) = 0.0;
 
         u32 layerIndex = 0;
         for (u32 y = 0; y < m_inputHeight-m_receptiveFieldHeight+1; y += m_stepSizeY)
         {
             for (u32 x = 0; x < m_inputWidth-m_receptiveFieldWidth+1; x += m_stepSizeX)
             {
-                m_layers[layerIndex++].backpropagate(m_fieldInput);
+                m_layers[layerIndex++].backpropagate(m_fieldInput, prev_da);
                 m_reverseFillField(m_fieldInput, x, y, prev_da);
             }
         }
@@ -648,11 +576,6 @@ class tLayerCNN : public bNonCopyable
 
         for (u32 i = 1; i < m_numLayers; i++)
             m_accum_dw(m_layers[0].dw_accum, m_layers[i].dw_accum);
-
-        // m_norm_dw(m_layers[0].dw_accum);    // !!!!!!!! This used to be
-                                               // active, so I'm leaving it
-                                               // here in case it is good
-                                               // to have I'll come back to it.
 
         m_layers[0].updateWeights();
 
@@ -709,13 +632,13 @@ class tLayerCNN : public bNonCopyable
 
         assertState(m_inputSize);
 
-        m_output = vector<f64>((m_stepsX+1)*(m_stepsY+1) * m_numFeatureMapsInThisLayer, 0.0);
+        m_output = Eigen::MatrixXd::Zero(1, (m_stepsX+1)*(m_stepsY+1) * m_numFeatureMapsInThisLayer);
         m_da = m_output;
 
-        m_pooledOutput = vector<f64>(((m_stepsX+1)/m_poolWidth) * ((m_stepsY+1)/m_poolHeight) * m_numFeatureMapsInThisLayer, 0.0);
+        m_pooledOutput = Eigen::MatrixXd::Zero(1, ((m_stepsX+1)/m_poolWidth) * ((m_stepsY+1)/m_poolHeight) * m_numFeatureMapsInThisLayer);
         m_pooled_da = m_pooledOutput;
 
-        m_fieldInput = vector<f64>(m_receptiveFieldWidth * m_receptiveFieldHeight, 0.0);
+        m_fieldInput = Eigen::MatrixXd::Zero(1, m_receptiveFieldWidth * m_receptiveFieldHeight);
     }
 };
 
@@ -775,7 +698,7 @@ tCNN::tCNN(string descriptionString)
             if (!getline(in, line))
                 throw eInvalidArgument("Not sure why this failed.");
 
-            vector<string> parts = algo::split(line, " ");
+            std::vector<string> parts = algo::split(line, " ");
 
             if (parts.size() == 7)
             {
@@ -953,8 +876,7 @@ void tCNN::setViscosity(f64 viscosity)
         setViscosity(viscosity, i);
 }
 
-void tCNN::addExample(const tIO& input, const tIO& target,
-                      tIO& actualOutput)
+void tCNN::addExample(const tIO& input, const tIO& target)
 {
     // Validate the target vector.
     tANN::nLayerType type = m_layers[m_numLayers-1].getPrimaryLayer().layerType;
@@ -978,27 +900,31 @@ void tCNN::addExample(const tIO& input, const tIO& target,
         }
     }
 
-    // Show the example to the network.
-    {
-        evaluate(input, actualOutput);
-        if (target.size() != actualOutput.size())
-            throw eInvalidArgument("The target vector must be the same size as the CNN's output.");
-
-        vector<f64>& top_da = m_layers[m_numLayers-1].get_da();
-        assert(top_da.size() == actualOutput.size());
-        for (u32 i = 0; i < top_da.size(); i++)
-            top_da[i] = actualOutput[i] - target[i];
-        m_layers[m_numLayers-1].distribute_da(false);
-
-        for (u32 i = m_numLayers-1; i > 0; i--)
-        {
-            m_layers[i].accumError(m_layers[i-1].getOutput());
-            m_layers[i].backpropagate(m_layers[i-1].get_da());
-            m_layers[i-1].distribute_da(false);
-        }
-
-        m_layers[0].accumError(input);
-    }
+//     // Show the example to the network.
+//     {
+//         evaluate(input, actualOutput);
+//         if (target.size() != actualOutput.size())
+//             throw eInvalidArgument("The target vector must be the same size as the CNN's output.");
+//
+//         Eigen::MatrixXd& top_da = m_layers[m_numLayers-1].get_da();
+//         assert((u32)top_da.cols() == actualOutput.size());
+//         for (u32 i = 0; i < top_da.cols(); i++)
+//             top_da(0,i) = actualOutput[i] - target[i];
+//         m_layers[m_numLayers-1].distribute_da(false);
+//
+//         for (u32 i = m_numLayers-1; i > 0; i--)
+//         {
+//             m_layers[i].accumError(m_layers[i-1].getOutput());
+//             m_layers[i].backpropagate(m_layers[i-1].get_da());
+//             m_layers[i-1].distribute_da(false);
+//         }
+//
+//         Eigen::MatrixXd inputVect(1, input.size()+1);
+//         for (size_t i = 0; i < input.size(); i++)
+//             inputVect(0, i) = input[i];
+//         inputVect(0, input.size()) = 1.0;  // <-- input to the bais weight
+//         m_layers[0].accumError(inputVect);
+//     }
 }
 
 void tCNN::update()
@@ -1014,12 +940,32 @@ void tCNN::evaluate(const tIO& input, tIO& output) const
     if (input.size() != (size_t)m_layers[0].getInputSize())
         throw eInvalidArgument("The input vector must be the same size as the CNN's input.");
 
-    m_layers[0].takeInput(input);
+    Eigen::MatrixXd inputVect(1, input.size()+1);
+    for (size_t i = 0; i < input.size(); i++)
+        inputVect(0, i) = input[i];
+    inputVect(0, input.size()) = 1.0;  // <-- input to the bais weight
+    m_layers[0].takeInput(inputVect);
 
     for (u32 i = 1; i < m_numLayers; i++)
         m_layers[i].takeInput(m_layers[i-1].getOutput());
 
-    output = m_layers[m_numLayers-1].getOutput();
+    Eigen::MatrixXd& outVect = m_layers[m_numLayers-1].getOutput();
+    output.resize(outVect.cols());
+    for (i32 i = 0; i < outVect.cols(); i++)
+        output[i] = outVect(0,i);
+}
+
+void tCNN::evaluateBatch(const std::vector<tIO>& inputs,
+                               std::vector<tIO>& outputs) const
+{
+    throw eNotImplemented("For later...");
+}
+
+void tCNN::evaluateBatch(std::vector<tIO>::const_iterator inputStart,
+                         std::vector<tIO>::const_iterator inputEnd,
+                         std::vector<tIO>::iterator outputStart) const
+{
+    throw eNotImplemented("For later...");
 }
 
 f64 tCNN::calculateError(const tIO& output, const tIO& target)
@@ -1095,7 +1041,7 @@ void tCNN::printLearnerInfo(std::ostream& out) const
     out << "        number feature maps:";
     out << std::right << std::setw(colw) << "-";
     for (u32 i = 0; i < m_numLayers; i++)
-        out << std::right << std::setw(colw) << m_layers[i].getPrimaryLayer().a.size();
+        out << std::right << std::setw(colw) << m_layers[i].getPrimaryLayer().a.cols();
     out << endl;
 
     // Receptive field sizes:
@@ -1164,31 +1110,10 @@ void tCNN::printLearnerInfo(std::ostream& out) const
     out << "                   out size:";
     out << std::right << std::setw(colw) << m_layers[0].getInputSize();
     for (u32 i = 0; i < m_numLayers; i++)
-        out << std::right << std::setw(colw) << m_layers[i].getOutput().size();
+        out << std::right << std::setw(colw) << m_layers[i].getOutput().cols();
     out << endl;
 
     out << endl;
-}
-
-void tCNN::backpropagateMaxError(i32 outputDimensionIndex, tIO& errorOnInput)
-{
-    vector<f64>& top_da = m_layers[m_numLayers-1].get_da();
-    for (size_t i = 0; i < top_da.size(); i++)
-        top_da[i] = (outputDimensionIndex < 0 || i == (size_t)outputDimensionIndex) ? 1.0 : 0.0;
-    m_layers[m_numLayers-1].distribute_da(true);
-    m_layers[m_numLayers-1].copy_da_to_output();
-
-    for (u32 i = m_numLayers-1; i > 0; i--)
-    {
-        m_layers[i].accumError(m_layers[i-1].getOutput());
-        m_layers[i].backpropagate(m_layers[i-1].get_da());
-        m_layers[i-1].distribute_da(true);
-        m_layers[i-1].copy_da_to_output();
-    }
-
-    errorOnInput.resize(m_layers[0].getInputSize(), 0.0);
-    m_layers[0].accumError(errorOnInput);
-    m_layers[0].backpropagate(errorOnInput);
 }
 
 string tCNN::learnerInfoString() const
@@ -1199,7 +1124,7 @@ string tCNN::learnerInfoString() const
     out << "size=";
     out << m_layers[0].getInputSize();
     for (u32 i = 0; i < m_numLayers; i++)
-        out << '-' << m_layers[i].getOutput().size();
+        out << '-' << m_layers[i].getOutput().cols();
 
     // Layer type (and normalizeLayerInput):
     out << "__type=";
@@ -1241,7 +1166,7 @@ string tCNN::learnerInfoString() const
     out << "__maps=";
     out << "i";
     for (u32 i = 0; i < m_numLayers; i++)
-        out << '-' << m_layers[i].getPrimaryLayer().a.size();
+        out << '-' << m_layers[i].getPrimaryLayer().a.cols();
 
     return out.str();
 }
@@ -1274,18 +1199,18 @@ u32 tCNN::getNumFeatureMaps(u32 layerIndex) const
     if (layerIndex >= m_numLayers)
         throw eInvalidArgument("No layer with that index.");
 
-    return (u32) (m_layers[layerIndex].getPrimaryLayer().a.size());
+    return (u32) (m_layers[layerIndex].getPrimaryLayer().a.cols());
 }
 
-void tCNN::getWeights(u32 layerIndex, u32 mapIndex, vector<f64>& weights) const
+void tCNN::getWeights(u32 layerIndex, u32 mapIndex, std::vector<f64>& weights) const
 {
     if (mapIndex >= getNumFeatureMaps(layerIndex))
         throw eInvalidArgument("No layer/map with that index.");
 
-    vector< vector<f64> >& w = m_layers[layerIndex].getPrimaryLayer().w;
-    weights.resize(w.size()-1);
-    for (u32 s = 0; s < w.size()-1; s++)
-        weights[s] = w[s][mapIndex];
+    Eigen::MatrixXd& w = m_layers[layerIndex].getPrimaryLayer().w;
+    weights.resize(w.rows()-1);
+    for (u32 s = 0; s < w.rows()-1; s++)
+        weights[s] = w(s, mapIndex);
 }
 
 f64 tCNN::getBias(u32 layerIndex, u32 mapIndex) const
@@ -1293,8 +1218,8 @@ f64 tCNN::getBias(u32 layerIndex, u32 mapIndex) const
     if (mapIndex >= getNumFeatureMaps(layerIndex))
         throw eInvalidArgument("No layer/map with that index.");
 
-    vector< vector<f64> >& w = m_layers[layerIndex].getPrimaryLayer().w;
-    return w.back()[mapIndex];
+    Eigen::MatrixXd& w = m_layers[layerIndex].getPrimaryLayer().w;
+    return w.bottomRows(1)(0,mapIndex);
 }
 
 u32 tCNN::getNumReplicatedFilters(u32 layerIndex) const
@@ -1319,7 +1244,7 @@ f64 tCNN::getOutput(u32 layerIndex, u32 mapIndex, u32 filterIndex,
     if (maxValue)
         *maxValue = s_squash_max(m_layers[layerIndex].getLayer(filterIndex).layerType);
 
-    return m_layers[layerIndex].getLayer(filterIndex).a[mapIndex];
+    return m_layers[layerIndex].getLayer(filterIndex).a(0,mapIndex);
 }
 
 void tCNN::getFeatureMapImage(u32 layerIndex, u32 mapIndex,
@@ -1327,7 +1252,7 @@ void tCNN::getFeatureMapImage(u32 layerIndex, u32 mapIndex,
                               img::tImage* dest) const
 {
     // Get the weights.
-    vector<f64> weights;
+    std::vector<f64> weights;
     getWeights(layerIndex, mapIndex, weights);
     assert(weights.size() > 0);
     u32 width = m_layers[layerIndex].getReceptiveFieldWidth();
@@ -1351,15 +1276,15 @@ void tCNN::getOutputImage(u32 layerIndex, u32 mapIndex,
         throw eInvalidArgument("No layer/map with that index.");
 
     // Get the weights.
-    vector<f64> weights;
+    std::vector<f64> weights;
     u32 width;
     {
-        size_t stride = getNumFeatureMaps(layerIndex);
-        vector<f64>& alloutput = pooled ? m_layers[layerIndex].getOutput()
-                                        : m_layers[layerIndex].getRealOutput();
+        u32 stride = getNumFeatureMaps(layerIndex);
+        Eigen::MatrixXd& alloutput = pooled ? m_layers[layerIndex].getOutput()
+                                            : m_layers[layerIndex].getRealOutput();
 
-        for (size_t i = mapIndex; i < alloutput.size(); i += stride)
-            weights.push_back(alloutput[i]);
+        for (u32 i = mapIndex; i < (u32)alloutput.cols(); i += stride)
+            weights.push_back(alloutput(0,i));
         assert(weights.size() > 0);
 
         width = pooled ? (m_layers[layerIndex].getStepsX()+1) / m_layers[layerIndex].getPoolWidth()

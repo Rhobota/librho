@@ -713,11 +713,10 @@ bool train(iLearner* learner, const std::vector<tIO>& inputs,
 
     std::vector<tIO> mostRecentBatch(batchSize);
     u32 batchCounter = 0;
-    tIO output;
 
     for (size_t i = 0; i < inputs.size(); i++)
     {
-        learner->addExample(inputs[i], targets[i], output);
+        learner->addExample(inputs[i], targets[i]);
         mostRecentBatch[batchCounter] = inputs[i];
         batchCounter++;
         if (batchCounter == batchSize)
@@ -740,16 +739,20 @@ bool train(iLearner* learner, const std::vector<tIO>& inputs,
 }
 
 void evaluate(iLearner* learner, const std::vector<tIO>& inputs,
-                                       std::vector<tIO>& outputs)
+                                       std::vector<tIO>& outputs,
+                                 u32 batchSize)
 {
     if (inputs.size() == 0)
-    {
         throw eInvalidArgument("There must be at least one input vector!");
-    }
+    if (batchSize == 0)
+        throw eInvalidArgument("The batch size must be positive.");
     outputs.resize(inputs.size());
-    for (size_t i = 0; i < inputs.size(); i++)
+    for (size_t i = 0; i < inputs.size(); i += batchSize)
     {
-        learner->evaluate(inputs[i], outputs[i]);
+        size_t sizeHere = std::min((size_t)batchSize, inputs.size()-i);
+        learner->evaluateBatch(inputs.begin()+i,
+                               inputs.begin()+i+sizeHere,
+                               outputs.begin()+i);
     }
 }
 
@@ -1074,11 +1077,11 @@ u32  s_ezTrain(iLearner* learner,       std::vector< tIO >& trainInputs,
         if (trainObserver)
         {
             // Evaluate the learner using the training set.
-            evaluate(learner, trainInputs, trainOutputs);
+            evaluate(learner, trainInputs, trainOutputs, batchSize);
             buildConfusionMatrix(trainOutputs, trainTargets, trainCM);
 
             // Evaluate the learner using the test set.
-            evaluate(learner, testInputs, testOutputs);
+            evaluate(learner, testInputs, testOutputs, batchSize);
             buildConfusionMatrix(testOutputs, testTargets, testCM);
 
             // Calculate the elapsed time.

@@ -15,6 +15,15 @@ namespace ml
 
 
 /**
+ * We can easily switch floating point precisions with the
+ * following typedef. This effect the precision of the
+ * input/output/target examples and the internal precision
+ * of the learners.
+ */
+typedef f64 fml;
+
+
+/**
  * This object will be used to denote input to the learner as
  * well as output from the learner. Both input/output to/from
  * this learner are vector data.
@@ -23,7 +32,7 @@ namespace ml
  * or several target examples without having to explicitly declare
  * vectors of vectors of floats.
  */
-typedef std::vector<f64> tIO;
+typedef std::vector<fml> tIO;
 
 
 /**
@@ -41,8 +50,7 @@ class iLearner
          * The learner will not become smarter by calling this method. You must
          * subsequently call update().
          */
-        virtual void addExample(const tIO& input, const tIO& target,
-                                  tIO& actualOutput) = 0;
+        virtual void addExample(const tIO& input, const tIO& target) = 0;
 
         /**
          * Updates the learner to account for all the examples it's seen since
@@ -56,6 +64,26 @@ class iLearner
          * Uses the current knowledge of the learner to evaluate the given input.
          */
         virtual void evaluate(const tIO& input, tIO& output) const = 0;
+
+        /**
+         * Uses the current knowledge of the learner to evaluate the given inputs.
+         *
+         * This is the same as the above version of evaluate(), but this one
+         * does a batch-evaluate, which is more efficient for most learners
+         * to perform.
+         */
+        virtual void evaluateBatch(const std::vector<tIO>& inputs,
+                                         std::vector<tIO>& outputs) const = 0;
+
+        /**
+         * Uses the current knowledge of the learner to evaluate the given inputs.
+         *
+         * This is the same as the above version of evaluateBatch(), but this one
+         * takes iterators so that you can avoid copying data in some cases.
+         */
+        virtual void evaluateBatch(std::vector<tIO>::const_iterator inputStart,
+                                   std::vector<tIO>::const_iterator inputEnd,
+                                   std::vector<tIO>::iterator outputStart) const = 0;
 
         /**
          * Asks the learner to calculate the error between the given output
