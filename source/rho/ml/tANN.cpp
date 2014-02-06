@@ -1043,7 +1043,10 @@ f64 tANN::getOutput(u32 layerIndex, u32 neuronIndex) const
 {
     if (neuronIndex >= getNumNeuronsInLayer(layerIndex))
         throw eInvalidArgument("No layer/node with that index.");
-    return m_layers[layerIndex].a(neuronIndex,0);
+    Mat& a = m_layers[layerIndex].a;
+    if (a.cols() == 0)
+        throw eInvalidArgument("There is no \"most recent\" output of this neuron.");
+    return a(neuronIndex,a.cols()-1);
 }
 
 void tANN::getImage(u32 layerIndex, u32 neuronIndex,

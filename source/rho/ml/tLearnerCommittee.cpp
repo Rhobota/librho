@@ -61,18 +61,23 @@ class tEvalWorker : public sync::iRunnable, public bNonCopyable
 {
     public:
 
-        tEvalWorker(const iLearner* learner, const tIO& input)
+        tEvalWorker(const iLearner* learner,
+                    std::vector<tIO>::const_iterator inputStart,
+                    std::vector<tIO>::const_iterator inputEnd)
             : m_learner(learner),
-              m_input(input)
+              m_inputStart(inputStart),
+              m_inputEnd(inputEnd)
         {
         }
 
         void run()
         {
-            m_learner->evaluate(m_input, m_output);
+            m_output.resize(m_inputEnd-m_inputStart);
+            m_learner->evaluateBatch(m_inputStart, m_inputEnd,
+                                     m_output.begin());
         }
 
-        const tIO& getOutput() const
+        const std::vector<tIO>& getOutput() const
         {
             return m_output;
         }
@@ -80,20 +85,37 @@ class tEvalWorker : public sync::iRunnable, public bNonCopyable
     private:
 
         const iLearner* m_learner;
-        const tIO& m_input;
-        tIO m_output;
+
+        std::vector<tIO>::const_iterator m_inputStart;
+        std::vector<tIO>::const_iterator m_inputEnd;
+
+        std::vector<tIO> m_output;
 };
 
 void tLearnerCommittee::evaluate(const tIO& input, tIO& output) const
 {
-    std::vector<tIO> outputs;
+    throw eLogicError("Do not call this method. This method is not efficient, and there is currently no reason to use it over evaluateBatch() for a committee of learners.");
+}
+
+void tLearnerCommittee::evaluateBatch(const std::vector<tIO>& inputs,
+                                            std::vector<tIO>& outputs) const
+{
+    outputs.resize(inputs.size());
+    evaluateBatch(inputs.begin(), inputs.end(), outputs.begin());
+}
+
+void tLearnerCommittee::evaluateBatch(std::vector<tIO>::const_iterator inputStart,
+                                      std::vector<tIO>::const_iterator inputEnd,
+                                      std::vector<tIO>::iterator outputStart) const
+{
+    std::vector< std::vector<tIO> > outputs;
     if (m_threadPool)
     {
         std::vector< refc<sync::iRunnable> > runnables;
         std::vector<sync::tThreadPool::tTaskKey> taskKeys;
         for (size_t i = 0; i < m_committee.size(); i++)
         {
-            refc<sync::iRunnable> runnable(new tEvalWorker(m_committee[i], input));
+            refc<sync::iRunnable> runnable(new tEvalWorker(m_committee[i], inputStart, inputEnd));
             taskKeys.push_back(m_threadPool->push(runnable));
             runnables.push_back(runnable);
         }
@@ -112,45 +134,37 @@ void tLearnerCommittee::evaluate(const tIO& input, tIO& output) const
     {
         for (size_t i = 0; i < m_committee.size(); i++)
         {
-            tIO outHere;
-            m_committee[i]->evaluate(input, outHere);
+            std::vector<tIO> outHere(inputEnd-inputStart);
+            m_committee[i]->evaluateBatch(inputStart, inputEnd, outHere.begin());
             outputs.push_back(outHere);
         }
     }
 
-    if (m_type == kCommitteeAverage)
+    for (size_t i = 0; i < outputs.size(); i++)
     {
-        output = outputs[0];
-        for (size_t i = 1; i < outputs.size(); i++)
-            s_accum(output, outputs[i]);
-        for (size_t i = 0; i < output.size(); i++)
-            output[i] /= ((f64)m_committee.size());
+        const std::vector<tIO>& outHere = outputs[i];
+        if (m_type == kCommitteeAverage)
+        {
+            (*outputStart) = outHere[0];
+            for (size_t i = 1; i < outHere.size(); i++)
+                s_accum((*outputStart), outHere[i]);
+            for (size_t i = 0; i < (*outputStart).size(); i++)
+                (*outputStart)[i] /= ((f64)m_committee.size());
+        }
+        else if (m_type == kCommitteeMostConfident)
+        {
+            size_t mostConfidentIndex = 0;
+            for (size_t i = 1; i < outHere.size(); i++)
+                if (s_max(outHere[i]) > s_max(outHere[mostConfidentIndex]))
+                    mostConfidentIndex = i;
+            (*outputStart) = outHere[mostConfidentIndex];
+        }
+        else
+        {
+            throw eNotImplemented("Is there a new enum value I haven't handled here yet?");
+        }
+        outputStart++;
     }
-    else if (m_type == kCommitteeMostConfident)
-    {
-        size_t mostConfidentIndex = 0;
-        for (size_t i = 1; i < outputs.size(); i++)
-            if (s_max(outputs[i]) > s_max(outputs[mostConfidentIndex]))
-                mostConfidentIndex = i;
-        output = outputs[mostConfidentIndex];
-    }
-    else
-    {
-        throw eNotImplemented("Is there a new enum value I haven't handled here yet?");
-    }
-}
-
-void tLearnerCommittee::evaluateBatch(const std::vector<tIO>& inputs,
-                                            std::vector<tIO>& outputs) const
-{
-    throw eNotImplemented("For later...");
-}
-
-void tLearnerCommittee::evaluateBatch(std::vector<tIO>::const_iterator inputStart,
-                                      std::vector<tIO>::const_iterator inputEnd,
-                                      std::vector<tIO>::iterator outputStart) const
-{
-    throw eNotImplemented("For later...");
 }
 
 void tLearnerCommittee::printLearnerInfo(std::ostream& out) const
