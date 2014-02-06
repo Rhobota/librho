@@ -323,8 +323,10 @@ class tANN : public rho::iPackable, public iLearner, public rho::bNonCopyable
         /**
          * Returns the output value of the specified neuron. This will be
          * the neuron's output value from the last example which was
-         * pushed through this network. Note, examples are not pushed
-         * through by addExample(). Only evaluate() and update().
+         * pushed through this network.
+         *
+         * Note: Examples are not pushed through by addExample(). They are
+         * only pushed through by evaluate*() and update().
          */
         f64 getOutput(u32 layerIndex, u32 neuronIndex) const;
 

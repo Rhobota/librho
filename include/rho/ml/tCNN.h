@@ -16,7 +16,7 @@ namespace ml
 {
 
 
-class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
+class tCNN : public rho::iPackable, public iLearner, public rho::bNonCopyable
 {
     public:
 
@@ -244,10 +244,6 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
         std::string learnerInfoString() const;
 
         //////////////////////////////////////////////////////////////////////
-        // Debugging
-        //////////////////////////////////////////////////////////////////////
-
-        //////////////////////////////////////////////////////////////////////
         // Getters
         //////////////////////////////////////////////////////////////////////
 
@@ -302,10 +298,12 @@ class tCNN : public rho::iPackable, public rho::bNonCopyable, public iLearner
         u32 getNumReplicatedFilters(u32 layerIndex) const;
 
         /**
-         * Returns the output value of the specified neuron. This will be
-         * the neuron's output value from the last example which was
-         * pushed through this network. Note, examples are not pushed
-         * through by addExample(). Only evaluate() and update().
+         * Returns the output value of the specified filter. This will be
+         * the filter's output value from the last example which was
+         * pushed through this network.
+         *
+         * Note: Examples are not pushed through by addExample(). They are
+         * only pushed through by evaluate*() and update().
          *
          * If minValue and maxValue are not NULL, they are filled
          * with the minimum and maximum possible values output by
