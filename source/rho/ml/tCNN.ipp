@@ -9,27 +9,6 @@ namespace ml
 {
 
 
-void s_printRowSums(const Mat& m)
-{
-    for (i32 i = 0; i < m.rows(); i++)
-        std::cout << " " << m.row(i).sum();
-    std::cout << endl;
-    std::cout << endl;
-}
-
-
-void s_printMat(const Mat& m)
-{
-    for (i32 s = 0; s < m.cols(); s++)
-    {
-        for (i32 i = 0; i < m.rows(); i++)
-            std::cout << " " << m(i,s);
-        std::cout << endl;
-    }
-    std::cout << endl;
-}
-
-
 class tLayerCNN : public bNonCopyable
 {
   private:
@@ -530,6 +509,7 @@ class tLayerCNN : public bNonCopyable
 
         // Un-convolve the convolved da.
         prev_da.resize(input.rows(), input.cols());
+        prev_da.setZero();
         u32 convolvCol = 0;
         for (i32 c = 0; c < prev_da.cols(); c++)
         {
@@ -546,7 +526,6 @@ class tLayerCNN : public bNonCopyable
 
     void updateWeights(const Mat& input)
     {
-        //s_printMat(m_layer.dw_accum);
         m_layer.updateWeights((u32)input.cols());
     }
 
@@ -1350,6 +1329,8 @@ void tCNN::unpack(iReadable* in)
     m_layers = layers;
     m_randWeightMin = randWeightMin;
     m_randWeightMax = randWeightMax;
+    m_inputAccum.clear();
+    m_targetAccum.clear();
 }
 
 
