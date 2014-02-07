@@ -4,7 +4,14 @@
 
 #include <rho/ml/tANN.h>
 #include <rho/algo/tLCG.h>
+
+#if NDEBUG
 #include "Eigen/Core"
+#else
+//#define NDEBUG 1             // <-- uncomment these two lines when you are confident
+#include "Eigen/Core"          //     we are using Eigen safely (i.e. we will never access
+//#undef NDEBUG                // <-- data that is out-of-bounds)
+#endif
 
 #include <cassert>
 #include <iomanip>
