@@ -360,6 +360,9 @@ class tCNN : public rho::iPackable, public iLearner, public rho::bNonCopyable
 
         f64 m_randWeightMin;   // used for resetWeights()
         f64 m_randWeightMax;   // ...
+
+        std::vector<tIO> m_inputAccum;
+        std::vector<tIO> m_targetAccum;
 };
 
 
