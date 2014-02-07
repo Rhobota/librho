@@ -404,11 +404,13 @@ class tLayer : public bNonCopyable
             prev_da = (w.block(0,0,w.rows(),w.cols()-1).transpose() * dA);
     }
 
-    void updateWeights()
+    void updateWeights(u32 batchSizeOverride = 0)
     {
         assert(a.cols() > 0);         // <--  a.cols() is the batch size
         assert(w.rows() > 0);
         assert(w.cols() > 0);
+
+        fml batchSize = (batchSizeOverride > 0) ? ((fml)batchSizeOverride) : ((fml)a.cols());
 
         switch (weightUpRule)
         {
@@ -421,7 +423,7 @@ class tLayer : public bNonCopyable
             {
                 if (alpha <= 0.0)
                     throw eLogicError("When using the fixed learning rate rule, alpha must be set.");
-                fml mult = (10.0 / (fml)a.cols()) * alpha;
+                fml mult = (10.0 / batchSize) * alpha;
                 w -= mult * dw_accum;
                 break;
             }
@@ -434,7 +436,7 @@ class tLayer : public bNonCopyable
                     throw eLogicError("When using the momentum update rule, viscosity must be set.");
                 if (vel.rows() == 0)
                     vel = Mat::Zero(w.rows(), w.cols());
-                fml mult = (10.0 / (fml)a.cols()) * alpha;
+                fml mult = (10.0 / batchSize) * alpha;
                 vel = viscosity*vel - mult*dw_accum;
                 w += vel;
                 break;
@@ -458,7 +460,7 @@ class tLayer : public bNonCopyable
                     throw eLogicError("When using the rmsprop rule, alpha must be set.");
                 if (dw_accum_avg.rows() == 0)
                     dw_accum_avg = Mat::Constant(w.rows(), w.cols(), 1000.0);
-                fml batchNormMult = 1.0 / (fml)a.cols();
+                fml batchNormMult = 1.0 / batchSize;
                 dw_accum *= batchNormMult;
                 dw_accum_avg = 0.9*dw_accum_avg + 0.1*dw_accum.array().square().matrix();
                 w -= alpha * dw_accum.binaryExpr(dw_accum_avg, t_RMSPROP_wUpdate());
@@ -806,8 +808,8 @@ void tANN::update()
         for (u32 i = m_numLayers-1; i > 0; i--)
         {
             m_layers[i].accumError(m_layers[i-1].output);
-            m_layers[i].updateWeights();
             m_layers[i].backpropagate(m_layers[i-1].da, m_layers[i-1].output);
+            m_layers[i].updateWeights();
         }
 
         m_layers[0].accumError(input);
@@ -829,7 +831,7 @@ void tANN::evaluate(const tIO& input, tIO& output) const
     for (u32 i = 1; i < m_numLayers; i++)
         m_layers[i].takeInput(m_layers[i-1].output);
 
-    Mat& outMat = m_layers[m_numLayers-1].a;
+    const Mat& outMat = m_layers[m_numLayers-1].a;
     output.resize(outMat.rows());
     for (i32 i = 0; i < outMat.rows(); i++)
         output[i] = outMat(i,0);
@@ -870,7 +872,7 @@ void tANN::evaluateBatch(std::vector<tIO>::const_iterator inputStart,
         m_layers[i].takeInput(m_layers[i-1].output);
 
     // Capture the output.
-    Mat& outMat = m_layers[m_numLayers-1].a;
+    const Mat& outMat = m_layers[m_numLayers-1].a;
     std::vector<tIO>::iterator outitr = outputStart;
     for (i32 c = 0; c < outMat.cols(); c++)
     {
@@ -1026,7 +1028,7 @@ void tANN::getWeights(u32 layerIndex, u32 neuronIndex, tIO& weights) const
     if (neuronIndex >= getNumNeuronsInLayer(layerIndex))
         throw eInvalidArgument("No layer/node with that index.");
 
-    Mat& w = m_layers[layerIndex].w;
+    const Mat& w = m_layers[layerIndex].w;
     weights.resize(w.cols()-1);
     for (size_t s = 0; s < weights.size(); s++)
         weights[s] = w(neuronIndex,s);
@@ -1043,7 +1045,7 @@ f64 tANN::getOutput(u32 layerIndex, u32 neuronIndex) const
 {
     if (neuronIndex >= getNumNeuronsInLayer(layerIndex))
         throw eInvalidArgument("No layer/node with that index.");
-    Mat& a = m_layers[layerIndex].a;
+    const Mat& a = m_layers[layerIndex].a;
     if (a.cols() == 0)
         throw eInvalidArgument("There is no \"most recent\" output of this neuron.");
     return a(neuronIndex,a.cols()-1);

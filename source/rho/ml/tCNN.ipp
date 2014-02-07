@@ -9,6 +9,27 @@ namespace ml
 {
 
 
+void s_printRowSums(const Mat& m)
+{
+    for (i32 i = 0; i < m.rows(); i++)
+        std::cout << " " << m.row(i).sum();
+    std::cout << endl;
+    std::cout << endl;
+}
+
+
+void s_printMat(const Mat& m)
+{
+    for (i32 s = 0; s < m.cols(); s++)
+    {
+        for (i32 i = 0; i < m.rows(); i++)
+            std::cout << " " << m(i,s);
+        std::cout << endl;
+    }
+    std::cout << endl;
+}
+
+
 class tLayerCNN : public bNonCopyable
 {
   private:
@@ -37,48 +58,32 @@ class tLayerCNN : public bNonCopyable
                                        // will be trained then replicated
                                        // across the receptive fields.
 
-    tLayer* m_layers;   // An array of tLayers.
-                        // These layers are not stacked on one another
-                        // like they are in tANN. Instead these layers
-                        // sit side-by-side and take input from the same
-                        // input vector.
-                        //
-                        // Each layer has many neurons (aka, filters).
-                        // Each neuron in m_layers[0] is replicated within
-                        // all the other layers. That is, the weights to
-                        // the neurons in m_layers[0] equal the weights to
-                        // the neurons in m_layers[1], which equal the weights
-                        // to the neurons in m_layers[2], etc.
-                        //
-                        // The reason for having these replicas is that each
-                        // replica is applied on a unique portion of the input
-                        // vector (i.e. each is applied to its own receptive
-                        // field).
+    tLayer m_layer;
 
-    u32 m_numLayers;   // The number of tLayers in the "layers" array above.
-                       // (Is equal to (m_stepsX+1)*(m_stepsY+1).)
+    u32 m_numReplicas;
 
   private:
 
     // The following is state to make calculations faster so that you don't
     // have to reallocate vectors all the time.
 
-    Eigen::MatrixXd m_output;
-    Eigen::MatrixXd m_da;
+    Mat m_output;
+    Mat m_da;
 
-    Eigen::MatrixXd m_pooledOutput;  // Only used when (m_poolWidth > 1 || m_poolHeight > 1)
-    Eigen::MatrixXd m_pooled_da;     // (same)
+    Mat m_pooledOutput;  // Only used when (m_poolWidth > 1 || m_poolHeight > 1)
+    Mat m_pooled_da;     // (same)
 
-    Eigen::MatrixXd m_fieldInput;
+    Mat m_convolvedInput;
+    Mat m_convolved_da;
 
   private:
 
-    void m_fillField(const Eigen::MatrixXd& input, u32 x, u32 y, Eigen::MatrixXd& fieldInput) const
+    void m_fillField(const Mat& input, i32 c, u32 x, u32 y, Mat& fieldInput, i32 f) const
     {
-        assert((u32)input.cols() == m_inputSize);
+        assert((u32)input.rows() == m_inputSize);
         assert(x+m_receptiveFieldWidth <= m_inputWidth);
         assert(y+m_receptiveFieldHeight <= m_inputHeight);
-        assert((u32)fieldInput.cols() == m_receptiveFieldWidth * m_receptiveFieldHeight);
+        assert((u32)fieldInput.rows() == m_receptiveFieldWidth*m_receptiveFieldHeight+1);
 
         u32 inputIndex = y*m_inputWidth + x;
         u32 fieldInputIndex = 0;
@@ -86,18 +91,18 @@ class tLayerCNN : public bNonCopyable
         {
             for (u32 xx = 0; xx < m_receptiveFieldWidth; xx++)
             {
-                fieldInput(0,fieldInputIndex++) = input(0,inputIndex+xx);
+                fieldInput(fieldInputIndex++,f) = input(inputIndex+xx,c);
             }
             inputIndex += m_inputWidth;
         }
     }
 
-    void m_reverseFillField(const Eigen::MatrixXd& fieldInput, u32 x, u32 y, Eigen::MatrixXd& input) const
+    void m_reverseFillField(const Mat& fieldInput, i32 f, u32 x, u32 y, Mat& input, i32 c) const
     {
-        assert((u32)input.cols() == m_inputSize);
+        assert((u32)input.rows() == m_inputSize);
         assert(x+m_receptiveFieldWidth <= m_inputWidth);
         assert(y+m_receptiveFieldHeight <= m_inputHeight);
-        assert((u32)fieldInput.cols() == m_receptiveFieldWidth * m_receptiveFieldHeight);
+        assert((u32)fieldInput.rows() == m_receptiveFieldWidth*m_receptiveFieldHeight);
 
         u32 inputIndex = y*m_inputWidth + x;
         u32 fieldInputIndex = 0;
@@ -105,7 +110,7 @@ class tLayerCNN : public bNonCopyable
         {
             for (u32 xx = 0; xx < m_receptiveFieldWidth; xx++)
             {
-                 input(0,inputIndex+xx) += fieldInput(0,fieldInputIndex++);
+                 input(inputIndex+xx,c) += fieldInput(fieldInputIndex++,f);
             }
             inputIndex += m_inputWidth;
         }
@@ -113,111 +118,120 @@ class tLayerCNN : public bNonCopyable
 
     void m_poolOutput()
     {
+        assert(m_output.rows() == m_numFeatureMapsInThisLayer*m_numReplicas);
+        assert(m_output.cols() > 0);
+
         size_t outWidth = (m_stepsX+1) * m_numFeatureMapsInThisLayer;
-        size_t pooledoutIndex = 0;
-        for (u32 y = 0; y <= (m_stepsY+1-m_poolHeight); y += m_poolHeight)
+        m_pooledOutput.resize(m_pooledOutput.rows(), m_output.cols());
+        for (i32 c = 0; c < m_output.cols(); c++)
         {
-            for (u32 x = 0; x <= (m_stepsX+1-m_poolWidth); x += m_poolWidth)
+            size_t pooledoutIndex = 0;
+            for (u32 y = 0; y <= (m_stepsY+1-m_poolHeight); y += m_poolHeight)
             {
-                size_t outputIndex = y*outWidth + x*m_numFeatureMapsInThisLayer;
-                for (u32 m = 0; m < m_numFeatureMapsInThisLayer; m++)
+                for (u32 x = 0; x <= (m_stepsX+1-m_poolWidth); x += m_poolWidth)
                 {
-                    size_t off = outputIndex + m;
-                    f64 maxval = m_output(0,off);
-                    for (u32 i = 0; i < m_poolHeight; i++)
+                    size_t outputIndex = y*outWidth + x*m_numFeatureMapsInThisLayer;
+                    for (u32 m = 0; m < m_numFeatureMapsInThisLayer; m++)
                     {
-                        size_t off2 = off;
-                        for (u32 j = 0; j < m_poolWidth; j++)
+                        size_t off = outputIndex + m;
+                        f64 maxval = m_output(off,c);
+                        for (u32 i = 0; i < m_poolHeight; i++)
                         {
-                            maxval = std::max(maxval, m_output(0,off2));
-                            off2 += m_numFeatureMapsInThisLayer;
+                            size_t off2 = off;
+                            for (u32 j = 0; j < m_poolWidth; j++)
+                            {
+                                maxval = std::max(maxval, m_output(off2,c));
+                                off2 += m_numFeatureMapsInThisLayer;
+                            }
+                            off += outWidth;
                         }
-                        off += outWidth;
+                        m_pooledOutput(pooledoutIndex++,c) = maxval;
                     }
-                    m_pooledOutput(0,pooledoutIndex++) = maxval;
                 }
             }
         }
-        assert(pooledoutIndex == (u32)m_pooledOutput.cols());
     }
 
     void m_unpool_da_sparse()
     {
+        assert(m_output.rows() == m_numFeatureMapsInThisLayer*m_numReplicas);
+        assert(m_output.cols() > 0);
+        assert(m_pooled_da.rows() == ((m_stepsX+1)/m_poolWidth) * ((m_stepsY+1)/m_poolHeight) * m_numFeatureMapsInThisLayer);
+        assert(m_pooled_da.cols() == m_output.cols());
+
         size_t outWidth = (m_stepsX+1) * m_numFeatureMapsInThisLayer;
-        size_t pooledoutIndex = 0;
-        for (i32 i = 0; i < m_da.cols(); i++)
-            m_da(0,i) = 0.0;
-        for (u32 y = 0; y <= (m_stepsY+1-m_poolHeight); y += m_poolHeight)
+        m_da.resize(m_da.rows(), m_output.cols());
+        m_da.setZero();
+        for (i32 c = 0; c < m_da.cols(); c++)
         {
-            for (u32 x = 0; x <= (m_stepsX+1-m_poolWidth); x += m_poolWidth)
+            size_t pooledoutIndex = 0;
+            for (u32 y = 0; y <= (m_stepsY+1-m_poolHeight); y += m_poolHeight)
             {
-                size_t outputIndex = y*outWidth + x*m_numFeatureMapsInThisLayer;
-                for (u32 m = 0; m < m_numFeatureMapsInThisLayer; m++)
+                for (u32 x = 0; x <= (m_stepsX+1-m_poolWidth); x += m_poolWidth)
                 {
-                    size_t off = outputIndex + m;
-                    f64 maxval = m_output(0,off);
-                    size_t maxi = off;
-                    for (u32 i = 0; i < m_poolHeight; i++)
+                    size_t outputIndex = y*outWidth + x*m_numFeatureMapsInThisLayer;
+                    for (u32 m = 0; m < m_numFeatureMapsInThisLayer; m++)
                     {
-                        size_t off2 = off;
-                        for (u32 j = 0; j < m_poolWidth; j++)
+                        size_t off = outputIndex + m;
+                        f64 maxval = m_output(off,c);
+                        size_t maxi = off;
+                        for (u32 i = 0; i < m_poolHeight; i++)
                         {
-                            if (maxval < m_output(0,off2))
+                            size_t off2 = off;
+                            for (u32 j = 0; j < m_poolWidth; j++)
                             {
-                                maxval = m_output(0,off2);
-                                maxi = off2;
+                                if (maxval < m_output(off2,c))
+                                {
+                                    maxval = m_output(off2,c);
+                                    maxi = off2;
+                                }
+                                off2 += m_numFeatureMapsInThisLayer;
                             }
-                            off2 += m_numFeatureMapsInThisLayer;
+                            off += outWidth;
                         }
-                        off += outWidth;
+                        m_da(maxi,c) = m_pooled_da(pooledoutIndex++,c);
                     }
-                    m_da(0,maxi) = m_pooled_da(0,pooledoutIndex++);
                 }
             }
         }
-        assert(pooledoutIndex == (u32)m_pooled_da.cols());
     }
 
     void m_unpool_da_dense()
     {
+        assert(m_output.rows() == m_numFeatureMapsInThisLayer*m_numReplicas);
+        assert(m_output.cols() > 0);
+        assert(m_pooled_da.rows() == ((m_stepsX+1)/m_poolWidth) * ((m_stepsY+1)/m_poolHeight) * m_numFeatureMapsInThisLayer);
+        assert(m_pooled_da.cols() == m_output.cols());
+
         size_t outWidth = (m_stepsX+1) * m_numFeatureMapsInThisLayer;
-        size_t pooledoutIndex = 0;
-        for (i32 i = 0; i < m_da.cols(); i++)
-            m_da(0,i) = 0.0;
-        for (u32 y = 0; y <= m_stepsY; y += m_poolHeight)
+        m_da.resize(m_da.rows(), m_output.cols());
+        m_da.setZero();
+        for (i32 c = 0; c < m_da.cols(); c++)
         {
-            for (u32 x = 0; x <= m_stepsX; x += m_poolWidth)
+            size_t pooledoutIndex = 0;
+            for (u32 y = 0; y <= m_stepsY; y += m_poolHeight)
             {
-                size_t outputIndex = y*outWidth + x*m_numFeatureMapsInThisLayer;
-                for (u32 m = 0; m < m_numFeatureMapsInThisLayer; m++)
+                for (u32 x = 0; x <= m_stepsX; x += m_poolWidth)
                 {
-                    size_t off = outputIndex + m;
-                    for (u32 i = 0; i < m_poolHeight; i++)
+                    size_t outputIndex = y*outWidth + x*m_numFeatureMapsInThisLayer;
+                    for (u32 m = 0; m < m_numFeatureMapsInThisLayer; m++)
                     {
-                        size_t off2 = off;
-                        for (u32 j = 0; j < m_poolWidth; j++)
+                        size_t off = outputIndex + m;
+                        for (u32 i = 0; i < m_poolHeight; i++)
                         {
-                            m_da(0,off2) = m_pooled_da(0,pooledoutIndex);
-                            off2 += m_numFeatureMapsInThisLayer;
+                            size_t off2 = off;
+                            for (u32 j = 0; j < m_poolWidth; j++)
+                            {
+                                m_da(0,off2) = m_pooled_da(0,pooledoutIndex);
+                                off2 += m_numFeatureMapsInThisLayer;
+                            }
+                            off += outWidth;
                         }
-                        off += outWidth;
+                        pooledoutIndex++;
                     }
-                    pooledoutIndex++;
                 }
             }
         }
-        assert(pooledoutIndex == (u32)m_pooled_da.cols());
-    }
-
-    void m_accum_dw(Eigen::MatrixXd& accum, Eigen::MatrixXd& vals)
-    {
-        accum += vals;
-        vals.setZero();
-    }
-
-    void m_set(Eigen::MatrixXd& dest, const Eigen::MatrixXd& source)
-    {
-        dest = source;
     }
 
   public:
@@ -226,8 +240,14 @@ class tLayerCNN : public bNonCopyable
     {
         // This constructed object is invalid. You must call init()
         // to set it up properly.
-        m_layers = NULL;
-        m_numLayers = 0;
+    }
+
+    void init_data()
+    {
+        m_output = Mat::Zero((m_stepsX+1)*(m_stepsY+1) * m_numFeatureMapsInThisLayer, 0);
+        m_da = m_output;
+        m_pooledOutput = Mat::Zero(((m_stepsX+1)/m_poolWidth) * ((m_stepsY+1)/m_poolHeight) * m_numFeatureMapsInThisLayer, 0);
+        m_pooled_da = m_pooledOutput;
     }
 
     void init(u32 inputSize, u32 inputRowWidth,
@@ -273,132 +293,56 @@ class tLayerCNN : public bNonCopyable
 
         assert(rmin < rmax);
 
-        // Initializing the replicated layers.
-        m_numLayers = (m_stepsX+1)*(m_stepsY+1);
-        delete [] m_layers;
-        m_layers = new tLayer[m_numLayers];
-        for (u32 i = 0; i < m_numLayers; i++)
-        {
-            // If this is the representative layer, initialize it randomly.
-            if (i == 0)
-            {
-                m_layers[i].init(m_receptiveFieldWidth * m_receptiveFieldHeight,
-                                 m_numFeatureMapsInThisLayer,
-                                 rmin, rmax, lcg);
-            }
+        m_numReplicas = (m_stepsX+1)*(m_stepsY+1);
+        m_layer.init(m_receptiveFieldWidth * m_receptiveFieldHeight,
+                     m_numFeatureMapsInThisLayer,
+                     rmin, rmax, lcg);
 
-            // Else, force the weights of each replicated filter to be the
-            // same!
-            else
-            {
-                m_layers[i].init_data(m_receptiveFieldWidth * m_receptiveFieldHeight,
-                                      m_numFeatureMapsInThisLayer);
-                m_layers[i].w = m_layers[0].w;
-            }
-        }
-
-        // Init the fast data members.
-        m_output = Eigen::MatrixXd::Zero(1, (m_stepsX+1)*(m_stepsY+1) * m_numFeatureMapsInThisLayer);
-        m_da = m_output;
-
-        m_pooledOutput = Eigen::MatrixXd::Zero(1, ((m_stepsX+1)/m_poolWidth) * ((m_stepsY+1)/m_poolHeight) * m_numFeatureMapsInThisLayer);
-        m_pooled_da = m_pooledOutput;
-
-        m_fieldInput = Eigen::MatrixXd::Zero(1, m_receptiveFieldWidth * m_receptiveFieldHeight);
+        init_data();
     }
 
     void resetWeights(f64 rmin, f64 rmax, algo::iLCG& lcg)
     {
-        for (u32 i = 0; i < m_numLayers; i++)
-        {
-            if (i == 0)
-            {
-                m_layers[i].reset(rmin, rmax, lcg);
-            }
-
-            else
-            {
-                m_layers[i].w = m_layers[0].w;
-            }
-        }
-    }
-
-    ~tLayerCNN()
-    {
-        delete [] m_layers;
-        m_layers = NULL;
-        m_numLayers = 0;
-    }
-
-    void assertState(size_t prevLayerSize) const
-    {
-        assert(m_numLayers > 0);
-        assert(m_layers != NULL);
-        assert(prevLayerSize == m_inputSize);
-        assert(m_inputSize == m_inputWidth * m_inputHeight);
-        assert(m_numLayers == (m_stepsX+1)*(m_stepsY+1));
-
-        for (u32 i = 0; i < m_numLayers; i++)
-        {
-            assert((u32)m_layers[i].a.cols() == m_numFeatureMapsInThisLayer);
-            assert(m_layers[i].w == m_layers[0].w);
-            assert(m_layers[i].layerType == m_layers[0].layerType);
-            assert(m_layers[i].normalizeLayerInput == m_layers[0].normalizeLayerInput);
-            assert(m_layers[i].weightUpRule == m_layers[0].weightUpRule);
-            assert(m_layers[i].alpha == m_layers[0].alpha);
-            assert(m_layers[i].viscosity == m_layers[0].viscosity);
-        }
+        m_layer.reset(rmin, rmax, lcg);
     }
 
     void setLayerType(tANN::nLayerType type)
     {
         assert(type >= 0 && type < tANN::kLayerTypeMax);
-        for (u32 i = 0; i < m_numLayers; i++)
-            m_layers[i].layerType = type;
+        m_layer.layerType = type;
     }
 
     void setLayerNormalizeLayerInput(bool norm)
     {
-        for (u32 i = 0; i < m_numLayers; i++)
-            m_layers[i].normalizeLayerInput = (norm ? 1 : 0);
+        m_layer.normalizeLayerInput = (norm ? 1 : 0);
     }
 
     void setLayerWeightUpdateRule(tANN::nWeightUpRule rule)
     {
         assert(rule >= 0 && rule < tANN::kWeightUpRuleMax);
-        for (u32 i = 0; i < m_numLayers; i++)
-            m_layers[i].weightUpRule = rule;
+        m_layer.weightUpRule = rule;
     }
 
     void setLayerAlpha(f64 alpha)
     {
         assert(alpha > 0.0);
-        for (u32 i = 0; i < m_numLayers; i++)
-            m_layers[i].alpha = alpha;
+        m_layer.alpha = alpha;
     }
 
     void setLayerViscosity(f64 viscosity)
     {
         assert(viscosity > 0.0 && viscosity < 1.0);
-        for (u32 i = 0; i < m_numLayers; i++)
-            m_layers[i].viscosity = viscosity;
+        m_layer.viscosity = viscosity;
     }
 
-    tLayer& getPrimaryLayer()
+    const tLayer& getLayer() const
     {
-        assert(m_numLayers > 0);
-        return m_layers[0];
+        return m_layer;
     }
 
-    u32 getNumLayers() const
+    u32 getNumReplicas() const
     {
-        return m_numLayers;
-    }
-
-    tLayer& getLayer(u32 layerIndex)
-    {
-        assert(layerIndex < m_numLayers);
-        return m_layers[layerIndex];
+        return m_numReplicas;
     }
 
     u32 getInputSize() const
@@ -463,32 +407,50 @@ class tLayerCNN : public bNonCopyable
 
     u32 getNumFreeParameters() const
     {
-        return (u32)(m_layers[0].w.rows() * m_layers[0].w.cols());
+        return (u32)(m_layer.w.cols() * m_layer.w.rows());
     }
 
-    void takeInput(const Eigen::MatrixXd& input)
+    void takeInput(const Mat& input)
     {
-        // Give input to each filter.
-        u32 layerIndex = 0;
-        for (u32 y = 0; y < m_inputHeight-m_receptiveFieldHeight+1; y += m_stepSizeY)
+        assert(input.rows() == m_inputSize);
+        assert(input.cols() > 0);
+
+        // Convolve the input.
+        m_convolvedInput.resize(m_receptiveFieldWidth*m_receptiveFieldHeight+1,
+                                input.cols() * m_numReplicas);
+        m_convolvedInput.bottomRows(1).setOnes();
+        u32 convolvCol = 0;
+        for (i32 c = 0; c < input.cols(); c++)
         {
-            for (u32 x = 0; x < m_inputWidth-m_receptiveFieldWidth+1; x += m_stepSizeX)
+            for (u32 y = 0; y < m_inputHeight-m_receptiveFieldHeight+1; y += m_stepSizeY)
             {
-                m_fillField(input, x, y, m_fieldInput);
-                m_layers[layerIndex++].takeInput(m_fieldInput);
+                for (u32 x = 0; x < m_inputWidth-m_receptiveFieldWidth+1; x += m_stepSizeX)
+                {
+                    m_fillField(input, c, x, y, m_convolvedInput, convolvCol++);
+                }
             }
         }
-        assert(layerIndex == (m_stepsX+1)*(m_stepsY+1));
-        assert(layerIndex == m_numLayers);
+        assert(convolvCol == (m_stepsX+1)*(m_stepsY+1)*input.cols());
+
+        // Run the convolved input through the ANN layer.
+        m_layer.takeInput(m_convolvedInput);
 
         // Put the output of each filter into one output vector.
-        size_t outputIndex = 0;
-        for (u32 i = 0; i < m_numLayers; i++)
+        assert(m_output.rows() == m_numFeatureMapsInThisLayer*m_numReplicas);
+        assert(m_layer.a.rows() == m_numFeatureMapsInThisLayer);
+        assert(m_layer.a.cols() == input.cols()*m_numReplicas);
+        m_output.resize(m_output.rows(), input.cols());
+        convolvCol = 0;
+        for (i32 c = 0; c < input.cols(); c++)
         {
-            for (u32 j = 0; j < m_layers[i].a.cols(); j++)
-                m_output(0,outputIndex++) = m_layers[i].a(0,j);
+            size_t outputIndex = 0;
+            for (u32 i = 0; i < m_numReplicas; i++)
+            {
+                for (u32 j = 0; j < m_layer.a.rows(); j++)
+                    m_output(outputIndex++,c) = m_layer.a(j,convolvCol);
+                convolvCol++;
+            }
         }
-        assert(outputIndex == (u32)m_output.cols());
 
         // Pool the output vector (only if we do pooling in this layer)
         if (m_poolWidth > 1 || m_poolHeight > 1)
@@ -497,7 +459,7 @@ class tLayerCNN : public bNonCopyable
         }
     }
 
-    Eigen::MatrixXd& getOutput()
+    const Mat& getOutput()
     {
         if (m_poolWidth > 1 || m_poolHeight > 1)
             return m_pooledOutput;
@@ -505,12 +467,12 @@ class tLayerCNN : public bNonCopyable
             return m_output;
     }
 
-    Eigen::MatrixXd& getRealOutput()
+    const Mat& getRealOutput()
     {
         return m_output;
     }
 
-    Eigen::MatrixXd& get_da()
+    Mat& get_da()
     {
         if (m_poolWidth > 1 || m_poolHeight > 1)
             return m_pooled_da;
@@ -518,21 +480,7 @@ class tLayerCNN : public bNonCopyable
             return m_da;
     }
 
-    void accumError(const Eigen::MatrixXd& prev_a)
-    {
-        u32 layerIndex = 0;
-        for (u32 y = 0; y < m_inputHeight-m_receptiveFieldHeight+1; y += m_stepSizeY)
-        {
-            for (u32 x = 0; x < m_inputWidth-m_receptiveFieldWidth+1; x += m_stepSizeX)
-            {
-                m_fillField(prev_a, x, y, m_fieldInput);
-                m_layers[layerIndex++].accumError(m_fieldInput);
-            }
-        }
-        assert(layerIndex == (m_stepsX+1)*(m_stepsY+1));
-    }
-
-    void distribute_da(bool dense)
+    void distribute_da(const Mat& input, bool dense)
     {
         // If we do max pooling, we will need to expand the pooled da.
         if (m_poolWidth > 1 || m_poolHeight > 1)
@@ -543,44 +491,63 @@ class tLayerCNN : public bNonCopyable
                 m_unpool_da_sparse();  // <-- fills m_da from the contents of m_pooled_da
         }
 
+        assert(m_da.cols() == input.cols());
+        assert(m_da.rows() == m_numFeatureMapsInThisLayer*m_numReplicas);
+
+        assert(m_layer.a.rows() == m_numFeatureMapsInThisLayer);
+        assert(m_layer.a.cols() == input.cols()*m_numReplicas);
+
         // Distribute.
-        size_t daindex = 0;
-        for (u32 i = 0; i < m_numLayers; i++)
+        m_layer.da.resize(m_layer.a.rows(), m_layer.a.cols());
+        u32 convolvCol = 0;
+        for (i32 c = 0; c < input.cols(); c++)
         {
-            for (u32 j = 0; j < m_layers[i].da.cols(); j++)
-                 m_layers[i].da(0,j) = m_da(0,daindex++);
-        }
-        assert(daindex == (u32)m_da.cols());
-    }
-
-    void backpropagate(Eigen::MatrixXd& prev_da)
-    {
-        for (i32 s = 0; s < prev_da.cols(); s++)
-            prev_da(0,s) = 0.0;
-
-        u32 layerIndex = 0;
-        for (u32 y = 0; y < m_inputHeight-m_receptiveFieldHeight+1; y += m_stepSizeY)
-        {
-            for (u32 x = 0; x < m_inputWidth-m_receptiveFieldWidth+1; x += m_stepSizeX)
+            size_t outputIndex = 0;
+            for (u32 i = 0; i < m_numReplicas; i++)
             {
-                m_layers[layerIndex++].backpropagate(m_fieldInput, prev_da);
-                m_reverseFillField(m_fieldInput, x, y, prev_da);
+                for (u32 j = 0; j < m_layer.da.rows(); j++)
+                    m_layer.da(j,convolvCol) = m_da(outputIndex++,c);
+                convolvCol++;
             }
         }
-        assert(layerIndex == (m_stepsX+1)*(m_stepsY+1));
     }
 
-    void updateWeights()
+    void accumError()
     {
-        assertState(m_inputSize);
+        m_layer.accumError(m_convolvedInput);
+    }
 
-        for (u32 i = 1; i < m_numLayers; i++)
-            m_accum_dw(m_layers[0].dw_accum, m_layers[i].dw_accum);
+    void backpropagate(Mat& prev_da, const Mat& input)
+    {
+        // Back-propagate the convolved stuff.
+        m_layer.backpropagate(m_convolved_da, m_convolvedInput);
+        assert(m_convolved_da.rows()+1 == m_convolvedInput.rows());
+        assert(m_convolved_da.cols() == m_convolvedInput.cols());
+        assert(m_convolved_da.rows() == m_receptiveFieldWidth*m_receptiveFieldHeight);
+        assert(m_convolved_da.cols() == input.cols()*m_numReplicas);
+        assert(input.rows() == m_inputWidth*m_inputHeight);
+        assert(input.cols() > 0);
 
-        m_layers[0].updateWeights();
+        // Un-convolve the convolved da.
+        prev_da.resize(input.rows(), input.cols());
+        u32 convolvCol = 0;
+        for (i32 c = 0; c < prev_da.cols(); c++)
+        {
+            for (u32 y = 0; y < m_inputHeight-m_receptiveFieldHeight+1; y += m_stepSizeY)
+            {
+                for (u32 x = 0; x < m_inputWidth-m_receptiveFieldWidth+1; x += m_stepSizeX)
+                {
+                    m_reverseFillField(m_convolved_da, convolvCol++, x, y, prev_da, c);
+                }
+            }
+        }
+        assert(convolvCol == (m_stepsX+1)*(m_stepsY+1)*prev_da.cols());
+    }
 
-        for (u32 i = 1; i < m_numLayers; i++)
-            m_set(m_layers[i].w, m_layers[0].w);
+    void updateWeights(const Mat& input)
+    {
+        //s_printMat(m_layer.dw_accum);
+        m_layer.updateWeights((u32)input.cols());
     }
 
     void pack(iWritable* out) const
@@ -597,8 +564,9 @@ class tLayerCNN : public bNonCopyable
         rho::pack(out, m_poolWidth);
         rho::pack(out, m_poolHeight);
         rho::pack(out, m_numFeatureMapsInThisLayer);
-        rho::pack(out, m_numLayers);
-        m_layers[0].pack(out);
+        rho::pack(out, m_numReplicas);
+
+        m_layer.pack(out);
     }
 
     void unpack(iReadable* in)
@@ -615,30 +583,14 @@ class tLayerCNN : public bNonCopyable
         rho::unpack(in, m_poolWidth);
         rho::unpack(in, m_poolHeight);
         rho::unpack(in, m_numFeatureMapsInThisLayer);
-        rho::unpack(in, m_numLayers);
-        assert(m_numLayers > 0);
+        rho::unpack(in, m_numReplicas);
 
-        delete [] m_layers;
-        m_layers = new tLayer[m_numLayers];
-        m_layers[0].unpack(in);
+        if (m_numReplicas == 0)
+            throw eRuntimeError("Invalid CNN stream -- num replicas");
 
-        for (u32 i = 1; i < m_numLayers; i++)
-        {
-            tByteWritable bw;
-            m_layers[0].pack(&bw);
-            tByteReadable br(bw.getBuf());
-            m_layers[i].unpack(&br);
-        }
+        m_layer.unpack(in);
 
-        assertState(m_inputSize);
-
-        m_output = Eigen::MatrixXd::Zero(1, (m_stepsX+1)*(m_stepsY+1) * m_numFeatureMapsInThisLayer);
-        m_da = m_output;
-
-        m_pooledOutput = Eigen::MatrixXd::Zero(1, ((m_stepsX+1)/m_poolWidth) * ((m_stepsY+1)/m_poolHeight) * m_numFeatureMapsInThisLayer);
-        m_pooled_da = m_pooledOutput;
-
-        m_fieldInput = Eigen::MatrixXd::Zero(1, m_receptiveFieldWidth * m_receptiveFieldHeight);
+        init_data();
     }
 };
 
@@ -879,8 +831,10 @@ void tCNN::setViscosity(f64 viscosity)
 void tCNN::addExample(const tIO& input, const tIO& target)
 {
     // Validate the target vector.
-    tANN::nLayerType type = m_layers[m_numLayers-1].getPrimaryLayer().layerType;
-    for (u32 i = 0; i < target.size(); i++)
+    if ((i32)target.size() != m_layers[m_numLayers-1].getOutput().rows())
+        throw eInvalidArgument("The target vector must be the same size as the CNN's output.");
+    tANN::nLayerType type = m_layers[m_numLayers-1].getLayer().layerType;
+    for (size_t i = 0; i < target.size(); i++)
     {
         if (target[i] < s_squash_min(type) || target[i] > s_squash_max(type))
         {
@@ -891,7 +845,7 @@ void tCNN::addExample(const tIO& input, const tIO& target)
     if (type == tANN::kLayerTypeSoftmax)
     {
         f64 summation = 0.0;
-        for (u32 i = 0; i < target.size(); i++)
+        for (size_t i = 0; i < target.size(); i++)
             summation += target[i];
         if (summation < 0.9999 || summation > 1.0001)
         {
@@ -900,77 +854,126 @@ void tCNN::addExample(const tIO& input, const tIO& target)
         }
     }
 
-//     // Show the example to the network.
-//     {
-//         evaluate(input, actualOutput);
-//         if (target.size() != actualOutput.size())
-//             throw eInvalidArgument("The target vector must be the same size as the CNN's output.");
-//
-//         Eigen::MatrixXd& top_da = m_layers[m_numLayers-1].get_da();
-//         assert((u32)top_da.cols() == actualOutput.size());
-//         for (u32 i = 0; i < top_da.cols(); i++)
-//             top_da(0,i) = actualOutput[i] - target[i];
-//         m_layers[m_numLayers-1].distribute_da(false);
-//
-//         for (u32 i = m_numLayers-1; i > 0; i--)
-//         {
-//             m_layers[i].accumError(m_layers[i-1].getOutput());
-//             m_layers[i].backpropagate(m_layers[i-1].get_da());
-//             m_layers[i-1].distribute_da(false);
-//         }
-//
-//         Eigen::MatrixXd inputVect(1, input.size()+1);
-//         for (size_t i = 0; i < input.size(); i++)
-//             inputVect(0, i) = input[i];
-//         inputVect(0, input.size()) = 1.0;  // <-- input to the bais weight
-//         m_layers[0].accumError(inputVect);
-//     }
+    // Validate the input vector.
+    if (input.size() != m_layers[0].getInputSize())
+        throw eInvalidArgument("The input vector must be the same size as the CNN's input.");
+
+    // Accumulate this example.
+    m_inputAccum.push_back(input);
+    m_targetAccum.push_back(target);
 }
 
 void tCNN::update()
 {
-    for (u32 i = 0; i < m_numLayers; i++)
+    if (m_inputAccum.size() == 0)
+        throw eLogicError("You must give the network some examples before you call update().");
+
+    // Build the input matrix.
+    Mat input(m_inputAccum[0].size(), m_inputAccum.size());
+    for (size_t c = 0; c < m_inputAccum.size(); c++)
+        for (size_t r = 0; r < m_inputAccum[0].size(); r++)
+            input(r, c) = m_inputAccum[c][r];
+    m_inputAccum.clear();
+
+    // Build the target matrix.
+    Mat target(m_targetAccum[0].size(), m_targetAccum.size());
+    for (size_t c = 0; c < m_targetAccum.size(); c++)
+        for (size_t r = 0; r < m_targetAccum[0].size(); r++)
+            target(r, c) = m_targetAccum[c][r];
+    m_targetAccum.clear();
+
+    // Run the input through the net.
     {
-        m_layers[i].updateWeights();
+        m_layers[0].takeInput(input);
+        for (u32 i = 1; i < m_numLayers; i++)
+            m_layers[i].takeInput(m_layers[i-1].getOutput());
+    }
+
+    // Backprop.
+    {
+        m_layers[m_numLayers-1].get_da() = m_layers[m_numLayers-1].getOutput() - target;
+
+        for (u32 i = m_numLayers-1; i > 0; i--)
+        {
+            m_layers[i].distribute_da(m_layers[i-1].getOutput(), false);
+            m_layers[i].accumError();
+            m_layers[i].backpropagate(m_layers[i-1].get_da(), m_layers[i-1].getOutput());
+            m_layers[i].updateWeights(m_layers[i-1].getOutput());
+        }
+
+        m_layers[0].distribute_da(input, false);
+        m_layers[0].accumError();
+        m_layers[0].updateWeights(input);
     }
 }
 
 void tCNN::evaluate(const tIO& input, tIO& output) const
 {
-    if (input.size() != (size_t)m_layers[0].getInputSize())
+    if (input.size() != m_layers[0].getInputSize())
         throw eInvalidArgument("The input vector must be the same size as the CNN's input.");
 
-    Eigen::MatrixXd inputVect(1, input.size()+1);
+    Mat inputMat(input.size(), 1);
     for (size_t i = 0; i < input.size(); i++)
-        inputVect(0, i) = input[i];
-    inputVect(0, input.size()) = 1.0;  // <-- input to the bais weight
-    m_layers[0].takeInput(inputVect);
+        inputMat(i,0) = input[i];
 
+    m_layers[0].takeInput(inputMat);
     for (u32 i = 1; i < m_numLayers; i++)
         m_layers[i].takeInput(m_layers[i-1].getOutput());
 
-    Eigen::MatrixXd& outVect = m_layers[m_numLayers-1].getOutput();
-    output.resize(outVect.cols());
-    for (i32 i = 0; i < outVect.cols(); i++)
-        output[i] = outVect(0,i);
+    const Mat& outMat = m_layers[m_numLayers-1].getOutput();
+    output.resize(outMat.rows());
+    for (i32 i = 0; i < outMat.rows(); i++)
+        output[i] = outMat(i,0);
 }
 
 void tCNN::evaluateBatch(const std::vector<tIO>& inputs,
                                std::vector<tIO>& outputs) const
 {
-    throw eNotImplemented("For later...");
+    outputs.resize(inputs.size());
+    evaluateBatch(inputs.begin(), inputs.end(), outputs.begin());
 }
 
 void tCNN::evaluateBatch(std::vector<tIO>::const_iterator inputStart,
                          std::vector<tIO>::const_iterator inputEnd,
                          std::vector<tIO>::iterator outputStart) const
 {
-    throw eNotImplemented("For later...");
+    if (inputStart >= inputEnd)
+        throw eInvalidArgument("There must be at least one input example.");
+
+    for (std::vector<tIO>::const_iterator initr = inputStart; initr != inputEnd; initr++)
+        if ((initr->size()) != m_layers[0].getInputSize())
+            throw eInvalidArgument("All input vectors must be the same size as the CNN's input.");
+
+    // Build the input matrix.
+    Mat inputMat(inputStart->size(), inputEnd-inputStart);
+    std::vector<tIO>::const_iterator initr = inputStart;
+    for (i32 c = 0; c < inputMat.cols(); c++)
+    {
+        for (size_t r = 0; r < initr->size(); r++)
+            inputMat(r,c) = (*initr)[r];
+        initr++;
+    }
+
+    // Run the input through the net.
+    m_layers[0].takeInput(inputMat);
+    for (u32 i = 1; i < m_numLayers; i++)
+        m_layers[i].takeInput(m_layers[i-1].getOutput());
+
+    // Capture the output.
+    const Mat& outMat = m_layers[m_numLayers-1].getOutput();
+    std::vector<tIO>::iterator outitr = outputStart;
+    for (i32 c = 0; c < outMat.cols(); c++)
+    {
+        outitr->resize(outMat.rows());
+        for (size_t r = 0; r < outitr->size(); r++)
+            (*outitr)[r] = outMat(r,c);
+        outitr++;
+    }
 }
 
 f64 tCNN::calculateError(const tIO& output, const tIO& target)
 {
-    if (m_layers[m_numLayers-1].getPrimaryLayer().layerType == tANN::kLayerTypeSoftmax)
+    if (m_layers[m_numLayers-1].getLayer().layerType == tANN::kLayerTypeSoftmax)
         return crossEntropyCost(output, target);
     else
         return standardSquaredError(output, target);
@@ -979,7 +982,7 @@ f64 tCNN::calculateError(const tIO& output, const tIO& target)
 f64 tCNN::calculateError(const std::vector<tIO>& outputs,
                          const std::vector<tIO>& targets)
 {
-    if (m_layers[m_numLayers-1].getPrimaryLayer().layerType == tANN::kLayerTypeSoftmax)
+    if (m_layers[m_numLayers-1].getLayer().layerType == tANN::kLayerTypeSoftmax)
         return crossEntropyCost(outputs, targets);
     else
         return standardSquaredError(outputs, targets);
@@ -1001,8 +1004,8 @@ void tCNN::printLearnerInfo(std::ostream& out) const
     out << std::right << std::setw(colw) << "input";
     for (u32 i = 0; i < m_numLayers; i++)
     {
-        string print = s_layerTypeToString(m_layers[i].getPrimaryLayer().layerType);
-        if (m_layers[i].getPrimaryLayer().normalizeLayerInput)
+        string print = s_layerTypeToString(m_layers[i].getLayer().layerType);
+        if (m_layers[i].getLayer().normalizeLayerInput)
             print += "(norm'd)";
         out << std::right << std::setw(colw) << print;
     }
@@ -1014,8 +1017,8 @@ void tCNN::printLearnerInfo(std::ostream& out) const
     for (u32 i = 0; i < m_numLayers; i++)
     {
         std::ostringstream ss;
-        ss << s_weightUpRuleToString(m_layers[i].getPrimaryLayer().weightUpRule);
-        switch (m_layers[i].getPrimaryLayer().weightUpRule)
+        ss << s_weightUpRuleToString(m_layers[i].getLayer().weightUpRule);
+        switch (m_layers[i].getLayer().weightUpRule)
         {
             case tANN::kWeightUpRuleNone:
             case tANN::kWeightUpRuleRPROP:
@@ -1024,11 +1027,11 @@ void tCNN::printLearnerInfo(std::ostream& out) const
             case tANN::kWeightUpRuleAdaptiveRates:
             case tANN::kWeightUpRuleRMSPROP:
             case tANN::kWeightUpRuleARMS:
-                ss << "(a=" << m_layers[i].getPrimaryLayer().alpha << ")";
+                ss << "(a=" << m_layers[i].getLayer().alpha << ")";
                 break;
             case tANN::kWeightUpRuleMomentum:
-                ss << "(a=" << m_layers[i].getPrimaryLayer().alpha
-                   << ",v=" << m_layers[i].getPrimaryLayer().viscosity << ")";
+                ss << "(a=" << m_layers[i].getLayer().alpha
+                   << ",v=" << m_layers[i].getLayer().viscosity << ")";
                 break;
             default:
                 assert(false);
@@ -1041,7 +1044,7 @@ void tCNN::printLearnerInfo(std::ostream& out) const
     out << "        number feature maps:";
     out << std::right << std::setw(colw) << "-";
     for (u32 i = 0; i < m_numLayers; i++)
-        out << std::right << std::setw(colw) << m_layers[i].getPrimaryLayer().a.cols();
+        out << std::right << std::setw(colw) << m_layers[i].getNumFeatureMaps();
     out << endl;
 
     // Receptive field sizes:
@@ -1110,7 +1113,7 @@ void tCNN::printLearnerInfo(std::ostream& out) const
     out << "                   out size:";
     out << std::right << std::setw(colw) << m_layers[0].getInputSize();
     for (u32 i = 0; i < m_numLayers; i++)
-        out << std::right << std::setw(colw) << m_layers[i].getOutput().cols();
+        out << std::right << std::setw(colw) << m_layers[i].getOutput().rows();
     out << endl;
 
     out << endl;
@@ -1124,15 +1127,15 @@ string tCNN::learnerInfoString() const
     out << "size=";
     out << m_layers[0].getInputSize();
     for (u32 i = 0; i < m_numLayers; i++)
-        out << '-' << m_layers[i].getOutput().cols();
+        out << '-' << m_layers[i].getOutput().rows();
 
     // Layer type (and normalizeLayerInput):
     out << "__type=";
     out << "i";
     for (u32 i = 0; i < m_numLayers; i++)
     {
-        out << '-' << s_layerTypeToChar(m_layers[i].getPrimaryLayer().layerType);
-        if (m_layers[i].getPrimaryLayer().normalizeLayerInput)
+        out << '-' << s_layerTypeToChar(m_layers[i].getLayer().layerType);
+        if (m_layers[i].getLayer().normalizeLayerInput)
             out << 'n';
     }
 
@@ -1141,8 +1144,8 @@ string tCNN::learnerInfoString() const
     out << "i";
     for (u32 i = 0; i < m_numLayers; i++)
     {
-        out << '-' << s_weightUpRuleToChar(m_layers[i].getPrimaryLayer().weightUpRule);
-        switch (m_layers[i].getPrimaryLayer().weightUpRule)
+        out << '-' << s_weightUpRuleToChar(m_layers[i].getLayer().weightUpRule);
+        switch (m_layers[i].getLayer().weightUpRule)
         {
             case tANN::kWeightUpRuleNone:
             case tANN::kWeightUpRuleRPROP:
@@ -1151,11 +1154,11 @@ string tCNN::learnerInfoString() const
             case tANN::kWeightUpRuleAdaptiveRates:
             case tANN::kWeightUpRuleRMSPROP:
             case tANN::kWeightUpRuleARMS:
-                out << m_layers[i].getPrimaryLayer().alpha;
+                out << m_layers[i].getLayer().alpha;
                 break;
             case tANN::kWeightUpRuleMomentum:
-                out << m_layers[i].getPrimaryLayer().alpha << ','
-                    << m_layers[i].getPrimaryLayer().viscosity;
+                out << m_layers[i].getLayer().alpha << ','
+                    << m_layers[i].getLayer().viscosity;
                 break;
             default:
                 assert(false);
@@ -1166,7 +1169,7 @@ string tCNN::learnerInfoString() const
     out << "__maps=";
     out << "i";
     for (u32 i = 0; i < m_numLayers; i++)
-        out << '-' << m_layers[i].getPrimaryLayer().a.cols();
+        out << '-' << m_layers[i].getNumFeatureMaps();
 
     return out.str();
 }
@@ -1199,18 +1202,18 @@ u32 tCNN::getNumFeatureMaps(u32 layerIndex) const
     if (layerIndex >= m_numLayers)
         throw eInvalidArgument("No layer with that index.");
 
-    return (u32) (m_layers[layerIndex].getPrimaryLayer().a.cols());
+    return (u32) (m_layers[layerIndex].getNumFeatureMaps());
 }
 
-void tCNN::getWeights(u32 layerIndex, u32 mapIndex, std::vector<f64>& weights) const
+void tCNN::getWeights(u32 layerIndex, u32 mapIndex, tIO& weights) const
 {
     if (mapIndex >= getNumFeatureMaps(layerIndex))
         throw eInvalidArgument("No layer/map with that index.");
 
-    Eigen::MatrixXd& w = m_layers[layerIndex].getPrimaryLayer().w;
-    weights.resize(w.rows()-1);
-    for (u32 s = 0; s < w.rows()-1; s++)
-        weights[s] = w(s, mapIndex);
+    const Mat& w = m_layers[layerIndex].getLayer().w;
+    weights.resize(w.cols()-1);
+    for (u32 s = 0; s < w.cols()-1; s++)
+        weights[s] = w(mapIndex, s);
 }
 
 f64 tCNN::getBias(u32 layerIndex, u32 mapIndex) const
@@ -1218,8 +1221,8 @@ f64 tCNN::getBias(u32 layerIndex, u32 mapIndex) const
     if (mapIndex >= getNumFeatureMaps(layerIndex))
         throw eInvalidArgument("No layer/map with that index.");
 
-    Eigen::MatrixXd& w = m_layers[layerIndex].getPrimaryLayer().w;
-    return w.bottomRows(1)(0,mapIndex);
+    const Mat& w = m_layers[layerIndex].getLayer().w;
+    return w.rightCols(1)(mapIndex,0);
 }
 
 u32 tCNN::getNumReplicatedFilters(u32 layerIndex) const
@@ -1227,7 +1230,7 @@ u32 tCNN::getNumReplicatedFilters(u32 layerIndex) const
     if (layerIndex >= m_numLayers)
         throw eInvalidArgument("No layer with that index.");
 
-    return m_layers[layerIndex].getNumLayers();
+    return m_layers[layerIndex].getNumReplicas();
 }
 
 f64 tCNN::getOutput(u32 layerIndex, u32 mapIndex, u32 filterIndex,
@@ -1240,11 +1243,17 @@ f64 tCNN::getOutput(u32 layerIndex, u32 mapIndex, u32 filterIndex,
         throw eInvalidArgument("No layer/filter with that index.");
 
     if (minValue)
-        *minValue = s_squash_min(m_layers[layerIndex].getLayer(filterIndex).layerType);
+        *minValue = s_squash_min(m_layers[layerIndex].getLayer().layerType);
     if (maxValue)
-        *maxValue = s_squash_max(m_layers[layerIndex].getLayer(filterIndex).layerType);
+        *maxValue = s_squash_max(m_layers[layerIndex].getLayer().layerType);
 
-    return m_layers[layerIndex].getLayer(filterIndex).a(0,mapIndex);
+    const Mat& a = m_layers[layerIndex].getLayer().a;
+    u32 numfilters = m_layers[layerIndex].getNumReplicas();
+
+    if (a.cols()+filterIndex < numfilters)
+        throw eInvalidArgument("There is no \"most recent\" output of this filter.");
+
+    return a(mapIndex,a.cols()+filterIndex-numfilters);
 }
 
 void tCNN::getFeatureMapImage(u32 layerIndex, u32 mapIndex,
@@ -1252,7 +1261,7 @@ void tCNN::getFeatureMapImage(u32 layerIndex, u32 mapIndex,
                               img::tImage* dest) const
 {
     // Get the weights.
-    std::vector<f64> weights;
+    tIO weights;
     getWeights(layerIndex, mapIndex, weights);
     assert(weights.size() > 0);
     u32 width = m_layers[layerIndex].getReceptiveFieldWidth();
@@ -1276,15 +1285,15 @@ void tCNN::getOutputImage(u32 layerIndex, u32 mapIndex,
         throw eInvalidArgument("No layer/map with that index.");
 
     // Get the weights.
-    std::vector<f64> weights;
+    tIO weights;
     u32 width;
     {
         u32 stride = getNumFeatureMaps(layerIndex);
-        Eigen::MatrixXd& alloutput = pooled ? m_layers[layerIndex].getOutput()
-                                            : m_layers[layerIndex].getRealOutput();
+        const Mat& alloutput = pooled ? m_layers[layerIndex].getOutput()
+                                      : m_layers[layerIndex].getRealOutput();
 
-        for (u32 i = mapIndex; i < (u32)alloutput.cols(); i += stride)
-            weights.push_back(alloutput(0,i));
+        for (u32 i = mapIndex; i < (u32)alloutput.rows(); i += stride)
+            weights.push_back(alloutput(i,0));
         assert(weights.size() > 0);
 
         width = pooled ? (m_layers[layerIndex].getStepsX()+1) / m_layers[layerIndex].getPoolWidth()
@@ -1297,8 +1306,8 @@ void tCNN::getOutputImage(u32 layerIndex, u32 mapIndex,
     // is okay to let un_examplify() determine a good range itself, but here we know
     // the range and we want the resulting image to represent the values relative to that
     // range.
-    f64 minValue = s_squash_min(m_layers[layerIndex].getPrimaryLayer().layerType);
-    f64 maxValue = s_squash_max(m_layers[layerIndex].getPrimaryLayer().layerType);
+    f64 minValue = s_squash_min(m_layers[layerIndex].getLayer().layerType);
+    f64 maxValue = s_squash_max(m_layers[layerIndex].getLayer().layerType);
 
     // Use the image creating method in ml::common to do the work.
     un_examplify(weights, false, width, false, dest, &minValue, &maxValue);
@@ -1326,6 +1335,8 @@ void tCNN::unpack(iReadable* in)
             layers[i].unpack(in);
         rho::unpack(in, randWeightMin);
         rho::unpack(in, randWeightMax);
+        if (randWeightMin >= randWeightMax)
+            throw eRuntimeError("Invalid CNN stream -- rand range");
     }
     catch (ebObject& e)
     {
