@@ -339,9 +339,9 @@ class tLayer : public bNonCopyable
         assert(w.rows() > 0);
 
         if (normalizeLayerInput)
-            A = (w * input) / (fml)input.rows();
+            A.noalias() = (w * input) / (fml)input.rows();
         else
-            A = (w * input);
+            A.noalias() = (w * input);
 
         if (layerType == tANN::kLayerTypeSoftmax)
         {
@@ -385,13 +385,13 @@ class tLayer : public bNonCopyable
         else
         {
             tDirSquashFunc func(layerType);
-            dA = (da.array() * A.unaryExpr(func).array()).matrix();
+            dA.noalias() = (da.array() * A.unaryExpr(func).array()).matrix();
         }
 
         if (normalizeLayerInput)
-            dw_accum = (dA * input.transpose()) / (fml)input.rows();
+            dw_accum.noalias() = (dA * input.transpose()) / (fml)input.rows();
         else
-            dw_accum = (dA * input.transpose());
+            dw_accum.noalias() = (dA * input.transpose());
     }
 
     void backpropagate(Mat& prev_da, const Mat& input)
@@ -400,15 +400,19 @@ class tLayer : public bNonCopyable
         assert(input.rows() > 0);
         assert(input.cols() > 0);
         assert(w.rows() > 0);
+        assert(input.cols() == da.cols());
+        assert(da.rows() == w.rows());
+        assert(A.rows() == da.rows());
+        assert(A.cols() == da.cols());
         assert(input.cols() == dA.cols());
         assert(dA.rows() == w.rows());
         assert(A.rows() == dA.rows());
         assert(A.cols() == dA.cols());
 
         if (normalizeLayerInput)
-            prev_da = (w.block(0,0,w.rows(),w.cols()-1).transpose() * dA) / (fml)input.rows();
+            prev_da.noalias() = (w.block(0,0,w.rows(),w.cols()-1).transpose() * dA) / (fml)input.rows();
         else
-            prev_da = (w.block(0,0,w.rows(),w.cols()-1).transpose() * dA);
+            prev_da.noalias() = (w.block(0,0,w.rows(),w.cols()-1).transpose() * dA);
     }
 
     void updateWeights(u32 batchSizeOverride = 0)
@@ -416,6 +420,8 @@ class tLayer : public bNonCopyable
         assert(a.cols() > 0);         // <--  a.cols() is the batch size
         assert(w.rows() > 0);
         assert(w.cols() > 0);
+        assert(w.rows() == dw_accum.rows());
+        assert(w.cols() == dw_accum.cols());
 
         fml batchSize = (batchSizeOverride > 0) ? ((fml)batchSizeOverride) : ((fml)a.cols());
 
@@ -431,7 +437,7 @@ class tLayer : public bNonCopyable
                 if (alpha <= 0.0)
                     throw eLogicError("When using the fixed learning rate rule, alpha must be set.");
                 fml mult = (10.0 / batchSize) * alpha;
-                w -= mult * dw_accum;
+                w.noalias() -= mult * dw_accum;
                 break;
             }
 
@@ -444,8 +450,9 @@ class tLayer : public bNonCopyable
                 if (vel.rows() == 0)
                     vel = Mat::Zero(w.rows(), w.cols());
                 fml mult = (10.0 / batchSize) * alpha;
-                vel = viscosity*vel - mult*dw_accum;
-                w += vel;
+                vel *= viscosity;
+                vel.noalias() -= mult*dw_accum;
+                w.noalias() += vel;
                 break;
             }
 
@@ -469,8 +476,9 @@ class tLayer : public bNonCopyable
                     dw_accum_avg = Mat::Constant(w.rows(), w.cols(), 1000.0);
                 fml batchNormMult = 1.0 / batchSize;
                 dw_accum *= batchNormMult;
-                dw_accum_avg = 0.9*dw_accum_avg + 0.1*dw_accum.array().square().matrix();
-                w -= alpha * dw_accum.binaryExpr(dw_accum_avg, t_RMSPROP_wUpdate());
+                dw_accum_avg *= 0.9;
+                dw_accum_avg.noalias() += 0.1*dw_accum.array().square().matrix();
+                w.noalias() -= alpha * dw_accum.binaryExpr(dw_accum_avg, t_RMSPROP_wUpdate());
                 break;
             }
 
@@ -810,6 +818,8 @@ void tANN::update()
 
     // Backprop.
     {
+        assert(m_layers[m_numLayers-1].a.rows() == target.rows());
+        assert(m_layers[m_numLayers-1].a.cols() == target.cols());
         m_layers[m_numLayers-1].da = m_layers[m_numLayers-1].a - target;
 
         for (u32 i = m_numLayers-1; i > 0; i--)
@@ -839,6 +849,8 @@ void tANN::evaluate(const tIO& input, tIO& output) const
         m_layers[i].takeInput(m_layers[i-1].output);
 
     const Mat& outMat = m_layers[m_numLayers-1].a;
+    assert(outMat.rows() > 0);
+    assert(outMat.cols() == 1);
     output.resize(outMat.rows());
     for (i32 i = 0; i < outMat.rows(); i++)
         output[i] = outMat(i,0);
@@ -880,6 +892,8 @@ void tANN::evaluateBatch(std::vector<tIO>::const_iterator inputStart,
 
     // Capture the output.
     const Mat& outMat = m_layers[m_numLayers-1].a;
+    assert(outMat.rows() > 0);
+    assert(outMat.cols() == inputMat.cols());
     std::vector<tIO>::iterator outitr = outputStart;
     for (i32 c = 0; c < outMat.cols(); c++)
     {
@@ -1036,6 +1050,7 @@ void tANN::getWeights(u32 layerIndex, u32 neuronIndex, tIO& weights) const
         throw eInvalidArgument("No layer/node with that index.");
 
     const Mat& w = m_layers[layerIndex].w;
+    assert(w.cols() > 1);
     weights.resize(w.cols()-1);
     for (size_t s = 0; s < weights.size(); s++)
         weights[s] = w(neuronIndex,s);
@@ -1045,7 +1060,9 @@ f64 tANN::getBias(u32 layerIndex, u32 neuronIndex) const
 {
     if (neuronIndex >= getNumNeuronsInLayer(layerIndex))
         throw eInvalidArgument("No layer/node with that index.");
-    return m_layers[layerIndex].w.rightCols(1)(neuronIndex,0);
+    const Mat& w = m_layers[layerIndex].w;
+    assert(w.cols() > 1);
+    return w.rightCols(1)(neuronIndex,0);
 }
 
 f64 tANN::getOutput(u32 layerIndex, u32 neuronIndex) const
