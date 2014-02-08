@@ -1029,6 +1029,13 @@ void tCNN::printLearnerInfo(std::ostream& out) const
         out << std::right << std::setw(colw) << m_layers[i].getNumFreeParameters();
     out << endl;
 
+    // Num connections:
+    out << "            num connections:";
+    out << std::right << std::setw(colw) << "-";
+    for (u32 i = 0; i < m_numLayers; i++)
+        out << std::right << std::setw(colw) << (m_layers[i].getNumFreeParameters() * m_layers[i].getNumReplicas());
+    out << endl;
+
     // Receptive field step sizes:
     out << "            field step size:";
     out << std::right << std::setw(colw) << "-";
