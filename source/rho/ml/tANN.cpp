@@ -8,9 +8,9 @@
 #if NDEBUG
 #include "Eigen/Core"
 #else
-//#define NDEBUG 1             // <-- uncomment these two lines when you are confident
-#include "Eigen/Core"          //     we are using Eigen safely (i.e. we will never access
-//#undef NDEBUG                // <-- data that is out-of-bounds)
+#define NDEBUG 1             // <-- comment-out these two lines if you need to debug tANN
+#include "Eigen/Core"        //     or tCNN, especially if your program is crashing
+#undef NDEBUG                // <-- somewhere inside Eigen doing so will help a lot
 #endif
 
 #include <cassert>
