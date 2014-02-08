@@ -199,36 +199,50 @@ class tLayerCNN : public bNonCopyable
               f64 rmin, f64 rmax, algo::iLCG& lcg)
     {
         // Validation and setup of useful member state.
-        assert(inputSize > 0);
-        assert(inputRowWidth > 0);
-        assert((inputSize % inputRowWidth) == 0);
+        if (!(inputSize > 0))
+            throw eInvalidArgument("Assert failed: (inputSize > 0)");
+        if (!(inputRowWidth > 0))
+            throw eInvalidArgument("Assert failed: (inputRowWidth > 0)");
+        if (!((inputSize % inputRowWidth) == 0))
+            throw eInvalidArgument("Assert failed: ((inputSize % inputRowWidth) == 0)");
         m_inputSize = inputSize;
         m_inputWidth = inputRowWidth;
         m_inputHeight = (inputSize / inputRowWidth);
 
-        assert(receptiveFieldWidth > 0);
-        assert(receptiveFieldHeight > 0);
-        assert(m_inputWidth >= receptiveFieldWidth);
-        assert(m_inputHeight >= receptiveFieldHeight);
+        if (!(receptiveFieldWidth > 0))
+            throw eInvalidArgument("Assert failed: (receptiveFieldWidth > 0)");
+        if (!(receptiveFieldHeight > 0))
+            throw eInvalidArgument("Assert failed: (receptiveFieldHeight > 0)");
+        if (!(m_inputWidth >= receptiveFieldWidth))
+            throw eInvalidArgument("Assert failed: (m_inputWidth >= receptiveFieldWidth)");
+        if (!(m_inputHeight >= receptiveFieldHeight))
+            throw eInvalidArgument("Assert failed: (m_inputHeight >= receptiveFieldHeight)");
         m_receptiveFieldWidth = receptiveFieldWidth;
         m_receptiveFieldHeight = receptiveFieldHeight;
         u32 numPossibleStepsX = m_inputWidth - m_receptiveFieldWidth;
         u32 numPossibleStepsY = m_inputHeight - m_receptiveFieldHeight;
 
-        assert(stepSizeHorizontal > 0);
-        assert(stepSizeVertical > 0);
+        if (!(stepSizeHorizontal > 0))
+            throw eInvalidArgument("Assert failed: (stepSizeHorizontal > 0)");
+        if (!(stepSizeVertical > 0))
+            throw eInvalidArgument("Assert failed: (stepSizeVertical > 0)");
         m_stepSizeX = stepSizeHorizontal;
         m_stepSizeY = stepSizeVertical;
         m_stepsX = numPossibleStepsX / m_stepSizeX;
         m_stepsY = numPossibleStepsY / m_stepSizeY;
 
-        assert(numFeatureMapsInThisLayer > 0);
+        if (!(numFeatureMapsInThisLayer > 0))
+            throw eInvalidArgument("Assert failed: (numFeatureMapsInThisLayer > 0)");
         m_numFeatureMapsInThisLayer = numFeatureMapsInThisLayer;
 
-        assert(poolWidth > 0);
-        assert(poolHeight > 0);
-        assert(poolWidth <= (m_stepsX+1));
-        assert(poolHeight <= (m_stepsY+1));
+        if (!(poolWidth > 0))
+            throw eInvalidArgument("Assert failed: (poolWidth > 0)");
+        if (!(poolHeight > 0))
+            throw eInvalidArgument("Assert failed: (poolHeight > 0)");
+        if (!(poolWidth <= (m_stepsX+1)))
+            throw eInvalidArgument("Assert failed: (poolWidth <= (m_stepsX+1))");
+        if (!(poolHeight <= (m_stepsY+1)))
+            throw eInvalidArgument("Assert failed: (poolHeight <= (m_stepsY+1))");
         m_poolWidth = poolWidth;
         m_poolHeight = poolHeight;
 
@@ -552,6 +566,9 @@ tCNN::tCNN(string descriptionString)
     m_randWeightMin = -1.0;
     m_randWeightMax = 1.0;
     algo::tKnuthLCG lcg;
+
+    if (m_randWeightMin >= m_randWeightMax)
+        throw eInvalidArgument("Invalid initial rand weight range.");
 
     {
         m_numLayers = 0;
