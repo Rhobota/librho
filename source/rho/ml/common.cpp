@@ -1344,7 +1344,7 @@ u32 tBestRememberingWrapper::bestTestEpochNum()  const
     return m_bestTestEpochNum;
 }
 
-f64 tBestRememberingWrapper::bestTestErrorRate() const
+f64 tBestRememberingWrapper::bestTestError() const
 {
     return m_bestTestErrorRate;
 }
@@ -1459,7 +1459,8 @@ tLoggingWrapper::tLoggingWrapper(u32 logInterval, bool isInputImageColor,
       m_logInterval(logInterval),
       m_isColorInput(isInputImageColor),
       m_imageWidth(inputImageWidth),
-      m_absoluteImage(shouldDisplayAbsoluteValues)
+      m_absoluteImage(shouldDisplayAbsoluteValues),
+      m_performanceAttribute(performanceAttribute)
 {
     if (m_logInterval == 0)
         throw eInvalidArgument("The log interval cannot be zero...");
@@ -1593,9 +1594,21 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
 
     // Log the results of this fold.
     {
-        m_logfile << "Best test error rate of " << bestTestErrorRate() * 100 << "% "
-                  << "found after epoch " << bestTestEpochNum()
-                  << "." << std::endl << std::endl;
+        switch (m_performanceAttribute)
+        {
+            case kClassificationErrorRate:
+                m_logfile << "Best test classification error rate of " << bestTestError() * 100 << "% "
+                          << "found after epoch " << bestTestEpochNum()
+                          << "." << std::endl << std::endl;
+                break;
+            case kOutputErrorMeasure:
+                m_logfile << "Best test output error measure of " << bestTestError() << " "
+                          << "found after epoch " << bestTestEpochNum()
+                          << "." << std::endl << std::endl;
+                break;
+            default:
+                throw eLogicError("Unknown performance attribute");
+        }
         m_logfile << "Training Set CM (fold=" << foldIndex+1 << '/' << numFolds << "):" << std::endl;
         print(matchingTrainCM(), m_logfile);
         m_logfile << "Test Set CM (fold=" << foldIndex+1 << '/' << numFolds << "):" << std::endl;
