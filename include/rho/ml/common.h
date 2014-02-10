@@ -551,7 +551,7 @@ class tBestRememberingWrapper : public iEZTrainObserver
         void reset();
 
         u32 bestTestEpochNum()  const;
-        f64 bestTestErrorRate() const;
+        f64 bestTestError() const;
 
         const std::vector<tIO>& bestTestOutputs() const;
         const tConfusionMatrix& bestTestCM()      const;
@@ -691,6 +691,8 @@ class tLoggingWrapper : public tBestRememberingWrapper
         std::vector<tIO> m_accumTestOutputs;
         tConfusionMatrix m_accumTestCM;
         tConfusionMatrix m_accumTrainCM;
+
+        nPerformanceAttribute m_performanceAttribute;
 };
 
 
