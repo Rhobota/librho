@@ -1454,12 +1454,14 @@ void tBestRememberingWrapper::didFinishTraining(iLearner* learner,
 tLoggingWrapper::tLoggingWrapper(u32 logInterval, bool isInputImageColor,
                                  u32 inputImageWidth, bool shouldDisplayAbsoluteValues,
                                  iEZTrainObserver* wrappedObserver,
+                                 std::string fileprefix,
                                  nPerformanceAttribute performanceAttribute)
     : tBestRememberingWrapper(wrappedObserver, performanceAttribute),
       m_logInterval(logInterval),
       m_isColorInput(isInputImageColor),
       m_imageWidth(inputImageWidth),
       m_absoluteImage(shouldDisplayAbsoluteValues),
+      m_fileprefix(fileprefix),
       m_performanceAttribute(performanceAttribute)
 {
     if (m_logInterval == 0)
@@ -1511,8 +1513,8 @@ bool tLoggingWrapper::didFinishEpoch(iLearner* learner,
     // If this is the first callback, open the log files.
     if (epochsCompleted == 0 && foldIndex == 0)
     {
-        m_logfile.open((learner->learnerInfoString() + ".log").c_str());
-        m_datafile.open((learner->learnerInfoString() + ".data").c_str());
+        m_logfile.open((m_fileprefix + learner->learnerInfoString() + ".log").c_str());
+        m_datafile.open((m_fileprefix + learner->learnerInfoString() + ".data").c_str());
         learner->printLearnerInfo(m_logfile);
     }
 
@@ -1539,7 +1541,7 @@ bool tLoggingWrapper::didFinishEpoch(iLearner* learner,
     if ((epochsCompleted % m_logInterval) == 0)
     {
         std::ostringstream out;
-        out << learner->learnerInfoString() << "__fold" << foldIndex+1 << "__epoch" << epochsCompleted;
+        out << m_fileprefix << learner->learnerInfoString() << "__fold" << foldIndex+1 << "__epoch" << epochsCompleted;
         m_save(out.str(), learner, trainInputs, testInputs, testTargets, testOutputs);
     }
 
@@ -1614,7 +1616,7 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
         m_logfile << "Test Set CM (fold=" << foldIndex+1 << '/' << numFolds << "):" << std::endl;
         print(bestTestCM(), m_logfile);
         std::ostringstream out;
-        out << bestLearner->learnerInfoString() << "__fold" << foldIndex+1 << "__best";
+        out << m_fileprefix << bestLearner->learnerInfoString() << "__fold" << foldIndex+1 << "__best";
         m_save(out.str(), bestLearner, trainInputs, testInputs, testTargets, bestTestOutputs());
     }
 
@@ -1638,7 +1640,7 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
                                    m_accumTestTargets,
                                    &visualCM);
         std::ostringstream out;
-        out << bestLearner->learnerInfoString() << "__accum__cm.png";
+        out << m_fileprefix << bestLearner->learnerInfoString() << "__accum__cm.png";
         visualCM.saveToFile(out.str());
     }
 
@@ -1650,7 +1652,7 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
         const std::vector< tIO >& saveTheseTestInputs  = (numFolds > 1) ? m_accumTestInputs  : testInputs;
         const std::vector< tIO >& saveTheseTestTargets = (numFolds > 1) ? m_accumTestTargets : testTargets;
         const std::vector< tIO >& saveTheseTestOutputs = (numFolds > 1) ? m_accumTestOutputs : bestTestOutputs();
-        tFileWritable outfile(bestLearner->learnerInfoString() + "__outputs.bin");
+        tFileWritable outfile(m_fileprefix + bestLearner->learnerInfoString() + "__outputs.bin");
         rho::pack(&outfile, saveTheseTestInputs);
         rho::pack(&outfile, saveTheseTestTargets);
         rho::pack(&outfile, saveTheseTestOutputs);

@@ -636,6 +636,7 @@ class tLoggingWrapper : public tBestRememberingWrapper
         tLoggingWrapper(u32 logInterval, bool isInputImageColor,
                         u32 inputImageWidth, bool shouldDisplayAbsoluteValues,
                         iEZTrainObserver* wrappedObserver=NULL,
+                        std::string fileprefix=std::string(),
                         nPerformanceAttribute performanceAttribute=kClassificationErrorRate);
 
         ~tLoggingWrapper();
@@ -682,6 +683,8 @@ class tLoggingWrapper : public tBestRememberingWrapper
         const bool m_isColorInput;
         const u32  m_imageWidth;
         const bool m_absoluteImage;
+
+        std::string m_fileprefix;
 
         std::ofstream m_logfile;
         std::ofstream m_datafile;
