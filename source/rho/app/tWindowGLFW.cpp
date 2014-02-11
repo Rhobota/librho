@@ -231,7 +231,9 @@ u32 tWindowGLFW::currWindowHeight() const
 
 void tWindowGLFW::setCursorMode(int mode)
 {
-    glfwSetInputMode(m_window, GLFW_CURSOR, mode);
+    sync::tAutoSync as(m_mux);
+    if (m_window)
+        glfwSetInputMode(m_window, GLFW_CURSOR, mode);
 }
 
 void tWindowGLFW::vsyncEnabled(bool enabled)
@@ -338,17 +340,25 @@ void tWindowGLFW::postEvents()
 
 void tWindowGLFW::flipBuffer()
 {
-    glfwSwapBuffers(m_window);
+    sync::tAutoSync as(m_mux);
+    if (m_window)
+        glfwSwapBuffers(m_window);
 }
 
 bool tWindowGLFW::shouldWindowClose()
 {
-    return glfwWindowShouldClose(m_window) != 0;
+    sync::tAutoSync as(m_mux);
+    if (m_window)
+        return glfwWindowShouldClose(m_window) != 0;
+    else
+        return true;
 }
 
 void tWindowGLFW::setWindowShouldClose()
 {
-    glfwSetWindowShouldClose(m_window, 1);
+    sync::tAutoSync as(m_mux);
+    if (m_window)
+        glfwSetWindowShouldClose(m_window, 1);
 }
 
 void tWindowGLFW::windowPosCallback(i32 xpos, i32 ypos)
@@ -411,11 +421,13 @@ void tWindowGLFW::m_open(tMainLoopGLFW* mainLoop)
         m_desiredHeight = m_initHeight;
         m_currWidth = m_initWidth;
         m_currHeight = m_initHeight;
+        sync::tAutoSync as(m_mux);
         m_window = glfwCreateWindow((int)m_initWidth, (int)m_initHeight, m_initTitle.c_str(),
                                      monitor, NULL);
     }
     else
     {
+        sync::tAutoSync as(m_mux);
         m_window = glfwCreateWindow((int)m_initWidth, (int)m_initHeight, m_initTitle.c_str(),
                                      NULL, NULL);
     }
@@ -469,8 +481,11 @@ void tWindowGLFW::m_close()
 
     gWindowMap.erase(m_window);
 
-    glfwDestroyWindow(m_window);
-    m_window = NULL;
+    {
+        sync::tAutoSync as(m_mux);
+        glfwDestroyWindow(m_window);
+        m_window = NULL;
+    }
 
     m_mainLoop = NULL;
 }
