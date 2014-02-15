@@ -616,7 +616,9 @@ class tLoggingWrapper : public tBestRememberingWrapper
          * class.
          *
          * Error rates are logged every epoch to a human-readable log file
-         * and to a simplified data log file.
+         * and to a simplified data log file. Every log file produced by
+         * this class is prefixed with the 'fileprefix' string specified
+         * to the constructor.
          *
          * Every 'logInterval' number of epochs, the learner itself is
          * serialized to a file, and visualization of the learner and its
@@ -632,10 +634,28 @@ class tLoggingWrapper : public tBestRememberingWrapper
          * This logging wrapper works well when used with both versions of
          * ezTrain() above. That is, it works for normal train/test sets,
          * and it works for x-fold cross-validation sets.
+         *
+         * If 'accumulateFoldIO' is set, a few things will happen:
+         *     1. If using more than one fold, the test inputs/targets/outputs
+         *        of each fold will be accumulated and will be displayed
+         *        at the end of learning (such as the accumulated CM and
+         *        the accumulated error rate and an accumulated visual CM).
+         *        Note: Accumulating the test inputs/targets/outputs like
+         *        this is memory intensive when the training set is large.
+         *     2. A binary log file will be written that contains
+         *        the accumulated test inputs/targets/outputs for each fold
+         *        (this will happen even if there is only one fold). This
+         *        binary file is useful for doing post processing on the
+         *        outputs, such as evaluating the outputs using a different
+         *        cost function, or trying to combine or morph the outputs
+         *        to decrease the error in some way.
+         *        Note: This binary log file will be very large if the training
+         *        set is large.
          */
         tLoggingWrapper(u32 logInterval, bool isInputImageColor,
                         u32 inputImageWidth, bool shouldDisplayAbsoluteValues,
                         iEZTrainObserver* wrappedObserver=NULL,
+                        bool accumulateFoldIO = false,
                         std::string fileprefix=std::string(),
                         nPerformanceAttribute performanceAttribute=kClassificationErrorRate);
 
@@ -683,17 +703,18 @@ class tLoggingWrapper : public tBestRememberingWrapper
         const bool m_isColorInput;
         const u32  m_imageWidth;
         const bool m_absoluteImage;
+        const bool m_accumulateFoldIO;
 
         std::string m_fileprefix;
 
         std::ofstream m_logfile;
         std::ofstream m_datafile;
 
-        std::vector<tIO> m_accumTestInputs;
-        std::vector<tIO> m_accumTestTargets;
-        std::vector<tIO> m_accumTestOutputs;
-        tConfusionMatrix m_accumTestCM;
-        tConfusionMatrix m_accumTrainCM;
+        std::vector<tIO> m_accumTestInputs;     //
+        std::vector<tIO> m_accumTestTargets;    //
+        std::vector<tIO> m_accumTestOutputs;    //  These are only used if m_accumulateFoldIO is true
+        tConfusionMatrix m_accumTestCM;         //
+        tConfusionMatrix m_accumTrainCM;        //
 
         nPerformanceAttribute m_performanceAttribute;
 };

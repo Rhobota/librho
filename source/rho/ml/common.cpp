@@ -1454,6 +1454,7 @@ void tBestRememberingWrapper::didFinishTraining(iLearner* learner,
 tLoggingWrapper::tLoggingWrapper(u32 logInterval, bool isInputImageColor,
                                  u32 inputImageWidth, bool shouldDisplayAbsoluteValues,
                                  iEZTrainObserver* wrappedObserver,
+                                 bool accumulateFoldIO,
                                  std::string fileprefix,
                                  nPerformanceAttribute performanceAttribute)
     : tBestRememberingWrapper(wrappedObserver, performanceAttribute),
@@ -1461,6 +1462,7 @@ tLoggingWrapper::tLoggingWrapper(u32 logInterval, bool isInputImageColor,
       m_isColorInput(isInputImageColor),
       m_imageWidth(inputImageWidth),
       m_absoluteImage(shouldDisplayAbsoluteValues),
+      m_accumulateFoldIO(accumulateFoldIO),
       m_fileprefix(fileprefix),
       m_performanceAttribute(performanceAttribute)
 {
@@ -1585,7 +1587,7 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
 
     // Accumulate the test set vectors and the CM from the best epoch if there will be
     // many folds.
-    if (numFolds > 1)
+    if (numFolds > 1 && m_accumulateFoldIO)
     {
         m_accumTestInputs.insert(m_accumTestInputs.end(), testInputs.begin(), testInputs.end());
         m_accumTestTargets.insert(m_accumTestTargets.end(), testTargets.begin(), testTargets.end());
@@ -1621,7 +1623,7 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
     }
 
     // If this is the last of many folds, log the accumulated stuff.
-    if (foldIndex+1 == numFolds && numFolds > 1)
+    if (foldIndex+1 == numFolds && numFolds > 1 && m_accumulateFoldIO)
     {
         m_logfile << std::endl;
         m_logfile << "Accumulated Training Set CM:" << std::endl;
@@ -1647,7 +1649,7 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
     // If this is the last fold (even if there was only one fold), save the outputs
     // of the learner. This is useful for doing post processing, such as for creating
     // ROC curves, or something like that.
-    if (foldIndex+1 == numFolds)
+    if (foldIndex+1 == numFolds && m_accumulateFoldIO)
     {
         const std::vector< tIO >& saveTheseTestInputs  = (numFolds > 1) ? m_accumTestInputs  : testInputs;
         const std::vector< tIO >& saveTheseTestTargets = (numFolds > 1) ? m_accumTestTargets : testTargets;
