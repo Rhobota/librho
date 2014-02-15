@@ -1455,6 +1455,7 @@ tLoggingWrapper::tLoggingWrapper(u32 logInterval, bool isInputImageColor,
                                  u32 inputImageWidth, bool shouldDisplayAbsoluteValues,
                                  iEZTrainObserver* wrappedObserver,
                                  bool accumulateFoldIO,
+                                 bool logVisuals,
                                  std::string fileprefix,
                                  nPerformanceAttribute performanceAttribute)
     : tBestRememberingWrapper(wrappedObserver, performanceAttribute),
@@ -1463,6 +1464,7 @@ tLoggingWrapper::tLoggingWrapper(u32 logInterval, bool isInputImageColor,
       m_imageWidth(inputImageWidth),
       m_absoluteImage(shouldDisplayAbsoluteValues),
       m_accumulateFoldIO(accumulateFoldIO),
+      m_logVisuals(logVisuals),
       m_fileprefix(fileprefix),
       m_performanceAttribute(performanceAttribute)
 {
@@ -1636,14 +1638,17 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
         m_logfile << "Accumulated test error rate:   " << errorRate(m_accumTestCM)*100 << "%" << std::endl;
         m_logfile << std::endl;
 
-        img::tImage visualCM;
-        buildVisualConfusionMatrix(m_accumTestInputs, m_isColorInput, m_imageWidth, m_absoluteImage,
-                                   m_accumTestOutputs,
-                                   m_accumTestTargets,
-                                   &visualCM);
-        std::ostringstream out;
-        out << m_fileprefix << bestLearner->learnerInfoString() << "__accum__cm.png";
-        visualCM.saveToFile(out.str());
+        if (m_logVisuals)
+        {
+            img::tImage visualCM;
+            buildVisualConfusionMatrix(m_accumTestInputs, m_isColorInput, m_imageWidth, m_absoluteImage,
+                                       m_accumTestOutputs,
+                                       m_accumTestTargets,
+                                       &visualCM);
+            std::ostringstream out;
+            out << m_fileprefix << bestLearner->learnerInfoString() << "__accum__cm.png";
+            visualCM.saveToFile(out.str());
+        }
     }
 
     // If this is the last fold (even if there was only one fold), save the outputs
@@ -1678,6 +1683,7 @@ void tLoggingWrapper::m_save(std::string filebasename,
     }
 
     // Save a visual confusion matrix.
+    if (m_logVisuals)
     {
         img::tImage visualCM;
         buildVisualConfusionMatrix(testInputs, m_isColorInput, m_imageWidth, m_absoluteImage,
@@ -1688,6 +1694,7 @@ void tLoggingWrapper::m_save(std::string filebasename,
     }
 
     // Save a visual of the learner.
+    if (m_logVisuals)
     {
         img::tImage image;
         visualize(learner, trainInputs.front(), m_isColorInput, m_imageWidth, m_absoluteImage, &image);

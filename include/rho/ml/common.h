@@ -622,12 +622,19 @@ class tLoggingWrapper : public tBestRememberingWrapper
          *
          * Every 'logInterval' number of epochs, the learner itself is
          * serialized to a file, and visualization of the learner and its
-         * progress are also saved.
+         * progress are also saved if 'logVisuals' is true.
          *
          * See un_examplify() for a description of 'isInputImageColor',
          * 'inputImageWidth', and 'shouldDisplayAbsoluteValues'. These
          * parameters are needed for creating the visualization which occur
-         * every 'logInterval' number of epochs.
+         * every 'logInterval' number of epochs. These parameters are only
+         * relevant if 'logVisuals' is true.
+         *
+         * The visualizations of the learner are useful when the learner is
+         * processing image data. If the input data is not image data,
+         * the visuals are not as meaningful, and in some cases cannot be
+         * produced anyway because of data alignment issues. You use
+         * 'logVisuals' to turn off the logging of these visualizations.
          *
          * See tBestRememberingWrapper for a description of 'performanceAttribute'.
          *
@@ -656,6 +663,7 @@ class tLoggingWrapper : public tBestRememberingWrapper
                         u32 inputImageWidth, bool shouldDisplayAbsoluteValues,
                         iEZTrainObserver* wrappedObserver=NULL,
                         bool accumulateFoldIO = false,
+                        bool logVisuals = true,
                         std::string fileprefix=std::string(),
                         nPerformanceAttribute performanceAttribute=kClassificationErrorRate);
 
@@ -704,6 +712,7 @@ class tLoggingWrapper : public tBestRememberingWrapper
         const u32  m_imageWidth;
         const bool m_absoluteImage;
         const bool m_accumulateFoldIO;
+        const bool m_logVisuals;
 
         std::string m_fileprefix;
 
