@@ -68,9 +68,17 @@ class tLearnerWindowWrapper : public iEZTrainObserver
                             const tConfusionMatrix& testCM,
                             f64 epochTrainTimeInSeconds)
         {
+            // Get a reference to the simple window.
             refc<app::tWindowGLFW> windowRef = m_window;
             app::tWindowGLFW* windowPtr = windowRef;
             app::tSimpleImageWindow& window = *(dynamic_cast<app::tSimpleImageWindow*>(windowPtr));
+
+            // If the window is closed, don't do anything expensive.
+            if (window.shouldWindowClose())
+            {
+                window.setImage(NULL);
+                return true;
+            }
 
             // Set the window title.
             std::ostringstream out;
