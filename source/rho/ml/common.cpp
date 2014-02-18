@@ -220,28 +220,57 @@ void un_examplify(const tIO& io, bool color, u32 width,
 
 void zscore(std::vector<tIO>& trainingInputs, std::vector<tIO>& testInputs)
 {
-    f64 mean = algo::mean(trainingInputs);
-    f64 stddev = algo::stddev(trainingInputs);
-
-    if (stddev != 0.0)
+    // Make sure all the input looks okay.
+    if (trainingInputs.size() == 0)
+        throw eInvalidArgument("There must be at least one training input!");
+    if (testInputs.size() == 0)
+        throw eInvalidArgument("There must be at least one test input!");
+    for (size_t i = 1; i < trainingInputs.size(); i++)
     {
-        for (size_t i = 0; i < trainingInputs.size(); i++)
-            for (size_t j = 0; j < trainingInputs[i].size(); j++)
-                trainingInputs[i][j] = (trainingInputs[i][j]-mean) / stddev;
-
-        for (size_t i = 0; i < testInputs.size(); i++)
-            for (size_t j = 0; j < testInputs[i].size(); j++)
-                testInputs[i][j] = (testInputs[i][j]-mean) / stddev;
+        if (trainingInputs[i].size() != trainingInputs[0].size())
+        {
+            throw eInvalidArgument("Every training input must have the same dimensionality!");
+        }
     }
-    else
+    for (size_t i = 1; i < testInputs.size(); i++)
     {
-        for (size_t i = 0; i < trainingInputs.size(); i++)
-            for (size_t j = 0; j < trainingInputs[i].size(); j++)
-                trainingInputs[i][j] = 0.0;
+        if (testInputs[i].size() != testInputs[0].size())
+        {
+            throw eInvalidArgument("Every test input must have the same dimensionality!");
+        }
+    }
+    if (trainingInputs[0].size() != testInputs[0].size())
+        throw eInvalidArgument("The training and test examples must all have the same dimensionality!");
 
-        for (size_t i = 0; i < testInputs.size(); i++)
-            for (size_t j = 0; j < testInputs[i].size(); j++)
-                testInputs[i][j] = 0.0;
+    // For every dimension, we'll need to create a vector of all that dimensions examples.
+    tIO dim(trainingInputs.size(), 0.0);
+
+    // For every dimension...
+    for (size_t d = 0; d < trainingInputs[0].size(); d++)
+    {
+        // ... Fill 'dim' with that dimension
+        for (size_t i = 0; i < trainingInputs.size(); i++)
+            dim[i] = trainingInputs[i][d];
+
+        // ... Calculate the mean and stddev
+        f64 mean = algo::mean(dim);
+        f64 stddev = algo::stddev(dim);
+
+        // ... Normalize that dimension
+        if (stddev != 0.0)
+        {
+            for (size_t i = 0; i < trainingInputs.size(); i++)
+                trainingInputs[i][d] = (trainingInputs[i][d] - mean) / stddev;
+            for (size_t i = 0; i < testInputs.size(); i++)
+                testInputs[i][d] = (testInputs[i][d] - mean) / stddev;
+        }
+        else
+        {
+            for (size_t i = 0; i < trainingInputs.size(); i++)
+                trainingInputs[i][d] = 0.0;
+            for (size_t i = 0; i < testInputs.size(); i++)
+                testInputs[i][d] = 0.0;
+        }
     }
 }
 
