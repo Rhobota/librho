@@ -124,6 +124,14 @@ void un_examplify(const tIO& io, bool color, u32 width,
                   const f64* minValue = NULL, const f64* maxValue = NULL);
 
 /**
+ * Z-score a set of input examples.
+ *
+ * Z-scoring is transforming the data so that each dimension's mean is zero
+ * and its standard deviation is one.
+ */
+void zscore(std::vector<tIO>& inputs);
+
+/**
  * Z-score the training set, and z-score the test set to match.
  *
  * Z-scoring is transforming the data so that each dimension's mean is zero

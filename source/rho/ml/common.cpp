@@ -218,6 +218,47 @@ void un_examplify(const tIO& io, bool color, u32 width,
     }
 }
 
+void zscore(std::vector<tIO>& inputs)
+{
+    // Make sure all the input looks okay.
+    if (inputs.size() == 0)
+        throw eInvalidArgument("There must be at least one training input!");
+    for (size_t i = 1; i < inputs.size(); i++)
+    {
+        if (inputs[i].size() != inputs[0].size())
+        {
+            throw eInvalidArgument("Every training input must have the same dimensionality!");
+        }
+    }
+
+    // For every dimension, we'll need to create a vector of all that dimensions examples.
+    tIO dim(inputs.size(), 0.0);
+
+    // For every dimension...
+    for (size_t d = 0; d < inputs[0].size(); d++)
+    {
+        // ... Fill 'dim' with that dimension
+        for (size_t i = 0; i < inputs.size(); i++)
+            dim[i] = inputs[i][d];
+
+        // ... Calculate the mean and stddev
+        f64 mean = algo::mean(dim);
+        f64 stddev = algo::stddev(dim);
+
+        // ... Normalize that dimension
+        if (stddev != 0.0)
+        {
+            for (size_t i = 0; i < inputs.size(); i++)
+                inputs[i][d] = (inputs[i][d] - mean) / stddev;
+        }
+        else
+        {
+            for (size_t i = 0; i < inputs.size(); i++)
+                inputs[i][d] = 0.0;
+        }
+    }
+}
+
 void zscore(std::vector<tIO>& trainingInputs, std::vector<tIO>& testInputs)
 {
     // Make sure all the input looks okay.
