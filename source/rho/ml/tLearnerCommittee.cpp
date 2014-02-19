@@ -108,6 +108,9 @@ void tLearnerCommittee::evaluateBatch(std::vector<tIO>::const_iterator inputStar
                                       std::vector<tIO>::const_iterator inputEnd,
                                       std::vector<tIO>::iterator outputStart) const
 {
+    if ((inputEnd-inputStart) <= 0)
+        throw eInvalidArgument("The batch size cannot be zero.");
+
     std::vector< std::vector<tIO> > outputs;
     if (m_threadPool)
     {
@@ -140,24 +143,32 @@ void tLearnerCommittee::evaluateBatch(std::vector<tIO>::const_iterator inputStar
         }
     }
 
-    for (size_t i = 0; i < outputs.size(); i++)
+    if (outputs.size() != m_committee.size() || outputs.size() == 0)
+        throw eLogicError("For some reason, we didn't get the output from every learner in this committee.");
+    for (size_t i = 1; i < outputs.size(); i++)
+        if (outputs[i].size() != outputs[0].size() || outputs[i].size() == 0)
+            throw eLogicError("The batch size of each learner in this committee does not match.");
+    size_t batchSize = outputs[0].size();
+    if (batchSize != (inputEnd-inputStart))
+        throw eLogicError("The batch size of the learners in this committee is not what it's supposed to be.");
+
+    for (size_t i = 0; i < batchSize; i++)
     {
-        const std::vector<tIO>& outHere = outputs[i];
         if (m_type == kCommitteeAverage)
         {
-            (*outputStart) = outHere[0];
-            for (size_t i = 1; i < outHere.size(); i++)
-                s_accum((*outputStart), outHere[i]);
-            for (size_t i = 0; i < (*outputStart).size(); i++)
-                (*outputStart)[i] /= ((f64)m_committee.size());
+            (*outputStart) = outputs[0][i];
+            for (size_t c = 1; c < outputs.size(); c++)
+                s_accum((*outputStart), outputs[c][i]);
+            for (size_t j = 0; j < (*outputStart).size(); j++)
+                (*outputStart)[j] /= ((f64)m_committee.size());
         }
         else if (m_type == kCommitteeMostConfident)
         {
             size_t mostConfidentIndex = 0;
-            for (size_t i = 1; i < outHere.size(); i++)
-                if (s_max(outHere[i]) > s_max(outHere[mostConfidentIndex]))
-                    mostConfidentIndex = i;
-            (*outputStart) = outHere[mostConfidentIndex];
+            for (size_t c = 1; c < outputs.size(); c++)
+                if (s_max(outputs[c][i]) > s_max(outputs[mostConfidentIndex][i]))
+                    mostConfidentIndex = c;
+            (*outputStart) = outputs[mostConfidentIndex][i];
         }
         else
         {
