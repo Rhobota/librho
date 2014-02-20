@@ -218,7 +218,7 @@ void un_examplify(const tIO& io, bool color, u32 width,
     }
 }
 
-void zscore(std::vector<tIO>& inputs)
+void zscore(std::vector<tIO>& inputs, u32 dStart, u32 dEnd)
 {
     // Make sure all the input looks okay.
     if (inputs.size() == 0)
@@ -235,7 +235,7 @@ void zscore(std::vector<tIO>& inputs)
     tIO dim(inputs.size(), 0.0);
 
     // For every dimension...
-    for (size_t d = 0; d < inputs[0].size(); d++)
+    for (size_t d = dStart; d < inputs[0].size() && d < dEnd; d++)
     {
         // ... Fill 'dim' with that dimension
         for (size_t i = 0; i < inputs.size(); i++)
