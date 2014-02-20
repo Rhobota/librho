@@ -1524,6 +1524,7 @@ void tBestRememberingWrapper::didFinishTraining(iLearner* learner,
 
 tLoggingWrapper::tLoggingWrapper(u32 logInterval, bool isInputImageColor,
                                  u32 inputImageWidth, bool shouldDisplayAbsoluteValues,
+                                 u32 cellWidthMultiplier,
                                  iEZTrainObserver* wrappedObserver,
                                  bool accumulateFoldIO,
                                  bool logVisuals,
@@ -1534,6 +1535,7 @@ tLoggingWrapper::tLoggingWrapper(u32 logInterval, bool isInputImageColor,
       m_isColorInput(isInputImageColor),
       m_imageWidth(inputImageWidth),
       m_absoluteImage(shouldDisplayAbsoluteValues),
+      m_cellWidthMultiplier(cellWidthMultiplier),
       m_accumulateFoldIO(accumulateFoldIO),
       m_logVisuals(logVisuals),
       m_fileprefix(fileprefix),
@@ -1715,7 +1717,7 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
             buildVisualConfusionMatrix(m_accumTestInputs, m_isColorInput, m_imageWidth, m_absoluteImage,
                                        m_accumTestOutputs,
                                        m_accumTestTargets,
-                                       &visualCM);
+                                       &visualCM, m_cellWidthMultiplier);
             std::ostringstream out;
             out << m_fileprefix << bestLearner->learnerInfoString() << "__accum__cm.png";
             visualCM.saveToFile(out.str());
@@ -1760,7 +1762,7 @@ void tLoggingWrapper::m_save(std::string filebasename,
         buildVisualConfusionMatrix(testInputs, m_isColorInput, m_imageWidth, m_absoluteImage,
                                    testOutputs,
                                    testTargets,
-                                   &visualCM);
+                                   &visualCM, m_cellWidthMultiplier);
         visualCM.saveToFile(filebasename + "__cm.png");
     }
 

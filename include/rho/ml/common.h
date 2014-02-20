@@ -224,7 +224,7 @@ void buildVisualConfusionMatrix(const std::vector<tIO>& inputs,
                                 const std::vector<tIO>& outputs,
                                 const std::vector<tIO>& targets,
                                       img::tImage* dest,
-                                u32 cellWidthMultiplier=5);
+                                u32 cellWidthMultiplier = 5);
 
 /**
  * Prints the confusion matrix in a pretty format.
@@ -648,6 +648,9 @@ class tLoggingWrapper : public tBestRememberingWrapper
          * every 'logInterval' number of epochs. These parameters are only
          * relevant if 'logVisuals' is true.
          *
+         * See buildConfusionMatrix() for a description of 'cellWidthMultiplier'.
+         * This parameter is only relevant if 'logVisuals' is true.
+         *
          * The visualizations of the learner are useful when the learner is
          * processing image data. If the input data is not image data,
          * the visuals are not as meaningful, and in some cases cannot be
@@ -679,7 +682,8 @@ class tLoggingWrapper : public tBestRememberingWrapper
          */
         tLoggingWrapper(u32 logInterval, bool isInputImageColor,
                         u32 inputImageWidth, bool shouldDisplayAbsoluteValues,
-                        iEZTrainObserver* wrappedObserver=NULL,
+                        u32 cellWidthMultiplier = 5,
+                        iEZTrainObserver* wrappedObserver = NULL,
                         bool accumulateFoldIO = false,
                         bool logVisuals = true,
                         std::string fileprefix=std::string(),
@@ -729,6 +733,8 @@ class tLoggingWrapper : public tBestRememberingWrapper
         const bool m_isColorInput;
         const u32  m_imageWidth;
         const bool m_absoluteImage;
+        const u32  m_cellWidthMultiplier;
+
         const bool m_accumulateFoldIO;
         const bool m_logVisuals;
 
