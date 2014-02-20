@@ -560,7 +560,8 @@ void buildVisualConfusionMatrix(const std::vector<tIO>& inputs,
                                 bool color, u32 width, bool absolute,
                                 const std::vector<tIO>& outputs,
                                 const std::vector<tIO>& targets,
-                                      img::tImage* dest)
+                                      img::tImage* dest,
+                                u32 cellWidthMultiplier)
 {
     if (outputs.size() != targets.size())
     {
@@ -607,7 +608,7 @@ void buildVisualConfusionMatrix(const std::vector<tIO>& inputs,
 
     algo::tKnuthLCG lcg;
 
-    u32 boxWidth = 5 * width;
+    u32 boxWidth = cellWidthMultiplier * width;
     u8 bgColor[3] = { 255, 255, 255 };    // white
     img::tCanvas canvas(img::kRGB24, bgColor, 3);
 
