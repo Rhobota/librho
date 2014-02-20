@@ -128,8 +128,12 @@ void un_examplify(const tIO& io, bool color, u32 width,
  *
  * Z-scoring is transforming the data so that each dimension's mean is zero
  * and its standard deviation is one.
+ *
+ * The 'dStart' and 'dEnd' indices let you specify which dimensions of the
+ * data you are interesting in zscoring. The dimensions that will be zscored
+ * are [dStart, dEnd). Note that by default all dimensions will be zscored.
  */
-void zscore(std::vector<tIO>& inputs);
+void zscore(std::vector<tIO>& inputs, u32 dStart=0, u32 dEnd=0xFFFFFFFF);
 
 /**
  * Z-score the training set, and z-score the test set to match.
@@ -137,7 +141,8 @@ void zscore(std::vector<tIO>& inputs);
  * Z-scoring is transforming the data so that each dimension's mean is zero
  * and its standard deviation is one.
  */
-void zscore(std::vector<tIO>& trainingInputs, std::vector<tIO>& testInputs);
+void zscore(std::vector<tIO>& trainingInputs,
+            std::vector<tIO>& testInputs);
 
 
 //////////////////////////////////////////////////////////////////////
