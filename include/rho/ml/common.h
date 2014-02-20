@@ -214,12 +214,17 @@ void buildConfusionMatrix(const std::vector<tIO>& outputs,
  * 'absolute'.
  *
  * The resulting image is stored in 'dest'.
+ *
+ * The width of each cell is calculated by multiplying the
+ * 'width' by 'cellWidthMultiplier'. So the width of 'dest'
+ * will be 'width*cellWidthMultiplier*<num_classes>'
  */
 void buildVisualConfusionMatrix(const std::vector<tIO>& inputs,
                                 bool color, u32 width, bool absolute,
                                 const std::vector<tIO>& outputs,
                                 const std::vector<tIO>& targets,
-                                      img::tImage* dest);
+                                      img::tImage* dest,
+                                u32 cellWidthMultiplier=5);
 
 /**
  * Prints the confusion matrix in a pretty format.
