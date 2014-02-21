@@ -177,6 +177,17 @@ f64 crossEntropyCost(const tIO& output, const tIO& target);
 f64 crossEntropyCost(const std::vector<tIO>& outputs,
                      const std::vector<tIO>& targets);
 
+/**
+ * Calculates the root-mean-squared error of the output/target
+ * pairs.
+ *
+ * (Note: This error function does not have a single output/target
+ *        pair version because that wouldn't not make sense for this
+ *        particular way of measuring error.)
+ */
+f64 rmsError(const std::vector<tIO>& outputs,
+             const std::vector<tIO>& targets);
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
