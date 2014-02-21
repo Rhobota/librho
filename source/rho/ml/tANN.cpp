@@ -928,25 +928,26 @@ void tANN::reset()
 
 void tANN::printLearnerInfo(std::ostream& out) const
 {
-    int colw = 20;
+    const int colw = 20;
+    std::ostringstream sout;
 
-    out << "Artificial Neural Network Info:" << endl;
+    sout << "Artificial Neural Network Info:" << endl;
 
     // Layer type (and normalizeLayerInput):
-    out << "             layer type:";
-    out << std::right << std::setw(colw) << "input";
+    sout << "             layer type:";
+    sout << std::right << std::setw(colw) << "input";
     for (u32 i = 0; i < m_numLayers; i++)
     {
         string print = s_layerTypeToString(m_layers[i].layerType);
         if (m_layers[i].normalizeLayerInput)
             print += "(norm'd)";
-        out << std::right << std::setw(colw) << print;
+        sout << std::right << std::setw(colw) << print;
     }
-    out << endl;
+    sout << endl;
 
     // Weight update rule:
-    out << "     weight update rule:";
-    out << std::right << std::setw(colw) << "-";
+    sout << "     weight update rule:";
+    sout << std::right << std::setw(colw) << "-";
     for (u32 i = 0; i < m_numLayers; i++)
     {
         std::ostringstream ss;
@@ -969,25 +970,27 @@ void tANN::printLearnerInfo(std::ostream& out) const
             default:
                 assert(false);
         }
-        out << std::right << std::setw(colw) << ss.str();
+        sout << std::right << std::setw(colw) << ss.str();
     }
-    out << endl;
+    sout << endl;
 
     // Network size:
-    out << "             layer size:";
-    out << std::right << std::setw(colw) << m_layers[0].w.cols()-1;
+    sout << "             layer size:";
+    sout << std::right << std::setw(colw) << m_layers[0].w.cols()-1;
     for (u32 i = 0; i < m_numLayers; i++)
-        out << std::right << std::setw(colw) << m_layers[i].w.rows();
-    out << endl;
+        sout << std::right << std::setw(colw) << m_layers[i].w.rows();
+    sout << endl;
 
     // Num free parameters:
-    out << "    num free parameters:";
-    out << std::right << std::setw(colw) << "-";
+    sout << "    num free parameters:";
+    sout << std::right << std::setw(colw) << "-";
     for (u32 i = 0; i < m_numLayers; i++)
-        out << std::right << std::setw(colw) << (m_layers[i].w.rows()*m_layers[i].w.cols());
-    out << endl;
+        sout << std::right << std::setw(colw) << (m_layers[i].w.rows()*m_layers[i].w.cols());
+    sout << endl;
 
-    out << endl;
+    sout << endl;
+
+    out << sout.str() << std::flush;
 }
 
 string tANN::learnerInfoString() const

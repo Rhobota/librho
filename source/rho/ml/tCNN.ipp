@@ -957,25 +957,26 @@ void tCNN::reset()
 
 void tCNN::printLearnerInfo(std::ostream& out) const
 {
-    int colw = 20;
+    const int colw = 20;
+    std::ostringstream sout;
 
-    out << "Convolutional Neural Network Info:" << endl;
+    sout << "Convolutional Neural Network Info:" << endl;
 
     // Layer type (and normalizeLayerInput):
-    out << "                 layer type:";
-    out << std::right << std::setw(colw) << "input";
+    sout << "                 layer type:";
+    sout << std::right << std::setw(colw) << "input";
     for (u32 i = 0; i < m_numLayers; i++)
     {
         string print = s_layerTypeToString(m_layers[i].getLayer().layerType);
         if (m_layers[i].getLayer().normalizeLayerInput)
             print += "(norm'd)";
-        out << std::right << std::setw(colw) << print;
+        sout << std::right << std::setw(colw) << print;
     }
-    out << endl;
+    sout << endl;
 
     // Weight update rule:
-    out << "         weight update rule:";
-    out << std::right << std::setw(colw) << "-";
+    sout << "         weight update rule:";
+    sout << std::right << std::setw(colw) << "-";
     for (u32 i = 0; i < m_numLayers; i++)
     {
         std::ostringstream ss;
@@ -998,64 +999,64 @@ void tCNN::printLearnerInfo(std::ostream& out) const
             default:
                 assert(false);
         }
-        out << std::right << std::setw(colw) << ss.str();
+        sout << std::right << std::setw(colw) << ss.str();
     }
-    out << endl;
+    sout << endl;
 
     // Number of feature maps:
-    out << "        number feature maps:";
-    out << std::right << std::setw(colw) << "-";
+    sout << "        number feature maps:";
+    sout << std::right << std::setw(colw) << "-";
     for (u32 i = 0; i < m_numLayers; i++)
-        out << std::right << std::setw(colw) << m_layers[i].getNumFeatureMaps();
-    out << endl;
+        sout << std::right << std::setw(colw) << m_layers[i].getNumFeatureMaps();
+    sout << endl;
 
     // Receptive field sizes:
-    out << "       receptive field size:";
-    out << std::right << std::setw(colw) << "-";
+    sout << "       receptive field size:";
+    sout << std::right << std::setw(colw) << "-";
     for (u32 i = 0; i < m_numLayers; i++)
     {
         std::ostringstream ss;
         ss << m_layers[i].getReceptiveFieldWidth() / (i > 0 ? m_layers[i-1].getNumFeatureMaps() : 1)
            << "x"
            << m_layers[i].getReceptiveFieldHeight();
-        out << std::right << std::setw(colw) << ss.str();
+        sout << std::right << std::setw(colw) << ss.str();
     }
-    out << endl;
+    sout << endl;
 
     // Num free parameters:
-    out << "        num free parameters:";
-    out << std::right << std::setw(colw) << "-";
+    sout << "        num free parameters:";
+    sout << std::right << std::setw(colw) << "-";
     for (u32 i = 0; i < m_numLayers; i++)
-        out << std::right << std::setw(colw) << m_layers[i].getNumFreeParameters();
-    out << endl;
+        sout << std::right << std::setw(colw) << m_layers[i].getNumFreeParameters();
+    sout << endl;
 
     // Num connections:
-    out << "            num connections:";
-    out << std::right << std::setw(colw) << "-";
+    sout << "            num connections:";
+    sout << std::right << std::setw(colw) << "-";
     for (u32 i = 0; i < m_numLayers; i++)
-        out << std::right << std::setw(colw) << (m_layers[i].getNumFreeParameters() * m_layers[i].getNumReplicas());
-    out << endl;
+        sout << std::right << std::setw(colw) << (m_layers[i].getNumFreeParameters() * m_layers[i].getNumReplicas());
+    sout << endl;
 
     // Receptive field step sizes:
-    out << "            field step size:";
-    out << std::right << std::setw(colw) << "-";
+    sout << "            field step size:";
+    sout << std::right << std::setw(colw) << "-";
     for (u32 i = 0; i < m_numLayers; i++)
     {
         std::ostringstream ss;
         ss << m_layers[i].getStepSizeX() / (i > 0 ? m_layers[i-1].getNumFeatureMaps() : 1)
            << "x"
            << m_layers[i].getStepSizeY();
-        out << std::right << std::setw(colw) << ss.str();
+        sout << std::right << std::setw(colw) << ss.str();
     }
-    out << endl;
+    sout << endl;
 
     // Network output dimensions:
-    out << "                  out dim's:";
+    sout << "                  out dim's:";
     {
         std::ostringstream ss;
         ss << m_layers[0].getInputWidth() << "x"
            << m_layers[0].getInputHeight();
-        out << std::right << std::setw(colw) << ss.str();
+        sout << std::right << std::setw(colw) << ss.str();
     }
     for (u32 i = 0; i < m_numLayers; i++)
     {
@@ -1063,29 +1064,31 @@ void tCNN::printLearnerInfo(std::ostream& out) const
         ss << (m_layers[i].getStepsX()+1);
         ss << "x";
         ss << (m_layers[i].getStepsY()+1);
-        out << std::right << std::setw(colw) << ss.str();
+        sout << std::right << std::setw(colw) << ss.str();
     }
-    out << endl;
+    sout << endl;
 
     // Pool dimensions:
-    out << "                 pool dim's:";
-    out << std::right << std::setw(colw) << "1x1";
+    sout << "                 pool dim's:";
+    sout << std::right << std::setw(colw) << "1x1";
     for (u32 i = 0; i < m_numLayers; i++)
     {
         std::ostringstream ss;
         ss << m_layers[i].getPoolWidth() << "x" << m_layers[i].getPoolHeight();
-        out << std::right << std::setw(colw) << ss.str();
+        sout << std::right << std::setw(colw) << ss.str();
     }
-    out << endl;
+    sout << endl;
 
     // Network output size:
-    out << "                   out size:";
-    out << std::right << std::setw(colw) << m_layers[0].getInputSize();
+    sout << "                   out size:";
+    sout << std::right << std::setw(colw) << m_layers[0].getInputSize();
     for (u32 i = 0; i < m_numLayers; i++)
-        out << std::right << std::setw(colw) << m_layers[i].getOutput().rows();
-    out << endl;
+        sout << std::right << std::setw(colw) << m_layers[i].getOutput().rows();
+    sout << endl;
 
-    out << endl;
+    sout << endl;
+
+    out << sout.str() << std::flush;
 }
 
 string tCNN::learnerInfoString() const
