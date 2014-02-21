@@ -430,6 +430,13 @@ f64 crossEntropyCost(const std::vector<tIO>& outputs,
     return error / ((f64)outputs.size());
 }
 
+f64 rmsError(const std::vector<tIO>& outputs,
+             const std::vector<tIO>& targets)
+{
+    f64 sqrdError = standardSquaredError(outputs, targets);
+    return std::sqrt(sqrdError * 2.0 / ((f64)outputs[0].size()));
+}
+
 
 void buildConfusionMatrix(const std::vector<tIO>& outputs,
                           const std::vector<tIO>& targets,
