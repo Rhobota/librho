@@ -1715,7 +1715,7 @@ void tLoggingWrapper::didFinishTraining(iLearner* learner,
         m_logfile << std::endl;
 
         m_logfile << "Num accumulated test examples: " << m_accumTestInputs.size() << std::endl;
-        m_logfile << "Accumulated test error rate:   " << errorRate(m_accumTestCM)*100 << "%" << std::endl;
+        m_logfile << "Accumulated test classification error rate:   " << errorRate(m_accumTestCM)*100 << "%" << std::endl;
         m_logfile << std::endl;
 
         if (m_logVisuals)
