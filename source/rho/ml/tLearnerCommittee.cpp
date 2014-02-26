@@ -149,7 +149,7 @@ void tLearnerCommittee::evaluateBatch(std::vector<tIO>::const_iterator inputStar
         if (outputs[i].size() != outputs[0].size() || outputs[i].size() == 0)
             throw eLogicError("The batch size of each learner in this committee does not match.");
     size_t batchSize = outputs[0].size();
-    if (batchSize != (inputEnd-inputStart))
+    if (batchSize != ((size_t)(inputEnd-inputStart)))
         throw eLogicError("The batch size of the learners in this committee is not what it's supposed to be.");
 
     for (size_t i = 0; i < batchSize; i++)
