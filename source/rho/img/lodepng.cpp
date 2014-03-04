@@ -396,7 +396,7 @@ unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const
   FILE* file;
   file = fopen(filename, "wb" );
   if(!file) return 79;
-  fwrite((char*)buffer , 1 , buffersize, file);
+  fwrite((const char*)buffer , 1 , buffersize, file);
   fclose(file);
   return 0;
 }
@@ -5054,7 +5054,7 @@ static unsigned addChunk_zTXt(ucvector* out, const char* keyword, const char* te
   ucvector_push_back(&data, 0); /*compression method: 0*/
 
   error = zlib_compress(&compressed.data, &compressed.size,
-                        (unsigned char*)textstring, textsize, zlibsettings);
+                        (const unsigned char*)textstring, textsize, zlibsettings);
   if(!error)
   {
     for(i = 0; i < compressed.size; i++) ucvector_push_back(&data, compressed.data[i]);
@@ -5090,7 +5090,7 @@ static unsigned addChunk_iTXt(ucvector* out, unsigned compressed, const char* ke
     ucvector compressed_data;
     ucvector_init(&compressed_data);
     error = zlib_compress(&compressed_data.data, &compressed_data.size,
-                          (unsigned char*)textstring, textsize, zlibsettings);
+                          (const unsigned char*)textstring, textsize, zlibsettings);
     if(!error)
     {
       for(i = 0; i < compressed_data.size; i++) ucvector_push_back(&data, compressed_data.data[i]);
@@ -6071,7 +6071,7 @@ void load_file(std::vector<unsigned char>& buffer, const std::string& filename)
 void save_file(const std::vector<unsigned char>& buffer, const std::string& filename)
 {
   std::ofstream file(filename.c_str(), std::ios::out|std::ios::binary);
-  file.write(buffer.empty() ? 0 : (char*)&buffer[0], std::streamsize(buffer.size()));
+  file.write(buffer.empty() ? 0 : (const char*)&buffer[0], std::streamsize(buffer.size()));
 }
 #endif //LODEPNG_COMPILE_DISK
 
