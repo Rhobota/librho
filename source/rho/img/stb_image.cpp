@@ -1814,7 +1814,7 @@ static int parse_huffman_block(zbuf *a)
          if (a->zout >= a->zout_end) if (!expand(a, 1)) return 0;
          *a->zout++ = (char) z;
       } else {
-            uint8 *p;
+         uint8 *p;
          int len,dist;
          if (z == 256) return 1;
          z -= 257;
