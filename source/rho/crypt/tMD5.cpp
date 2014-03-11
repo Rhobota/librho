@@ -50,9 +50,14 @@ std::vector<u8> tMD5::getHash() const
 std::string tMD5::getHashString() const
 {
     std::vector<u8> hash = getHash();
+    return hashToString(hash);
+}
+
+std::string tMD5::hashToString(const std::vector<u8>& hash)
+{
     std::ostringstream out;
     for (u32 i = 0; i < hash.size(); i++)
-        out << std::hex << std::setfill('0') << std::setw(2) << (u32)hash[i];
+        out << std::hex << std::setfill('0') << std::setw(2) << ((u32)hash[i]);
     return out.str();
 }
 
