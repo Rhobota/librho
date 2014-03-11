@@ -13,26 +13,26 @@ namespace tcp
 
 
 tSocket::tSocket(const tAddr& addr, u16 port, u32 timeoutMS)
-    : m_fd(-1), m_readEOF(false), m_writeEOF(false)
+    : m_fd(-1), m_readEOF(false), m_writeEOF(false), m_nodelay(false)
 {
     m_init(addr, port, timeoutMS);
 }
 
 tSocket::tSocket(const tAddrGroup& addrGroup, u16 port, u32 timeoutMS)
-    : m_fd(-1), m_readEOF(false), m_writeEOF(false)
+    : m_fd(-1), m_readEOF(false), m_writeEOF(false), m_nodelay(false)
 {
     m_init(addrGroup, port, timeoutMS);
 }
 
 tSocket::tSocket(std::string hostStr, u16 port, u32 timeoutMS)
-    : m_fd(-1), m_readEOF(false), m_writeEOF(false)
+    : m_fd(-1), m_readEOF(false), m_writeEOF(false), m_nodelay(false)
 {
     tAddrGroup addrGroup(hostStr);
     m_init(addrGroup, port, timeoutMS);
 }
 
 tSocket::tSocket(int fd, const tAddr& addr)
-    : m_fd(fd), m_addr(addr), m_readEOF(false), m_writeEOF(false)
+    : m_fd(fd), m_addr(addr), m_readEOF(false), m_writeEOF(false), m_nodelay(false)
 {
 }
 
@@ -203,6 +203,7 @@ u16 tSocket::getLocalPort() const
 void tSocket::setNagles(bool on)
 {
     int flag = on ? 0 : 1;    // Nagle's on == TCP_NODELAY off
+    m_nodelay = (flag == 1);
     if(::setsockopt(m_fd, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(int))
             == -1)
     {
@@ -313,6 +314,20 @@ i32 tSocket::writeAll(const u8* buffer, i32 length)
         amountWritten += n;
     }
     return amountWritten;
+}
+
+bool tSocket::flush()
+{
+    // If we're already setup for no-delay transport, there will
+    // be nothing that needs to be flushed.
+    if (m_nodelay)
+        return true;
+
+    // Otherwise, we'll disable Nagle's algorithm temporarily in
+    // order to cause a flush of the kernel's TCP buffer.
+    setNagles(false);
+    setNagles(true);
+    return true;
 }
 
 void tSocket::close()
