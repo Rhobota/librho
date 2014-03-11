@@ -33,8 +33,19 @@ class tMD5 : public iWritable, public bNonCopyable
          * Returns the hash in string form.
          * The returned string always is hexadecimal
          * and always has length 32.
+         *
+         * Uses hashToString() to do the conversion.
          */
         std::string getHashString() const;
+
+    public:
+
+        /**
+         * Converts a hash (aka, a vector of bytes) to a string
+         * representation (aka, a lowercase concatenation of bytes,
+         * each byte represented by two hex characters).
+         */
+        static std::string hashToString(const std::vector<u8>& hash);
 
     private:
 
