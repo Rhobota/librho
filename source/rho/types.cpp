@@ -1,8 +1,13 @@
 #include <rho/types.h>
+#include <rho/eRho.h>
 
 #ifdef __APPLE__
 #include "TargetConditionals.h"
 #endif
+
+#include <errno.h>
+#include <string.h>
+#include <sys/utsname.h>
 
 
 namespace rho
@@ -46,6 +51,16 @@ std::string platformEnumToString(nPlatform plat)
         default:
             return "Unknown";
     }
+}
+
+
+std::string platformVersionString()
+{
+    struct utsname n;
+    int ret = ::uname(&n);
+    if (ret != 0)
+        throw eRuntimeError(strerror(errno));
+    return std::string(n.release);
 }
 
 
