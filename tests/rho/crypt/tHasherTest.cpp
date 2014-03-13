@@ -3,6 +3,8 @@
 #include <rho/crypt/tSHA1.h>
 #include <rho/crypt/tSHA224.h>
 #include <rho/crypt/tSHA256.h>
+#include <rho/crypt/tSHA384.h>
+#include <rho/crypt/tSHA512.h>
 #include <rho/tCrashReporter.h>
 #include <rho/tTest.h>
 
@@ -189,6 +191,72 @@ void testSHA256(const tTest& t)
 }
 
 
+void testSHA384(const tTest& t)
+{
+    vector< pair<string,string> > tests;
+
+    tests.push_back(make_pair(string(""),
+                              string("38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b")));
+
+    tests.push_back(make_pair(string("a"),
+                              string("54a59b9f22b0b80880d8427e548b7c23abd873486e1f035dce9cd697e85175033caa88e6d57bc35efae0b5afd3145f31")));
+
+    tests.push_back(make_pair(string("abc"),
+                              string("cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7")));
+
+    tests.push_back(make_pair(string("message digest"),
+                              string("473ed35167ec1f5d8e550368a3db39be54639f828868e9454c239fc8b52e3c61dbd0d8b4de1390c256dcbb5d5fd99cd5")));
+
+    tests.push_back(make_pair(string("abcdefghijklmnopqrstuvwxyz"),
+                              string("feb67349df3db6f5924815d6c3dc133f091809213731fe5c7b5f4999e463479ff2877f5f2936fa63bb43784b12f3ebb4")));
+
+    tests.push_back(make_pair(string("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"),
+                              string("1761336e3f7cbfe51deb137f026f89e01a448e3b1fafa64039c1464ee8732f11a5341a6f41e0c202294736ed64db1a84")));
+
+    tests.push_back(make_pair(string("12345678901234567890123456789012345678901234567890123456789012345678901234567890"),
+                              string("b12932b0627d1c060942f5447764155655bd4da0c9afa6dd9b9ef53129af1b8fb0195996d2de9ca0df9d821ffee67026")));
+
+    for (size_t i = 0; i < tests.size(); i++)
+    {
+        crypt::tSHA384 hasher;
+        test(hasher, tests[i], t);
+    }
+}
+
+
+void testSHA512(const tTest& t)
+{
+    vector< pair<string,string> > tests;
+
+    tests.push_back(make_pair(string(""),
+                              string("cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e")));
+
+    tests.push_back(make_pair(string("a"),
+                              string("1f40fc92da241694750979ee6cf582f2d5d7d28e18335de05abc54d0560e0f5302860c652bf08d560252aa5e74210546f369fbbbce8c12cfc7957b2652fe9a75")));
+
+    tests.push_back(make_pair(string("abc"),
+                              string("ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f")));
+
+    tests.push_back(make_pair(string("message digest"),
+                              string("107dbf389d9e9f71a3a95f6c055b9251bc5268c2be16d6c13492ea45b0199f3309e16455ab1e96118e8a905d5597b72038ddb372a89826046de66687bb420e7c")));
+
+    tests.push_back(make_pair(string("abcdefghijklmnopqrstuvwxyz"),
+                              string("4dbff86cc2ca1bae1e16468a05cb9881c97f1753bce3619034898faa1aabe429955a1bf8ec483d7421fe3c1646613a59ed5441fb0f321389f77f48a879c7b1f1")));
+
+    tests.push_back(make_pair(string("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"),
+                              string("1e07be23c26a86ea37ea810c8ec7809352515a970e9253c26f536cfc7a9996c45c8370583e0a78fa4a90041d71a4ceab7423f19c71b9d5a3e01249f0bebd5894")));
+
+    tests.push_back(make_pair(string("12345678901234567890123456789012345678901234567890123456789012345678901234567890"),
+                              string("72ec1ef1124a45b047e8b7c75a932195135bb61de24ec0d1914042246e0aec3a2354e093d76f3048b456764346900cb130d2a4fd5dd16abb5e30bcb850dee843")));
+
+    for (size_t i = 0; i < tests.size(); i++)
+    {
+        crypt::tSHA512 hasher;
+        test(hasher, tests[i], t);
+    }
+}
+
+
 int main()
 {
     tCrashReporter::init();
@@ -199,6 +267,8 @@ int main()
     tTest("tSHA1 test", testSHA1, kNumIters);
     tTest("tSHA224 test", testSHA224, kNumIters);
     tTest("tSHA256 test", testSHA256, kNumIters);
+    tTest("tSHA384 test", testSHA384, kNumIters);
+    tTest("tSHA512 test", testSHA512, kNumIters);
 
     return 0;
 }
