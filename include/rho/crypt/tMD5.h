@@ -2,8 +2,7 @@
 #define __rho_crypt_tMD5_h__
 
 
-#include <rho/iWritable.h>
-#include <rho/bNonCopyable.h>
+#include <rho/crypt/iHasher.h>
 #include <vector>
 
 
@@ -13,7 +12,7 @@ namespace crypt
 {
 
 
-class tMD5 : public iWritable, public bNonCopyable
+class tMD5 : public iHasher, public bNonCopyable
 {
     public:
 
@@ -33,8 +32,6 @@ class tMD5 : public iWritable, public bNonCopyable
          * Returns the hash in string form.
          * The returned string always is hexadecimal
          * and always has length 32.
-         *
-         * Uses hashToString() to do the conversion.
          */
         std::string getHashString() const;
 
