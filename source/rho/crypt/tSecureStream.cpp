@@ -1,6 +1,6 @@
 #include <rho/crypt/tSecureStream.h>
 #include <rho/crypt/tSecureRandom.h>
-#include <rho/crypt/tMD5.h>
+#include <rho/crypt/tSHA512.h>
 
 #include <vector>
 
@@ -65,9 +65,14 @@ bool tSecureStream::flush()
 static
 vector<u8> s_hash(vector<u8> vect)
 {
-    tMD5 md5;
-    md5.writeAll(&vect[0], (i32)vect.size());
-    return md5.getHash();
+    static const string kSalt1 = "384c33048b71ba83d2ec6e420342c7bbbc859c31bae3026439ef";
+    static const string kSalt2 = "34c76ae5a45555ff9ff527c98410a6984f3";
+
+    tSHA512 sha512;
+    sha512.writeAll((const u8*)(&(kSalt1[0])), (i32)(kSalt1.length()));
+    sha512.writeAll((const u8*)(&(vect[0])),   (i32)(vect.size()));
+    sha512.writeAll((const u8*)(&(kSalt2[0])), (i32)(kSalt2.length()));
+    return sha512.getHash();
 }
 
 static
