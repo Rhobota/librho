@@ -3,7 +3,6 @@
 
 
 #include <rho/crypt/iHasher.h>
-#include <vector>
 
 
 namespace rho
