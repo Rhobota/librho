@@ -1,5 +1,6 @@
 #include <rho/crypt/tMD5.h>
 #include <rho/crypt/tSHA0.h>
+#include <rho/crypt/tSHA1.h>
 #include <rho/tCrashReporter.h>
 #include <rho/tTest.h>
 
@@ -87,6 +88,39 @@ void testSHA0(const tTest& t)
 }
 
 
+void testSHA1(const tTest& t)
+{
+    vector< pair<string,string> > tests;
+
+    tests.push_back(make_pair(string(""),
+                              string("da39a3ee5e6b4b0d3255bfef95601890afd80709")));
+
+    tests.push_back(make_pair(string("a"),
+                              string("86f7e437faa5a7fce15d1ddcb9eaeaea377667b8")));
+
+    tests.push_back(make_pair(string("abc"),
+                              string("a9993e364706816aba3e25717850c26c9cd0d89d")));
+
+    tests.push_back(make_pair(string("message digest"),
+                              string("c12252ceda8be8994d5fa0290a47231c1d16aae3")));
+
+    tests.push_back(make_pair(string("abcdefghijklmnopqrstuvwxyz"),
+                              string("32d10c7b8cf96570ca04ce37f2a19d84240d3a89")));
+
+    tests.push_back(make_pair(string("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"),
+                              string("761c457bf73b14d27e9e9265c46f4b4dda11f940")));
+
+    tests.push_back(make_pair(string("12345678901234567890123456789012345678901234567890123456789012345678901234567890"),
+                              string("50abf5706a150990a08b2c5ea40fa0e585554732")));
+
+    for (size_t i = 0; i < tests.size(); i++)
+    {
+        crypt::tSHA1 hasher;
+        test(hasher, tests[i], t);
+    }
+}
+
+
 int main()
 {
     tCrashReporter::init();
@@ -94,6 +128,7 @@ int main()
 
     tTest("tMD5 test", testMD5, kNumIters);
     tTest("tSHA0 test", testSHA0, kNumIters);
+    tTest("tSHA1 test", testSHA1, kNumIters);
 
     return 0;
 }
