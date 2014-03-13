@@ -1,10 +1,10 @@
 #include <rho/crypt/tMD5.h>
+#include <rho/crypt/tSHA0.h>
 #include <rho/tCrashReporter.h>
 #include <rho/tTest.h>
 
 #include <iostream>
 #include <string>
-#include <util>
 #include <vector>
 
 using namespace rho;
@@ -72,12 +72,28 @@ void testMD5(const tTest& t)
 }
 
 
+void testSHA0(const tTest& t)
+{
+    vector< pair<string,string> > tests;
+
+    tests.push_back(make_pair(string("abc"),
+                              string("0164b8a914cd2a5e74c4f7ff082c4d97f1edf880")));
+
+    for (size_t i = 0; i < tests.size(); i++)
+    {
+        crypt::tSHA0 hasher;
+        test(hasher, tests[i], t);
+    }
+}
+
+
 int main()
 {
     tCrashReporter::init();
     srand(time(0));
 
     tTest("tMD5 test", testMD5, kNumIters);
+    tTest("tSHA0 test", testSHA0, kNumIters);
 
     return 0;
 }
