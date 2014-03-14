@@ -1,6 +1,5 @@
 #include <rho/crypt/hash_utils.h>
 #include <rho/crypt/tMD5.h>
-#include <rho/crypt/tSHA0.h>
 #include <rho/crypt/tSHA1.h>
 #include <rho/crypt/tSHA224.h>
 #include <rho/crypt/tSHA256.h>
@@ -72,21 +71,6 @@ void testMD5(const tTest& t)
     for (size_t i = 0; i < tests.size(); i++)
     {
         crypt::tMD5 hasher;
-        test(hasher, tests[i], t);
-    }
-}
-
-
-void testSHA0(const tTest& t)
-{
-    vector< pair<string,string> > tests;
-
-    tests.push_back(make_pair(string("abc"),
-                              string("0164b8a914cd2a5e74c4f7ff082c4d97f1edf880")));
-
-    for (size_t i = 0; i < tests.size(); i++)
-    {
-        crypt::tSHA0 hasher;
         test(hasher, tests[i], t);
     }
 }
@@ -578,7 +562,6 @@ int main()
     srand(time(0));
 
     tTest("tMD5 test", testMD5, kNumIters);
-    tTest("tSHA0 test", testSHA0, kNumIters);
     tTest("tSHA1 test", testSHA1, kNumIters);
     tTest("tSHA224 test", testSHA224, kNumIters);
     tTest("tSHA256 test", testSHA256, kNumIters);
