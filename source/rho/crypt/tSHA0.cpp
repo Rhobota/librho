@@ -1,5 +1,5 @@
 #include <rho/crypt/tSHA0.h>
-#include <rho/crypt/tMD5.h>
+#include <rho/crypt/hash_utils.h>
 
 #include "sha.h"
 
@@ -51,7 +51,7 @@ std::vector<u8> tSHA0::getHash() const
 std::string tSHA0::getHashString() const
 {
     std::vector<u8> hash = getHash();
-    return tMD5::hashToString(hash);
+    return hashToString(hash);
 }
 
 

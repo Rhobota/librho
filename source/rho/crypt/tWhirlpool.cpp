@@ -1,5 +1,5 @@
 #include <rho/crypt/tWhirlpool.h>
-#include <rho/crypt/tMD5.h>
+#include <rho/crypt/hash_utils.h>
 
 #include "Whirlpool.ipp"
 
@@ -51,7 +51,7 @@ std::vector<u8> tWhirlpool::getHash() const
 std::string tWhirlpool::getHashString() const
 {
     std::vector<u8> hash = getHash();
-    return tMD5::hashToString(hash);
+    return hashToString(hash);
 }
 
 
