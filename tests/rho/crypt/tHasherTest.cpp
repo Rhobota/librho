@@ -305,6 +305,9 @@ void testHMAC_MD5(const tTest& t)
     tests.push_back(make_pair(make_pair(string("key"),string("The quick brown fox jumps over the lazy dog")),
                               string("80070713463e7749b90c2dc24911e275")));
 
+    tests.push_back(make_pair(make_pair(string("asd;fkjasdfasdf9sadf9asdfkljd;fakjsdf;jasd;fkjasdfahsdfkals;jdf;aksdjf;aksdfj;aksjdfasdfereirerjasdfkjasdfasdfasdf"),string("asdjfasdfasdkfja;sdkfjasd9fasd908fas9d08fa0sdfasdfnmvhn,zxmvnskldfhsdofiudsf9uasdfadksfj;askdfj;asdkfhajksherfernamsdbnfasdfjughaesuiryhas;dkfhnas;dfiha;lskdhfa;hfa;sdkjhfa;sdkfha;sdkfhasd;fhernase.rhka.seklrbha.kdifha;lsdifyha;.erkih>Sdklea;lsdifhas d;fakj sd;fka sdfjhlaskjhfajsd;hfhasleufhajerbalsuer;lasker;aseirya;eriyha;sekhrfa;keiryha;so8eryawerkjane.resuihfD:SofiZeihf;awirha/.iwhef.zakdehfa;wiery;KHFA;SDKFH;h;kjadhf;adhksf")),
+                              string("b2ee7e9351916e9c03fed49be6588a9c")));
+
     for (size_t i = 0; i < tests.size(); i++)
     {
         string key = tests[i].first.first;
@@ -328,6 +331,9 @@ void testHMAC_SHA1(const tTest& t)
     tests.push_back(make_pair(make_pair(string("key"),string("The quick brown fox jumps over the lazy dog")),
                               string("de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9")));
 
+    tests.push_back(make_pair(make_pair(string("asd;fkjasdfasdf9sadf9asdfkljd;fakjsdf;jasd;fkjasdfahsdfkals;jdf;aksdjf;aksdfj;aksjdfasdfereirerjasdfkjasdfasdfasdf"),string("asdjfasdfasdkfja;sdkfjasd9fasd908fas9d08fa0sdfasdfnmvhn,zxmvnskldfhsdofiudsf9uasdfadksfj;askdfj;asdkfhajksherfernamsdbnfasdfjughaesuiryhas;dkfhnas;dfiha;lskdhfa;hfa;sdkjhfa;sdkfha;sdkfhasd;fhernase.rhka.seklrbha.kdifha;lsdifyha;.erkih>Sdklea;lsdifhas d;fakj sd;fka sdfjhlaskjhfajsd;hfhasleufhajerbalsuer;lasker;aseirya;eriyha;sekhrfa;keiryha;so8eryawerkjane.resuihfD:SofiZeihf;awirha/.iwhef.zakdehfa;wiery;KHFA;SDKFH;h;kjadhf;adhksf")),
+                              string("87e96cd1d429c73c5a64ecd7226c7456b6cd6cb3")));
+
     for (size_t i = 0; i < tests.size(); i++)
     {
         string key = tests[i].first.first;
@@ -336,6 +342,29 @@ void testHMAC_SHA1(const tTest& t)
 
         vector<u8> res = crypt::hmac_sha1(vector<u8>(key.c_str(), key.c_str()+key.length()),
                                           vector<u8>(msg.c_str(), msg.c_str()+msg.length()));
+        t.assert(crypt::hashToString(res) == cor);
+    }
+}
+
+
+void testHMAC_SHA224(const tTest& t)
+{
+    vector< pair< pair<string,string>,string> > tests;
+
+    tests.push_back(make_pair(make_pair(string("key"),string("The quick brown fox jumps over the lazy dog")),
+                              string("88ff8b54675d39b8f72322e65ff945c52d96379988ada25639747e69")));
+
+    tests.push_back(make_pair(make_pair(string("asd;fkjasdfasdf9sadf9asdfkljd;fakjsdf;jasd;fkjasdfahsdfkals;jdf;aksdjf;aksdfj;aksjdfasdfereirerjasdfkjasdfasdfasdf"),string("asdjfasdfasdkfja;sdkfjasd9fasd908fas9d08fa0sdfasdfnmvhn,zxmvnskldfhsdofiudsf9uasdfadksfj;askdfj;asdkfhajksherfernamsdbnfasdfjughaesuiryhas;dkfhnas;dfiha;lskdhfa;hfa;sdkjhfa;sdkfha;sdkfhasd;fhernase.rhka.seklrbha.kdifha;lsdifyha;.erkih>Sdklea;lsdifhas d;fakj sd;fka sdfjhlaskjhfajsd;hfhasleufhajerbalsuer;lasker;aseirya;eriyha;sekhrfa;keiryha;so8eryawerkjane.resuihfD:SofiZeihf;awirha/.iwhef.zakdehfa;wiery;KHFA;SDKFH;h;kjadhf;adhksf")),
+                              string("417b31f48cfb6fc98cf53497e8eefb5d29a84238c91519a05cdb4c44")));
+
+    for (size_t i = 0; i < tests.size(); i++)
+    {
+        string key = tests[i].first.first;
+        string msg = tests[i].first.second;
+        string cor = tests[i].second;
+
+        vector<u8> res = crypt::hmac_sha224(vector<u8>(key.c_str(), key.c_str()+key.length()),
+                                            vector<u8>(msg.c_str(), msg.c_str()+msg.length()));
         t.assert(crypt::hashToString(res) == cor);
     }
 }
@@ -351,6 +380,9 @@ void testHMAC_SHA256(const tTest& t)
     tests.push_back(make_pair(make_pair(string("key"),string("The quick brown fox jumps over the lazy dog")),
                               string("f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8")));
 
+    tests.push_back(make_pair(make_pair(string("asd;fkjasdfasdf9sadf9asdfkljd;fakjsdf;jasd;fkjasdfahsdfkals;jdf;aksdjf;aksdfj;aksjdfasdfereirerjasdfkjasdfasdfasdf"),string("asdjfasdfasdkfja;sdkfjasd9fasd908fas9d08fa0sdfasdfnmvhn,zxmvnskldfhsdofiudsf9uasdfadksfj;askdfj;asdkfhajksherfernamsdbnfasdfjughaesuiryhas;dkfhnas;dfiha;lskdhfa;hfa;sdkjhfa;sdkfha;sdkfhasd;fhernase.rhka.seklrbha.kdifha;lsdifyha;.erkih>Sdklea;lsdifhas d;fakj sd;fka sdfjhlaskjhfajsd;hfhasleufhajerbalsuer;lasker;aseirya;eriyha;sekhrfa;keiryha;so8eryawerkjane.resuihfD:SofiZeihf;awirha/.iwhef.zakdehfa;wiery;KHFA;SDKFH;h;kjadhf;adhksf")),
+                              string("a002c286074712f51f88442234a043265bc80a3a58ea7bad9a2fb85747a1cf4a")));
+
     for (size_t i = 0; i < tests.size(); i++)
     {
         string key = tests[i].first.first;
@@ -358,6 +390,52 @@ void testHMAC_SHA256(const tTest& t)
         string cor = tests[i].second;
 
         vector<u8> res = crypt::hmac_sha256(vector<u8>(key.c_str(), key.c_str()+key.length()),
+                                            vector<u8>(msg.c_str(), msg.c_str()+msg.length()));
+        t.assert(crypt::hashToString(res) == cor);
+    }
+}
+
+
+void testHMAC_SHA384(const tTest& t)
+{
+    vector< pair< pair<string,string>,string> > tests;
+
+    tests.push_back(make_pair(make_pair(string("key"),string("The quick brown fox jumps over the lazy dog")),
+                              string("d7f4727e2c0b39ae0f1e40cc96f60242d5b7801841cea6fc592c5d3e1ae50700582a96cf35e1e554995fe4e03381c237")));
+
+    tests.push_back(make_pair(make_pair(string("asd;fkjasdfasdf9sadf9asdfkljd;fakjsdf;jasd;fkjasdfahsdfkals;jdf;aksdjf;aksdfj;aksjdfasdfereirerjasdfkjasdfasdfasdf"),string("asdjfasdfasdkfja;sdkfjasd9fasd908fas9d08fa0sdfasdfnmvhn,zxmvnskldfhsdofiudsf9uasdfadksfj;askdfj;asdkfhajksherfernamsdbnfasdfjughaesuiryhas;dkfhnas;dfiha;lskdhfa;hfa;sdkjhfa;sdkfha;sdkfhasd;fhernase.rhka.seklrbha.kdifha;lsdifyha;.erkih>Sdklea;lsdifhas d;fakj sd;fka sdfjhlaskjhfajsd;hfhasleufhajerbalsuer;lasker;aseirya;eriyha;sekhrfa;keiryha;so8eryawerkjane.resuihfD:SofiZeihf;awirha/.iwhef.zakdehfa;wiery;KHFA;SDKFH;h;kjadhf;adhksf")),
+                              string("f800902fa3f7e69e8f132069b5184ea34cfb0c8a72822edb7c08ceb05e8a33d393bb7d56846cb5b947cada326bbe6e66")));
+
+    for (size_t i = 0; i < tests.size(); i++)
+    {
+        string key = tests[i].first.first;
+        string msg = tests[i].first.second;
+        string cor = tests[i].second;
+
+        vector<u8> res = crypt::hmac_sha384(vector<u8>(key.c_str(), key.c_str()+key.length()),
+                                            vector<u8>(msg.c_str(), msg.c_str()+msg.length()));
+        t.assert(crypt::hashToString(res) == cor);
+    }
+}
+
+
+void testHMAC_SHA512(const tTest& t)
+{
+    vector< pair< pair<string,string>,string> > tests;
+
+    tests.push_back(make_pair(make_pair(string("key"),string("The quick brown fox jumps over the lazy dog")),
+                              string("b42af09057bac1e2d41708e48a902e09b5ff7f12ab428a4fe86653c73dd248fb82f948a549f7b791a5b41915ee4d1ec3935357e4e2317250d0372afa2ebeeb3a")));
+
+    tests.push_back(make_pair(make_pair(string("asd;fkjasdfasdf9sadf9asdfkljd;fakjsdf;jasd;fkjasdfahsdfkals;jdf;aksdjf;aksdfj;aksjdfasdfereirerjasdfkjasdfasdfasdf"),string("asdjfasdfasdkfja;sdkfjasd9fasd908fas9d08fa0sdfasdfnmvhn,zxmvnskldfhsdofiudsf9uasdfadksfj;askdfj;asdkfhajksherfernamsdbnfasdfjughaesuiryhas;dkfhnas;dfiha;lskdhfa;hfa;sdkjhfa;sdkfha;sdkfhasd;fhernase.rhka.seklrbha.kdifha;lsdifyha;.erkih>Sdklea;lsdifhas d;fakj sd;fka sdfjhlaskjhfajsd;hfhasleufhajerbalsuer;lasker;aseirya;eriyha;sekhrfa;keiryha;so8eryawerkjane.resuihfD:SofiZeihf;awirha/.iwhef.zakdehfa;wiery;KHFA;SDKFH;h;kjadhf;adhksf")),
+                              string("c689bde6ab4a3805ed3d90e77635b01b95b03697d3201116d86dca49fced98ae4ceee4936f4fe02c99a14e5d3e77e23d1b2e0749b2bb0aadf08ef5189a436aa6")));
+
+    for (size_t i = 0; i < tests.size(); i++)
+    {
+        string key = tests[i].first.first;
+        string msg = tests[i].first.second;
+        string cor = tests[i].second;
+
+        vector<u8> res = crypt::hmac_sha512(vector<u8>(key.c_str(), key.c_str()+key.length()),
                                             vector<u8>(msg.c_str(), msg.c_str()+msg.length()));
         t.assert(crypt::hashToString(res) == cor);
     }
@@ -379,7 +457,10 @@ int main()
     tTest("tWhirlpool test", testWhirlpool, kNumIters);
     tTest("HMAC_MD5 test", testHMAC_MD5, kNumIters);
     tTest("HMAC_SHA1 test", testHMAC_SHA1, kNumIters);
+    tTest("HMAC_SHA224 test", testHMAC_SHA224, kNumIters);
     tTest("HMAC_SHA256 test", testHMAC_SHA256, kNumIters);
+    tTest("HMAC_SHA384 test", testHMAC_SHA384, kNumIters);
+    tTest("HMAC_SHA512 test", testHMAC_SHA512, kNumIters);
 
     return 0;
 }

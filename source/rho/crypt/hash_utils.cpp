@@ -1,7 +1,10 @@
 #include <rho/crypt/hash_utils.h>
 #include <rho/crypt/tMD5.h>
 #include <rho/crypt/tSHA1.h>
+#include <rho/crypt/tSHA224.h>
 #include <rho/crypt/tSHA256.h>
+#include <rho/crypt/tSHA384.h>
+#include <rho/crypt/tSHA512.h>
 
 #include <cassert>
 #include <sstream>
@@ -82,9 +85,27 @@ vector<u8> hmac_sha1(const vector<u8>& key, const vector<u8>& message)
 }
 
 
+vector<u8> hmac_sha224(const vector<u8>& key, const vector<u8>& message)
+{
+    return hmac<crypt::tSHA224, 64>(key, message);
+}
+
+
 vector<u8> hmac_sha256(const vector<u8>& key, const vector<u8>& message)
 {
     return hmac<crypt::tSHA256, 64>(key, message);
+}
+
+
+vector<u8> hmac_sha384(const vector<u8>& key, const vector<u8>& message)
+{
+    return hmac<crypt::tSHA384, 128>(key, message);
+}
+
+
+vector<u8> hmac_sha512(const vector<u8>& key, const vector<u8>& message)
+{
+    return hmac<crypt::tSHA512, 128>(key, message);
 }
 
 
