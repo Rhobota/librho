@@ -15,8 +15,6 @@
 #include <vector>
 
 using namespace rho;
-using std::cout;
-using std::endl;
 using std::string;
 using std::pair;
 using std::make_pair;
@@ -442,6 +440,138 @@ void testHMAC_SHA512(const tTest& t)
 }
 
 
+void testPBKDF2_HMAC_SHA1(const tTest& t)
+{
+    {
+        string pass = "password";
+        string salt = "salt";
+        u32 iters = 1;
+        u32 dklen = 20;
+
+        string res = crypt::hashToString(
+                        crypt::pbkdf2(crypt::hmac_sha1,
+                                      vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                                      vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                                      iters, dklen));
+
+        t.assert(res == "0c60c80f961f0e71f3a9b524af6012062fe037a6");
+    }
+    {
+        string pass = "password";
+        string salt = "salt";
+        u32 iters = 2;
+        u32 dklen = 20;
+
+        string res = crypt::hashToString(
+                        crypt::pbkdf2(crypt::hmac_sha1,
+                                      vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                                      vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                                      iters, dklen));
+
+        t.assert(res == "ea6c014dc72d6f8ccd1ed92ace1d41f0d8de8957");
+    }
+    {
+        string pass = "password";
+        string salt = "salt";
+        u32 iters = 4096;
+        u32 dklen = 20;
+
+        string res = crypt::hashToString(
+                        crypt::pbkdf2(crypt::hmac_sha1,
+                                      vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                                      vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                                      iters, dklen));
+
+        t.assert(res == "4b007901b765489abead49d926f721d065a429c1");
+    }
+    {
+        // Disabled because it takes too long to run.
+//         string pass = "password";
+//         string salt = "salt";
+//         u32 iters = 16777216;
+//         u32 dklen = 20;
+//
+//         string res = crypt::hashToString(
+//                         crypt::pbkdf2(crypt::hmac_sha1,
+//                                       vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+//                                       vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+//                                       iters, dklen));
+//
+//         t.assert(res == "eefe3d61cd4da4e4e9945b3d6ba2158c2634e984");
+    }
+    {
+        string pass = "passwordPASSWORDpassword";
+        string salt = "saltSALTsaltSALTsaltSALTsaltSALTsalt";
+        u32 iters = 4096;
+        u32 dklen = 25;
+
+        string res = crypt::hashToString(
+                        crypt::pbkdf2(crypt::hmac_sha1,
+                                      vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                                      vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                                      iters, dklen));
+
+        t.assert(res == "3d2eec4fe41c849b80c8d83662c0e44a8b291a964cf2f07038");
+    }
+    {
+        string pass("pass\0word", 9);
+        string salt("sa\0lt", 5);
+        u32 iters = 4096;
+        u32 dklen = 16;
+
+        string res = crypt::hashToString(
+                        crypt::pbkdf2(crypt::hmac_sha1,
+                                      vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                                      vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                                      iters, dklen));
+
+        t.assert(res == "56fa6aa75548099dcc37d7f03425e0c3");
+    }
+    {
+        string pass = "a";
+        string salt = "b";
+        u32 iters = 1000;
+        u32 dklen = 16;
+
+        string res = crypt::hashToString(
+                        crypt::pbkdf2(crypt::hmac_sha1,
+                                      vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                                      vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                                      iters, dklen));
+
+        t.assert(res == "8b0b1a28939a307631789dec57410a93");
+    }
+    {
+        string pass = "a";
+        string salt = "b";
+        u32 iters = 10000;
+        u32 dklen = 51;
+
+        string res = crypt::hashToString(
+                        crypt::pbkdf2(crypt::hmac_sha1,
+                                      vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                                      vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                                      iters, dklen));
+
+        t.assert(res == "324fe48b0921051ada4d754dcf2a793575224e571316f123d0010524257ac6d6d3e366e6ac7e19498193bd20fd7ea8b5a8198d");
+    }
+    {
+        string pass = "aaksdjf;jf;akdasdfrurasdfer7u3535353okja;sdkfjasdfjaso89er35asdf";
+        string salt = "bdfasdf89dasfas9dfasdf033jasdfkjasd;fkjasd;fkjadf#%#%33293423";
+        u32 iters = 100;
+        u32 dklen = 81;
+
+        string res = crypt::hashToString(
+                        crypt::pbkdf2(crypt::hmac_sha1,
+                                      vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                                      vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                                      iters, dklen));
+
+        t.assert(res == "cc8437fb66fbb6b6cd344530978e34ce98464d61601373817e69d41d9d82e9c7359b17ac092071e15f127195bd998e591cf2568fa28ccf284254add14037f1a6ecd32e88e0b4272cedca8bdfb375560b85");
+    }
+}
+
+
 int main()
 {
     tCrashReporter::init();
@@ -461,6 +591,7 @@ int main()
     tTest("HMAC_SHA256 test", testHMAC_SHA256, kNumIters);
     tTest("HMAC_SHA384 test", testHMAC_SHA384, kNumIters);
     tTest("HMAC_SHA512 test", testHMAC_SHA512, kNumIters);
+    tTest("PBKDF2_HMAC_SHA1 test", testPBKDF2_HMAC_SHA1);
 
     return 0;
 }
