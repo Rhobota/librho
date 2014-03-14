@@ -1,3 +1,4 @@
+#include <rho/crypt/hash_utils.h>
 #include <rho/crypt/tMD5.h>
 #include <rho/crypt/tSHA0.h>
 #include <rho/crypt/tSHA1.h>
@@ -294,6 +295,75 @@ void testWhirlpool(const tTest& t)
 }
 
 
+void testHMAC_MD5(const tTest& t)
+{
+    vector< pair< pair<string,string>,string> > tests;
+
+    tests.push_back(make_pair(make_pair(string(""),string("")),
+                              string("74e6f7298a9c2d168935f58c001bad88")));
+
+    tests.push_back(make_pair(make_pair(string("key"),string("The quick brown fox jumps over the lazy dog")),
+                              string("80070713463e7749b90c2dc24911e275")));
+
+    for (size_t i = 0; i < tests.size(); i++)
+    {
+        string key = tests[i].first.first;
+        string msg = tests[i].first.second;
+        string cor = tests[i].second;
+
+        vector<u8> res = crypt::hmac_md5(vector<u8>(key.c_str(), key.c_str()+key.length()),
+                                         vector<u8>(msg.c_str(), msg.c_str()+msg.length()));
+        t.assert(crypt::hashToString(res) == cor);
+    }
+}
+
+
+void testHMAC_SHA1(const tTest& t)
+{
+    vector< pair< pair<string,string>,string> > tests;
+
+    tests.push_back(make_pair(make_pair(string(""),string("")),
+                              string("fbdb1d1b18aa6c08324b7d64b71fb76370690e1d")));
+
+    tests.push_back(make_pair(make_pair(string("key"),string("The quick brown fox jumps over the lazy dog")),
+                              string("de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9")));
+
+    for (size_t i = 0; i < tests.size(); i++)
+    {
+        string key = tests[i].first.first;
+        string msg = tests[i].first.second;
+        string cor = tests[i].second;
+
+        vector<u8> res = crypt::hmac_sha1(vector<u8>(key.c_str(), key.c_str()+key.length()),
+                                          vector<u8>(msg.c_str(), msg.c_str()+msg.length()));
+        t.assert(crypt::hashToString(res) == cor);
+    }
+}
+
+
+void testHMAC_SHA256(const tTest& t)
+{
+    vector< pair< pair<string,string>,string> > tests;
+
+    tests.push_back(make_pair(make_pair(string(""),string("")),
+                              string("b613679a0814d9ec772f95d778c35fc5ff1697c493715653c6c712144292c5ad")));
+
+    tests.push_back(make_pair(make_pair(string("key"),string("The quick brown fox jumps over the lazy dog")),
+                              string("f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8")));
+
+    for (size_t i = 0; i < tests.size(); i++)
+    {
+        string key = tests[i].first.first;
+        string msg = tests[i].first.second;
+        string cor = tests[i].second;
+
+        vector<u8> res = crypt::hmac_sha256(vector<u8>(key.c_str(), key.c_str()+key.length()),
+                                            vector<u8>(msg.c_str(), msg.c_str()+msg.length()));
+        t.assert(crypt::hashToString(res) == cor);
+    }
+}
+
+
 int main()
 {
     tCrashReporter::init();
@@ -307,6 +377,9 @@ int main()
     tTest("tSHA384 test", testSHA384, kNumIters);
     tTest("tSHA512 test", testSHA512, kNumIters);
     tTest("tWhirlpool test", testWhirlpool, kNumIters);
+    tTest("HMAC_MD5 test", testHMAC_MD5, kNumIters);
+    tTest("HMAC_SHA1 test", testHMAC_SHA1, kNumIters);
+    tTest("HMAC_SHA256 test", testHMAC_SHA256, kNumIters);
 
     return 0;
 }

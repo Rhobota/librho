@@ -34,15 +34,6 @@ class tMD5 : public iHasher, public bNonCopyable
          */
         std::string getHashString() const;
 
-    public:
-
-        /**
-         * Converts a hash (aka, a vector of bytes) to a string
-         * representation (aka, a lowercase concatenation of bytes,
-         * each byte represented by two hex characters).
-         */
-        static std::string hashToString(const std::vector<u8>& hash);
-
     private:
 
         void* m_context;
