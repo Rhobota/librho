@@ -58,6 +58,27 @@ std::vector<u8> hmac_sha384(const std::vector<u8>& key, const std::vector<u8>& m
 std::vector<u8> hmac_sha512(const std::vector<u8>& key, const std::vector<u8>& message);
 
 
+/**
+ * A funtion pointer typedef for the hmac_<hasher> family of functions above.
+ */
+typedef std::vector<u8> (*hmac_func)(const std::vector<u8>& key, const std::vector<u8>& message);
+
+
+/**
+ * Does the "Password-Based Key Derivation Function 2" on the given password, using
+ * the given salt and the given hmac_func.
+ *
+ * It does 'c' iterations and generates a hash of length 'dklen'. The returned
+ * vector has length 'dklen'.
+ *
+ * This is part of the PKCS #5 series.
+ * See RFC 2898.
+ */
+std::vector<u8> pbkdf2(hmac_func prf,
+                       const std::vector<u8>& password, const std::vector<u8>& salt,
+                       u32 c, u32 dklen);
+
+
 }  // namespace crypt
 }  // namespace rho
 

@@ -109,5 +109,67 @@ vector<u8> hmac_sha512(const vector<u8>& key, const vector<u8>& message)
 }
 
 
+static
+vector<u8> pbkdf2_T(hmac_func prf,
+                    const vector<u8>& password, const vector<u8>& salt,
+                    u32 c, u32 i)
+{
+    assert(prf != NULL);
+    assert(c > 0);
+    assert(i > 0);
+
+    vector<u8> u = salt;
+    u.push_back((u8)((i >> 24) & 0xFF));
+    u.push_back((u8)((i >> 16) & 0xFF));
+    u.push_back((u8)((i >>  8) & 0xFF));
+    u.push_back((u8)((i      ) & 0xFF));
+
+    u = prf(password, u);
+    c--;
+
+    vector<u8> res = u;
+    assert(res.size() > 0);
+
+    while (c > 0)
+    {
+        u = prf(password, u);
+        c--;
+
+        assert(res.size() == u.size());
+        for (size_t j = 0; j < res.size(); j++)
+            res[j] ^= u[j];
+    }
+
+    return res;
+}
+
+
+vector<u8> pbkdf2(hmac_func prf,
+                  const vector<u8>& password, const vector<u8>& salt,
+                  u32 c, u32 dklen)
+{
+    if (prf == NULL)
+        throw eInvalidArgument("prf may not be null");
+    if (c == 0)
+        throw eInvalidArgument("num iterations must be one or more");
+    if (dklen == 0)
+        throw eInvalidArgument("dklen must be greater than zero");
+
+    vector<u8> res;
+    u32 len = 0;
+    u32 i = 1;
+    while (len < dklen)
+    {
+        vector<u8> Ti = pbkdf2_T(prf, password, salt, c, i);
+        assert(Ti.size() > 0);
+        u32 lenHere = std::min((u32)Ti.size(), dklen-len);
+        res.insert(res.end(), Ti.begin(), Ti.begin()+lenHere);
+        len += lenHere;
+        i++;
+    }
+    return res;
+}
+
+
 }   // namespace crypt
 }   // namespace rho
