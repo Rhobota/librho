@@ -290,6 +290,27 @@ void testHMAC_MD5(const tTest& t)
     tests.push_back(make_pair(make_pair(string("asd;fkjasdfasdf9sadf9asdfkljd;fakjsdf;jasd;fkjasdfahsdfkals;jdf;aksdjf;aksdfj;aksjdfasdfereirerjasdfkjasdfasdfasdf"),string("asdjfasdfasdkfja;sdkfjasd9fasd908fas9d08fa0sdfasdfnmvhn,zxmvnskldfhsdofiudsf9uasdfadksfj;askdfj;asdkfhajksherfernamsdbnfasdfjughaesuiryhas;dkfhnas;dfiha;lskdhfa;hfa;sdkjhfa;sdkfha;sdkfhasd;fhernase.rhka.seklrbha.kdifha;lsdifyha;.erkih>Sdklea;lsdifhas d;fakj sd;fka sdfjhlaskjhfajsd;hfhasleufhajerbalsuer;lasker;aseirya;eriyha;sekhrfa;keiryha;so8eryawerkjane.resuihfD:SofiZeihf;awirha/.iwhef.zakdehfa;wiery;KHFA;SDKFH;h;kjadhf;adhksf")),
                               string("b2ee7e9351916e9c03fed49be6588a9c")));
 
+    tests.push_back(make_pair(make_pair(string("\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b"),string("Hi There")),
+                              string("9294727a3638bb1c13f48ef8158bfc9d")));
+
+    tests.push_back(make_pair(make_pair(string("Jefe"),string("what do ya want for nothing?")),
+                              string("750c783e6ab0b503eaa86e310a5db738")));
+
+    tests.push_back(make_pair(make_pair(string("\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA"),string("\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD")),
+                              string("56be34521d144c88dbb8c733f0e8b3f6")));
+
+    tests.push_back(make_pair(make_pair(string("\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19"),string("\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd")),
+                              string("697eaf0aca3a3aea3a75164746ffaa79")));
+
+    tests.push_back(make_pair(make_pair(string("\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c"),string("Test With Truncation")),
+                              string("56461ef2342edc00f9bab995690efd4c")));
+
+    tests.push_back(make_pair(make_pair(string("\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"),string("Test Using Larger Than Block-Size Key - Hash Key First")),
+                              string("6b1ab7fe4bd7bf8f0b62e6ce61b9d0cd")));
+
+    tests.push_back(make_pair(make_pair(string("\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"),string("Test Using Larger Than Block-Size Key and Larger Than One Block-Size Data")),
+                              string("6f630fad67cda0ee1fb1f562db3aa53e")));
+
     for (size_t i = 0; i < tests.size(); i++)
     {
         string key = tests[i].first.first;
@@ -316,6 +337,27 @@ void testHMAC_SHA1(const tTest& t)
     tests.push_back(make_pair(make_pair(string("asd;fkjasdfasdf9sadf9asdfkljd;fakjsdf;jasd;fkjasdfahsdfkals;jdf;aksdjf;aksdfj;aksjdfasdfereirerjasdfkjasdfasdfasdf"),string("asdjfasdfasdkfja;sdkfjasd9fasd908fas9d08fa0sdfasdfnmvhn,zxmvnskldfhsdofiudsf9uasdfadksfj;askdfj;asdkfhajksherfernamsdbnfasdfjughaesuiryhas;dkfhnas;dfiha;lskdhfa;hfa;sdkjhfa;sdkfha;sdkfhasd;fhernase.rhka.seklrbha.kdifha;lsdifyha;.erkih>Sdklea;lsdifhas d;fakj sd;fka sdfjhlaskjhfajsd;hfhasleufhajerbalsuer;lasker;aseirya;eriyha;sekhrfa;keiryha;so8eryawerkjane.resuihfD:SofiZeihf;awirha/.iwhef.zakdehfa;wiery;KHFA;SDKFH;h;kjadhf;adhksf")),
                               string("87e96cd1d429c73c5a64ecd7226c7456b6cd6cb3")));
 
+    tests.push_back(make_pair(make_pair(string("\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b"),string("Hi There")),
+                              string("b617318655057264e28bc0b6fb378c8ef146be00")));
+
+    tests.push_back(make_pair(make_pair(string("Jefe"),string("what do ya want for nothing?")),
+                              string("effcdf6ae5eb2fa2d27416d5f184df9c259a7c79")));
+
+    tests.push_back(make_pair(make_pair(string("\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA"),string("\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD")),
+                              string("125d7342b9ac11cd91a39af48aa17b4f63f175d3")));
+
+    tests.push_back(make_pair(make_pair(string("\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19"),string("\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd")),
+                              string("4c9007f4026250c6bc8414f9bf50c86c2d7235da")));
+
+    tests.push_back(make_pair(make_pair(string("\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c"),string("Test With Truncation")),
+                              string("4c1a03424b55e07fe7f27be1d58bb9324a9a5a04")));
+
+    tests.push_back(make_pair(make_pair(string("\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"),string("Test Using Larger Than Block-Size Key - Hash Key First")),
+                              string("aa4ae5e15272d00e95705637ce8a3b55ed402112")));
+
+    tests.push_back(make_pair(make_pair(string("\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"),string("Test Using Larger Than Block-Size Key and Larger Than One Block-Size Data")),
+                              string("e8e99d0f45237d786d6bbaa7965c7808bbff1a91")));
+
     for (size_t i = 0; i < tests.size(); i++)
     {
         string key = tests[i].first.first;
@@ -333,11 +375,32 @@ void testHMAC_SHA224(const tTest& t)
 {
     vector< pair< pair<string,string>,string> > tests;
 
+    tests.push_back(make_pair(make_pair(string(""),string("")),
+                              string("5ce14f72894662213e2748d2a6ba234b74263910cedde2f5a9271524")));
+
     tests.push_back(make_pair(make_pair(string("key"),string("The quick brown fox jumps over the lazy dog")),
                               string("88ff8b54675d39b8f72322e65ff945c52d96379988ada25639747e69")));
 
     tests.push_back(make_pair(make_pair(string("asd;fkjasdfasdf9sadf9asdfkljd;fakjsdf;jasd;fkjasdfahsdfkals;jdf;aksdjf;aksdfj;aksjdfasdfereirerjasdfkjasdfasdfasdf"),string("asdjfasdfasdkfja;sdkfjasd9fasd908fas9d08fa0sdfasdfnmvhn,zxmvnskldfhsdofiudsf9uasdfadksfj;askdfj;asdkfhajksherfernamsdbnfasdfjughaesuiryhas;dkfhnas;dfiha;lskdhfa;hfa;sdkjhfa;sdkfha;sdkfhasd;fhernase.rhka.seklrbha.kdifha;lsdifyha;.erkih>Sdklea;lsdifhas d;fakj sd;fka sdfjhlaskjhfajsd;hfhasleufhajerbalsuer;lasker;aseirya;eriyha;sekhrfa;keiryha;so8eryawerkjane.resuihfD:SofiZeihf;awirha/.iwhef.zakdehfa;wiery;KHFA;SDKFH;h;kjadhf;adhksf")),
                               string("417b31f48cfb6fc98cf53497e8eefb5d29a84238c91519a05cdb4c44")));
+
+    tests.push_back(make_pair(make_pair(string("\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b"),string("Hi There")),
+                              string("896fb1128abbdf196832107cd49df33f47b4b1169912ba4f53684b22")));
+
+    tests.push_back(make_pair(make_pair(string("Jefe"),string("what do ya want for nothing?")),
+                              string("a30e01098bc6dbbf45690f3a7e9e6d0f8bbea2a39e6148008fd05e44")));
+
+    tests.push_back(make_pair(make_pair(string("\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA"),string("\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD")),
+                              string("7fb3cb3588c6c1f6ffa9694d7d6ad2649365b0c1f65d69d1ec8333ea")));
+
+    tests.push_back(make_pair(make_pair(string("\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19"),string("\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd")),
+                              string("6c11506874013cac6a2abc1bb382627cec6a90d86efc012de7afec5a")));
+
+    tests.push_back(make_pair(make_pair(string("\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"),string("Test Using Larger Than Block-Size Key - Hash Key First")),
+                              string("95e9a0db962095adaebe9b2d6f0dbce2d499f112f2d2b7273fa6870e")));
+
+    tests.push_back(make_pair(make_pair(string("\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"),string("This is a test using a larger than block-size key and a larger than block-size data. The key needs to be hashed before being used by the HMAC algorithm.")),
+                              string("3a854166ac5d9f023f54d517d0b39dbd946770db9c2b95c9f6f565d1")));
 
     for (size_t i = 0; i < tests.size(); i++)
     {
@@ -365,6 +428,24 @@ void testHMAC_SHA256(const tTest& t)
     tests.push_back(make_pair(make_pair(string("asd;fkjasdfasdf9sadf9asdfkljd;fakjsdf;jasd;fkjasdfahsdfkals;jdf;aksdjf;aksdfj;aksjdfasdfereirerjasdfkjasdfasdfasdf"),string("asdjfasdfasdkfja;sdkfjasd9fasd908fas9d08fa0sdfasdfnmvhn,zxmvnskldfhsdofiudsf9uasdfadksfj;askdfj;asdkfhajksherfernamsdbnfasdfjughaesuiryhas;dkfhnas;dfiha;lskdhfa;hfa;sdkjhfa;sdkfha;sdkfhasd;fhernase.rhka.seklrbha.kdifha;lsdifyha;.erkih>Sdklea;lsdifhas d;fakj sd;fka sdfjhlaskjhfajsd;hfhasleufhajerbalsuer;lasker;aseirya;eriyha;sekhrfa;keiryha;so8eryawerkjane.resuihfD:SofiZeihf;awirha/.iwhef.zakdehfa;wiery;KHFA;SDKFH;h;kjadhf;adhksf")),
                               string("a002c286074712f51f88442234a043265bc80a3a58ea7bad9a2fb85747a1cf4a")));
 
+    tests.push_back(make_pair(make_pair(string("\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b"),string("Hi There")),
+                              string("b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7")));
+
+    tests.push_back(make_pair(make_pair(string("Jefe"),string("what do ya want for nothing?")),
+                              string("5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843")));
+
+    tests.push_back(make_pair(make_pair(string("\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA"),string("\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD")),
+                              string("773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe")));
+
+    tests.push_back(make_pair(make_pair(string("\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19"),string("\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd")),
+                              string("82558a389a443c0ea4cc819899f2083a85f0faa3e578f8077a2e3ff46729665b")));
+
+    tests.push_back(make_pair(make_pair(string("\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"),string("Test Using Larger Than Block-Size Key - Hash Key First")),
+                              string("60e431591ee0b67f0d8a26aacbf5b77f8e0bc6213728c5140546040f0ee37f54")));
+
+    tests.push_back(make_pair(make_pair(string("\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"),string("This is a test using a larger than block-size key and a larger than block-size data. The key needs to be hashed before being used by the HMAC algorithm.")),
+                              string("9b09ffa71b942fcb27635fbcd5b0e944bfdc63644f0713938a7f51535c3a35e2")));
+
     for (size_t i = 0; i < tests.size(); i++)
     {
         string key = tests[i].first.first;
@@ -382,11 +463,32 @@ void testHMAC_SHA384(const tTest& t)
 {
     vector< pair< pair<string,string>,string> > tests;
 
+    tests.push_back(make_pair(make_pair(string(""),string("")),
+                              string("6c1f2ee938fad2e24bd91298474382ca218c75db3d83e114b3d4367776d14d3551289e75e8209cd4b792302840234adc")));
+
     tests.push_back(make_pair(make_pair(string("key"),string("The quick brown fox jumps over the lazy dog")),
                               string("d7f4727e2c0b39ae0f1e40cc96f60242d5b7801841cea6fc592c5d3e1ae50700582a96cf35e1e554995fe4e03381c237")));
 
     tests.push_back(make_pair(make_pair(string("asd;fkjasdfasdf9sadf9asdfkljd;fakjsdf;jasd;fkjasdfahsdfkals;jdf;aksdjf;aksdfj;aksjdfasdfereirerjasdfkjasdfasdfasdf"),string("asdjfasdfasdkfja;sdkfjasd9fasd908fas9d08fa0sdfasdfnmvhn,zxmvnskldfhsdofiudsf9uasdfadksfj;askdfj;asdkfhajksherfernamsdbnfasdfjughaesuiryhas;dkfhnas;dfiha;lskdhfa;hfa;sdkjhfa;sdkfha;sdkfhasd;fhernase.rhka.seklrbha.kdifha;lsdifyha;.erkih>Sdklea;lsdifhas d;fakj sd;fka sdfjhlaskjhfajsd;hfhasleufhajerbalsuer;lasker;aseirya;eriyha;sekhrfa;keiryha;so8eryawerkjane.resuihfD:SofiZeihf;awirha/.iwhef.zakdehfa;wiery;KHFA;SDKFH;h;kjadhf;adhksf")),
                               string("f800902fa3f7e69e8f132069b5184ea34cfb0c8a72822edb7c08ceb05e8a33d393bb7d56846cb5b947cada326bbe6e66")));
+
+    tests.push_back(make_pair(make_pair(string("\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b"),string("Hi There")),
+                              string("afd03944d84895626b0825f4ab46907f15f9dadbe4101ec682aa034c7cebc59cfaea9ea9076ede7f4af152e8b2fa9cb6")));
+
+    tests.push_back(make_pair(make_pair(string("Jefe"),string("what do ya want for nothing?")),
+                              string("af45d2e376484031617f78d2b58a6b1b9c7ef464f5a01b47e42ec3736322445e8e2240ca5e69e2c78b3239ecfab21649")));
+
+    tests.push_back(make_pair(make_pair(string("\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA"),string("\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD")),
+                              string("88062608d3e6ad8a0aa2ace014c8a86f0aa635d947ac9febe83ef4e55966144b2a5ab39dc13814b94e3ab6e101a34f27")));
+
+    tests.push_back(make_pair(make_pair(string("\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19"),string("\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd")),
+                              string("3e8a69b7783c25851933ab6290af6ca77a9981480850009cc5577c6e1f573b4e6801dd23c4a7d679ccf8a386c674cffb")));
+
+    tests.push_back(make_pair(make_pair(string("\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"),string("Test Using Larger Than Block-Size Key - Hash Key First")),
+                              string("4ece084485813e9088d2c63a041bc5b44f9ef1012a2b588f3cd11f05033ac4c60c2ef6ab4030fe8296248df163f44952")));
+
+    tests.push_back(make_pair(make_pair(string("\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"),string("This is a test using a larger than block-size key and a larger than block-size data. The key needs to be hashed before being used by the HMAC algorithm.")),
+                              string("6617178e941f020d351e2f254e8fd32c602420feb0b8fb9adccebb82461e99c5a678cc31e799176d3860e6110c46523e")));
 
     for (size_t i = 0; i < tests.size(); i++)
     {
@@ -405,11 +507,32 @@ void testHMAC_SHA512(const tTest& t)
 {
     vector< pair< pair<string,string>,string> > tests;
 
+    tests.push_back(make_pair(make_pair(string(""),string("")),
+                              string("b936cee86c9f87aa5d3c6f2e84cb5a4239a5fe50480a6ec66b70ab5b1f4ac6730c6c515421b327ec1d69402e53dfb49ad7381eb067b338fd7b0cb22247225d47")));
+
     tests.push_back(make_pair(make_pair(string("key"),string("The quick brown fox jumps over the lazy dog")),
                               string("b42af09057bac1e2d41708e48a902e09b5ff7f12ab428a4fe86653c73dd248fb82f948a549f7b791a5b41915ee4d1ec3935357e4e2317250d0372afa2ebeeb3a")));
 
     tests.push_back(make_pair(make_pair(string("asd;fkjasdfasdf9sadf9asdfkljd;fakjsdf;jasd;fkjasdfahsdfkals;jdf;aksdjf;aksdfj;aksjdfasdfereirerjasdfkjasdfasdfasdf"),string("asdjfasdfasdkfja;sdkfjasd9fasd908fas9d08fa0sdfasdfnmvhn,zxmvnskldfhsdofiudsf9uasdfadksfj;askdfj;asdkfhajksherfernamsdbnfasdfjughaesuiryhas;dkfhnas;dfiha;lskdhfa;hfa;sdkjhfa;sdkfha;sdkfhasd;fhernase.rhka.seklrbha.kdifha;lsdifyha;.erkih>Sdklea;lsdifhas d;fakj sd;fka sdfjhlaskjhfajsd;hfhasleufhajerbalsuer;lasker;aseirya;eriyha;sekhrfa;keiryha;so8eryawerkjane.resuihfD:SofiZeihf;awirha/.iwhef.zakdehfa;wiery;KHFA;SDKFH;h;kjadhf;adhksf")),
                               string("c689bde6ab4a3805ed3d90e77635b01b95b03697d3201116d86dca49fced98ae4ceee4936f4fe02c99a14e5d3e77e23d1b2e0749b2bb0aadf08ef5189a436aa6")));
+
+    tests.push_back(make_pair(make_pair(string("\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b"),string("Hi There")),
+                              string("87aa7cdea5ef619d4ff0b4241a1d6cb02379f4e2ce4ec2787ad0b30545e17cdedaa833b7d6b8a702038b274eaea3f4e4be9d914eeb61f1702e696c203a126854")));
+
+    tests.push_back(make_pair(make_pair(string("Jefe"),string("what do ya want for nothing?")),
+                              string("164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34d4a6b4b636e070a38bce737")));
+
+    tests.push_back(make_pair(make_pair(string("\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA"),string("\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD")),
+                              string("fa73b0089d56a284efb0f0756c890be9b1b5dbdd8ee81a3655f83e33b2279d39bf3e848279a722c806b485a47e67c807b946a337bee8942674278859e13292fb")));
+
+    tests.push_back(make_pair(make_pair(string("\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19"),string("\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd")),
+                              string("b0ba465637458c6990e5a8c5f61d4af7e576d97ff94b872de76f8050361ee3dba91ca5c11aa25eb4d679275cc5788063a5f19741120c4f2de2adebeb10a298dd")));
+
+    tests.push_back(make_pair(make_pair(string("\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"),string("Test Using Larger Than Block-Size Key - Hash Key First")),
+                              string("80b24263c7c1a3ebb71493c1dd7be8b49b46d1f41b4aeec1121b013783f8f3526b56d037e05f2598bd0fd2215d6a1e5295e64f73f63f0aec8b915a985d786598")));
+
+    tests.push_back(make_pair(make_pair(string("\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"),string("This is a test using a larger than block-size key and a larger than block-size data. The key needs to be hashed before being used by the HMAC algorithm.")),
+                              string("e37b6a775dc87dbaa4dfa9f96e5e3ffddebd71f8867289865df5a32d20cdc944b6022cac3c4982b10d5eeb55c3e4de15134676fb6de0446065c97440fa8c6a58")));
 
     for (size_t i = 0; i < tests.size(); i++)
     {
