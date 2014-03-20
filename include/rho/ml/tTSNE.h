@@ -47,6 +47,18 @@ void tsne(const std::vector<tIO>& originalData, f64 theta, f64 perplexity,
                 std::vector<tIO>& reducedDimData);
 
 
+/**
+ * Plots images in a two dimensional map. Each image in 'images' is plotted at
+ * the location specified in the corresponding index of 'locations'. The final
+ * image is stored in 'dest', which will have a width of 'destWidth'.
+ *
+ * See un_examplify() for a description of 'color', 'width', and 'absolute'.
+ */
+void plotImages(const std::vector<tIO>& images, bool color, u32 width,
+                bool absolute, const std::vector<tIO>& locations,
+                u32 destWidth, img::tImage* dest);
+
+
 }  // namespace ml
 }  // namespace rho
 

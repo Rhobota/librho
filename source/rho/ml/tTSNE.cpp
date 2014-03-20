@@ -1,4 +1,5 @@
 #include <rho/ml/tTSNE.h>
+#include <rho/img/tCanvas.h>
 
 #include "bh_tsne/tsne.h"
 
@@ -49,6 +50,57 @@ void tsne(const std::vector<tIO>& originalData, f64 theta, f64 perplexity,
             reducedDimData[i][j] = Y[i*redDims + j];
     }
     free(Y); Y = NULL;
+}
+
+
+void plotImages(const std::vector<tIO>& images, bool color, u32 width,
+                bool absolute, const std::vector<tIO>& locations,
+                u32 destWidth, img::tImage* dest)
+{
+    // Verify the input.
+    if (images.size() != locations.size())
+        throw eInvalidArgument("There must be the same number of images as locations.");
+    if (images.size() == 0)
+        throw eInvalidArgument("There must be at least one image to plot.");
+    for (size_t i = 1; i < images.size(); i++)
+        if (images[i].size() != images[0].size())
+            throw eInvalidArgument("Each image must have the same dimensionality.");
+    if (images[0].size() == 0)
+        throw eInvalidArgument("The image dimensionality must be non-zero.");
+    for (size_t i = 0; i < locations.size(); i++)
+        if (locations[i].size() != 2)
+            throw eInvalidArgument("Each locations must specify a 2D point.");
+
+    // Normalize the locations to the coordinate space we want.
+    f64 xmin = locations[0][0];
+    f64 xmax = locations[0][0];
+    f64 ymin = locations[0][1];
+    f64 ymax = locations[0][1];
+    for (size_t i = 1; i < locations.size(); i++)
+    {
+        xmin = std::min(xmin, locations[i][0]);
+        xmax = std::max(xmax, locations[i][0]);
+        ymin = std::min(ymin, locations[i][1]);
+        ymax = std::max(ymax, locations[i][1]);
+    }
+    f64 scale = ((f64)destWidth) / (xmax - xmin);
+    std::vector<tIO> locs = locations;
+    for (size_t i = 0; i < locs.size(); i++)
+    {
+        locs[i][0] = (locs[i][0] - xmin) * scale;
+        locs[i][1] = (locs[i][1] - ymin) * scale;
+    }
+
+    // Plot each image onto a canvas.
+    u8 bgColor[3] = { 255, 255, 255 };    // white
+    img::tCanvas canvas(img::kRGB24, bgColor, 3);
+    img::tImage image;
+    for (size_t i = 0; i < locs.size(); i++)
+    {
+        ml::un_examplify(images[i], color, width, absolute, &image);
+        canvas.drawImage(&image, (i32)round(locs[i][0]), (i32)round(locs[i][1]));
+    }
+    canvas.genImage(dest);
 }
 
 
