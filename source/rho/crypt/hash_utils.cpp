@@ -5,6 +5,7 @@
 #include <rho/crypt/tSHA256.h>
 #include <rho/crypt/tSHA384.h>
 #include <rho/crypt/tSHA512.h>
+#include <rho/crypt/tWhirlpool.h>
 
 #include <cassert>
 #include <sstream>
@@ -106,6 +107,12 @@ vector<u8> hmac_sha384(const vector<u8>& key, const vector<u8>& message)
 vector<u8> hmac_sha512(const vector<u8>& key, const vector<u8>& message)
 {
     return hmac<crypt::tSHA512, 128>(key, message);
+}
+
+
+vector<u8> hmac_whirlpool(const vector<u8>& key, const vector<u8>& message)
+{
+    return hmac<crypt::tWhirlpool, 64>(key, message);
 }
 
 

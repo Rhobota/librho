@@ -59,6 +59,12 @@ std::vector<u8> hmac_sha512(const std::vector<u8>& key, const std::vector<u8>& m
 
 
 /**
+ * HMAC over Whirlpool -- returns a 64byte hash
+ */
+std::vector<u8> hmac_whirlpool(const std::vector<u8>& key, const std::vector<u8>& message);
+
+
+/**
  * A funtion pointer typedef for the hmac_<hasher> family of functions above.
  */
 typedef std::vector<u8> (*hmac_func)(const std::vector<u8>& key, const std::vector<u8>& message);

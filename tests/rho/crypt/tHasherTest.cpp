@@ -547,6 +547,53 @@ void testHMAC_SHA512(const tTest& t)
 }
 
 
+void testHMAC_WHIRLPOOL(const tTest& t)
+{
+    vector< pair< pair<string,string>,string> > tests;
+
+    tests.push_back(make_pair(make_pair(string(""),string("")),
+                              string("57d739903190550defa77309ff7b72406a927bbc54e8fcdc98e145fa4c36ce83a9cf1605ad01e0d1925f93ac1d12b985a26044e9fb1b9cce24301faa76eaab53")));
+
+    tests.push_back(make_pair(make_pair(string("key"),string("The quick brown fox jumps over the lazy dog")),
+                              string("7f7192e3a155cb6a8171584ba146882f26821658112dfd2601272db013517a31e573637d146584596f86a884eb0decc9514dde000ecf2476dc5d436a92197527")));
+
+    tests.push_back(make_pair(make_pair(string("asd;fkjasdfasdf9sadf9asdfkljd;fakjsdf;jasd;fkjasdfahsdfkals;jdf;aksdjf;aksdfj;aksjdfasdfereirerjasdfkjasdfasdfasdf"),string("asdjfasdfasdkfja;sdkfjasd9fasd908fas9d08fa0sdfasdfnmvhn,zxmvnskldfhsdofiudsf9uasdfadksfj;askdfj;asdkfhajksherfernamsdbnfasdfjughaesuiryhas;dkfhnas;dfiha;lskdhfa;hfa;sdkjhfa;sdkfha;sdkfhasd;fhernase.rhka.seklrbha.kdifha;lsdifyha;.erkih>Sdklea;lsdifhas d;fakj sd;fka sdfjhlaskjhfajsd;hfhasleufhajerbalsuer;lasker;aseirya;eriyha;sekhrfa;keiryha;so8eryawerkjane.resuihfD:SofiZeihf;awirha/.iwhef.zakdehfa;wiery;KHFA;SDKFH;h;kjadhf;adhksf")),
+                              string("2a15b48c162b1268698c453bb0e71113ef5b4e98ee53fb2dd3e64643df208f49a31c594c35271c981d52930d48761449345824f3457ccea3d22684884642b60d")));
+
+    tests.push_back(make_pair(make_pair(string("\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b"),string("Hi There")),
+                              string("27344136921cd495d3d36b3fc7094f9f3f26835e9b02bc5e215d75e082277e06723f0ad0dbb8008be3019f2a13a9103c99dd7f53eed96f92dc965eaef13c902c")));
+
+    tests.push_back(make_pair(make_pair(string("Jefe"),string("what do ya want for nothing?")),
+                              string("3d595ccd1d4f4cfd045af53ba7d5c8283fee6ded6eaf1269071b6b4ea64800056b5077c6a942cfa1221bd4e5aed791276e5dd46a407d2b8007163d3e7cd1de66")));
+
+    tests.push_back(make_pair(make_pair(string("\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA"),string("\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD\xDD")),
+                              string("844fb5124797a76cac689f5e359abb0a4a598ed594ba6163ca0ba245869760ce9ec2c507b29bf0aa21a9fc863bfeb0852bd43a0e5e290839acf7274e8ff20286")));
+
+    tests.push_back(make_pair(make_pair(string("\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19"),string("\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd")),
+                              string("35bc33e2ed71e1cb01c140ddd3291ae3f84e9f0dce18005a1123df199983a211fe744b244449a1c093b17584069359bc6a95352271d78e2ef7a6f21dc28ab3c1")));
+
+    tests.push_back(make_pair(make_pair(string("\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c"),string("Test With Truncation")),
+                              string("59f19e2aa74dd3893fb51338ec11d07b31abe491d0813e0ea01d2e2671c08511dac7795476cc37d41f04efce3c70cb0ec0e4f41f2c7dd4b5ff762e4a49f1826a")));
+
+    tests.push_back(make_pair(make_pair(string("\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"),string("Test Using Larger Than Block-Size Key - Hash Key First")),
+                              string("dd90bd637cfcd27ca914c290f33402cf68576d6e70601af0295f6b9dafa9d988d8b8fb4fde8605ac544638158dba2baa90a2bf882546cd0b876d59ab3f18962e")));
+
+    tests.push_back(make_pair(make_pair(string("\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"),string("Test Using Larger Than Block-Size Key and Larger Than One Block-Size Data")),
+                              string("faf529af18a0f569480fd001122bb446b32a3cf758c385cec4adad9c73c77327812e260b7082011a3eb1071e71a50e1c3d37a8963f8b6a64a31cc017db1d619c")));
+
+    for (size_t i = 0; i < tests.size(); i++)
+    {
+        string key = tests[i].first.first;
+        string msg = tests[i].first.second;
+        string cor = tests[i].second;
+
+        vector<u8> res = crypt::hmac_whirlpool(vector<u8>(key.c_str(), key.c_str()+key.length()),
+                                               vector<u8>(msg.c_str(), msg.c_str()+msg.length()));
+        t.assert(crypt::hashToString(res) == cor);
+    }
+}
+
+
 void testPBKDF2_HMAC_SHA1(const tTest& t)
 {
     {
@@ -1597,12 +1644,15 @@ int main()
     tTest("tSHA384 test", testSHA384, kNumIters);
     tTest("tSHA512 test", testSHA512, kNumIters);
     tTest("tWhirlpool test", testWhirlpool, kNumIters);
+
     tTest("HMAC_MD5 test", testHMAC_MD5, kNumIters);
     tTest("HMAC_SHA1 test", testHMAC_SHA1, kNumIters);
     tTest("HMAC_SHA224 test", testHMAC_SHA224, kNumIters);
     tTest("HMAC_SHA256 test", testHMAC_SHA256, kNumIters);
     tTest("HMAC_SHA384 test", testHMAC_SHA384, kNumIters);
     tTest("HMAC_SHA512 test", testHMAC_SHA512, kNumIters);
+    tTest("HMAC_WHIRLPOOL test", testHMAC_WHIRLPOOL, kNumIters);
+
     tTest("PBKDF2_HMAC_SHA1 test", testPBKDF2_HMAC_SHA1);
     tTest("PBKDF2_HMAC_SHA512 test", testPBKDF2_HMAC_SHA512);
 
