@@ -116,6 +116,7 @@ int main()
 
     cout << endl;
     cout << "Current platform:  " << platformEnumToString(getCurrPlatform()) << endl;
+    cout << "Current version:   " << platformVersionString() << endl;
     cout << "Machine's bitness: " << getMachineBitness() << endl;
 
     return 0;

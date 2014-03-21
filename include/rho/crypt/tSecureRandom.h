@@ -5,6 +5,8 @@
 #include <rho/iReadable.h>
 #include <rho/bNonCopyable.h>
 
+#include <string>
+
 
 namespace rho
 {
@@ -37,6 +39,11 @@ class tSecureRandom : public iReadable, public bNonCopyable
 
         tBufferedReadable* m_readable;
 };
+
+
+// This function is used to create a Globally Unique Identifier (GUID) using the global
+// secure rand object.
+std::string genGUID();
 
 
 }   // namespace crypt

@@ -1,5 +1,5 @@
-#ifndef __rho_crypt_tMD5_h__
-#define __rho_crypt_tMD5_h__
+#ifndef __rho_crypt_tWhirlpool_h__
+#define __rho_crypt_tWhirlpool_h__
 
 
 #include <rho/crypt/iHasher.h>
@@ -11,26 +11,26 @@ namespace crypt
 {
 
 
-class tMD5 : public iHasher, public bNonCopyable
+class tWhirlpool : public iHasher, public bNonCopyable
 {
     public:
 
-        tMD5();
-        ~tMD5();
+        tWhirlpool();
+        ~tWhirlpool();
 
         i32 write(const u8* buffer, i32 length);
         i32 writeAll(const u8* buffer, i32 length);
 
         /**
          * Returns the hash in vector form.
-         * The returned vector always has length of 16.
+         * The returned vector always has length of 64.
          */
         std::vector<u8> getHash() const;
 
         /**
          * Returns the hash in string form.
          * The returned string always is hexadecimal
-         * and always has length 32.
+         * and always has length 128.
          */
         std::string getHashString() const;
 
@@ -44,4 +44,4 @@ class tMD5 : public iHasher, public bNonCopyable
 }   // namespace rho
 
 
-#endif   // __rho_crypt_tMD5_h__
+#endif   // __rho_crypt_tWhirlpool_h__

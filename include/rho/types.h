@@ -41,6 +41,8 @@ nPlatform getCurrPlatform();
 
 std::string platformEnumToString(nPlatform plat);
 
+std::string platformVersionString();
+
 int getMachineBitness();
 
 
