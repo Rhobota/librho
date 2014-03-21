@@ -30,18 +30,16 @@
 #define MAXKB	(256/8)
 #define MAXNR	14
 
-typedef unsigned char	u8;
-typedef unsigned short	u16;
-typedef unsigned int	u32;
+#include <rho/types.h>
 
-int rijndaelKeySetupEnc(u32 rk[/*4*(Nr + 1)*/], const u8 cipherKey[], int keyBits);
-int rijndaelKeySetupDec(u32 rk[/*4*(Nr + 1)*/], const u8 cipherKey[], int keyBits);
-void rijndaelEncrypt(const u32 rk[/*4*(Nr + 1)*/], int Nr, const u8 pt[16], u8 ct[16]);
-void rijndaelDecrypt(const u32 rk[/*4*(Nr + 1)*/], int Nr, const u8 ct[16], u8 pt[16]);
+rho::i32 rijndaelKeySetupEnc(rho::u32 rk[/*4*(Nr + 1)*/], const rho::u8 cipherKey[], rho::i32 keyBits);
+rho::i32 rijndaelKeySetupDec(rho::u32 rk[/*4*(Nr + 1)*/], const rho::u8 cipherKey[], rho::i32 keyBits);
+void rijndaelEncrypt(const rho::u32 rk[/*4*(Nr + 1)*/], rho::i32 Nr, const rho::u8 pt[16], rho::u8 ct[16]);
+void rijndaelDecrypt(const rho::u32 rk[/*4*(Nr + 1)*/], rho::i32 Nr, const rho::u8 ct[16], rho::u8 pt[16]);
 
 #ifdef INTERMEDIATE_VALUE_KAT
-void rijndaelEncryptRound(const u32 rk[/*4*(Nr + 1)*/], int Nr, u8 block[16], int rounds);
-void rijndaelDecryptRound(const u32 rk[/*4*(Nr + 1)*/], int Nr, u8 block[16], int rounds);
+void rijndaelEncryptRound(const rho::u32 rk[/*4*(Nr + 1)*/], rho::i32 Nr, rho::u8 block[16], rho::i32 rounds);
+void rijndaelDecryptRound(const rho::u32 rk[/*4*(Nr + 1)*/], rho::i32 Nr, rho::u8 block[16], rho::i32 rounds);
 #endif /* INTERMEDIATE_VALUE_KAT */
 
 #endif /* __RIJNDAEL_ALG_FST_H */

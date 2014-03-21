@@ -1,9 +1,7 @@
 #include <rho/crypt/tMD5.h>
+#include <rho/crypt/hash_utils.h>
 
 #include "md5.h"
-
-#include <sstream>
-#include <iomanip>
 
 
 namespace rho
@@ -50,10 +48,7 @@ std::vector<u8> tMD5::getHash() const
 std::string tMD5::getHashString() const
 {
     std::vector<u8> hash = getHash();
-    std::ostringstream out;
-    for (u32 i = 0; i < hash.size(); i++)
-        out << std::hex << std::setfill('0') << std::setw(2) << (u32)hash[i];
-    return out.str();
+    return hashToString(hash);
 }
 
 

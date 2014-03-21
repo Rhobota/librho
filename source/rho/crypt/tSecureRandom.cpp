@@ -11,6 +11,8 @@
 
 #include <cstdlib>
 #include <cstdio>
+#include <iomanip>
+#include <sstream>
 
 
 namespace rho
@@ -170,6 +172,40 @@ i32 tSecureRandom::read(u8* buffer, i32 length)
 i32 tSecureRandom::readAll(u8* buffer, i32 length)
 {
     return m_readable->readAll(buffer, length);
+}
+
+
+std::string genGUID()
+{
+    u8 buf[16];
+    secureRand_readAll(buf, 16);
+
+    u32 val[16];
+    for (u32 i = 0; i < 16; i++)
+        val[i] = buf[i];
+
+    std::ostringstream out;
+
+    for (u32 i = 0; i < 4; i++)
+        out << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << val[i];
+    out << '-';
+
+    for (u32 i = 4; i < 6; i++)
+        out << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << val[i];
+    out << '-';
+
+    for (u32 i = 6; i < 8; i++)
+        out << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << val[i];
+    out << '-';
+
+    for (u32 i = 8; i < 10; i++)
+        out << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << val[i];
+    out << '-';
+
+    for (u32 i = 10; i < 16; i++)
+        out << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << val[i];
+
+    return out.str();
 }
 
 
