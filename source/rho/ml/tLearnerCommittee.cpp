@@ -94,7 +94,10 @@ class tEvalWorker : public sync::iRunnable, public bNonCopyable
 
 void tLearnerCommittee::evaluate(const tIO& input, tIO& output) const
 {
-    throw eLogicError("Do not call this method. This method is not efficient, and there is currently no reason to use it over evaluateBatch() for a committee of learners.");
+    std::vector<tIO> inputs; inputs.push_back(input);
+    std::vector<tIO> outputs;
+    evaluateBatch(inputs, outputs);
+    output = outputs[0];
 }
 
 void tLearnerCommittee::evaluateBatch(const std::vector<tIO>& inputs,
