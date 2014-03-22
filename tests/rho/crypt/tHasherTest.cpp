@@ -1632,6 +1632,912 @@ void testPBKDF2_HMAC_SHA512(const tTest& t)
 }
 
 
+void testPBKDF2_HMAC_WHIRLPOOL(const tTest& t)
+{
+    {
+        string pass = "passDATAb00AB7YxDTT";
+        string salt = "saltKEYbcTcXHCBxtjD";
+        u32 iters = 1;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "f6ac8a500ae3bf14238806c19c82ce6cd9644404e1d091b4ad05a42bd2b67c3395a8fab57dd26ccfdf09d518519889e523512c80b36a8bf9bb419207f884f7ce");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTT";
+        string salt = "saltKEYbcTcXHCBxtjD";
+        u32 iters = 100000;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "180ec7aa86ba3989aac6826f5d0212ea8bba60a2b3ddd55acadabbb9d839cb3e0104ba74fe730d1f2fc1104f02beb519de6f8442dfb33092409c7a847565613e");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTl";
+        string salt = "saltKEYbcTcXHCBxtjD2";
+        u32 iters = 1;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "19dcc59f6d3c983155e8278053e9ac072967c736ce349d324f7fda150d21be2c5805321fcbfe39953e33758efd4f280e70f1095ac46e8073832ecdd3ba0a567f");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTl";
+        string salt = "saltKEYbcTcXHCBxtjD2";
+        u32 iters = 100000;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "f092d68ce6b4e8caf95f3a0ab1c1d1fb7fecb83d586ffebdbcd54cfd3b1a87dd17e6b358b965a5364e8fbf10d71102d6f4f4eb15f821a8d769d32f3d2c74c04d");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlR";
+        string salt = "saltKEYbcTcXHCBxtjD2P";
+        u32 iters = 1;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "6a06698c7a83b67a9cd846e6d3d01d89184b278d9bea18cff8e6c6dba5a01e42b24342403db2be87d13545991725ae267e968a3651485005fbb52f433fb76ad6");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlR";
+        string salt = "saltKEYbcTcXHCBxtjD2P";
+        u32 iters = 100000;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "281ef7a73e726a341f0df2334ee104fb9eba5e855c4a72f85c6725a3425068599b24613ea0bc36112f8434e5dc332e8770e3a2feb0b9df902a872fcbf9cec6f2");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE5";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJe";
+        u32 iters = 1;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "576875ad381dc34009d9880145d8a4238c7661f17f1ba691cccaa079aedf5d004657219b21e3740f81816e8439dd2b9d6ff051d159d94de558b3a41038219ef9");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE5";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJe";
+        u32 iters = 100000;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "7558f51cdcd48b82dee558e38d5d568f1ff79ab9a5f2b2b67a3db1dd79c87133d7b9f763eb1f1f59a8d483b79779ab398505e923510dc43f456d500be44121d4");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJem";
+        u32 iters = 1;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "c1edb64ada4d01be816c2c9e64c87504151687590d6d405f11c21ad376dcb86a07c5f3bbac8b73264707fca87b53bb1c84194387d1aeb7e7cb44b02d6452b477");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJem";
+        u32 iters = 100000;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "f572fc2da27cdbc7c45b52cf709282a12685d42a0ac99051853efc3ff002fffedf2f818d73094d66d3708628c112ebb028e0cd4249931852d901ed0248768967");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57U";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemk";
+        u32 iters = 1;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "4e8fc63fe280f0120c433c580c1485ac6bd208c97606fee0f6bb0d437b08605f60e77dc1ee740053153a185ca3fef75ebdda5a1d57bd8a9db06f068e05c9b31b");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57U";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemk";
+        u32 iters = 100000;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "44b9d75fc24426522dbf13d85236e3ee3953a568d60325b2ffbaafbb291bd3b54118cc0cfe92147f1a86046e99dd35e707a7c53621d825ecbe7674a786ba731a");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi0";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy";
+        u32 iters = 1;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "02dd0930a3b00cd2c95c8d1b8e3faf00060fc1f43be488d67e66f49210ea0b33ec0167679c3253b0cf35cc6d1e47b5b4e3b3acef4cb202438f70be0b34d5b02b");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi0";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy";
+        u32 iters = 100000;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "e68b0592838f63f897add92ef40bd70ecc59cb4388077ed6cdda558e95fb2f3bf00465dab2eba6dcd546f8f229acd725dd8571bbbf303b4912c1fab0636eaf8c");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi04";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy6";
+        u32 iters = 1;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "bd34e8855bc2b2a8678c49845a3525494d8a8e1395802a36e3dd4527e7215893507eff618ab2834ca166322d890ea107caa968642c301703b85f34ae11bd7417");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi04";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy6";
+        u32 iters = 100000;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "ea68fc056a0ebc270492a1c6bbb342b9c8cda8a9e70169bd9bb2c8175bc7497c93f1b6725818169f7a0e8240cefee4a3bd84d222f032afd53d15c292a2ea7c2d");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi04U";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy6P";
+        u32 iters = 1;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "bf3f08b5eecaf0560e9a930da89f669cef4adeb5b76a2f9f09ccd3de9b9c76be00a84bae83940e5deb852ec1b4e038e103b4a428c7f006af1e1ffbea8d55174e");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi04U";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy6P";
+        u32 iters = 100000;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "5e7468def302ef4ebcb96322da888928244f4dc0d632369583b39fc03f566c496b91276c32c2f2f5de26666aa245b7adc20dde720e964d6ace792a26d19d6be2");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi04Uz3ebEAhzZ4ve1A2wg5CnLXdZC5Y7gwfVgbEgZSTmoYQSzC5OW4dfrjqiwApTACO6xoOL1AjWj6X6f6qFfF8TVmOzU9RhOd1N4QtzWI4fP6FYttNz5FuLdtYVXWVXH2Tf7I9fieMeWCHTMkM4VcmQyQHpbcP8MEb5f1g6Ckg5xk3HQr3wMBvQcOHpCPy1K8HCM7a5wkPDhgVA0BVmwNpsRIbDQZRtHK6dT6bGyalp6gbFZBuBHwD86gTzkrFY7HkOVrgc0gJcGJZe65Ce8v4Jn5OzkuVsiU8efm2Pw2RnbpWSAr7SkVdCwXK2XSJDQ5fZ4HBEz9VTFYrG23ELuLjvx5njOLNgDAJuf5JB2tn4nMjjcnl1e8qcYVwZqFzEv2zhLyDWMkV4tzl4asLnvyAxTBkxPRZj2pRABWwb3kEofpsHYxMTAn38YSpZreoXipZWBnu6HDURaruXaIPYFPYHl9Ls9wsuD7rzaGfbOyfVgLIGK5rODphwRA7lm88bGKY8b7tWOtepyEvaLxMI7GZF5ScwpZTYeEDNUKPzvM2Im9zehIaznpguNdNXNMLWnwPu4H6zEvajkw3G3ucSiXKmh6XNe3hkdSANm3vnxzRXm4fcuzAx68IElXE2bkGFElluDLo6EsUDWZ4JIWBVaDwYdJx8uCXbQdoifzCs5kuuClaDaDqIhb5hJ2WR8mxiueFsS0aDGdIYmye5svmNmzQxFmdOkHoF7CfwuU1yy4uEEt9vPSP2wFp1dyaMvJW68vtB4kddLmI6gIgVVcT6ZX1Qm6WsusPrdisPLB2ScodXojCbL3DLj6PKG8QDVMWTrL1TpafT2wslRledWIhsTlv2mI3C066WMcTSwKLXdEDhVvFJ6ShiLKSN7gnRrlE0BnAw";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy6PlBdILBOkKUB6TGTPJXh1tpdOHTG6KuIvcbQp9qWjaf1uxAKgiTtYRIHhxjJI2viVa6fDZ67QOouOaf2RXQhpsWaTtAVnff6PIFcvJhdPDFGV5nvmZWoCZQodj6yXRDHPw9PyF0iLYm9uFtEunlAAxGB5qqea4X5tZvB1OfLVwymY3a3JPjdxTdvHxCHbqqE0zip61JNqdmeWxGtlRBC6CGoCiHO4XxHCntQBRJDcG0zW7joTdgtTBarsQQhlLXBGMNBSNmmTbDf3hFtawUBCJH18IAiRMwyeQJbJ2bERsY3MVRPuYCf4Au7gN72iGh1lRktSQtEFye7pO46kMXRrEjHQWXInMzzy7X2StXUzHVTFF2VdOoKn0WUqFNvB6PF7qIsOlYKj57bi1Psa34s85WxMSbTkhrd7VHdHZkTVaWdraohXYOePdeEvIwObCGEXkETUzqM5P2yzoBOJSdjpIYaa8zzdLD3yrb1TwCZuJVxsrq0XXY6vErU4QntsW0972XmGNyumFNJiPm4ONKh1RLvS1kddY3nm8276S4TUuZfrRQO8QxZRNuSaZI8JRZp5VojB5DktuMxAQkqoPjQ5Vtb6oXeOyY591CB1MEW1fLTCs0NrL321SaNRMqza1ETogAxpEiYwZ6pIgnMmSqNMRdZnCqA4gMWw1lIVATWK83OCeicNRUNOdfzS7A8vbLcmvKPtpOFvhNzwrrUdkvuKvaYJviQgeR7snGetO9JLCwIlHIj52gMCNU18d32SJl7Xomtl3wIe02SMvq1i1BcaX7lXioqWGmgVqBWU3fsUuGwHi6RUKCCQdEOBfNo2WdpFaCflcgnn0O6jVHCqkv8cQk81AqS00rAmHGCNTwyA6Tq5TXoLlDnC8gAQjDUsZp0z";
+        u32 iters = 1;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "02aef638662c621f26cc74a9c3b18aee5d8bb43f57cdebeded87f80cc942ea6f202fe529cb3e1dfbdac90f98104d25124c70fdd1a40181064fd8f7d873f92d8a");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi04Uz3ebEAhzZ4ve1A2wg5CnLXdZC5Y7gwfVgbEgZSTmoYQSzC5OW4dfrjqiwApTACO6xoOL1AjWj6X6f6qFfF8TVmOzU9RhOd1N4QtzWI4fP6FYttNz5FuLdtYVXWVXH2Tf7I9fieMeWCHTMkM4VcmQyQHpbcP8MEb5f1g6Ckg5xk3HQr3wMBvQcOHpCPy1K8HCM7a5wkPDhgVA0BVmwNpsRIbDQZRtHK6dT6bGyalp6gbFZBuBHwD86gTzkrFY7HkOVrgc0gJcGJZe65Ce8v4Jn5OzkuVsiU8efm2Pw2RnbpWSAr7SkVdCwXK2XSJDQ5fZ4HBEz9VTFYrG23ELuLjvx5njOLNgDAJuf5JB2tn4nMjjcnl1e8qcYVwZqFzEv2zhLyDWMkV4tzl4asLnvyAxTBkxPRZj2pRABWwb3kEofpsHYxMTAn38YSpZreoXipZWBnu6HDURaruXaIPYFPYHl9Ls9wsuD7rzaGfbOyfVgLIGK5rODphwRA7lm88bGKY8b7tWOtepyEvaLxMI7GZF5ScwpZTYeEDNUKPzvM2Im9zehIaznpguNdNXNMLWnwPu4H6zEvajkw3G3ucSiXKmh6XNe3hkdSANm3vnxzRXm4fcuzAx68IElXE2bkGFElluDLo6EsUDWZ4JIWBVaDwYdJx8uCXbQdoifzCs5kuuClaDaDqIhb5hJ2WR8mxiueFsS0aDGdIYmye5svmNmzQxFmdOkHoF7CfwuU1yy4uEEt9vPSP2wFp1dyaMvJW68vtB4kddLmI6gIgVVcT6ZX1Qm6WsusPrdisPLB2ScodXojCbL3DLj6PKG8QDVMWTrL1TpafT2wslRledWIhsTlv2mI3C066WMcTSwKLXdEDhVvFJ6ShiLKSN7gnRrlE0BnAw";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy6PlBdILBOkKUB6TGTPJXh1tpdOHTG6KuIvcbQp9qWjaf1uxAKgiTtYRIHhxjJI2viVa6fDZ67QOouOaf2RXQhpsWaTtAVnff6PIFcvJhdPDFGV5nvmZWoCZQodj6yXRDHPw9PyF0iLYm9uFtEunlAAxGB5qqea4X5tZvB1OfLVwymY3a3JPjdxTdvHxCHbqqE0zip61JNqdmeWxGtlRBC6CGoCiHO4XxHCntQBRJDcG0zW7joTdgtTBarsQQhlLXBGMNBSNmmTbDf3hFtawUBCJH18IAiRMwyeQJbJ2bERsY3MVRPuYCf4Au7gN72iGh1lRktSQtEFye7pO46kMXRrEjHQWXInMzzy7X2StXUzHVTFF2VdOoKn0WUqFNvB6PF7qIsOlYKj57bi1Psa34s85WxMSbTkhrd7VHdHZkTVaWdraohXYOePdeEvIwObCGEXkETUzqM5P2yzoBOJSdjpIYaa8zzdLD3yrb1TwCZuJVxsrq0XXY6vErU4QntsW0972XmGNyumFNJiPm4ONKh1RLvS1kddY3nm8276S4TUuZfrRQO8QxZRNuSaZI8JRZp5VojB5DktuMxAQkqoPjQ5Vtb6oXeOyY591CB1MEW1fLTCs0NrL321SaNRMqza1ETogAxpEiYwZ6pIgnMmSqNMRdZnCqA4gMWw1lIVATWK83OCeicNRUNOdfzS7A8vbLcmvKPtpOFvhNzwrrUdkvuKvaYJviQgeR7snGetO9JLCwIlHIj52gMCNU18d32SJl7Xomtl3wIe02SMvq1i1BcaX7lXioqWGmgVqBWU3fsUuGwHi6RUKCCQdEOBfNo2WdpFaCflcgnn0O6jVHCqkv8cQk81AqS00rAmHGCNTwyA6Tq5TXoLlDnC8gAQjDUsZp0z";
+        u32 iters = 100000;
+        u32 dklen = 64;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "eaf06d5d59c9038b5d63fa20823ba9b88e02c164b0e745520ecf150fba1340992707d9182227896b3e146485c711f7661af3273549f1e6a1d99849e4a12e06df");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTT";
+        string salt = "saltKEYbcTcXHCBxtjD";
+        u32 iters = 1;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "f6ac8a500ae3bf14238806c19c82ce6cd9644404e1d091b4ad05a42bd2b67c3395a8fab57dd26ccfdf09d518519889e523512c80b36a8bf9bb419207f884f7");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTT";
+        string salt = "saltKEYbcTcXHCBxtjD";
+        u32 iters = 100000;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "180ec7aa86ba3989aac6826f5d0212ea8bba60a2b3ddd55acadabbb9d839cb3e0104ba74fe730d1f2fc1104f02beb519de6f8442dfb33092409c7a84756561");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTl";
+        string salt = "saltKEYbcTcXHCBxtjD2";
+        u32 iters = 1;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "19dcc59f6d3c983155e8278053e9ac072967c736ce349d324f7fda150d21be2c5805321fcbfe39953e33758efd4f280e70f1095ac46e8073832ecdd3ba0a56");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTl";
+        string salt = "saltKEYbcTcXHCBxtjD2";
+        u32 iters = 100000;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "f092d68ce6b4e8caf95f3a0ab1c1d1fb7fecb83d586ffebdbcd54cfd3b1a87dd17e6b358b965a5364e8fbf10d71102d6f4f4eb15f821a8d769d32f3d2c74c0");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlR";
+        string salt = "saltKEYbcTcXHCBxtjD2P";
+        u32 iters = 1;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "6a06698c7a83b67a9cd846e6d3d01d89184b278d9bea18cff8e6c6dba5a01e42b24342403db2be87d13545991725ae267e968a3651485005fbb52f433fb76a");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlR";
+        string salt = "saltKEYbcTcXHCBxtjD2P";
+        u32 iters = 100000;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "281ef7a73e726a341f0df2334ee104fb9eba5e855c4a72f85c6725a3425068599b24613ea0bc36112f8434e5dc332e8770e3a2feb0b9df902a872fcbf9cec6");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE5";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJe";
+        u32 iters = 1;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "576875ad381dc34009d9880145d8a4238c7661f17f1ba691cccaa079aedf5d004657219b21e3740f81816e8439dd2b9d6ff051d159d94de558b3a41038219e");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE5";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJe";
+        u32 iters = 100000;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "7558f51cdcd48b82dee558e38d5d568f1ff79ab9a5f2b2b67a3db1dd79c87133d7b9f763eb1f1f59a8d483b79779ab398505e923510dc43f456d500be44121");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJem";
+        u32 iters = 1;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "c1edb64ada4d01be816c2c9e64c87504151687590d6d405f11c21ad376dcb86a07c5f3bbac8b73264707fca87b53bb1c84194387d1aeb7e7cb44b02d6452b4");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJem";
+        u32 iters = 100000;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "f572fc2da27cdbc7c45b52cf709282a12685d42a0ac99051853efc3ff002fffedf2f818d73094d66d3708628c112ebb028e0cd4249931852d901ed02487689");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57U";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemk";
+        u32 iters = 1;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "4e8fc63fe280f0120c433c580c1485ac6bd208c97606fee0f6bb0d437b08605f60e77dc1ee740053153a185ca3fef75ebdda5a1d57bd8a9db06f068e05c9b3");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57U";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemk";
+        u32 iters = 100000;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "44b9d75fc24426522dbf13d85236e3ee3953a568d60325b2ffbaafbb291bd3b54118cc0cfe92147f1a86046e99dd35e707a7c53621d825ecbe7674a786ba73");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi0";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy";
+        u32 iters = 1;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "02dd0930a3b00cd2c95c8d1b8e3faf00060fc1f43be488d67e66f49210ea0b33ec0167679c3253b0cf35cc6d1e47b5b4e3b3acef4cb202438f70be0b34d5b0");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi0";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy";
+        u32 iters = 100000;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "e68b0592838f63f897add92ef40bd70ecc59cb4388077ed6cdda558e95fb2f3bf00465dab2eba6dcd546f8f229acd725dd8571bbbf303b4912c1fab0636eaf");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi04";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy6";
+        u32 iters = 1;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "bd34e8855bc2b2a8678c49845a3525494d8a8e1395802a36e3dd4527e7215893507eff618ab2834ca166322d890ea107caa968642c301703b85f34ae11bd74");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi04";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy6";
+        u32 iters = 100000;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "ea68fc056a0ebc270492a1c6bbb342b9c8cda8a9e70169bd9bb2c8175bc7497c93f1b6725818169f7a0e8240cefee4a3bd84d222f032afd53d15c292a2ea7c");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi04U";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy6P";
+        u32 iters = 1;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "bf3f08b5eecaf0560e9a930da89f669cef4adeb5b76a2f9f09ccd3de9b9c76be00a84bae83940e5deb852ec1b4e038e103b4a428c7f006af1e1ffbea8d5517");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi04U";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy6P";
+        u32 iters = 100000;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "5e7468def302ef4ebcb96322da888928244f4dc0d632369583b39fc03f566c496b91276c32c2f2f5de26666aa245b7adc20dde720e964d6ace792a26d19d6b");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi04Uz3ebEAhzZ4ve1A2wg5CnLXdZC5Y7gwfVgbEgZSTmoYQSzC5OW4dfrjqiwApTACO6xoOL1AjWj6X6f6qFfF8TVmOzU9RhOd1N4QtzWI4fP6FYttNz5FuLdtYVXWVXH2Tf7I9fieMeWCHTMkM4VcmQyQHpbcP8MEb5f1g6Ckg5xk3HQr3wMBvQcOHpCPy1K8HCM7a5wkPDhgVA0BVmwNpsRIbDQZRtHK6dT6bGyalp6gbFZBuBHwD86gTzkrFY7HkOVrgc0gJcGJZe65Ce8v4Jn5OzkuVsiU8efm2Pw2RnbpWSAr7SkVdCwXK2XSJDQ5fZ4HBEz9VTFYrG23ELuLjvx5njOLNgDAJuf5JB2tn4nMjjcnl1e8qcYVwZqFzEv2zhLyDWMkV4tzl4asLnvyAxTBkxPRZj2pRABWwb3kEofpsHYxMTAn38YSpZreoXipZWBnu6HDURaruXaIPYFPYHl9Ls9wsuD7rzaGfbOyfVgLIGK5rODphwRA7lm88bGKY8b7tWOtepyEvaLxMI7GZF5ScwpZTYeEDNUKPzvM2Im9zehIaznpguNdNXNMLWnwPu4H6zEvajkw3G3ucSiXKmh6XNe3hkdSANm3vnxzRXm4fcuzAx68IElXE2bkGFElluDLo6EsUDWZ4JIWBVaDwYdJx8uCXbQdoifzCs5kuuClaDaDqIhb5hJ2WR8mxiueFsS0aDGdIYmye5svmNmzQxFmdOkHoF7CfwuU1yy4uEEt9vPSP2wFp1dyaMvJW68vtB4kddLmI6gIgVVcT6ZX1Qm6WsusPrdisPLB2ScodXojCbL3DLj6PKG8QDVMWTrL1TpafT2wslRledWIhsTlv2mI3C066WMcTSwKLXdEDhVvFJ6ShiLKSN7gnRrlE0BnAw";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy6PlBdILBOkKUB6TGTPJXh1tpdOHTG6KuIvcbQp9qWjaf1uxAKgiTtYRIHhxjJI2viVa6fDZ67QOouOaf2RXQhpsWaTtAVnff6PIFcvJhdPDFGV5nvmZWoCZQodj6yXRDHPw9PyF0iLYm9uFtEunlAAxGB5qqea4X5tZvB1OfLVwymY3a3JPjdxTdvHxCHbqqE0zip61JNqdmeWxGtlRBC6CGoCiHO4XxHCntQBRJDcG0zW7joTdgtTBarsQQhlLXBGMNBSNmmTbDf3hFtawUBCJH18IAiRMwyeQJbJ2bERsY3MVRPuYCf4Au7gN72iGh1lRktSQtEFye7pO46kMXRrEjHQWXInMzzy7X2StXUzHVTFF2VdOoKn0WUqFNvB6PF7qIsOlYKj57bi1Psa34s85WxMSbTkhrd7VHdHZkTVaWdraohXYOePdeEvIwObCGEXkETUzqM5P2yzoBOJSdjpIYaa8zzdLD3yrb1TwCZuJVxsrq0XXY6vErU4QntsW0972XmGNyumFNJiPm4ONKh1RLvS1kddY3nm8276S4TUuZfrRQO8QxZRNuSaZI8JRZp5VojB5DktuMxAQkqoPjQ5Vtb6oXeOyY591CB1MEW1fLTCs0NrL321SaNRMqza1ETogAxpEiYwZ6pIgnMmSqNMRdZnCqA4gMWw1lIVATWK83OCeicNRUNOdfzS7A8vbLcmvKPtpOFvhNzwrrUdkvuKvaYJviQgeR7snGetO9JLCwIlHIj52gMCNU18d32SJl7Xomtl3wIe02SMvq1i1BcaX7lXioqWGmgVqBWU3fsUuGwHi6RUKCCQdEOBfNo2WdpFaCflcgnn0O6jVHCqkv8cQk81AqS00rAmHGCNTwyA6Tq5TXoLlDnC8gAQjDUsZp0z";
+        u32 iters = 100000;
+        u32 dklen = 63;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "eaf06d5d59c9038b5d63fa20823ba9b88e02c164b0e745520ecf150fba1340992707d9182227896b3e146485c711f7661af3273549f1e6a1d99849e4a12e06");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTT";
+        string salt = "saltKEYbcTcXHCBxtjD";
+        u32 iters = 1;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "f6ac8a500ae3bf14238806c19c82ce6cd9644404e1d091b4ad05a42bd2b67c3395a8fab57dd26ccfdf09d518519889e523512c80b36a8bf9bb419207f884f7ce4f");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTT";
+        string salt = "saltKEYbcTcXHCBxtjD";
+        u32 iters = 100000;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "180ec7aa86ba3989aac6826f5d0212ea8bba60a2b3ddd55acadabbb9d839cb3e0104ba74fe730d1f2fc1104f02beb519de6f8442dfb33092409c7a847565613ed8");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTl";
+        string salt = "saltKEYbcTcXHCBxtjD2";
+        u32 iters = 1;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "19dcc59f6d3c983155e8278053e9ac072967c736ce349d324f7fda150d21be2c5805321fcbfe39953e33758efd4f280e70f1095ac46e8073832ecdd3ba0a567f54");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTl";
+        string salt = "saltKEYbcTcXHCBxtjD2";
+        u32 iters = 100000;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "f092d68ce6b4e8caf95f3a0ab1c1d1fb7fecb83d586ffebdbcd54cfd3b1a87dd17e6b358b965a5364e8fbf10d71102d6f4f4eb15f821a8d769d32f3d2c74c04de0");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlR";
+        string salt = "saltKEYbcTcXHCBxtjD2P";
+        u32 iters = 1;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "6a06698c7a83b67a9cd846e6d3d01d89184b278d9bea18cff8e6c6dba5a01e42b24342403db2be87d13545991725ae267e968a3651485005fbb52f433fb76ad687");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlR";
+        string salt = "saltKEYbcTcXHCBxtjD2P";
+        u32 iters = 100000;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "281ef7a73e726a341f0df2334ee104fb9eba5e855c4a72f85c6725a3425068599b24613ea0bc36112f8434e5dc332e8770e3a2feb0b9df902a872fcbf9cec6f2ac");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE5";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJe";
+        u32 iters = 1;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "576875ad381dc34009d9880145d8a4238c7661f17f1ba691cccaa079aedf5d004657219b21e3740f81816e8439dd2b9d6ff051d159d94de558b3a41038219ef9de");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE5";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJe";
+        u32 iters = 100000;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "7558f51cdcd48b82dee558e38d5d568f1ff79ab9a5f2b2b67a3db1dd79c87133d7b9f763eb1f1f59a8d483b79779ab398505e923510dc43f456d500be44121d43d");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJem";
+        u32 iters = 1;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "c1edb64ada4d01be816c2c9e64c87504151687590d6d405f11c21ad376dcb86a07c5f3bbac8b73264707fca87b53bb1c84194387d1aeb7e7cb44b02d6452b47742");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJem";
+        u32 iters = 100000;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "f572fc2da27cdbc7c45b52cf709282a12685d42a0ac99051853efc3ff002fffedf2f818d73094d66d3708628c112ebb028e0cd4249931852d901ed024876896799");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57U";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemk";
+        u32 iters = 1;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "4e8fc63fe280f0120c433c580c1485ac6bd208c97606fee0f6bb0d437b08605f60e77dc1ee740053153a185ca3fef75ebdda5a1d57bd8a9db06f068e05c9b31b18");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57U";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemk";
+        u32 iters = 100000;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "44b9d75fc24426522dbf13d85236e3ee3953a568d60325b2ffbaafbb291bd3b54118cc0cfe92147f1a86046e99dd35e707a7c53621d825ecbe7674a786ba731a7e");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi0";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy";
+        u32 iters = 1;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "02dd0930a3b00cd2c95c8d1b8e3faf00060fc1f43be488d67e66f49210ea0b33ec0167679c3253b0cf35cc6d1e47b5b4e3b3acef4cb202438f70be0b34d5b02b04");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi0";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy";
+        u32 iters = 100000;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "e68b0592838f63f897add92ef40bd70ecc59cb4388077ed6cdda558e95fb2f3bf00465dab2eba6dcd546f8f229acd725dd8571bbbf303b4912c1fab0636eaf8c9c");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi04";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy6";
+        u32 iters = 1;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "bd34e8855bc2b2a8678c49845a3525494d8a8e1395802a36e3dd4527e7215893507eff618ab2834ca166322d890ea107caa968642c301703b85f34ae11bd7417a1");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi04";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy6";
+        u32 iters = 100000;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "ea68fc056a0ebc270492a1c6bbb342b9c8cda8a9e70169bd9bb2c8175bc7497c93f1b6725818169f7a0e8240cefee4a3bd84d222f032afd53d15c292a2ea7c2d58");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi04U";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy6P";
+        u32 iters = 1;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "bf3f08b5eecaf0560e9a930da89f669cef4adeb5b76a2f9f09ccd3de9b9c76be00a84bae83940e5deb852ec1b4e038e103b4a428c7f006af1e1ffbea8d55174eb3");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi04U";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy6P";
+        u32 iters = 100000;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "5e7468def302ef4ebcb96322da888928244f4dc0d632369583b39fc03f566c496b91276c32c2f2f5de26666aa245b7adc20dde720e964d6ace792a26d19d6be279");
+    }
+
+    {
+        string pass = "passDATAb00AB7YxDTTlRH2dqxDx19GDxDV1zFMz7E6QVqKIzwOtMnlxQLttpE57Un4u12D2YD7oOPpiEvCDYvntXEe4NNPLCnGGeJArbYDEu6xDoCfWH6kbuV6awi04Uz3ebEAhzZ4ve1A2wg5CnLXdZC5Y7gwfVgbEgZSTmoYQSzC5OW4dfrjqiwApTACO6xoOL1AjWj6X6f6qFfF8TVmOzU9RhOd1N4QtzWI4fP6FYttNz5FuLdtYVXWVXH2Tf7I9fieMeWCHTMkM4VcmQyQHpbcP8MEb5f1g6Ckg5xk3HQr3wMBvQcOHpCPy1K8HCM7a5wkPDhgVA0BVmwNpsRIbDQZRtHK6dT6bGyalp6gbFZBuBHwD86gTzkrFY7HkOVrgc0gJcGJZe65Ce8v4Jn5OzkuVsiU8efm2Pw2RnbpWSAr7SkVdCwXK2XSJDQ5fZ4HBEz9VTFYrG23ELuLjvx5njOLNgDAJuf5JB2tn4nMjjcnl1e8qcYVwZqFzEv2zhLyDWMkV4tzl4asLnvyAxTBkxPRZj2pRABWwb3kEofpsHYxMTAn38YSpZreoXipZWBnu6HDURaruXaIPYFPYHl9Ls9wsuD7rzaGfbOyfVgLIGK5rODphwRA7lm88bGKY8b7tWOtepyEvaLxMI7GZF5ScwpZTYeEDNUKPzvM2Im9zehIaznpguNdNXNMLWnwPu4H6zEvajkw3G3ucSiXKmh6XNe3hkdSANm3vnxzRXm4fcuzAx68IElXE2bkGFElluDLo6EsUDWZ4JIWBVaDwYdJx8uCXbQdoifzCs5kuuClaDaDqIhb5hJ2WR8mxiueFsS0aDGdIYmye5svmNmzQxFmdOkHoF7CfwuU1yy4uEEt9vPSP2wFp1dyaMvJW68vtB4kddLmI6gIgVVcT6ZX1Qm6WsusPrdisPLB2ScodXojCbL3DLj6PKG8QDVMWTrL1TpafT2wslRledWIhsTlv2mI3C066WMcTSwKLXdEDhVvFJ6ShiLKSN7gnRrlE0BnAw";
+        string salt = "saltKEYbcTcXHCBxtjD2PnBh44AIQ6XUOCESOhXpEp3HrcGMwbjzQKMSaf63IJemkURWoqHusIeVB8Il91NjiCGQacPUu9qTFaShLbKG0Yj4RCMV56WPj7E14EMpbxy6PlBdILBOkKUB6TGTPJXh1tpdOHTG6KuIvcbQp9qWjaf1uxAKgiTtYRIHhxjJI2viVa6fDZ67QOouOaf2RXQhpsWaTtAVnff6PIFcvJhdPDFGV5nvmZWoCZQodj6yXRDHPw9PyF0iLYm9uFtEunlAAxGB5qqea4X5tZvB1OfLVwymY3a3JPjdxTdvHxCHbqqE0zip61JNqdmeWxGtlRBC6CGoCiHO4XxHCntQBRJDcG0zW7joTdgtTBarsQQhlLXBGMNBSNmmTbDf3hFtawUBCJH18IAiRMwyeQJbJ2bERsY3MVRPuYCf4Au7gN72iGh1lRktSQtEFye7pO46kMXRrEjHQWXInMzzy7X2StXUzHVTFF2VdOoKn0WUqFNvB6PF7qIsOlYKj57bi1Psa34s85WxMSbTkhrd7VHdHZkTVaWdraohXYOePdeEvIwObCGEXkETUzqM5P2yzoBOJSdjpIYaa8zzdLD3yrb1TwCZuJVxsrq0XXY6vErU4QntsW0972XmGNyumFNJiPm4ONKh1RLvS1kddY3nm8276S4TUuZfrRQO8QxZRNuSaZI8JRZp5VojB5DktuMxAQkqoPjQ5Vtb6oXeOyY591CB1MEW1fLTCs0NrL321SaNRMqza1ETogAxpEiYwZ6pIgnMmSqNMRdZnCqA4gMWw1lIVATWK83OCeicNRUNOdfzS7A8vbLcmvKPtpOFvhNzwrrUdkvuKvaYJviQgeR7snGetO9JLCwIlHIj52gMCNU18d32SJl7Xomtl3wIe02SMvq1i1BcaX7lXioqWGmgVqBWU3fsUuGwHi6RUKCCQdEOBfNo2WdpFaCflcgnn0O6jVHCqkv8cQk81AqS00rAmHGCNTwyA6Tq5TXoLlDnC8gAQjDUsZp0z";
+        u32 iters = 1;
+        u32 dklen = 65;
+
+        string res = crypt::hashToString(
+                crypt::pbkdf2(crypt::hmac_whirlpool,
+                    vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+                    vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+                    iters, dklen));
+
+        t.assert(res == "02aef638662c621f26cc74a9c3b18aee5d8bb43f57cdebeded87f80cc942ea6f202fe529cb3e1dfbdac90f98104d25124c70fdd1a40181064fd8f7d873f92d8aea");
+    }
+
+    {
+        // Disabled because it takes too long to run.
+//         string pass = "passDATA";
+//         string salt = "saltKEYbc";
+//         u32 iters = 16777216;
+//         u32 dklen = 7;
+//
+//         string res = crypt::hashToString(
+//                 crypt::pbkdf2(crypt::hmac_whirlpool,
+//                     vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+//                     vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+//                     iters, dklen));
+//
+//         t.assert(res == "ff2fd69bbbce2a");
+    }
+
+    {
+        // Disabled because it takes too long to run.
+//         string pass = "passDATAb00AB";
+//         string salt = "saltKEYbcTcX";
+//         u32 iters = 2097152;
+//         u32 dklen = 481;
+//
+//         string res = crypt::hashToString(
+//                 crypt::pbkdf2(crypt::hmac_whirlpool,
+//                     vector<u8>(pass.c_str(), pass.c_str()+pass.length()),
+//                     vector<u8>(salt.c_str(), salt.c_str()+salt.length()),
+//                     iters, dklen));
+//
+//         t.assert(res == "2911efb590ccec1c3ddb85d8254a3d3e72f21b24783d72d4712350b3fe88643662bc1db4d7ea18305dd1c88e73ceb33bc76ce2b2fdd1f99382df3aa586d6c2a14a3f643f5f093b89ccbf533fbd7e924fbf9a1638fec6e4ac74908260a04e80d44cb3e5a0f86bb1c509a0d341bbf0f5aeda1c4a078a8646ffc2c4dd4734f348481cb30c4fc16b0a33156431f6b6ba27bd2189f8d711d40220a564242cba3fccd5e1d07d43eb4a0e4fa8e21aacd32302c2bb27a984934698adf85655148112296258c9027c3a225fb2306ba2ddbbc0d4ecdf9ea202bdff75128765bd1a3699af5a95dc514e29a98b63ff4e9fa751d7a97470b9c018658693ffe1a2ebab1ba9bb32dea9fffdd476a6f8cbdacab78c1ea8e5e221aaf58ef134e25111d58313466e371fbb68188e0c8ba7679ba825526ded9ad78f3e2de45db17a658978299c6e9720a90587eea4e87bd56ad6bea059dd6b14e2049a40eb65d268f6fc6ac3080bd317d581f4f38b6baf048e5bf273b0be9365338d49f94ed25c71b2ca40fd081467739c6c53cf523b4e7bc110c62185f2ac4fb916fafd8c8f1dadfa535088997e9d8b65630ae64b3d4352225baf6ccc8c115290df996e6948b8b9da730c499fa5308117671afbc64257fdd77e7f053f1f83c092151cce8ecc22b57b3d27ce2934d13e05");
+    }
+}
+
+
 int main()
 {
     tCrashReporter::init();
@@ -1655,6 +2561,7 @@ int main()
 
     tTest("PBKDF2_HMAC_SHA1 test", testPBKDF2_HMAC_SHA1);
     tTest("PBKDF2_HMAC_SHA512 test", testPBKDF2_HMAC_SHA512);
+    tTest("PBKDF2_HMAC_WHIRLPOOL test", testPBKDF2_HMAC_WHIRLPOOL);
 
     return 0;
 }
