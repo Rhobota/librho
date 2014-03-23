@@ -14,14 +14,14 @@ namespace crypt
 {
 
 
-static const u32 kAESKeyLenToUse        = 256;  // in bits
+static const u32 kAESKeyLenToUse = 256;  // in bits
 
-static const string kLibrhoGreeting     = "Hello librho secure server version 1.";
-static const string kSuccessfulGreeting = "Hi!";
-static const string kFailedGreeting     = "No.";
+static const string kLibrhoGreeting     = "\x10\x55\xa9\x8b\xd3\xa3\x9f\x5b\xbb\xd9\x2b\x7c\x7a\x61\x5d\x49";
+static const string kSuccessfulGreeting = "\x95\xd2\x56\xf6\xd8\xb7\xb4\x82\x36\x20\x7b\xbe\x95\x81\x14\x12";
+static const string kFailedGreeting     = "\xf9\x04\x73\xf7\xd1\x79\x34\x46\xb2\xd7\xf2\xca\x05\x64\x1b\xea";
 
-static const string kSalt1 = "384c33048b71ba83d2ec6e420342c7bbbc859c31bae3026439ef";
-static const string kSalt2 = "34c76ae5a45555ff9ff527c98410a6984f3";
+static const string kPad1 = "\x38\x4c\x33\x04\x8b\x71\xba\x83\xd2\xec\x6e\x42\x03\x42\xc7\xbb\xbc\x85\x9c\x31\xba\xe3\x02\x64\x39\xef";
+static const string kPad2 = "\x34\xc7\x6a\xe5\xa4\x55\x55\xff\x9f\xf5\x27\xc9\x84\x10\xa6\x98\x4\xf3";
 
 static const u32 kMinRandMessageLen = 20;
 
@@ -78,9 +78,9 @@ static
 vector<u8> s_hash(vector<u8> vect)
 {
     tSHA512 sha512;
-    sha512.writeAll((const u8*)(&(kSalt1[0])), (i32)(kSalt1.length()));
+    sha512.writeAll((const u8*)(&(kPad1[0])), (i32)(kPad1.length()));
     sha512.writeAll((const u8*)(&(vect[0])),   (i32)(vect.size()));
-    sha512.writeAll((const u8*)(&(kSalt2[0])), (i32)(kSalt2.length()));
+    sha512.writeAll((const u8*)(&(kPad2[0])), (i32)(kPad2.length()));
     return sha512.getHash();
 }
 
