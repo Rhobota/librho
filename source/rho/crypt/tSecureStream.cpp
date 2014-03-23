@@ -14,6 +14,18 @@ namespace crypt
 {
 
 
+static const u32 kAESKeyLenToUse        = 256;  // in bits
+
+static const string kLibrhoGreeting     = "Hello librho secure server version 1.";
+static const string kSuccessfulGreeting = "Hi!";
+static const string kFailedGreeting     = "No.";
+
+static const string kSalt1 = "384c33048b71ba83d2ec6e420342c7bbbc859c31bae3026439ef";
+static const string kSalt2 = "34c76ae5a45555ff9ff527c98410a6984f3";
+
+static const u32 kMinRandMessageLen = 20;
+
+
 tSecureStream::tSecureStream(iReadable* internalReadable,
                              iWritable* internalWritable,
                              const tRSA& rsa,
@@ -65,9 +77,6 @@ bool tSecureStream::flush()
 static
 vector<u8> s_hash(vector<u8> vect)
 {
-    static const string kSalt1 = "384c33048b71ba83d2ec6e420342c7bbbc859c31bae3026439ef";
-    static const string kSalt2 = "34c76ae5a45555ff9ff527c98410a6984f3";
-
     tSHA512 sha512;
     sha512.writeAll((const u8*)(&(kSalt1[0])), (i32)(kSalt1.length()));
     sha512.writeAll((const u8*)(&(vect[0])),   (i32)(vect.size()));
@@ -110,17 +119,16 @@ nKeyLengthAES s_toKeyLen(size_t vectsize)
 void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
 {
     // Greeting.
-    const string librhoGreeting = "Hello librho secure server version 1.";
     string receivedLibrhoGreeting, receivedAppGreeting;
-    rho::unpack(m_internal_readable, receivedLibrhoGreeting, (u32)librhoGreeting.size());
+    rho::unpack(m_internal_readable, receivedLibrhoGreeting, (u32)kLibrhoGreeting.size());
     rho::unpack(m_internal_readable, receivedAppGreeting, (u32)appGreeting.size());
-    if (receivedLibrhoGreeting != librhoGreeting || receivedAppGreeting != appGreeting)
+    if (receivedLibrhoGreeting != kLibrhoGreeting || receivedAppGreeting != appGreeting)
     {
-        rho::pack(m_internal_writable, string("No."));
+        rho::pack(m_internal_writable, string(kFailedGreeting));
         s_flush(m_internal_writable);
         throw eRuntimeError("The secure client did not greet me properly... :(");
     }
-    rho::pack(m_internal_writable, string("Hi!"));
+    rho::pack(m_internal_writable, string(kSuccessfulGreeting));
     s_flush(m_internal_writable);
 
     // Read the encrypted aes key for this connection.
@@ -146,7 +154,7 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
                                       &aeskey[0], s_toKeyLen(aeskey.size()));
 
     // Let myself randomize communication with the client.
-    u32 randLen = secureRand_u8() + 20;
+    u32 randLen = secureRand_u8() + kMinRandMessageLen;
     vector<u8> randVect(randLen);
     secureRand_readAll(&randVect[0], (i32)randLen);
     rho::pack(secureWritable, randVect);
@@ -157,7 +165,7 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
         throw eRuntimeError("The secure client failed the random challenge.");
 
     // Let the client randomize communication with me.
-    rho::unpack(secureReadable, receivedRand, 300);
+    rho::unpack(secureReadable, receivedRand, 256+kMinRandMessageLen);
     receivedRand = s_reverse(receivedRand);
     rho::pack(secureWritable, receivedRand);
     if (!secureWritable->flush()) throw eRuntimeError("Couldn't flush secure stream.");
@@ -170,15 +178,15 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
 void tSecureStream::m_setupClient(const tRSA& rsa, string appGreeting)
 {
     // Greeting.
-    const string librhoGreeting = "Hello librho secure server version 1.";
-    rho::pack(m_internal_writable, librhoGreeting);
+    rho::pack(m_internal_writable, kLibrhoGreeting);
     rho::pack(m_internal_writable, appGreeting);
     s_flush(m_internal_writable);
 
     // Read that the server liked the greeting.
     string greetingResponse;
-    rho::unpack(m_internal_readable, greetingResponse, 100);
-    if (greetingResponse != "Hi!")
+    rho::unpack(m_internal_readable, greetingResponse,
+                (u32)(std::max(kSuccessfulGreeting.length(), kFailedGreeting.length())));
+    if (greetingResponse != kSuccessfulGreeting)
     {
         throw eRuntimeError(string() +
                 "Didn't get proper greeting from the secure server. Received: " +
@@ -186,7 +194,7 @@ void tSecureStream::m_setupClient(const tRSA& rsa, string appGreeting)
     }
 
     // Create an aes key for this connection.
-    vector<u8> aeskey(192/8, 0);
+    vector<u8> aeskey(kAESKeyLenToUse/8, 0);
     secureRand_readAll(&aeskey[0], (i32)aeskey.size());
 
     // Encrypt the aes key and send to the server.
@@ -210,13 +218,13 @@ void tSecureStream::m_setupClient(const tRSA& rsa, string appGreeting)
 
     // Let the server randomize communication with me.
     vector<u8> receivedRand;
-    rho::unpack(secureReadable, receivedRand, 300);
+    rho::unpack(secureReadable, receivedRand, 256+kMinRandMessageLen);
     receivedRand = s_reverse(receivedRand);
     rho::pack(secureWritable, receivedRand);
     if (!secureWritable->flush()) throw eRuntimeError("Couldn't flush secure stream.");
 
     // Let myself randomize communication with the server.
-    u32 randLen = secureRand_u8() + 20;
+    u32 randLen = secureRand_u8() + kMinRandMessageLen;
     vector<u8> randVect(randLen);
     secureRand_readAll(&randVect[0], (i32)randLen);
     rho::pack(secureWritable, randVect);
