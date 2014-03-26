@@ -35,8 +35,8 @@ void test(const tTest& t, tByteWritable& bw, crypt::tWritableAES& cw)
         vector<u8> ct = bw.getBuf();
         t.assert((ct.size() % AES_BLOCK_SIZE) == 0);
 
-        u32 numBlocks = (pt.size() + 4) / AES_BLOCK_SIZE;
-        if ((pt.size() + 4) % AES_BLOCK_SIZE)
+        u32 numBlocks = (pt.size() + 16) / AES_BLOCK_SIZE;
+        if ((pt.size() + 16) % AES_BLOCK_SIZE)
             numBlocks++;
         t.assert(ct.size() == numBlocks*AES_BLOCK_SIZE);
     }
