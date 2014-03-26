@@ -58,20 +58,20 @@ vector<u8> H1(const vector<u8>& ps,
 {
     vector<u8> ret;
 
-    const char*[3] kPads = { "A", "BB", "CCC" };
+    const char* const kPads[3] = { "A", "BB", "CCC" };
 
     for (i32 i = 0; i < 3; i++)
     {
         tSHA1 s;
-        s.write(kPads[i], i+1);
-        s.write(&ps[0], ps.length());
-        s.write(&rc[0], rc.length());
-        s.write(&rs[0], rs.length());
+        s.write((const u8*)kPads[i], i+1);
+        s.write(&ps[0], (i32)ps.size());
+        s.write(&rc[0], (i32)rc.size());
+        s.write(&rs[0], (i32)rs.size());
         vector<u8> sHash = s.getHash();
 
         tMD5 m;
-        m.write(&ps[0], ps.length());
-        m.write(&sHash[0], sHash.length());
+        m.write(&ps[0], (i32)ps.size());
+        m.write(&sHash[0], (i32)sHash.size());
         vector<u8> mHash = m.getHash();
         ret.insert(ret.end(), mHash.begin(), mHash.end());
     }
@@ -160,7 +160,7 @@ static
 vector<u8> s_genRand(u32 numbytes)
 {
     vector<u8> vect(numbytes, 0);
-    secureRand_readAll(&vect[0], vect.size());
+    secureRand_readAll(&vect[0], (i32)vect.size());
     return vect;
 }
 
@@ -236,144 +236,158 @@ bool tSecureStream::flush()
     return m_writable->flush();
 }
 
+static
+void s_failConnection(iWritable* writable, string reason)
+{
+    pack(writable, kFailedGreeting);
+    s_flush(writable);
+    throw eRuntimeError(reason);
+}
+
 void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
 {
-    // Read the greeting from the client.
+    // Read the greeting (part 1) from the client.
     string receivedLibrhoGreeting;
-    rho::unpack(m_internal_readable, receivedLibrhoGreeting, (u32)kLibrhoGreeting.size());
+    try {
+        unpack(m_internal_readable, receivedLibrhoGreeting, (u32)kLibrhoGreeting.size());
+    } catch (ebObject& e) {
+        s_failConnection(m_internal_writable, "The secure client did not greet me properly.");
+    }
     if (receivedLibrhoGreeting != kLibrhoGreeting)
-    {
-        rho::pack(m_internal_writable, string(kFailedGreeting));
-        s_flush(m_internal_writable);
-        throw eRuntimeError("The secure client did not greet me properly... :(");
-    }
+        s_failConnection(m_internal_writable, "The secure client did not greet me properly.");
+
+    // Read the greeting (part 2) from the client.
     string receivedAppGreeting;
-    rho::unpack(m_internal_readable, receivedAppGreeting, (u32)appGreeting.size());
-    if (receivedAppGreeting != appGreeting)
-    {
-        rho::pack(m_internal_writable, string(kFailedGreeting));
-        s_flush(m_internal_writable);
-        throw eRuntimeError(string("The secure client requested different application: ") + receivedAppGreeting);
+    try {
+        unpack(m_internal_readable, receivedAppGreeting, (u32)appGreeting.size());
+    } catch (ebObject& e) {
+        s_failConnection(m_internal_writable, "The secure client requested a different application.");
     }
+    if (receivedAppGreeting != appGreeting)
+        s_failConnection(m_internal_writable, "The secure client requested a different application.");
 
     // Read the client's random bytes.
-    vector<u8> randClient;
-    rho::unpack(m_internal_readable, randClient, kRandMessageLength);
-    if (randClient.size() != kRandMessageLength)
-    {
-        throw eRuntimeError("Didn't get proper rand byte length from the secure server.");
+    vector<u8> rand_c;
+    try {
+        unpack(m_internal_readable, rand_c, kRandVectLen);
+    } catch (ebObject& e) {
+        s_failConnection(m_internal_writable, "The secure client failed to send their random byte vector.");
     }
+    if (rand_c.size() != kRandVectLen)
+        s_failConnection(m_internal_writable, "The secure client sent a random byte vector of the wrong length.");
 
-    // Read the encrypted secret from the client, decrypt it, and make sure it looks okay.
-    vector<u8> encryptedSecret;
-    rho::unpack(m_internal_readable, encryptedSecret, rsa.maxMessageLength()+5);
-    vector<u8> secret = rsa.decrypt(encryptedSecret);
-    if (secret.size() != kLengthOfSecret)
-        throw eRuntimeError("The secure client gave a secret that is an invalid size.");
+    // Read the encrypted pre-secret from the client, decrypt it, and make sure it looks okay.
+    vector<u8> pre_secret;
+    try {
+        vector<u8> enc;
+        unpack(m_internal_readable, enc, rsa.maxMessageLength()+5);
+        pre_secret = rsa.decrypt(enc);
+    } catch (ebObject& e) {
+        s_failConnection(m_internal_writable, "The secure client failed to send an encrypted pre-secret.");
+    }
+    if (pre_secret.size() != kPreSecretLen)
+        s_failConnection(m_internal_writable, "The secure client gave a pre-secret that is the wrong length.");
 
-    // Write my greeting back to the client.
-    rho::pack(m_internal_writable, kSuccessfulGreeting);
+    // Generate the server random byte vector.
+    vector<u8> rand_s = s_genRand(kRandVectLen);
 
-    // Generate the server's random bytes and send to the client.
-    vector<u8> randServer(kRandMessageLength, 0);
-    secureRand_readAll(&randServer[0], kRandMessageLength);
-    rho::pack(m_internal_writable, randServer);
+    // Calculated the shared secret (from the pre-secret).
+    vector<u8> secret = H1(pre_secret, rand_c, rand_s);
 
-    // Calulate H1 and send it to the client.
-    vector<u8> correctH1 = s_genVerificationHash(randClient, randServer, kPad1, secret);
-    rho::pack(m_internal_writable, correctH1);
+    // Calculate the proof-of-server hash. (The convinces the client that we are the actual server.)
+    vector<u8> f = H2(secret, rand_c, rand_s);
 
-    // Flush all this to the client.
+    // Write back to the client all this stuff.
+    pack(m_internal_writable, kSuccessfulGreeting);
+    pack(m_internal_writable, rand_s);
+    pack(m_internal_writable, f);
     s_flush(m_internal_writable);
 
-    // Ensure that the client actually knows the secret (aka, ensure this is not a replay attack).
-    vector<u8> correctH2 = s_genVerificationHash(randServer, randClient, kPad2, secret);
-    vector<u8> receivedH2;
-    rho::unpack(m_internal_readable, receivedH2, (u32)correctH2.size());
-    if (receivedH2 != correctH2)
-    {
-        throw eRuntimeError("The client failed to verify itself.");
+    // Have the client prove that it is a real client, not a reply attack.
+    vector<u8> g = H3(secret, rand_c, rand_s);
+    vector<u8> gPrime;
+    try {
+        unpack(m_internal_readable, gPrime, (u32)g.size());
+    } catch (ebObject& e) {
+        throw eRuntimeError("The client failed to show proof that it is real.");
     }
+    if (gPrime != g)
+        throw eRuntimeError("The client failed to show proof that it is real.");
 
     // Setup secure streams with the client.
-    vector<u8> aeskey = s_genAESKey(secret);
-    refc<tReadableAES> secureReadable;
-    refc<tWritableAES> secureWritable;
-    secureReadable = new tReadableAES(m_internal_readable, kOpModeCBC,
-                                      &aeskey[0], s_toKeyLen(aeskey.size()));
-    secureWritable = new tWritableAES(m_internal_writable, kOpModeCBC,
-                                      &aeskey[0], s_toKeyLen(aeskey.size()));
-
-    // All is well, so make this official!
-    m_readable = secureReadable;
-    m_writable = secureWritable;
+    vector<u8> ksw = H4(secret, rand_c, rand_s);   // <-- the Key for the Server Writer
+    vector<u8> kcw = H5(secret, rand_c, rand_s);   // <-- the Key for the Client Writer
+    m_readable = new tReadableAES(m_internal_readable, kOpModeCBC,
+                                  &kcw[0], s_toKeyLen(kcw.size()));
+    m_writable = new tWritableAES(m_internal_writable, kOpModeCBC,
+                                  &ksw[0], s_toKeyLen(ksw.size()));
 }
 
 void tSecureStream::m_setupClient(const tRSA& rsa, string appGreeting)
 {
-    // Send greeting.
-    rho::pack(m_internal_writable, kLibrhoGreeting);
-    rho::pack(m_internal_writable, appGreeting);
+    // Generate the client random vector.
+    vector<u8> rand_c = s_genRand(kRandVectLen);
 
-    // Generate and send the client random bytes.
-    vector<u8> randClient(kRandMessageLength, 0);
-    secureRand_readAll(&randClient[0], kRandMessageLength);
-    rho::pack(m_internal_writable, randClient);
+    // Generate the pre-secret random vector.
+    vector<u8> pre_secret = s_genRand(kPreSecretLen);
 
-    // Generate, encrypt, and send the shared secret.
-    vector<u8> secret(kLengthOfSecret, 0);
-    secureRand_readAll(&secret[0], kLengthOfSecret);
-    vector<u8> encryptedSecret = rsa.encrypt(secret);
-    rho::pack(m_internal_writable, encryptedSecret);
+    // Encrypt the pre-secret under the server's RSA public key.
+    vector<u8> enc = rsa.encrypt(pre_secret);
 
     // Send all this to the server.
+    pack(m_internal_writable, kLibrhoGreeting);
+    pack(m_internal_writable, appGreeting);
+    pack(m_internal_writable, rand_c);
+    pack(m_internal_writable, enc);
     s_flush(m_internal_writable);
 
     // Read the greeting from the server.
     string greetingResponse;
-    rho::unpack(m_internal_readable, greetingResponse,
-                (u32)(std::max(kSuccessfulGreeting.length(), kFailedGreeting.length())));
-    if (greetingResponse != kSuccessfulGreeting)
-    {
-        throw eRuntimeError(string() +
-                "Didn't get proper greeting from the secure server. Received: " +
-                greetingResponse);
+    try {
+        unpack(m_internal_readable, greetingResponse,
+               (u32)(std::max(kSuccessfulGreeting.length(), kFailedGreeting.length())));
+    } catch (ebObject& e) {
+        throw eRuntimeError("The secure server didn't reply with its greeting.");
     }
+    if (greetingResponse != kSuccessfulGreeting)
+        throw eRuntimeError("The secure server sent the failure greeting.");
 
     // Read the random server bytes.
-    vector<u8> randServer;
-    rho::unpack(m_internal_readable, randServer, kRandMessageLength);
-    if (randServer.size() != kRandMessageLength)
-    {
-        throw eRuntimeError("Didn't get proper rand byte length from the secure server.");
+    vector<u8> rand_s;
+    try {
+        unpack(m_internal_readable, rand_s, kRandVectLen);
+    } catch (ebObject& e) {
+        throw eRuntimeError("The secure server didn't send its random byte vector.");
     }
+    if (rand_s.size() != kRandVectLen)
+        throw eRuntimeError("The secure server sent a random vector of the wrong length.");
 
-    // Read the H1 from the server.
-    vector<u8> correctH1 = s_genVerificationHash(randClient, randServer, kPad1, secret);
-    vector<u8> receivedH1;
-    rho::unpack(m_internal_readable, receivedH1, (u32)correctH1.size());
-    if (correctH1 != receivedH1)
-    {
-        throw eRuntimeError("The server failed to verify itself.");
+    // Calculated the shared secret (from the pre-secret).
+    vector<u8> secret = H1(pre_secret, rand_c, rand_s);
+
+    // Read the proof-of-server hash.
+    vector<u8> f = H2(secret, rand_c, rand_s);
+    vector<u8> fPrime;
+    try {
+        unpack(m_internal_readable, fPrime, (u32)f.size());
+    } catch (ebObject& e) {
+        throw eRuntimeError("The secure server didn't even try to verify itself.");
     }
+    if (fPrime != f)
+        throw eRuntimeError("The secure server failed to verify itself.");
 
-    // Generate and send H2 to the server.
-    vector<u8> correctH2 = s_genVerificationHash(randServer, randClient, kPad2, secret);
-    rho::pack(m_internal_writable, correctH2);
+    // Generate the proof-of-client. (That is, prove we are not just replaying some other connection.)
+    vector<u8> g = H3(secret, rand_c, rand_s);
+    pack(m_internal_writable, g);
     s_flush(m_internal_writable);
 
     // Setup secure streams with the server.
-    vector<u8> aeskey = s_genAESKey(secret);
-    refc<tReadableAES> secureReadable;
-    refc<tWritableAES> secureWritable;
-    secureReadable = new tReadableAES(m_internal_readable, kOpModeCBC,
-                                      &aeskey[0], s_toKeyLen(aeskey.size()));
-    secureWritable = new tWritableAES(m_internal_writable, kOpModeCBC,
-                                      &aeskey[0], s_toKeyLen(aeskey.size()));
-
-    // All is well, so make this official!
-    m_readable = secureReadable;
-    m_writable = secureWritable;
+    vector<u8> ksw = H4(secret, rand_c, rand_s);   // <-- the Key for the Server Writer
+    vector<u8> kcw = H5(secret, rand_c, rand_s);   // <-- the Key for the Client Writer
+    m_readable = new tReadableAES(m_internal_readable, kOpModeCBC,
+                                  &ksw[0], s_toKeyLen(ksw.size()));
+    m_writable = new tWritableAES(m_internal_writable, kOpModeCBC,
+                                  &kcw[0], s_toKeyLen(kcw.size()));
 }
 
 
