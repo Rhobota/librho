@@ -271,7 +271,7 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
     try {
         unpack(m_internal_readable, rand_c, kRandVectLen);
     } catch (ebObject& e) {
-        s_failConnection(m_internal_writable, "The secure client failed to send their random byte vector.");
+        s_failConnection(m_internal_writable, "The secure client sent a random byte vector of the wrong length.");
     }
     if (rand_c.size() != kRandVectLen)
         s_failConnection(m_internal_writable, "The secure client sent a random byte vector of the wrong length.");
@@ -304,15 +304,15 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
     s_flush(m_internal_writable);
 
     // Have the client prove that it is a real client, not a reply attack.
-    vector<u8> g = H3(secret, rand_c, rand_s);
-    vector<u8> gPrime;
+    vector<u8> gPrime = H3(secret, rand_c, rand_s);
+    vector<u8> g;
     try {
-        unpack(m_internal_readable, gPrime, (u32)g.size());
+        unpack(m_internal_readable, g, (u32)gPrime.size());
     } catch (ebObject& e) {
-        throw eRuntimeError("The client failed to show proof that it is real.");
+        throw eRuntimeError("The secure client failed to show proof that it is real.");
     }
-    if (gPrime != g)
-        throw eRuntimeError("The client failed to show proof that it is real.");
+    if (g != gPrime)
+        throw eRuntimeError("The secure client failed to show proof that it is real.");
 
     // Setup secure streams with the client.
     vector<u8> ksw = H4(secret, rand_c, rand_s);   // <-- the Key for the Server Writer
@@ -350,14 +350,14 @@ void tSecureStream::m_setupClient(const tRSA& rsa, string appGreeting)
         throw eRuntimeError("The secure server didn't reply with its greeting.");
     }
     if (greetingResponse != kSuccessfulGreeting)
-        throw eRuntimeError("The secure server sent the failure greeting.");
+        throw eRuntimeError("The secure server sent a failure greeting.");
 
     // Read the random server bytes.
     vector<u8> rand_s;
     try {
         unpack(m_internal_readable, rand_s, kRandVectLen);
     } catch (ebObject& e) {
-        throw eRuntimeError("The secure server didn't send its random byte vector.");
+        throw eRuntimeError("The secure server sent a random vector of the wrong length.");
     }
     if (rand_s.size() != kRandVectLen)
         throw eRuntimeError("The secure server sent a random vector of the wrong length.");
@@ -366,14 +366,14 @@ void tSecureStream::m_setupClient(const tRSA& rsa, string appGreeting)
     vector<u8> secret = H1(pre_secret, rand_c, rand_s);
 
     // Read the proof-of-server hash.
-    vector<u8> f = H2(secret, rand_c, rand_s);
-    vector<u8> fPrime;
+    vector<u8> fPrime = H2(secret, rand_c, rand_s);
+    vector<u8> f;
     try {
-        unpack(m_internal_readable, fPrime, (u32)f.size());
+        unpack(m_internal_readable, f, (u32)fPrime.size());
     } catch (ebObject& e) {
-        throw eRuntimeError("The secure server didn't even try to verify itself.");
+        throw eRuntimeError("The secure server failed to verify itself.");
     }
-    if (fPrime != f)
+    if (f != fPrime)
         throw eRuntimeError("The secure server failed to verify itself.");
 
     // Generate the proof-of-client. (That is, prove we are not just replaying some other connection.)
