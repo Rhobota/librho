@@ -15,7 +15,7 @@ namespace crypt
 tWritableAES::tWritableAES(iWritable* internalStream, nOperationModeAES opmode,
              const u8 key[], nKeyLengthAES keylen)
     : m_stream(internalStream), m_buf(NULL),
-      m_bufSize(0), m_bufUsed(0),
+      m_bufSize(0), m_bufUsed(0), m_seq(0),
       m_opmode(opmode)
 {
     if (m_stream == NULL)
@@ -53,8 +53,10 @@ tWritableAES::tWritableAES(iWritable* internalStream, nOperationModeAES opmode,
     // Alloc stuff...
     m_bufSize = AES_BLOCK_SIZE*512;
     m_buf = new u8[m_bufSize];
-    m_bufUsed = 4;               // <-- the first four bytes are used to store
-                                 //     the size of the chunk
+    m_bufUsed = 16;               // <-- the first 16 bytes are used to store:
+                                  //       1. the size of the chunk (4 bytes)
+                                  //       2. the sequence number of this chunk (8 bytes)
+                                  //       3. the parity of this chunk (4 bytes)
 }
 
 tWritableAES::~tWritableAES()
@@ -73,7 +75,7 @@ i32 tWritableAES::write(const u8* buffer, i32 length)
         throw eInvalidArgument("Stream read/write length must be >0");
 
     if (m_bufUsed >= m_bufSize)
-        if (! flush())    // <-- if successful, resets m_bufUsed to 4
+        if (! flush())    // <-- if successful, resets m_bufUsed to 16
             return 0;
     i32 i;
     for (i = 0; i < length && m_bufUsed < m_bufSize; i++)
@@ -99,7 +101,7 @@ i32 tWritableAES::writeAll(const u8* buffer, i32 length)
 
 bool tWritableAES::flush()
 {
-    if (m_bufUsed <= 4)
+    if (m_bufUsed <= 16)
         return true;
 
     // If in cbc mode and this is the first flush, send the initialization
@@ -117,8 +119,28 @@ bool tWritableAES::flush()
     // Store the size of the chunk.
     m_buf[0] = (u8)((m_bufUsed >> 24) & 0xFF);
     m_buf[1] = (u8)((m_bufUsed >> 16) & 0xFF);
-    m_buf[2] = (u8)((m_bufUsed >> 8)  & 0xFF);
-    m_buf[3] = (u8)((m_bufUsed >> 0)  & 0xFF);
+    m_buf[2] = (u8)((m_bufUsed >>  8) & 0xFF);
+    m_buf[3] = (u8)((m_bufUsed      ) & 0xFF);
+
+    // Store the sequence number of this chunk.
+    m_buf[ 4] = (u8)((m_seq >> 56) & 0xFF);
+    m_buf[ 5] = (u8)((m_seq >> 48) & 0xFF);
+    m_buf[ 6] = (u8)((m_seq >> 40) & 0xFF);
+    m_buf[ 7] = (u8)((m_seq >> 32) & 0xFF);
+    m_buf[ 8] = (u8)((m_seq >> 24) & 0xFF);
+    m_buf[ 9] = (u8)((m_seq >> 16) & 0xFF);
+    m_buf[10] = (u8)((m_seq >>  8) & 0xFF);
+    m_buf[11] = (u8)((m_seq      ) & 0xFF);
+    m_seq += m_bufUsed;
+
+    // Store the parity of this chunk.
+    u8 parity[4] = { 0, 0, 0, 0 };
+    for (u32 i = 0; i < 12; i++)         parity[i%4] ^= m_buf[i];
+    for (u32 i = 16; i < m_bufUsed; i++) parity[i%4] ^= m_buf[i];
+    m_buf[12] = parity[0];
+    m_buf[13] = parity[1];
+    m_buf[14] = parity[2];
+    m_buf[15] = parity[3];
 
     // Randomize the end of the last block.
     // (Removes potential predictable plain text.)
@@ -153,7 +175,7 @@ bool tWritableAES::flush()
     i32 r = m_stream->writeAll(m_buf, bytesToSend);
     if (r < 0 || ((u32)r) != bytesToSend)
         return false;
-    m_bufUsed = 4;
+    m_bufUsed = 16;
 
     // Flush the lower buffer if it supports flushing.
     iFlushable* flushable = dynamic_cast<iFlushable*>(m_stream);
@@ -165,7 +187,7 @@ bool tWritableAES::flush()
 
 void tWritableAES::reset()
 {
-    m_bufUsed = 4;
+    m_bufUsed = 16;
     if (m_opmode == kOpModeCBC)
         m_hasSentInitializationVector = false;
 }
