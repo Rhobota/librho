@@ -40,10 +40,11 @@ class tReadableAES : public iReadable, public bNonCopyable
 
         // Stuff:
         tBufferedReadable m_stream;
-        u8  m_buf[AES_BLOCK_SIZE];
+        u8* m_buf;
+        u32 m_bufSize;
         u32 m_bufUsed;
         u32 m_pos;
-        u32 m_chunkBytesLeftToRead;
+        u64 m_seq;
 
         // Operation mode stuff:
         nOperationModeAES m_opmode;

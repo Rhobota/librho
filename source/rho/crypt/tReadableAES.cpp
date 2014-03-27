@@ -16,8 +16,9 @@ namespace crypt
 tReadableAES::tReadableAES(iReadable* internalStream, nOperationModeAES opmode,
              const u8 key[], nKeyLengthAES keylen)
     : m_stream(internalStream),
+      m_buf(NULL), m_bufSize(0),
       m_bufUsed(0), m_pos(0),
-      m_chunkBytesLeftToRead(0),
+      m_seq(0),
       m_opmode(opmode)
 {
     // Setup encryption state...
@@ -46,11 +47,19 @@ tReadableAES::tReadableAES(iReadable* internalStream, nOperationModeAES opmode,
 
         default: throw eInvalidArgument("opmode is not recognized!");
     }
+
+    // Alloc the chunk buffer.
+    m_bufSize = 512*AES_BLOCK_SIZE;
+    m_buf = new u8[m_bufSize];
 }
 
 tReadableAES::~tReadableAES()
 {
-    // Nothing to do...
+    delete [] m_buf;
+    m_buf = NULL;
+    m_bufSize = 0;
+    m_bufUsed = 0;
+    m_pos = 0;
 }
 
 i32 tReadableAES::read(u8* buffer, i32 length)
@@ -125,31 +134,81 @@ bool tReadableAES::m_refill()
         }
     }
 
-    // Keep track of where in the chunk we are at.
-    if (m_chunkBytesLeftToRead == 0)
+    // We just read the first block (16 bytes) of a chunk from the stream.
+    // This block contains the chunk length, sequence number, and parity.
+    u32 chunkLen = 0;
+    chunkLen |= pt[0]; chunkLen <<= 8;
+    chunkLen |= pt[1]; chunkLen <<= 8;
+    chunkLen |= pt[2]; chunkLen <<= 8;
+    chunkLen |= pt[3];
+
+    u64 seq = 0;
+    seq |= pt[ 4]; seq <<= 8;
+    seq |= pt[ 5]; seq <<= 8;
+    seq |= pt[ 6]; seq <<= 8;
+    seq |= pt[ 7]; seq <<= 8;
+    seq |= pt[ 8]; seq <<= 8;
+    seq |= pt[ 9]; seq <<= 8;
+    seq |= pt[10]; seq <<= 8;
+    seq |= pt[11];
+
+    // Verify that these values are currect.
+    if (chunkLen <= 16)
+        throw eRuntimeError("This stream is not a valid AES stream. The chunk length is <=16.");
+    if (chunkLen > m_bufSize)
+        throw eRuntimeError("This stream is not a valid AES stream. The chunk length is too large.");
+    if (seq != m_seq)
+        throw eRuntimeError("This stream is not a valid AES stream. The sequence number is not what was expected.");
+    m_seq += chunkLen;
+
+    // Start the parity check.
+    u8 parity[4] = { 0, 0, 0, 0 };
+    for (u32 i = 0; i < 16; i++)
+        parity[i%4] ^= pt[i];
+
+    // Read the rest of the chunk into our buffer.
+    u32 extraBytes = (chunkLen % AES_BLOCK_SIZE);
+    u32 bytesToRead = (extraBytes > 0) ? (chunkLen + (AES_BLOCK_SIZE-extraBytes)) : (chunkLen);
+    bytesToRead -= AES_BLOCK_SIZE;
+    r = m_stream.readAll(m_buf, bytesToRead);
+    if (r != (i32)bytesToRead)
     {
-        m_chunkBytesLeftToRead =
-            (pt[0] << 24) |
-            (pt[1] << 16) |
-            (pt[2] <<  8) |
-            (pt[3] <<  0);
-        if (m_chunkBytesLeftToRead <= 4)
+        return (r >= 0);  // <-- makes read() give the expected behavior
+    }
+
+    // Decrypt the bytes we just read.
+    for (u32 i = 0; i < bytesToRead; i += AES_BLOCK_SIZE)
+    {
+        // Decrypt this block.
+        for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
+            ct[j] = m_buf[i+j];
+        rijndaelDecrypt(m_rk, m_Nr, ct, pt);
+
+        // If in CBC mode, deal with the xor chaining stuff.
+        if (m_opmode == kOpModeCBC)
         {
-            throw eRuntimeError("This stream is not a valid AES stream.");
+            for (int j = 0; j < AES_BLOCK_SIZE; j++)
+            {
+                pt[j] ^= m_last_ct[j];
+                m_last_ct[j] = ct[j];
+            }
         }
-        m_bufUsed = std::min((u32)AES_BLOCK_SIZE, m_chunkBytesLeftToRead) - 4;
-        for (u32 i = 0; i < m_bufUsed; i++)
-            m_buf[i] = pt[i+4];
-        m_chunkBytesLeftToRead -= 4;
-        m_chunkBytesLeftToRead -= m_bufUsed;
+
+        // Copy the plain text back to our buffer.
+        for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
+            m_buf[i+j] = pt[j];
     }
-    else
-    {
-        m_bufUsed = std::min((u32)AES_BLOCK_SIZE, m_chunkBytesLeftToRead);
-        for (u32 i = 0; i < m_bufUsed; i++)
-            m_buf[i] = pt[i];
-        m_chunkBytesLeftToRead -= m_bufUsed;
-    }
+
+    // Make sure the parity works out.
+    chunkLen -= 16;
+    for (u32 i = 0; i < chunkLen; i++)
+        parity[i%4] ^= m_buf[i];
+    for (u32 i = 0; i < 4; i++)
+        if (parity[i] != 0)
+            throw eRuntimeError("This stream is not a valid AES stream. The parity is broken.");
+
+    // All must have worked, so set the state up for reading.
+    m_bufUsed = chunkLen;
 
     return true;
 }
@@ -158,7 +217,7 @@ void tReadableAES::reset()
 {
     m_pos = 0;
     m_bufUsed = 0;
-    m_chunkBytesLeftToRead = 0;
+    m_seq = 0;
     if (m_opmode == kOpModeCBC)
         m_hasReadInitializationVector = false;
 }
