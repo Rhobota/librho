@@ -101,9 +101,9 @@ void randomFlushTest(const tTest& t, crypt::nOperationModeAES opmode, u8* key, c
         size_t w = 0;
         while (w < pt1.size())
         {
-            if ((rand() % 3) == 0)
+            if ((rand() % 10) == 0)
                 cw.flush();
-            size_t len = (rand() % 200) + 1;
+            size_t len = (rand() % 1000) + 1;
             i32 w_here = cw.write(&pt1[w], std::min(len, pt1.size()-w));
             if (w_here <= 0)
                 t.fail();
