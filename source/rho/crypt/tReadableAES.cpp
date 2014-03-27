@@ -135,13 +135,16 @@ bool tReadableAES::m_refill()
     }
 
     // We just read the first block (16 bytes) of a chunk from the stream.
-    // This block contains the chunk length, sequence number, and parity.
+    // This block contains the chunk's length, sequence number, and parity.
+
+    // Extract the chunk length.
     u32 chunkLen = 0;
     chunkLen |= pt[0]; chunkLen <<= 8;
     chunkLen |= pt[1]; chunkLen <<= 8;
     chunkLen |= pt[2]; chunkLen <<= 8;
     chunkLen |= pt[3];
 
+    // Extract the sequence number.
     u64 seq = 0;
     seq |= pt[ 4]; seq <<= 8;
     seq |= pt[ 5]; seq <<= 8;
@@ -152,7 +155,7 @@ bool tReadableAES::m_refill()
     seq |= pt[10]; seq <<= 8;
     seq |= pt[11];
 
-    // Verify that these values are currect.
+    // Verify that these values are correct.
     if (chunkLen <= 16)
         throw eRuntimeError("This stream is not a valid AES stream. The chunk length is <=16.");
     if (chunkLen > m_bufSize)
@@ -163,7 +166,7 @@ bool tReadableAES::m_refill()
 
     // Start the parity check.
     u8 parity[4] = { 0, 0, 0, 0 };
-    for (u32 i = 0; i < 16; i++)
+    for (u32 i = 0; i < AES_BLOCK_SIZE; i++)
         parity[i%4] ^= pt[i];
 
     // Read the rest of the chunk into our buffer.
@@ -171,7 +174,7 @@ bool tReadableAES::m_refill()
     u32 bytesToRead = (extraBytes > 0) ? (chunkLen + (AES_BLOCK_SIZE-extraBytes)) : (chunkLen);
     bytesToRead -= AES_BLOCK_SIZE;
     r = m_stream.readAll(m_buf, bytesToRead);
-    if (r != (i32)bytesToRead)
+    if (r < 0 || ((u32)r) != bytesToRead)
     {
         return (r >= 0);  // <-- makes read() give the expected behavior
     }
@@ -200,7 +203,7 @@ bool tReadableAES::m_refill()
     }
 
     // Make sure the parity works out.
-    chunkLen -= 16;
+    chunkLen -= AES_BLOCK_SIZE;
     for (u32 i = 0; i < chunkLen; i++)
         parity[i%4] ^= m_buf[i];
     for (u32 i = 0; i < 4; i++)
