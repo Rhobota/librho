@@ -19,6 +19,11 @@ namespace crypt
 {
 
 
+/**
+ * This writes data to an AES stream. It can be read by the tReadableAES class.
+ *
+ * See tReadableAES for details.
+ */
 class tWritableAES : public iWritable, public iFlushable, public bNonCopyable
 {
     public:
