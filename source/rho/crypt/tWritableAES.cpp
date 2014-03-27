@@ -188,6 +188,7 @@ bool tWritableAES::flush()
 void tWritableAES::reset()
 {
     m_bufUsed = 16;
+    m_seq = 0;
     if (m_opmode == kOpModeCBC)
         m_hasSentInitializationVector = false;
 }
