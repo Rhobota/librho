@@ -100,6 +100,11 @@ void tThread::detach()
     m_detached = true;
 }
 
+refc<iRunnable> tThread::getRunnable() const
+{
+    return m_runnable;
+}
+
 tThread::~tThread()
 {
     if (!m_joined && !m_detached)

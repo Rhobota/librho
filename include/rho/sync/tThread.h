@@ -43,6 +43,11 @@ class tThread : public bNonCopyable
         void detach();
 
         /**
+         * Returns the runnable that this thread is running.
+         */
+        refc<iRunnable> getRunnable() const;
+
+        /**
          * Destructs the thread object. The thread itself becomes detached
          * if it has not already been joined-with.
          */
