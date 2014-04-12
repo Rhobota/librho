@@ -3,6 +3,9 @@
 #include <rho/crypt/hash_utils.h>
 #include <rho/crypt/tMD5.h>
 #include <rho/crypt/tSHA1.h>
+#include <rho/sync/tTimer.h>
+#include <rho/sync/tMutex.h>
+#include <rho/sync/tThread.h>
 
 #include <vector>
 
@@ -256,6 +259,43 @@ void s_failConnection(iWritable* writable, string reason)
     throw eRuntimeError(reason);
 }
 
+static sync::tMutex gConstTimeMutex;
+static u64          gServerGreetingTimingHistory = 0;
+
+class tConstTimeBlock : public bNonCopyable
+{
+    public:
+
+        tConstTimeBlock(u64* timingHistory)
+            : m_history(timingHistory)
+        {
+            m_startTime = sync::tTimer::usecTime();
+        }
+
+        ~tConstTimeBlock()
+        {
+            u64 endTime = sync::tTimer::usecTime();
+            u64 elapsed = endTime - m_startTime;
+
+            u64 sleepTime = 0;
+
+            {
+                sync::tAutoSync as(gConstTimeMutex);
+                if (elapsed > (*m_history))
+                    (*m_history) = elapsed;
+                else
+                    sleepTime = (*m_history) - elapsed;
+            }
+
+            sync::tThread::usleep(sleepTime);
+        }
+
+    private:
+
+        u64* m_history;
+        u64  m_startTime;
+};
+
 void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
 {
     // Read the greeting (part 1) from the client.
@@ -296,19 +336,26 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
         s_failConnection(m_internal_writable, "The secure client failed to send an encrypted pre-secret.");
     }
 
-    // Decrypt the pre-secret and make sure it looks okay.
-    vector<u8> pre_secret = rsa.decrypt(enc);
-    if (pre_secret.size() != kPreSecretLen)
-        s_failConnection(m_internal_writable, "The secure client gave a pre-secret that is the wrong length.");
+    // Now that the server has read everything from the client, it will do some calculations.
+    // We will protect this section with a const time block to protect agains timing side-channel attacks.
+    vector<u8> pre_secret, rand_s, secret, f;
+    {
+        tConstTimeBlock ctb(&gServerGreetingTimingHistory);
 
-    // Generate the server random byte vector.
-    vector<u8> rand_s = s_genRand(kRandVectLen);
+        // Decrypt the pre-secret and make sure it looks okay.
+        pre_secret = rsa.decrypt(enc);
+        if (pre_secret.size() != kPreSecretLen)
+            s_failConnection(m_internal_writable, "The secure client gave a pre-secret that is the wrong length.");
 
-    // Calculated the shared secret (from the pre-secret).
-    vector<u8> secret = H1(pre_secret, rand_c, rand_s);
+        // Generate the server random byte vector.
+        rand_s = s_genRand(kRandVectLen);
 
-    // Calculate the proof-of-server hash. (The convinces the client that we are the actual server.)
-    vector<u8> f = H2(secret, rand_c, rand_s);
+        // Calculated the shared secret (from the pre-secret).
+        secret = H1(pre_secret, rand_c, rand_s);
+
+        // Calculate the proof-of-server hash. (The convinces the client that we are the actual server.)
+        f = H2(secret, rand_c, rand_s);
+    }
 
     // Write back to the client all this stuff.
     pack(m_internal_writable, kSuccessfulGreeting);
