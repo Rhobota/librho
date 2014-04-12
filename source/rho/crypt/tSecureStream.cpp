@@ -288,15 +288,16 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
     if (rand_c.size() != kRandVectLen)
         s_failConnection(m_internal_writable, "The secure client sent a random byte vector of the wrong length.");
 
-    // Read the encrypted pre-secret from the client, decrypt it, and make sure it looks okay.
-    vector<u8> pre_secret;
+    // Read the encrypted pre-secret from the client.
+    vector<u8> enc;
     try {
-        vector<u8> enc;
         unpack(m_internal_readable, enc, rsa.maxMessageLength()+5);
-        pre_secret = rsa.decrypt(enc);
     } catch (ebObject& e) {
         s_failConnection(m_internal_writable, "The secure client failed to send an encrypted pre-secret.");
     }
+
+    // Decrypt the pre-secret and make sure it looks okay.
+    vector<u8> pre_secret = rsa.decrypt(enc);
     if (pre_secret.size() != kPreSecretLen)
         s_failConnection(m_internal_writable, "The secure client gave a pre-secret that is the wrong length.");
 
