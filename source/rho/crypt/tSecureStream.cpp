@@ -296,6 +296,20 @@ class tConstTimeBlock : public bNonCopyable
         u64  m_startTime;
 };
 
+static
+bool s_constTimeIsEqual(const vector<u8>& a, const vector<u8>& b)
+{
+    // Instead of trying to implement a const time compare function, we're
+    // taking another approach. We're hashing both values then comparing them,
+    // which will not be const time but the timings will be meaningless to
+    // anyone who is observing them.
+    // We're taking this approach because writing a const time compare function
+    // is hard, especially when using an optimizing compiler.
+    tSHA1 ahash; ahash.write(&a[0], (i32)a.size());
+    tSHA1 bhash; bhash.write(&b[0], (i32)b.size());
+    return (ahash.getHash() == bhash.getHash());
+}
+
 void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
 {
     // Read the greeting (part 1) from the client.
@@ -338,7 +352,7 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
 
     // Now that the server has read everything from the client, it will do some calculations.
     // We will protect this section with a const time block to protect agains timing side-channel attacks.
-    vector<u8> pre_secret, rand_s, secret, f;
+    vector<u8> pre_secret, rand_s, secret, f, gPrime;
     {
         tConstTimeBlock ctb(&gServerGreetingTimingHistory);
 
@@ -355,6 +369,9 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
 
         // Calculate the proof-of-server hash. (The convinces the client that we are the actual server.)
         f = H2(secret, rand_c, rand_s);
+
+        // Calculate what the client correct response would be.
+        gPrime = H3(secret, rand_c, rand_s);
     }
 
     // Write back to the client all this stuff.
@@ -364,14 +381,13 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
     s_flush(m_internal_writable);
 
     // Have the client prove that it is a real client, not a reply attack.
-    vector<u8> gPrime = H3(secret, rand_c, rand_s);
     vector<u8> g;
     try {
         unpack(m_internal_readable, g, (u32)gPrime.size());
     } catch (ebObject& e) {
         throw eRuntimeError("The secure client failed to show proof that it is real.");
     }
-    if (g != gPrime)
+    if (!s_constTimeIsEqual(g, gPrime))
         throw eRuntimeError("The secure client failed to show proof that it is real.");
 
     // Setup secure streams with the client.
