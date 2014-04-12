@@ -392,6 +392,23 @@ void orderTest(const tTest& t)
 }
 
 
+void popTimeoutTest(const tTest& t)
+{
+    tIntPCQ pcq(1, sync::kGrow);
+    bool didThrow = false;
+    try
+    {
+        pcq.pop(11);   // <-- will block for 11 milliseconds, and then will throw
+        t.fail();
+    }
+    catch (sync::eQueueBlockingTimeoutExpired& e)
+    {
+        didThrow = true;
+    }
+    t.assert(didThrow);
+}
+
+
 int main()
 {
     tCrashReporter::init();
@@ -404,6 +421,7 @@ int main()
     tTest("Throw test", throwTest);
     tTest("Stress test", stressTest);
     tTest("Order test", orderTest);
+    tTest("Pop with timeout test", popTimeoutTest, 100);
 
     return 0;
 }

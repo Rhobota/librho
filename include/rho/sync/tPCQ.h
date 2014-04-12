@@ -8,6 +8,8 @@
 #include <rho/types.h>
 
 #include <pthread.h>
+#include <sys/time.h>
+#include <errno.h>
 
 #include <deque>
 #include <queue>
@@ -77,6 +79,16 @@ class tPCQ : public bNonCopyable
          * thread will block until an item is available.
          */
         T pop();
+
+        /**
+         * Pops the front item off of the queue and returns it. If the
+         * queue has no items when this method is called, the calling
+         * thread will block until an item is available, or until 'timeoutMS'
+         * milliseconds pass. If no item is available after 'timeoutMS'
+         * milliseconds, this method will throw a eQueueBlockingTimeoutExpired
+         * exception.
+         */
+        T pop(u32 timeoutMS);
 
         /**
          * Returns the number of items in the queue.
@@ -208,6 +220,40 @@ T tPCQ<T,U>::pop()
     while (m_size == 0)
     {
         if (pthread_cond_wait(&m_queueHasSomething, &m_mutex) != 0)
+            throw eRuntimeError("Why can't I wait on the condition?");
+    }
+    T f = m_queue.front();
+    m_queue.pop();
+    --m_size;
+    if (m_size == m_capacity-1)
+    {
+        if (pthread_cond_broadcast(&m_queueHasRoom) != 0)
+            throw eRuntimeError("Why can't I broadcast?");
+    }
+    return f;
+}
+
+template <class T, class U>
+T tPCQ<T,U>::pop(u32 timeoutMS)
+{
+    tAutoLock al(this);
+    while (m_size == 0)
+    {
+        struct timeval currtime; gettimeofday(&currtime, NULL);
+        struct timespec abstime;
+        abstime.tv_sec = currtime.tv_sec;
+        abstime.tv_nsec = currtime.tv_usec * 1000;
+        abstime.tv_sec += timeoutMS / 1000;
+        abstime.tv_nsec += (timeoutMS % 1000) * 1000000;
+        if (abstime.tv_nsec >= 1000000000)
+        {
+            abstime.tv_nsec -= 1000000000;
+            abstime.tv_sec += 1;
+        }
+        int returnVal = pthread_cond_timedwait(&m_queueHasSomething, &m_mutex, &abstime);
+        if (returnVal == ETIMEDOUT)
+            throw eQueueBlockingTimeoutExpired();
+        if (returnVal != 0)
             throw eRuntimeError("Why can't I wait on the condition?");
     }
     T f = m_queue.front();
