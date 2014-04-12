@@ -93,6 +93,16 @@ class eDeadlockDetected : public ebSync
 };
 
 
+class eQueueBlockingTimeoutExpired : public ebSync
+{
+    public:
+
+        eQueueBlockingTimeoutExpired() : ebSync("The timeout has expired while blocking on this queue.") { }
+
+        ~eQueueBlockingTimeoutExpired() throw() { }
+};
+
+
 }   // namespace sync
 }   // namespace rho
 
