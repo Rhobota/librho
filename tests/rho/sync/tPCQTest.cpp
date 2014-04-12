@@ -1,4 +1,5 @@
 #include <rho/sync/tPCQ.h>
+#include <rho/sync/tTimer.h>
 #include <rho/refc.h>
 #include <rho/sync/tThread.h>
 #include <rho/tCrashReporter.h>
@@ -396,6 +397,7 @@ void popTimeoutTest(const tTest& t)
 {
     tIntPCQ pcq(1, sync::kGrow);
     bool didThrow = false;
+    u64 starttime = sync::tTimer::usecTime();
     try
     {
         pcq.pop(11);   // <-- will block for 11 milliseconds, and then will throw
@@ -403,6 +405,11 @@ void popTimeoutTest(const tTest& t)
     }
     catch (sync::eQueueBlockingTimeoutExpired& e)
     {
+        u64 endtime = sync::tTimer::usecTime();
+        u64 elapsed = endtime - starttime;
+        u64 elapsedMS = elapsed / 1000;
+        t.assert(elapsedMS > 9);
+        t.assert(elapsedMS < 15);
         didThrow = true;
     }
     t.assert(didThrow);
