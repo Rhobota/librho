@@ -45,10 +45,10 @@ static const string kSalt4 = "\xa7\x59\xe0\xf1\x13\xd5\x34\x15\x56\x3a\xc6\x2d\x
 static const string kSalt5 = "\xeb\x0f\xbb\x9d\xb9\x4c\xdd\xf3\x73\x7b\xac\x14\x92\x31\x55";
 
 // 'h4_iters' in the diagram
-static const u32 kH4Iters = 1000;
+static const u32 kH4Iters = 100;
 
 // 'h5_iters' in the diagram
-static const u32 kH5Iters = 1000;
+static const u32 kH5Iters = 100;
 
 
 static
@@ -131,12 +131,18 @@ vector<u8> H3(const vector<u8>& s,
 
 
 static
-vector<u8> H4(const vector<u8>& s,
+vector<u8> H4(const vector<u8>& ps,
+              const vector<u8>& s,
               const vector<u8>& rc,
               const vector<u8>& rs)
 {
+    vector<u8> pass = ps;
+    pass.insert(pass.end(), s.begin(), s.end());
+    pass.insert(pass.end(), rc.begin(), rc.end());
+    pass.insert(pass.end(), rs.begin(), rs.end());
+
     return pbkdf2(hmac_whirlpool,
-                  s,
+                  pass,
                   vector<u8>(kSalt4.begin(), kSalt4.end()),
                   kH4Iters,
                   kAESKeyLen);
@@ -144,12 +150,18 @@ vector<u8> H4(const vector<u8>& s,
 
 
 static
-vector<u8> H5(const vector<u8>& s,
+vector<u8> H5(const vector<u8>& ps,
+              const vector<u8>& s,
               const vector<u8>& rc,
               const vector<u8>& rs)
 {
+    vector<u8> pass = ps;
+    pass.insert(pass.end(), s.begin(), s.end());
+    pass.insert(pass.end(), rs.begin(), rs.end());
+    pass.insert(pass.end(), rc.begin(), rc.end());
+
     return pbkdf2(hmac_whirlpool,
-                  s,
+                  pass,
                   vector<u8>(kSalt5.begin(), kSalt5.end()),
                   kH5Iters,
                   kAESKeyLen);
