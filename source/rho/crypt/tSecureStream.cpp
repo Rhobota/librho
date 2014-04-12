@@ -327,8 +327,8 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
         throw eRuntimeError("The secure client failed to show proof that it is real.");
 
     // Setup secure streams with the client.
-    vector<u8> ksw = H4(secret, rand_c, rand_s);   // <-- the Key for the Server Writer
-    vector<u8> kcw = H5(secret, rand_c, rand_s);   // <-- the Key for the Client Writer
+    vector<u8> ksw = H4(pre_secret, secret, rand_c, rand_s);   // <-- the Key for the Server Writer
+    vector<u8> kcw = H5(pre_secret, secret, rand_c, rand_s);   // <-- the Key for the Client Writer
     m_readable = new tReadableAES(m_internal_readable, kOpModeCBC,
                                   &kcw[0], s_toKeyLen(kcw.size()));
     m_writable = new tWritableAES(m_internal_writable, kOpModeCBC,
@@ -394,8 +394,8 @@ void tSecureStream::m_setupClient(const tRSA& rsa, string appGreeting)
     s_flush(m_internal_writable);
 
     // Setup secure streams with the server.
-    vector<u8> ksw = H4(secret, rand_c, rand_s);   // <-- the Key for the Server Writer
-    vector<u8> kcw = H5(secret, rand_c, rand_s);   // <-- the Key for the Client Writer
+    vector<u8> ksw = H4(pre_secret, secret, rand_c, rand_s);   // <-- the Key for the Server Writer
+    vector<u8> kcw = H5(pre_secret, secret, rand_c, rand_s);   // <-- the Key for the Client Writer
     m_readable = new tReadableAES(m_internal_readable, kOpModeCBC,
                                   &ksw[0], s_toKeyLen(ksw.size()));
     m_writable = new tWritableAES(m_internal_writable, kOpModeCBC,
