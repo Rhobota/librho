@@ -260,7 +260,9 @@ void s_failConnection(iWritable* writable, string reason)
 }
 
 static sync::tMutex gConstTimeMutex;
-static u64          gServerGreetingTimingHistory = 0;
+static u64          gServerProcessGreetingTimingHistory = 0;
+static u64          gClientInitTimingHistory            = 0;
+static u64          gClientProcessResponseTimingHistory = 0;
 
 class tConstTimeBlock : public bNonCopyable
 {
@@ -313,6 +315,8 @@ bool s_constTimeIsEqual(const vector<u8>& a, const vector<u8>& b)
 void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
 {
     // Read the greeting (part 1) from the client.
+    // Note: The following DOES leak timing information, but we don't
+    //       care because 'kLibrhoGreeting' isn't a secret.
     string receivedLibrhoGreeting;
     try {
         unpack(m_internal_readable, receivedLibrhoGreeting, (u32)kLibrhoGreeting.size());
@@ -323,6 +327,8 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
         s_failConnection(m_internal_writable, "The secure client did not greet me properly.");
 
     // Read the greeting (part 2) from the client.
+    // Note: The following DOES leak timing information, but we don't
+    //       care because 'appGreeting' isn't a secret.
     string receivedAppGreeting;
     try {
         unpack(m_internal_readable, receivedAppGreeting, (u32)appGreeting.size());
@@ -333,6 +339,8 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
         s_failConnection(m_internal_writable, "The secure client requested a different application.");
 
     // Read the client's random bytes.
+    // Again, we don't care about the leaked info here because the correct
+    // random vector length is not a secret.
     vector<u8> rand_c;
     try {
         unpack(m_internal_readable, rand_c, kRandVectLen);
@@ -343,6 +351,7 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
         s_failConnection(m_internal_writable, "The secure client sent a random byte vector of the wrong length.");
 
     // Read the encrypted pre-secret from the client.
+    // (No info is leaked by this section.)
     vector<u8> enc;
     try {
         unpack(m_internal_readable, enc, rsa.maxMessageLength()+5);
@@ -350,11 +359,17 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
         s_failConnection(m_internal_writable, "The secure client failed to send an encrypted pre-secret.");
     }
 
-    // Now that the server has read everything from the client, it will do some calculations.
-    // We will protect this section with a const time block to protect agains timing side-channel attacks.
+    // Now that the server has read everything from the client, it
+    // will do some calculations.
+    // We will protect this section with a const time block to
+    // protect against timing side-channel attacks.
     vector<u8> pre_secret, rand_s, secret, f, gPrime;
     {
-        tConstTimeBlock ctb(&gServerGreetingTimingHistory);
+        // This object is constructed in this code block, and it
+        // will be destructed when this block ends. The d'tor of
+        // this class calls sleep() in order to enforce consistent
+        // timing of the execution of this block.
+        tConstTimeBlock ctb(&gServerProcessGreetingTimingHistory);
 
         // Decrypt the pre-secret and make sure it looks okay.
         pre_secret = rsa.decrypt(enc);
@@ -401,14 +416,26 @@ void tSecureStream::m_setupServer(const tRSA& rsa, string appGreeting)
 
 void tSecureStream::m_setupClient(const tRSA& rsa, string appGreeting)
 {
-    // Generate the client random vector.
-    vector<u8> rand_c = s_genRand(kRandVectLen);
+    // This block is protected by constant timing in case
+    // there is a man-in-the-middle who is causing the client
+    // connection to fail over-and-over and analysing the time
+    // it takes for the client to re-start the connection.
+    // This block prevents info from being leaked about the
+    // particular pre_secret that is being used by the current
+    // connection attempt.
+    vector<u8> rand_c, pre_secret, enc;
+    {
+        tConstTimeBlock ctb(&gClientInitTimingHistory);
 
-    // Generate the pre-secret random vector.
-    vector<u8> pre_secret = s_genRand(kPreSecretLen);
+        // Generate the client random vector.
+        rand_c = s_genRand(kRandVectLen);
 
-    // Encrypt the pre-secret under the server's RSA public key.
-    vector<u8> enc = rsa.encrypt(pre_secret);
+        // Generate the pre-secret random vector.
+        pre_secret = s_genRand(kPreSecretLen);
+
+        // Encrypt the pre-secret under the server's RSA public key.
+        enc = rsa.encrypt(pre_secret);
+    }
 
     // Send all this to the server.
     pack(m_internal_writable, kLibrhoGreeting);
@@ -418,6 +445,8 @@ void tSecureStream::m_setupClient(const tRSA& rsa, string appGreeting)
     s_flush(m_internal_writable);
 
     // Read the greeting from the server.
+    // We don't care if timing info is leaked here
+    // because 'kSuccessfulGreeting' is not a secret.
     string greetingResponse;
     try {
         unpack(m_internal_readable, greetingResponse,
@@ -429,6 +458,7 @@ void tSecureStream::m_setupClient(const tRSA& rsa, string appGreeting)
         throw eRuntimeError("The secure server sent a failure greeting.");
 
     // Read the random server bytes.
+    // Again, we don't care about leaking timing info here.
     vector<u8> rand_s;
     try {
         unpack(m_internal_readable, rand_s, kRandVectLen);
@@ -438,22 +468,32 @@ void tSecureStream::m_setupClient(const tRSA& rsa, string appGreeting)
     if (rand_s.size() != kRandVectLen)
         throw eRuntimeError("The secure server sent a random vector of the wrong length.");
 
-    // Calculated the shared secret (from the pre-secret).
-    vector<u8> secret = H1(pre_secret, rand_c, rand_s);
+    // Another const timing block.
+    vector<u8> secret, fPrime, g;
+    {
+        tConstTimeBlock ctb(&gClientProcessResponseTimingHistory);
+
+        // Calculated the shared secret (from the pre-secret).
+        secret = H1(pre_secret, rand_c, rand_s);
+
+        // Calculate the correct response from the server.
+        fPrime = H2(secret, rand_c, rand_s);
+
+        // Calculate the proof-of-client.
+        g = H3(secret, rand_c, rand_s);
+    }
 
     // Read the proof-of-server hash.
-    vector<u8> fPrime = H2(secret, rand_c, rand_s);
     vector<u8> f;
     try {
         unpack(m_internal_readable, f, (u32)fPrime.size());
     } catch (ebObject& e) {
         throw eRuntimeError("The secure server failed to verify itself.");
     }
-    if (f != fPrime)
+    if (!s_constTimeIsEqual(f, fPrime))
         throw eRuntimeError("The secure server failed to verify itself.");
 
-    // Generate the proof-of-client. (That is, prove we are not just replaying some other connection.)
-    vector<u8> g = H3(secret, rand_c, rand_s);
+    // Send the proof-of-client. (That is, prove we are not just replaying some other connection.)
     pack(m_internal_writable, g);
     s_flush(m_internal_writable);
 
