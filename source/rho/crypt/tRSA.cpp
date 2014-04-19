@@ -99,7 +99,7 @@ vector<u8> tRSA::sign(vector<u8> hash) const
     return sigAsInt.getBytes();
 }
 
-bool tRSA::verify(vector<u8> hash, vector<u8> signature) const
+bool tRSA::verSig(vector<u8> hash, vector<u8> signature) const
 {
     algo::tBigInteger sigAsInt(signature);
     if (sigAsInt >= n)
