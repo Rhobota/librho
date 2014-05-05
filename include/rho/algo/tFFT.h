@@ -73,6 +73,11 @@ class tFFT
         std::vector<double> getPhases();
 
         /**
+         * Returns the sample rate that the input signal was sampled at.
+         */
+        int getSampleRateOfInputSignal();
+
+        /**
          * Converts backwards from a frequency-domain signal to a time-domain
          * signal. The frequency-domain signal is given as a list of real
          * and imaginary parts of several sinusoids.

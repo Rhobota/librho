@@ -106,6 +106,12 @@ vector<double> tFFT::getPhases()
 }
 
 
+int tFFT::getSampleRateOfInputSignal()
+{
+    return m_sampleRate;
+}
+
+
 vector<double> tFFT::inverse(vector<double> realPart, vector<double> imgPart)
 {
     if (realPart.size() != imgPart.size())
