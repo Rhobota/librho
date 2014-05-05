@@ -9,18 +9,18 @@ STATIC_LIB_NAME := librho.a
 CC := $(TARGET)g++
 AR := $(TARGET)ar
 CC_FLAGS_LOCAL := $(CC_FLAGS) \
-	-g -O2 -fopenmp -fvisibility=hidden -Wall -Wextra \
-	-Wno-unused-parameter -Wno-long-long -Wswitch-default \
-	-Wcast-qual -Wcast-align -Wconversion -Werror -pedantic \
-	-I $(INCLUDE_DIR)  # consider: -Wold-style-cast -Wshadow -Wsign-conversion
+	-g -O2 -fvisibility=hidden -Wall -Wextra -Werror -pedantic \
+	-Wswitch-default -Wcast-qual -Wconversion \
+	-Wno-unused-parameter -Wno-long-long -Wno-sign-conversion \
+	-I $(INCLUDE_DIR)  # consider: -Wold-style-cast -Wshadow
 
 ifeq ($(shell uname),Linux)
 	# Linux stuff:
-	CC_FLAGS_LOCAL += -rdynamic -Wdouble-promotion
+	CC_FLAGS_LOCAL += -rdynamic -fopenmp -Wdouble-promotion -Wcast-align
 else
 ifeq ($(shell uname),Darwin)
 	# OSX stuff:
-	CC_FLAGS_LOCAL += -rdynamic
+	CC_FLAGS_LOCAL +=
 	PRE_STEP  := osx_pre_step
 	POST_STEP := osx_post_step
 else
