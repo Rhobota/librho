@@ -7,7 +7,6 @@ ifeq ($(shell uname),Linux)
 	# Linux stuff:
 	LIB_FLAGS = \
 		-lglfw \
-		-lpthread \
 		-lGLU \
 		-lGL
 else
@@ -15,7 +14,6 @@ ifeq ($(shell uname),Darwin)
 	# OSX stuff:
 	LIB_FLAGS = \
 		-lglfw \
-		-lpthread \
 		-framework Foundation \
 		-framework Cocoa \
 		-framework OpenGL \
@@ -24,7 +22,6 @@ else
 	# Mingw stuff:
 	LIB_FLAGS = \
 		-lglfw \
-		-lpthread \
 		-lglu32 \
 		-lopengl32 \
 		-lws2_32 \
@@ -36,7 +33,7 @@ endif
 all : $(EXECUTABLES)
 
 %.exec : %.cpp
-	$(TARGET)g++ -Wall -Werror -I../../../include $^ ../../../objects/librho.a $(LIB_FLAGS) -o $@
+	$(TARGET)g++ -Wall -Werror -pthread -fvisibility=hidden -I../../../include $^ ../../../objects/librho.a $(LIB_FLAGS) -o $@
 
 clean :
 	@rm -f *.exec
