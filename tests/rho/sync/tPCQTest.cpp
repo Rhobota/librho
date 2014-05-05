@@ -401,6 +401,7 @@ void popTimeoutTest(const tTest& t)
     try
     {
         pcq.pop(11);   // <-- will block for 11 milliseconds, and then will throw
+        std::cerr << "Why didn't pop() throw here!?" << std::endl;
         t.fail();
     }
     catch (sync::eQueueBlockingTimeoutExpired& e)
@@ -408,8 +409,12 @@ void popTimeoutTest(const tTest& t)
         u64 endtime = sync::tTimer::usecTime();
         u64 elapsed = endtime - starttime;
         u64 elapsedMS = elapsed / 1000;
+
+        if (elapsedMS <= 9 || elapsedMS >= 15)
+            std::cerr << "elapsedMS: " << elapsedMS << std::endl;
         t.assert(elapsedMS > 9);
         t.assert(elapsedMS < 15);
+
         didThrow = true;
     }
     t.assert(didThrow);
