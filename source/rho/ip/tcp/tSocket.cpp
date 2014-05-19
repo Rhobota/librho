@@ -69,8 +69,7 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
         m_finalize();
         throw eSocketCreationError("Cannot get the current file status flags.");
     }
-    currentFlags |= O_NONBLOCK;
-    if (::fcntl(m_fd, F_SETFL, currentFlags) < 0)
+    if (::fcntl(m_fd, F_SETFL, (currentFlags | O_NONBLOCK)) < 0)
     {
         m_finalize();
         throw eSocketCreationError("Cannot set the socket to be non-blocking during the connect phase.");
@@ -96,7 +95,8 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
         m_finalize();
         std::ostringstream errorStr;
         errorStr << "Host (" << addr.toString() << ") unreachable, ";
-        errorStr << "or host rejected connection on port (" << port << ").";
+        errorStr << "or host rejected connection on port (" << port << "). ";
+        errorStr << "Error: " << "timeout expired on connect()";
         throw eHostUnreachableError(errorStr.str());
     }
 
@@ -117,7 +117,6 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
         throw eHostUnreachableError(errorStr.str());
     }
 
-    currentFlags &= (~O_NONBLOCK);
     if (::fcntl(m_fd, F_SETFL, currentFlags) < 0)
     {
         m_finalize();

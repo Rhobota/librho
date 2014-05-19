@@ -1,4 +1,5 @@
 #include <rho/ip/tAddrGroup.h>
+#include <sstream>
 
 
 namespace rho
@@ -96,10 +97,9 @@ void tAddrGroup::m_init_helper(const char* hostStr, const char* serviceStr,
     }
     if (a != 0)
     {
-        if (a == EAI_NONAME || a == EAI_NODATA)
-            throw eHostNotFoundError("Cannot resolve host to address.");
-        else
-            throw eLogicError(gai_strerror(a));
+        std::ostringstream out;
+        out << "Cannot resolve host to address, error: " << gai_strerror(a);
+        throw eHostNotFoundError(out.str());
     }
 
     struct addrinfo* curr = NULL;
