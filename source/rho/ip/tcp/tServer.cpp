@@ -42,14 +42,14 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
     #endif
     if (m_fd == -1)
     {
-        throw eSocketCreationError("Cannot create posix socket.");
+        throw eSocketCreationError("Cannot create posix server socket.");
     }
 
     #if __APPLE__ || __CYGWIN__ || __MINGW32__
     if (fcntl(m_fd, F_SETFD, FD_CLOEXEC) == -1)
     {
         m_finalize();
-        throw eSocketCreationError("Cannot set close-on-exec on the new socket.");
+        throw eSocketCreationError("Cannot set close-on-exec on the new server socket.");
     }
     #endif
 
@@ -59,7 +59,7 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
             == -1)
     {
         m_finalize();
-        throw eRuntimeError("Cannot set server to ipv6-only.");
+        throw eSocketCreationError("Cannot set server socket to ipv6-only.");
     }
     #endif
 
@@ -73,21 +73,21 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
     #endif
     {
         m_finalize();
-        throw eRuntimeError("Cannot enable reuse-addr on server.");
+        throw eSocketCreationError("Cannot enable reuse-addr on server socket.");
     }
 
     if (::bind(m_fd, m_addr.m_sockaddr, m_addr.m_sockaddrlen) == -1)
     {
         m_finalize();
         std::ostringstream o;
-        o << "Cannot bind tcp server to port (" << bindPort << ").";
+        o << "Cannot bind tcp server socket to port (" << bindPort << ").";
         throw eSocketBindError(o.str());
     }
 
     if (::listen(m_fd, kServerAcceptQueueLength) == -1)
     {
         m_finalize();
-        throw eRuntimeError("Cannot put server in listening state.");
+        throw eSocketBindError("Cannot put server socket into the listening state.");
     }
 }
 
@@ -135,19 +135,26 @@ refc<tSocket> tServer::accept()
 
     if (fd == -1)
     {
-        throw eResourceAcquisitionError(strerror(errno));
+        std::ostringstream o;
+        o << "Server socket failed to accept() a new connection, error: "
+          << strerror(errno);
+        throw eSocketCreationError(o.str());
     }
 
     #if __APPLE__ || __CYGWIN__ || __MINGW32__
     if (fcntl(fd, F_SETFD, FD_CLOEXEC) == -1)
     {
         close(fd);
-        throw eResourceAcquisitionError(strerror(errno));
+        std::ostringstream o;
+        o << "Cannot set close-on-exec on the new accept()ed connection, error: "
+          << strerror(errno);
+        throw eSocketCreationError(o.str());
     }
     #endif
 
     if (returnedLen > sockAddrLen)
     {
+        close(fd);
         throw eLogicError("Something is crazy wrong.");
     }
 
