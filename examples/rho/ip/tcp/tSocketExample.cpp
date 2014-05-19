@@ -9,12 +9,15 @@ using std::cout;
 using std::endl;
 
 
-int main()
+int main(int argc, char* argv[])
 {
+    std::string addrStr = (argc > 1) ? argv[1] : "rhobox.com";
+    std::string portStr = (argc > 2) ? argv[2] : "22";
+
     try
     {
-        ip::tAddrGroup addrGroup("rhobox.com");
-        ip::tcp::tSocket sock(addrGroup, 22, 1000);  // <-- 1 second timeout
+        ip::tAddrGroup addrGroup(addrStr);
+        ip::tcp::tSocket sock(addrGroup, atoi(portStr.c_str()), 1000);  // <-- 1 second timeout
 
         ip::tAddr addr = sock.getForeignAddress();
         u16       port = sock.getForeignPort();
