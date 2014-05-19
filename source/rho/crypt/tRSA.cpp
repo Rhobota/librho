@@ -140,6 +140,15 @@ void tRSA::unpack(iReadable* in)
 
 tRSA tRSA::generate(u32 numBits, u32 numRounds)
 {
+    tByteWritable out;
+    generate(numBits, numRounds, &out);
+    tByteReadable in(out.getBuf());
+    return tRSA(&in);
+}
+
+void tRSA::generate(u32 numBits, u32 numRounds, iWritable* out)
+{
+    // Generate the secret primes: p and q
     algo::tBigInteger p(0);
     algo::tBigInteger q(0);
     do
@@ -148,20 +157,33 @@ tRSA tRSA::generate(u32 numBits, u32 numRounds)
         q = algo::tBigInteger::genPseudoPrime(numBits/2, numRounds);
     } while (p == q);
 
+    // Compute the known modulus: n
     algo::tBigInteger n = p * q;
 
+    // Compute the secret Euler's totient: m
     algo::tBigInteger m = (p-1) * (q-1);
 
+    // Find an appropriate public key: e
     algo::tBigInteger e(65537);
     while (algo::GCD(e, m) > 1)
         e += 2;
 
+    // Compute the private key: d
     algo::tBigInteger d(0), aux(0);
     algo::extendedGCD(e, m, d, aux);
     while (d.isNegative())
         d += m;
 
-    return tRSA(n.getBytes(), e.getBytes(), d.getBytes());
+    // Pack the required values: n, e, and d
+    rho::pack(out, n.getBytes());
+    rho::pack(out, e.getBytes());
+    rho::pack(out, d.getBytes());
+
+    // The following are not current used by this class, but
+    // they might be used in the future for the Chinese Remainder
+    // Algorithm, or for something else...
+    rho::pack(out, p.getBytes());
+    rho::pack(out, q.getBytes());
 }
 
 
