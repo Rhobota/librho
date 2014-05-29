@@ -2,6 +2,7 @@
 #include <rho/ebObject.h>
 #include <rho/tStacktrace.h>
 
+#include <string.h>
 #include <signal.h>
 
 #include <iostream>
