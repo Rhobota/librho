@@ -7,7 +7,6 @@
 #include <errno.h>            // for errno
 #include <fcntl.h>            // for open()
 #include <linux/videodev2.h>  // for all the v4l2 stuff
-#include <signal.h>           // for signal()
 #include <string.h>           // for memset()
 #include <sys/ioctl.h>        // for ioctl()
 #include <sys/mman.h>         // for mmap()

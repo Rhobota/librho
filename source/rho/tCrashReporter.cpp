@@ -60,8 +60,12 @@ static void uninit()
 {
     std::set_terminate(rho::simpleTerminate);
     std::set_unexpected(rho::simpleTerminate);
-    ::signal(SIGSEGV, rho::simpleSigHandler);
-    ::signal(SIGILL, rho::simpleSigHandler);
+
+    struct sigaction act;
+    memset(&act, 0, sizeof(act));
+    act.sa_handler = rho::simpleSigHandler;
+    ::sigaction(SIGSEGV, &act, NULL);
+    ::sigaction(SIGILL, &act, NULL);
 }
 
 static void terminate()
@@ -98,8 +102,12 @@ void tCrashReporter::init()
 {
     std::set_terminate(rho::terminate);
     std::set_unexpected(rho::unexpected);
-    ::signal(SIGSEGV, rho::segmentationFault);
-    ::signal(SIGILL, rho::segmentationFault);
+
+    struct sigaction act;
+    memset(&act, 0, sizeof(act));
+    act.sa_handler = rho::segmentationFault;
+    ::sigaction(SIGSEGV, &act, NULL);
+    ::sigaction(SIGILL, &act, NULL);
 }
 
 void tCrashReporter::terminate()

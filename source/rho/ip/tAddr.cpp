@@ -174,7 +174,10 @@ tAddr::~tAddr()
  */
 static int setSigPipeHandler()
 {
-    signal(SIGPIPE, SIG_IGN);
+    struct sigaction act;
+    memset(&act, 0, sizeof(act));
+    act.sa_handler = SIG_IGN;
+    ::sigaction(SIGPIPE, &act, NULL);
     return 1;
 }
 const int kSigPipeIgnoreKickoff = setSigPipeHandler();
