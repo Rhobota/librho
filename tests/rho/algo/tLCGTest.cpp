@@ -21,53 +21,11 @@ void defaultLCG(const tTest& t)
 }
 
 
-void defaultFairTest(const tTest& t)
-{
-    algo::tLCG lcg(1);
-
-    const u32 kNumBins = 100;
-    u32 bins[kNumBins];
-    for (u32 i = 0; i < kNumBins; i++)
-        bins[i] = 0;
-
-    for (u32 i = 0; i < 1234567890; i++)
-        bins[(lcg.next()%kNumBins)]++;
-
-    for (u32 i = 0; i < kNumBins; i++)
-    {
-        for (u32 j = 0; j < kNumBins; j++)
-            t.assert((bins[i]>bins[j]?bins[i]-bins[j]:bins[j]-bins[i]) <= 20000);
-    }
-}
-
-
-void knuthFairTest(const tTest& t)
-{
-    algo::tKnuthLCG lcg(1);
-
-    const u32 kNumBins = 100;
-    u32 bins[kNumBins];
-    for (u32 i = 0; i < kNumBins; i++)
-        bins[i] = 0;
-
-    for (u32 i = 0; i < 1234567890; i++)
-        bins[(lcg.next()%kNumBins)]++;
-
-    for (u32 i = 0; i < kNumBins; i++)
-    {
-        for (u32 j = 0; j < kNumBins; j++)
-            t.assert((bins[i]>bins[j]?bins[i]-bins[j]:bins[j]-bins[i]) <= 20000);
-    }
-}
-
-
 int main()
 {
     tCrashReporter::init();
 
     tTest("Default LCG test", defaultLCG, 1000);
-    tTest("Default LCG fair test", defaultFairTest);
-    tTest("Knuth LCG fair test", knuthFairTest);
 
     return 0;
 }

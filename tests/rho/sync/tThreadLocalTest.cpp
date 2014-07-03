@@ -12,7 +12,7 @@ using namespace rho;
 using std::vector;
 
 
-const int kTestIterations = 100;
+const int kTestIterations = 2;
 const int kMaxThreads = 100;
 const int kThreadIterations = 1000;
 

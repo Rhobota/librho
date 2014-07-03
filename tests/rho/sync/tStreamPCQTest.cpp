@@ -13,9 +13,9 @@ using std::cout;
 using std::endl;
 
 
-static const u64 kMaxTotalLen = 100000000;
+static const u64 kMaxTotalLen = 10000000;
 static const u64 kMaxReadWrite = 10000;
-static const u32 kNumTests = 100;
+static const u32 kNumTests = 10;
 
 
 class tConsumer : public sync::iRunnable

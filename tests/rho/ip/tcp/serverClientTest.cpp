@@ -19,7 +19,7 @@ using std::endl;
 using std::vector;
 
 
-const int kTestIterations = 20;
+const int kTestIterations = 5;
 const int kMaxSendRecvIterations = 50;
 
 u16 gServerBindPort = 15001;

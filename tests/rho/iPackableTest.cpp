@@ -16,6 +16,9 @@ using std::string;
 using std::vector;
 
 
+static const int kRandIters = 50000;
+
+
 class tMyPackable : public iPackable
 {
     public:
@@ -445,12 +448,12 @@ void f32test(const tTest& t)
     }
 
     // Randomized tests.
-    for (int i = 0; i < 1000000; i++)
+    for (int i = 0; i < kRandIters; i++)
     {
         f32 x;
         u8* p = (u8*)(&x);
-        for (int i = 0; i < 4; i++)
-            p[i] = (u8) (rand() % 256);
+        for (int j = 0; j < 4; j++)
+            p[j] = (u8) (rand() % 256);
         if (std::isnan(x))
             continue;
         f32 y = NAN;
@@ -659,12 +662,12 @@ void f64test(const tTest& t)
     }
 
     // Randomized tests.
-    for (int i = 0; i < 1000000; i++)
+    for (int i = 0; i < kRandIters; i++)
     {
         f64 x;
         u8* p = (u8*)(&x);
-        for (int i = 0; i < 8; i++)
-            p[i] = (u8) (rand() % 256);
+        for (int j = 0; j < 8; j++)
+            p[j] = (u8) (rand() % 256);
         if (std::isnan(x))
             continue;
         f64 y = NAN;

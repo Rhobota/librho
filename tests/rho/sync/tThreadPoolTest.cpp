@@ -9,16 +9,16 @@ using namespace rho;
 
 // Long-running test
 const int kNumThreadsInPool = 32;
-const int kLargeNumTasks = 1000;
-const int kBatchSize = 200;
+const int kLargeNumTasks = 200;
+const int kBatchSize = 50;
 const int kLargeWorkerCountTo = 10000000;
 
 // Short-running test
 const int kMaxThreadsInPool = 32;
-const int kShortNumTasks = 100000;
+const int kShortNumTasks = 10000;
 const int kMaxBatchSize = 200;
 const int kSmallWorkerCountTo = 20000;
-const int kNumRepeatTests = 10;
+const int kNumRepeatTests = 2;
 
 
 class tMyTask : public sync::iRunnable, public bNonCopyable

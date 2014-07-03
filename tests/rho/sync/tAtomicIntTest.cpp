@@ -14,7 +14,7 @@ using std::cerr;
 using std::endl;
 
 
-const int kTestCount = 200;
+const int kTestCount = 20;
 
 sync::ai32 gCount;
 
