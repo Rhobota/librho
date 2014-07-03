@@ -10,7 +10,7 @@ using namespace rho;
 using std::vector;
 
 
-static const int kNumTests = 1000;
+static const int kNumTests = 100;
 
 
 vector<double> createRandomSignal(u32 numSamples, u32 sampleRate)

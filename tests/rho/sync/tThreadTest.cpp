@@ -11,6 +11,7 @@ using namespace rho;
 
 const int kNumSingleThreads = 10000;
 const int kNumConcurrentThreads = 200;
+const int kWorkload = 1000000;
 
 
 class tFoo : public sync::iRunnable, public bNonCopyable
@@ -27,7 +28,7 @@ class tFoo : public sync::iRunnable, public bNonCopyable
             if (m_doWork)
             {
                 int answer = 0;
-                for (int i = 0; i < 10000000; i++)
+                for (int i = 0; i < kWorkload; i++)
                     answer *= (i+4)-i*i;
             }
             m_threadDidRunYay = true;

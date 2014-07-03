@@ -18,7 +18,7 @@ using std::endl;
 using std::vector;
 
 
-static const i32 kMaxTests = 100;
+static const i32 kMaxTests = 10;
 static const i32 kMaxThreads = 100;
 
 

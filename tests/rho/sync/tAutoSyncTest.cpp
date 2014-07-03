@@ -13,7 +13,7 @@
 using namespace rho;
 
 
-const i32 kTestIterations = 30;
+const i32 kTestIterations = 5;
 
 const i32 kMaxThreads = 100;
 const i64 kMaxCount = 10000;

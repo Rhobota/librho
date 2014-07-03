@@ -13,7 +13,7 @@ using std::vector;
 using std::string;
 
 
-static const int kRandIters = 100000;
+static const int kRandIters = 10000;
 
 
 void print(algo::tBigInteger bi)
@@ -577,7 +577,7 @@ int main()
     tTest("tBigInteger mult test", multtest);
     tTest("tBigInteger div test", divtest);
     tTest("tBigInteger mod test", modtest);
-    tTest("tBigInteger final big test", bigtest, 25);
+    tTest("tBigInteger final big test", bigtest);
     tTest("tBigInteger equal test", equaltest);
     tTest("tBigInteger less test", lesstest);
     tTest("tBigInteger pseudo prime test", pseudoPrimeTest);
