@@ -1,0 +1,7 @@
+Dear Future Me or Someone Else,
+
+I used to have some code here that depended on OpenGL. But that didn't really make sense because this library was designed to have no dependencies other than the C and C++ standard libraries.
+
+So I removed it on July 17, 2014. You can go back in time to then if you want to see it. There were also some include files in the 'includes/rho/gl' directory. And there was an example in the 'examples/rho/geo' directory.
+
+- Ryan
