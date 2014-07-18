@@ -2,6 +2,7 @@
 #define __rho_crypt_tWritableAES_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/iWritable.h>
 #include <rho/iFlushable.h>
 #include <rho/bNonCopyable.h>

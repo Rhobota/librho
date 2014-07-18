@@ -2,6 +2,7 @@
 #define __rho_img_tImageCapFactory_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/img/iImageCap.h>
 #include <rho/img/iImageCapParamsEnumerator.h>
 

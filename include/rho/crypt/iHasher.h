@@ -2,6 +2,7 @@
 #define __rho_crypt_iHasher_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/iWritable.h>
 
 

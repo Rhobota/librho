@@ -2,6 +2,7 @@
 #define __rho_crypt_tSecureStream_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/refc.h>
 
 #include <rho/iReadable.h>

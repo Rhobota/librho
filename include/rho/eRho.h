@@ -2,6 +2,7 @@
 #define __rho_eRho_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/ebObject.h>
 
 

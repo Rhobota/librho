@@ -2,6 +2,9 @@
 #define __rho_sync_iRunnable_h__
 
 
+#include <rho/ppcheck.h>
+
+
 namespace rho
 {
 namespace sync

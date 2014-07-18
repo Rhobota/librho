@@ -2,6 +2,7 @@
 #define __rho_sync_tPCQ_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/bNonCopyable.h>
 #include <rho/eRho.h>
 #include <rho/sync/ebSync.h>

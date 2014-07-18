@@ -2,6 +2,7 @@
 #define __rho_algo_tArray_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/eRho.h>
 #include <rho/types.h>
 #include <algorithm>

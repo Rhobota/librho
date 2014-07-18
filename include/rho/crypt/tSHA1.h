@@ -2,6 +2,7 @@
 #define __rho_crypt_tSHA1_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/crypt/iHasher.h>
 
 

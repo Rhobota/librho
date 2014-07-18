@@ -2,6 +2,7 @@
 #define __rho_img_tCurrentFrame_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/bNonCopyable.h>
 #include <rho/img/tImage.h>
 #include <rho/img/tImageCapFactory.h>

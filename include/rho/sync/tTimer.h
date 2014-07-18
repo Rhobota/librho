@@ -2,6 +2,7 @@
 #define __rho_sync_tTimer_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/sync/iTimerObserver.h>
 #include <rho/sync/tThread.h>
 #include <rho/eRho.h>

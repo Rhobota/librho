@@ -2,6 +2,7 @@
 #define __rho_algo_tFFT_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/types.h>
 
 #include <utility>

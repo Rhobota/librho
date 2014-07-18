@@ -2,6 +2,7 @@
 #define __rho_tTest_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/bNonCopyable.h>
 #include <rho/ebObject.h>
 #include <rho/types.h>

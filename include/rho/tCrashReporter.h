@@ -2,6 +2,7 @@
 #define __rho_tCrashReporter_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/bNonCopyable.h>
 
 

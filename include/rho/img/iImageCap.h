@@ -2,6 +2,7 @@
 #define __rho_img_iImageCap_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/img/tImage.h>
 #include <rho/img/tImageCapParams.h>
 

@@ -2,6 +2,7 @@
 #define __rho_algo_tBigInteger_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/algo/tArray.h>
 #include <rho/types.h>
 #include <rho/eRho.h>

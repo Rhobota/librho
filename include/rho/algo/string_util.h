@@ -2,6 +2,8 @@
 #define __rho_algo_string_util_h__
 
 
+#include <rho/ppcheck.h>
+
 #include <string>
 #include <vector>
 

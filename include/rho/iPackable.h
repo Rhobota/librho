@@ -2,6 +2,7 @@
 #define __rho_iPackable_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/iWritable.h>
 #include <rho/iReadable.h>
 #include <rho/eRho.h>

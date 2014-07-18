@@ -2,6 +2,7 @@
 #define __rho_iDrawable_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/iArtist.h>
 #include <rho/refc.h>
 

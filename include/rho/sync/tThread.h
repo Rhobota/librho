@@ -2,6 +2,7 @@
 #define __rho_sync_tThread_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/bNonCopyable.h>
 #include <rho/refc.h>
 #include <rho/types.h>

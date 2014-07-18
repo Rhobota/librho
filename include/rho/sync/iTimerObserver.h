@@ -2,6 +2,7 @@
 #define __rho_sync_iTimerObserver_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/types.h>
 
 

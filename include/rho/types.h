@@ -2,6 +2,7 @@
 #define __rho_types_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/sysinclude.h>
 
 #include <string>

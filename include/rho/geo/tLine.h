@@ -2,6 +2,7 @@
 #define __rho_geo_tLine_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/iPackable.h>
 #include <rho/geo/tVector.h>
 

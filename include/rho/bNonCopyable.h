@@ -2,6 +2,9 @@
 #define __rho_bNonCopyable_h__
 
 
+#include <rho/ppcheck.h>
+
+
 namespace rho
 {
 

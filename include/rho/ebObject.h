@@ -2,6 +2,7 @@
 #define __rho_ebObject_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/tStacktrace.h>
 
 #include <cstdlib>
