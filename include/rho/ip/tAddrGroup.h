@@ -2,7 +2,6 @@
 #define __rho_ip_tAddrGroup_h__
 
 
-#include <rho/ip/_pre.h>
 #include <rho/ip/ebIP.h>
 #include <rho/ip/tAddr.h>
 #include <rho/bNonCopyable.h>
@@ -42,7 +41,7 @@ class tAddrGroup : public bNonCopyable
     private:
 
         void m_init_helper(const char* hostStr, const char* serviceStr,
-                           struct addrinfo* hints);
+                           void* hints);
 
         void m_initLocalhostConnect();
         void m_initLocalhostBind();
@@ -53,10 +52,10 @@ class tAddrGroup : public bNonCopyable
 
     private:
 
-        struct addrinfo* m_addrinfohead;
-        std::vector<struct addrinfo*> m_valid_addrinfos;
+        void* m_addrinfohead;
+        std::vector<void*> m_valid_addrinfos;
 
-        void m_debugprint(std::ostream& o, struct addrinfo* info);
+        void m_debugprint(std::ostream& o, void* info);
 };
 
 

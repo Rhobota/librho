@@ -8,9 +8,9 @@ namespace ip
 {
 
 
-void tAddrGroup::m_debugprint(std::ostream& o, struct addrinfo* info)
+void tAddrGroup::m_debugprint(std::ostream& o, void* info)
 {
-    switch (info->ai_family)
+    switch (((struct addrinfo*)info)->ai_family)
     {
         case AF_INET:
             o << "IPv4";
@@ -23,7 +23,7 @@ void tAddrGroup::m_debugprint(std::ostream& o, struct addrinfo* info)
             break;
     }
     o << "   ";
-    switch (info->ai_socktype)
+    switch (((struct addrinfo*)info)->ai_socktype)
     {
         case SOCK_STREAM:
             o << "STREAM";
@@ -36,7 +36,7 @@ void tAddrGroup::m_debugprint(std::ostream& o, struct addrinfo* info)
             break;
     }
     o << "   ";
-    switch (info->ai_protocol)
+    switch (((struct addrinfo*)info)->ai_protocol)
     {
         case IPPROTO_TCP:
             o << "TCP";
@@ -49,7 +49,7 @@ void tAddrGroup::m_debugprint(std::ostream& o, struct addrinfo* info)
             break;
     }
     o << "\n";
-    o << tAddr(info->ai_addr, info->ai_addrlen).toString();
+    o << tAddr(((struct addrinfo*)info)->ai_addr, ((struct addrinfo*)info)->ai_addrlen).toString();
     o << "\n";
 }
 
@@ -86,12 +86,12 @@ tAddrGroup::tAddrGroup(std::string host, bool resolve)
 }
 
 void tAddrGroup::m_init_helper(const char* hostStr, const char* serviceStr,
-                               struct addrinfo* hints)
+                               void* hints)
 {
     int a;
     for (int i = 0; i < 10; i++)
     {
-        a = getaddrinfo(hostStr, serviceStr, hints, &m_addrinfohead);
+        a = getaddrinfo(hostStr, serviceStr, (struct addrinfo*)hints, &((struct addrinfo*)m_addrinfohead));
         if (a != EAI_AGAIN)
             break;
     }
@@ -103,7 +103,7 @@ void tAddrGroup::m_init_helper(const char* hostStr, const char* serviceStr,
     }
 
     struct addrinfo* curr = NULL;
-    for (curr = m_addrinfohead; curr != NULL; curr = curr->ai_next)
+    for (curr = ((struct addrinfo*)m_addrinfohead); curr != NULL; curr = curr->ai_next)
     {
         if (curr->ai_family == AF_INET || curr->ai_family == AF_INET6)
             m_valid_addrinfos.push_back(curr);
@@ -183,7 +183,7 @@ void tAddrGroup::m_finalize()
 {
     if (m_addrinfohead)
     {
-        freeaddrinfo(m_addrinfohead);
+        freeaddrinfo(((struct addrinfo*)m_addrinfohead));
         m_addrinfohead = NULL;
         m_valid_addrinfos.clear();
     }
