@@ -24,9 +24,9 @@ tAddr& tAddr::operator= (const tAddr& other)
 
 nVersion tAddr::getVersion() const
 {
-    if (m_sockaddr->sa_family == AF_INET)
+    if (((struct sockaddr*)m_sockaddr)->sa_family == AF_INET)
         return kIPv4;
-    else if (m_sockaddr->sa_family == AF_INET6)
+    else if (((struct sockaddr*)m_sockaddr)->sa_family == AF_INET6)
         return kIPv6;
     else
         throw eLogicError(
@@ -37,7 +37,7 @@ std::vector<u8> tAddr::getAddress() const
 {
     std::vector<u8> rep;
 
-    if (m_sockaddr->sa_family == AF_INET)
+    if (((struct sockaddr*)m_sockaddr)->sa_family == AF_INET)
     {
         struct sockaddr_in* ip4sockAddr = (struct sockaddr_in*) m_sockaddr;
         struct in_addr* ip4addr = &(ip4sockAddr->sin_addr);
@@ -47,7 +47,7 @@ std::vector<u8> tAddr::getAddress() const
         rep.push_back((u8)((ipVal >> 16) & 0xFF));
         rep.push_back((u8)((ipVal >> 24) & 0xFF));
     }
-    else if (m_sockaddr->sa_family == AF_INET6)
+    else if (((struct sockaddr*)m_sockaddr)->sa_family == AF_INET6)
     {
         struct sockaddr_in6* ip6sockAddr = (struct sockaddr_in6*) m_sockaddr;
         struct in6_addr* ip6addr = &(ip6sockAddr->sin6_addr);
@@ -68,12 +68,12 @@ u16 tAddr::getUpperProtoPort() const
 {
     u16 port = 0;
 
-    if (m_sockaddr->sa_family == AF_INET)
+    if (((struct sockaddr*)m_sockaddr)->sa_family == AF_INET)
     {
         struct sockaddr_in* ip4sockAddr = (struct sockaddr_in*) m_sockaddr;
         port = ntohs(ip4sockAddr->sin_port);
     }
-    else if (m_sockaddr->sa_family == AF_INET6)
+    else if (((struct sockaddr*)m_sockaddr)->sa_family == AF_INET6)
     {
         struct sockaddr_in6* ip6sockAddr = (struct sockaddr_in6*) m_sockaddr;
         port = ntohs(ip6sockAddr->sin6_port);
@@ -89,12 +89,12 @@ u16 tAddr::getUpperProtoPort() const
 
 void tAddr::setUpperProtoPort(u16 port)
 {
-    if (m_sockaddr->sa_family == AF_INET)
+    if (((struct sockaddr*)m_sockaddr)->sa_family == AF_INET)
     {
         struct sockaddr_in* ip4sockAddr = (struct sockaddr_in*) m_sockaddr;
         ip4sockAddr->sin_port = htons(port);
     }
-    else if (m_sockaddr->sa_family == AF_INET6)
+    else if (((struct sockaddr*)m_sockaddr)->sa_family == AF_INET6)
     {
         struct sockaddr_in6* ip6sockAddr = (struct sockaddr_in6*) m_sockaddr;
         ip6sockAddr->sin6_port = htons(port);
@@ -112,7 +112,7 @@ std::string tAddr::toString(bool reverseLookup) const
     char hostname[NI_MAXHOST];
     int res;
     int flags = 0; if (!reverseLookup) flags = NI_NUMERICHOST;
-    while ((res = ::getnameinfo(m_sockaddr, m_sockaddrlen, hostname, NI_MAXHOST, NULL, 0, flags))
+    while ((res = ::getnameinfo(((struct sockaddr*)m_sockaddr), m_sockaddrlen, hostname, NI_MAXHOST, NULL, 0, flags))
             == EAI_AGAIN) { }
     if (res != 0)
         throw eRuntimeError("cannot toString() the IP address");
@@ -132,19 +132,19 @@ tAddr::tAddr()
 {
 }
 
-tAddr::tAddr(struct sockaddr* sockAddr, int length)
+tAddr::tAddr(void* sockAddr, int length)
     : m_sockaddr(NULL),
       m_sockaddrlen(0)
 {
     m_init(sockAddr, length);
 }
 
-void tAddr::m_init(struct sockaddr* sockAddr, int length)
+void tAddr::m_init(void* sockAddr, int length)
 {
     if (m_sockaddr)
         m_finalize();
 
-    m_sockaddr = (struct sockaddr*) malloc(length);
+    m_sockaddr = malloc(length);
     m_sockaddrlen = length;
     memcpy(m_sockaddr, sockAddr, length);
 }
