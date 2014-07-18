@@ -2,7 +2,6 @@
 #define __rho_ip_tAddr_h__
 
 
-#include <rho/ip/_pre.h>
 #include <rho/ip/tcp/_pre.h>
 #include <rho/ip/ebIP.h>
 #include <rho/types.h>
@@ -41,9 +40,9 @@ class tAddr
     private:
 
         tAddr();
-        tAddr(struct sockaddr* sockAddr, int length);
+        tAddr(void* sockAddr, int length);
 
-        void m_init(struct sockaddr* sockAddr, int length);
+        void m_init(void* sockAddr, int length);
         void m_finalize();
 
         u16  getUpperProtoPort() const;
@@ -51,7 +50,7 @@ class tAddr
 
     private:
 
-        struct sockaddr* m_sockaddr;
+        void* m_sockaddr;
         int m_sockaddrlen;
 
         friend class tAddrGroup;
