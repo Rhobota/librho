@@ -56,10 +56,10 @@ int main()
 {
     srand(time(0));
 
-    sync::tThread t1(new tRunnable);
-    sync::tThread t2(new tRunnable);
-    sync::tThread t3(new tRunnable);
-    sync::tThread t4(new tRunnable);
+    sync::tThread t1(refc<sync::iRunnable>(new tRunnable));
+    sync::tThread t2(refc<sync::iRunnable>(new tRunnable));
+    sync::tThread t3(refc<sync::iRunnable>(new tRunnable));
+    sync::tThread t4(refc<sync::iRunnable>(new tRunnable));
 
     t1.join();
     t2.join();

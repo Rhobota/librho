@@ -60,7 +60,8 @@ class tCountingObject
 
 void example1()
 {
-    refc<int> r = new int(99);
+    refc<int> r;
+    r = new int(99);
     int x = *r;
     assert(x == 99);
 } // --------------------------> // The 'int' is delete when 'r' goes oos here.
@@ -70,7 +71,7 @@ void example2()
 {
     {
         assert(gObjectCount == 0);
-        refc<tCountingObject> r = new tCountingObject;
+        refc<tCountingObject> r; r = new tCountingObject;
         assert(gObjectCount == 1);
 
         tCountingObject& c = *r;     // cool huh?
@@ -87,7 +88,7 @@ void example3()
     // 'Const' example:
     {
         assert(gObjectCount == 0);
-        const refc<tCountingObject> r = new tCountingObject;
+        const refc<tCountingObject> r(new tCountingObject);
         assert(gObjectCount == 1);
 
         // Can't call r->foo() because foo() is not labels 'const'
@@ -105,9 +106,9 @@ void example3()
 void example4()
 {
     {
-        refc<int> myref = new int(15);
-        refc<int> myref2 = myref;
-        refc<int> myref3 = new int(15);
+        refc<int> myref(new int(15));
+        refc<int> myref2(myref);
+        refc<int> myref3(new int(15));
 
         assert(myref == myref2);          //
         assert(myref != myref3);          // These operators operator on the ref
