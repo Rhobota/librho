@@ -12,6 +12,7 @@ CC_FLAGS_LOCAL := $(CC_FLAGS) \
 	-g -O2 -fvisibility=hidden -Wall -Wextra -Werror -pedantic \
 	-Wswitch-default -Wcast-qual -Wconversion \
 	-Wno-unused-parameter -Wno-long-long -Wno-sign-conversion \
+	-D_FILE_OFFSET_BITS=64 \
 	-I $(INCLUDE_DIR)  # consider: -Wold-style-cast -Wshadow
 
 ifeq ($(shell uname),Linux)
