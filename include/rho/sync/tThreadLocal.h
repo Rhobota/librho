@@ -4,8 +4,7 @@
 
 #include <rho/bNonCopyable.h>
 #include <rho/eRho.h>
-
-#include <pthread.h>    // posix header
+#include <rho/sysinclude.h>
 
 
 namespace rho
