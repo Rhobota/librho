@@ -5,12 +5,8 @@
 #include <rho/bNonCopyable.h>
 #include <rho/refc.h>
 #include <rho/types.h>
-
 #include <rho/sync/iRunnable.h>
-
-#include <pthread.h>   //
-#include <errno.h>     // posix headers
-#include <unistd.h>    //
+#include <rho/sysinclude.h>
 
 
 namespace rho

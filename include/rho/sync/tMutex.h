@@ -3,11 +3,8 @@
 
 
 #include <rho/bNonCopyable.h>
-
 #include <rho/sync/iSync.h>
-
-#include <pthread.h>   // posix headers
-#include <errno.h>     //
+#include <rho/sysinclude.h>
 
 
 namespace rho

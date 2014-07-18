@@ -2,7 +2,7 @@
 #define __rho_types_h__
 
 
-#include <stdint.h>   // posix header file
+#include <rho/sysinclude.h>
 
 #include <string>
 
