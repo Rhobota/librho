@@ -30,13 +30,10 @@ void simpleThreadCreation()
      * "hardcoded", such as below where exactly two threads are always created.
      */
 
-    /*
-     * Don't worry, the heap-allocated objects here will be put into a refc's by
-     * tThread and each of their ref-counts will be kept >0 until each thread
-     * terminates.
-     */
-    sync::tThread t1(new tMyAwesomeRunnable);
-    sync::tThread t2(new tMyAwesomeRunnable);
+    refc<sync::iRunnable> runnable1(new tMyAwesomeRunnable);
+    refc<sync::iRunnable> runnable2(new tMyAwesomeRunnable);
+    sync::tThread t1(runnable1);
+    sync::tThread t2(runnable2);
 
     /*
      * You don't have to join() with your threads; you are allowed to let the
@@ -72,7 +69,11 @@ void complexThreadCreation()
     vector< refc<sync::tThread> > threads;
 
     for (int i = 0; i < numThreads; i++)
-        threads.push_back(new sync::tThread(new tMyAwesomeRunnable));
+    {
+        refc<sync::iRunnable> runnable(new tMyAwesomeRunnable);
+        refc<sync::tThread> thread(new sync::tThread(runnable));
+        threads.push_back(thread);
+    }
 
     for (int i = 0; i < numThreads; i++)
         threads[i]->join();
