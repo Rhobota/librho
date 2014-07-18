@@ -2,6 +2,7 @@
 #define __rho_audio_tWaveMaker_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/types.h>
 
 #include <string>

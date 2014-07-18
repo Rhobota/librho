@@ -2,6 +2,7 @@
 #define __rho_geo_units_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/types.h>
 
 

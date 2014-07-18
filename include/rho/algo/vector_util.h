@@ -2,6 +2,7 @@
 #define __rho_algo_vector_util_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/eRho.h>
 #include <rho/algo/tLCG.h>
 

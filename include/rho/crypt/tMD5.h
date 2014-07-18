@@ -2,6 +2,7 @@
 #define __rho_crypt_tMD5_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/crypt/iHasher.h>
 
 

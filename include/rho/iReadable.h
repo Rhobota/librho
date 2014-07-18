@@ -2,6 +2,7 @@
 #define __rho_iReadable_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/bNonCopyable.h>
 #include <rho/types.h>
 #include <rho/eRho.h>

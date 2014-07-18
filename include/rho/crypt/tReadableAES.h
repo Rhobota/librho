@@ -2,6 +2,7 @@
 #define __rho_crypt_tReadableAES_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/iReadable.h>
 #include <rho/bNonCopyable.h>
 #include <rho/crypt/nKeyLength.h>

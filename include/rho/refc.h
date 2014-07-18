@@ -2,6 +2,7 @@
 #define __rho_refc_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/eRho.h>
 
 #include <rho/sync/tAtomicInt.h>

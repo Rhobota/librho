@@ -2,6 +2,9 @@
 #define __rho_crypt_nOperationModeAES_h__
 
 
+#include <rho/ppcheck.h>
+
+
 namespace rho
 {
 namespace crypt

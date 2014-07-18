@@ -2,6 +2,7 @@
 #define __rho_img_tCanvas_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/img/nImageFormat.h>
 #include <rho/img/tImage.h>
 #include <rho/geo/tRect.h>

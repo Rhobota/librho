@@ -2,6 +2,7 @@
 #define __rho_img_nImageFormat_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/types.h>
 #include <rho/eRho.h>
 

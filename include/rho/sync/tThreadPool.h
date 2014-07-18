@@ -2,6 +2,7 @@
 #define __rho_sync_tThreadPool_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/sync/tThread.h>
 #include <rho/sync/tPCQ.h>
 

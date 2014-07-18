@@ -2,6 +2,7 @@
 #define __rho_img_ebImg_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/eRho.h>
 
 

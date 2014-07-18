@@ -2,6 +2,7 @@
 #define __rho_geo_tVector_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/eRho.h>
 #include <rho/iPackable.h>
 #include <rho/geo/units.h>

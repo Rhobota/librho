@@ -2,6 +2,7 @@
 #define __rho_bObjectTracer_h__
 
 
+#include <rho/ppcheck.h>
 #include <iostream>
 #include <string>
 

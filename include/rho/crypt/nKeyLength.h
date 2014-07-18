@@ -2,6 +2,9 @@
 #define __rho_crypt_nKeyLength_h__
 
 
+#include <rho/ppcheck.h>
+
+
 namespace rho
 {
 namespace crypt

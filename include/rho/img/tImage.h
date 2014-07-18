@@ -2,6 +2,7 @@
 #define __rho_img_tImage_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/bNonCopyable.h>
 #include <rho/geo/tRect.h>
 #include <rho/img/nImageFormat.h>

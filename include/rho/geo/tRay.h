@@ -2,6 +2,7 @@
 #define __rho_geo_tRay_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/iPackable.h>
 #include <rho/geo/tBox.h>
 #include <rho/geo/tLine.h>

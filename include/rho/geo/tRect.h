@@ -2,6 +2,7 @@
 #define __rho_geo_tRect_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/iDrawable.h>
 #include <rho/iPackable.h>
 #include <rho/geo/tBox.h>

@@ -2,6 +2,8 @@
 #define __rho_tStacktrace_h__
 
 
+#include <rho/ppcheck.h>
+
 #include <cstdlib>
 #include <ostream>
 

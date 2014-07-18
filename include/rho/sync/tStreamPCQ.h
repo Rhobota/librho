@@ -2,6 +2,7 @@
 #define __rho_sync_tStreamPCQ_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/refc.h>
 #include <rho/iReadable.h>
 #include <rho/iWritable.h>

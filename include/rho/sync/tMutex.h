@@ -2,6 +2,7 @@
 #define __rho_sync_tMutex_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/bNonCopyable.h>
 #include <rho/sync/iSync.h>
 #include <rho/sysinclude.h>

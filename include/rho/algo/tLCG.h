@@ -2,6 +2,7 @@
 #define __rho_algo_tLCG_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/iReadable.h>
 
 

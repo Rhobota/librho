@@ -2,6 +2,7 @@
 #define __rho_crypt_hash_utils_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/types.h>
 
 #include <string>

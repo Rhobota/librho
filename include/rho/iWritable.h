@@ -2,6 +2,7 @@
 #define __rho_iWritable_h__
 
 
+#include <rho/ppcheck.h>
 #include <rho/bNonCopyable.h>
 #include <rho/iFlushable.h>
 #include <rho/types.h>
