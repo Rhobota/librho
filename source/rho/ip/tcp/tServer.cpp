@@ -1,5 +1,6 @@
 #include <rho/ip/tcp/tServer.h>
 #include <rho/ip/ebIP.h>
+#include "../_pre.h"
 
 #include <sstream>
 
@@ -76,7 +77,7 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
         throw eSocketCreationError("Cannot enable reuse-addr on server socket.");
     }
 
-    if (::bind(m_fd, m_addr.m_sockaddr, m_addr.m_sockaddrlen) == -1)
+    if (::bind(m_fd, (struct sockaddr*)(m_addr.m_sockaddr), m_addr.m_sockaddrlen) == -1)
     {
         m_finalize();
         std::ostringstream o;

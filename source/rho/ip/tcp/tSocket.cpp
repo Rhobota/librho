@@ -1,5 +1,6 @@
 #include <rho/ip/tcp/tSocket.h>
 #include <rho/ip/ebIP.h>
+#include "../_pre.h"
 
 #include <sstream>
 
@@ -75,7 +76,7 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
         throw eSocketCreationError("Cannot set the socket to be non-blocking during the connect phase.");
     }
 
-    int connectStatus = ::connect(m_fd, m_addr.m_sockaddr, m_addr.m_sockaddrlen);
+    int connectStatus = ::connect(m_fd, (struct sockaddr*)(m_addr.m_sockaddr), m_addr.m_sockaddrlen);
     if (connectStatus != -1 || errno != EINPROGRESS)
     {
         m_finalize();

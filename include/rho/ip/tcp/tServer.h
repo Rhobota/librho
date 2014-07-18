@@ -2,7 +2,6 @@
 #define __rho_ip_tcp_tServer_h__
 
 
-#include <rho/ip/_pre.h>
 #include <rho/ip/tcp/tSocket.h>
 #include <rho/bNonCopyable.h>
 #include <rho/refc.h>
