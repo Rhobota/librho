@@ -8,7 +8,7 @@ This library compiles under:
  - Cygwin
  - OSX
  - iOS
- - Mingw (aka Windows)
+ - Mingw (on Windows)
 
 Following are instructions for compiling on each platform.
 
@@ -46,12 +46,7 @@ To clean-up, run:
 --- OSX ---
 -----------
 
-On OSX, the OpenGL and GLU headers live in a different place. To fix OSX to
-be like the rest of the world, create two files: /usr/include/GL/gl.h and
-/usr/include/GL/glu.h and in each do a #include <OpenGL/gl.h> and a
-#include <OpenGL/glu.h>, respectively.
-
-After that, you can follow the instructions for compiling under Linux.
+Same as the instructions for compiling under Linux.
 
 
 -----------
@@ -100,11 +95,6 @@ $CC_FLAGS equal to '-m32' just for the duration of the `make` command.
 for doing some sort of cross-compilation), you can set the $TARGET variable
 to the desired g++-prefix before running `make`. Do this in the same way as
 described in the Mingw section.
-
-3. Some classes in this library use Eigen, a very fast C++ linear algebra library.
-Eigen supports parallelization using OpenMP, and it will do so by default. If you
-do not want Eigen to parallelize its operations, you should set the macro
-EIGEN_DONT_PARALLELIZE before compiling this library.
 
 
 

@@ -16,7 +16,7 @@ CC_FLAGS_LOCAL := $(CC_FLAGS) \
 
 ifeq ($(shell uname),Linux)
 	# Linux stuff:
-	CC_FLAGS_LOCAL += -rdynamic -fopenmp -Wdouble-promotion -Wcast-align
+	CC_FLAGS_LOCAL += -rdynamic -Wdouble-promotion -Wcast-align
 else
 ifeq ($(shell uname),Darwin)
 	# OSX stuff:
