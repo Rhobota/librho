@@ -1,4 +1,6 @@
 #include <rho/ip/tAddrGroup.h>
+#include "_pre.h"
+
 #include <sstream>
 
 
@@ -91,7 +93,7 @@ void tAddrGroup::m_init_helper(const char* hostStr, const char* serviceStr,
     int a;
     for (int i = 0; i < 10; i++)
     {
-        a = getaddrinfo(hostStr, serviceStr, (struct addrinfo*)hints, &((struct addrinfo*)m_addrinfohead));
+        a = getaddrinfo(hostStr, serviceStr, (struct addrinfo*)hints, (struct addrinfo**)(&m_addrinfohead));
         if (a != EAI_AGAIN)
             break;
     }
@@ -204,7 +206,7 @@ tAddr tAddrGroup::operator[](int i) const
     if (i < 0 || i >= size())
         throw eLogicError("No address with that index in group.");
 
-    struct addrinfo* curr = m_valid_addrinfos[i];
+    struct addrinfo* curr = (struct addrinfo*)(m_valid_addrinfos[i]);
     return tAddr(curr->ai_addr, curr->ai_addrlen);
 }
 
