@@ -323,6 +323,8 @@ void unpack(iReadable* in, std::string& str, u64 maxlen)
     u64 length; unpack(in, length);
     if (length > maxlen)
         throw eBufferOverflow("Unpacking a string: the max length was exceeded!");
+    if ((sizeof(u64) > sizeof(size_t)) && (length > ((size_t)(-1))))
+        throw eBufferOverflow("Unpacking a string: length too big for machine.");
     str = "";
     for (u64 i = 0; i < length; i++)
     {
