@@ -74,7 +74,7 @@ class tSecureRandomInternal : public iReadable, public bNonCopyable
 
             #elif __MINGW32__
 
-            HCRYPTPROV hProvider = NULL;
+            HCRYPTPROV hProvider = 0;
             if (!::CryptAcquireContextW(&hProvider, 0, 0, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
                 throw eResourceAcquisitionError("Cannot create a secure random thingy on windows!");
             m_internal = hProvider;
@@ -90,18 +90,17 @@ class tSecureRandomInternal : public iReadable, public bNonCopyable
             {
                 #if __linux__ || __APPLE__ || __CYGWIN__
 
-                tFileReadable* fileReader = (tFileReadable*) m_internal;
-                delete fileReader;
+                delete m_internal;
+                m_internal = NULL;
 
                 #elif __MINGW32__
 
-                ::CryptReleaseContext((HCRYPTPROV)m_internal, 0);
+                ::CryptReleaseContext(m_internal, 0);
+                m_internal = 0;
 
                 #else
                 #error What platform are you on!?
                 #endif
-
-                m_internal = NULL;
             }
         }
 
@@ -112,11 +111,11 @@ class tSecureRandomInternal : public iReadable, public bNonCopyable
 
             #if __linux__ || __APPLE__ || __CYGWIN__
 
-            return ((tFileReadable*)m_internal)->read(buffer, length);
+            return m_internal->read(buffer, length);
 
             #elif __MINGW32__
 
-            if (!::CryptGenRandom((HCRYPTPROV)m_internal, (DWORD)length, (BYTE*)buffer))
+            if (!::CryptGenRandom(m_internal, (DWORD)length, (BYTE*)buffer))
                 return 0;
             else
                 return length;
@@ -144,7 +143,13 @@ class tSecureRandomInternal : public iReadable, public bNonCopyable
 
     private:
 
-        void* m_internal;
+        #if __linux__ || __APPLE__ || __CYGWIN__
+        tFileReadable* m_internal;
+        #elif __MINGW32__
+        HCRYPTPROV m_internal;
+        #else
+        #error What platform are you on!?
+        #endif
 };
 
 

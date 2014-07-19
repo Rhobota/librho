@@ -19,16 +19,7 @@ extern const int kSigPipeIgnoreKickoff;
 
 #elif __MINGW32__
 
-#include <w32api.h>
-#ifndef  _WIN32_WINNT
-#define  _WIN32_WINNT    WindowsXP
-#endif
-#ifndef  _WIN32_WINDOWS
-#define  _WIN32_WINDOWS  WindowsXP
-#endif
-#ifndef  WINVER
-#define  WINVER          WindowsXP
-#endif
+#define  NTDDI_VERSION  NTDDI_WINXPSP1
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
