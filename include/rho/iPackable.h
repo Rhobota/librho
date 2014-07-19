@@ -59,7 +59,7 @@ void pack(iWritable*  out, f64  x);
 void unpack(iReadable* in, f64& x);
 
 void pack(iWritable*  out, const std::string& str);
-void unpack(iReadable* in, std::string& str, u32 maxlen = 0xFFFFFFFF);
+void unpack(iReadable* in, std::string& str, u64 maxlen = 0xFFFFFFFFFFFFFFFF);
 
 void pack(iWritable*  out, const iPackable& packable);
 void unpack(iReadable* in, iPackable& packable);
@@ -67,20 +67,22 @@ void unpack(iReadable* in, iPackable& packable);
 template <class T>
 void pack(iWritable* out, const std::vector<T>& vtr)
 {
-    pack(out, (u32)vtr.size());
+    pack(out, (u64)vtr.size());
     for (size_t i = 0; i < vtr.size(); i++)
         pack(out, vtr[i]);
 }
 
 template <class T>
-void unpack(iReadable* in, std::vector<T>& vtr, u32 maxlen = 0xFFFFFFFF)
+void unpack(iReadable* in, std::vector<T>& vtr, u64 maxlen = 0xFFFFFFFFFFFFFFFF)
 {
-    u32 size; unpack(in, size);
+    u64 size; unpack(in, size);
     if (size > maxlen)
         throw eBufferOverflow("Unpacking a vector: the max length was exceeded!");
-    vtr = std::vector<T>(size);
-    for (u32 i = 0; i < size; i++)
-        unpack(in, vtr[i]);
+    if ((sizeof(u64) > sizeof(size_t)) && (size > ((size_t)(-1))))
+        throw eBufferOverflow("Unpacking a vector: size too big for machine.");
+    vtr = std::vector<T>((size_t)size);
+    for (u64 i = 0; i < size; i++)
+        unpack(in, vtr[(size_t)i]);
 }
 
 

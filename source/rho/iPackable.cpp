@@ -313,18 +313,18 @@ void unpack(iReadable* in, f64& x)
 
 void pack(iWritable* out, const std::string& str)
 {
-    pack(out, (u32)str.length());
+    pack(out, (u64)str.length());
     for (size_t i = 0; i < str.length(); i++)
         pack(out, (u8)str[i]);
 }
 
-void unpack(iReadable* in, std::string& str, u32 maxlen)
+void unpack(iReadable* in, std::string& str, u64 maxlen)
 {
-    u32 length; unpack(in, length);
+    u64 length; unpack(in, length);
     if (length > maxlen)
         throw eBufferOverflow("Unpacking a string: the max length was exceeded!");
     str = "";
-    for (u32 i = 0; i < length; i++)
+    for (u64 i = 0; i < length; i++)
     {
         u8 c; unpack(in, c);
         str += (char)c;
