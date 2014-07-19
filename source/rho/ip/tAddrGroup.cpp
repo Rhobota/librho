@@ -100,7 +100,7 @@ void tAddrGroup::m_init_helper(const char* hostStr, const char* serviceStr,
     if (a != 0)
     {
         std::ostringstream out;
-        out << "Cannot resolve host to address, error: " << gai_strerror(a);
+        out << "Cannot resolve host (" << hostStr << ") to address, error: " << gai_strerror(a);
         throw eHostNotFoundError(out.str());
     }
 

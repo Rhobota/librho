@@ -54,15 +54,15 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
     }
     #endif
 
-    #if __linux__ || __APPLE__ || __CYGWIN__
     int off = 0;
     if (::setsockopt(m_fd, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&off, sizeof(off))
             == -1)
     {
+        #if __linux__ || __APPLE__
         m_finalize();
         throw eSocketCreationError("Cannot set server socket to ipv6-only.");
+        #endif
     }
-    #endif
 
     int on  = 1;
     #if __linux__ || __APPLE__ || __CYGWIN__

@@ -101,7 +101,7 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
         throw eHostUnreachableError(errorStr.str());
     }
 
-    unsigned int argLen = sizeof(int);
+    socklen_t argLen = sizeof(int);
     if (::getsockopt(m_fd, SOL_SOCKET, SO_ERROR, (void*)(&connectStatus), &argLen) < 0)
     {
         m_finalize();
