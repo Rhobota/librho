@@ -410,10 +410,10 @@ void popTimeoutTest(const tTest& t)
         u64 elapsed = endtime - starttime;
         u64 elapsedMS = elapsed / 1000;
 
-        if (elapsedMS <= 9 || elapsedMS >= 15)
+        if (elapsedMS <= 9 || elapsedMS >= 25)
             std::cerr << "elapsedMS: " << elapsedMS << std::endl;
         t.assert(elapsedMS > 9);
-        t.assert(elapsedMS < 15);
+        t.assert(elapsedMS < 25);
 
         didThrow = true;
     }

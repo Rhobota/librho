@@ -32,7 +32,7 @@ int gSendRecvIterations = 0;
 
 void randomizeWriteData(vector<u8>& data)
 {
-    int writeDataSize = rand() % 100000 + 1;
+    int writeDataSize = (rand() % 100000) + 1;
     data = vector<u8>(writeDataSize);
     for (int i = 0; i < writeDataSize; i++)
         data[i] = (u8) (rand() % 256);
@@ -161,7 +161,7 @@ void test(const tTest& t)
     ++gServerBindPort;
     randomizeWriteData(gServerWriteData);
     randomizeWriteData(gClientWriteData);
-    gSendRecvIterations = rand() % kMaxSendRecvIterations + 1;
+    gSendRecvIterations = (rand() % kMaxSendRecvIterations) + 1;
 
     sync::tThread serverThread(refc<sync::iRunnable>(new tServerRunnable(t)));
     sync::tThread clientThread(refc<sync::iRunnable>(new tClientRunnable(t)));

@@ -51,12 +51,12 @@ vector<u8> hmac(vector<u8> key, const vector<u8>& message)
     // Create the outer padding vector.
     vector<u8> o_key_pad(blocksize, 0x5c);
     for (size_t i = 0; i < blocksize; i++)
-        o_key_pad[i] ^= key[i];
+        o_key_pad[i] = (u8)(o_key_pad[i] ^ key[i]);
 
     // Create the inner padding vector.
     vector<u8> i_key_pad(blocksize, 0x36);
     for (size_t i = 0; i < blocksize; i++)
-        i_key_pad[i] ^= key[i];
+        i_key_pad[i] = (u8)(i_key_pad[i] ^ key[i]);
 
     // Compute the inner hash part.
     Hasher h1;
@@ -144,7 +144,7 @@ vector<u8> pbkdf2_T(hmac_func prf,
 
         assert(res.size() == u.size());
         for (size_t j = 0; j < res.size(); j++)
-            res[j] ^= u[j];
+            res[j] = (u8)(res[j] ^ u[j]);
     }
 
     return res;
