@@ -57,7 +57,11 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
     }
 
     #if __APPLE__ || __CYGWIN__ || __MINGW32__
+    #if __APPLE__ || __CYGWIN__
     if (::fcntl(m_fd, F_SETFD, ::fcntl(m_fd, F_GETFD, 0) | FD_CLOEXEC) == -1)
+    #else
+    if (!SetHandleInformation(m_fd, HANDLE_FLAG_INHERIT, 0))
+    #endif
     {
         m_finalize();
         throw eSocketCreationError("Cannot set close-on-exec on the new socket.");
