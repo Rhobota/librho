@@ -47,7 +47,7 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
     }
 
     #if __APPLE__ || __CYGWIN__ || __MINGW32__
-    if (fcntl(m_fd, F_SETFD, FD_CLOEXEC) == -1)
+    if (fcntl(m_fd, F_SETFD, fcntl(m_fd, F_GETFD, 0) | FD_CLOEXEC) == -1)
     {
         m_finalize();
         throw eSocketCreationError("Cannot set close-on-exec on the new server socket.");
@@ -143,7 +143,7 @@ refc<tSocket> tServer::accept()
     }
 
     #if __APPLE__ || __CYGWIN__ || __MINGW32__
-    if (fcntl(fd, F_SETFD, FD_CLOEXEC) == -1)
+    if (fcntl(fd, F_SETFD, fnctl(fd, F_GETFD, 0) | FD_CLOEXEC) == -1)
     {
         close(fd);
         std::ostringstream o;
