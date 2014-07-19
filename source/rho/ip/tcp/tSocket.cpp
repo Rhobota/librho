@@ -68,6 +68,7 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
     }
     #endif
 
+    #if __linux__ || __APPLE__ || __CYGWIN__
     int currentFlags = ::fcntl(m_fd, F_GETFL);
     if (currentFlags < 0)
     {
@@ -79,9 +80,25 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
         m_finalize();
         throw eSocketCreationError("Cannot set the socket to be non-blocking during the connect phase.");
     }
+    #elif __MINGW32__
+    unsigned long nonblockflag = 1;
+    if (ioctlsocket(m_fd, FIONBIO, &nonblockflag) == -1)
+    {
+        m_finalize();
+        throw eSocketCreationError("Cannot set the socket to be non-blocking during the connect phase.");
+    }
+    #else
+    #error What platform are you on!?
+    #endif
 
     int connectStatus = ::connect(m_fd, (struct sockaddr*)(m_addr.m_sockaddr), m_addr.m_sockaddrlen);
+    #if __linux__ || __APPLE__ || __CYGWIN__
     if (connectStatus != -1 || errno != EINPROGRESS)
+    #elif __MINGW32__
+    if (connectStatus != -1 || WSAGetLastError() != WSAEWOULDBLOCK)
+    #else
+    #error What platform are you on!?
+    #endif
     {
         m_finalize();
         throw eSocketCreationError("Connect behaved weirdly. It should indicate the socket is nonblocking...");
@@ -89,7 +106,13 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
 
     fd_set myfdset;
     FD_ZERO(&myfdset);
+    #if __linux__ || __APPLE__ || __CYGWIN__
     FD_SET(m_fd, &myfdset);
+    #elif __MINGW32__
+    FD_SET((SOCKET)m_fd, &myfdset);
+    #else
+    #error What platform are you on!?
+    #endif
     struct timeval tv;
     tv.tv_sec = (timeoutMS / 1000);
     tv.tv_usec = ((timeoutMS % 1000) * 1000);
@@ -106,7 +129,13 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
     }
 
     socklen_t argLen = sizeof(int);
+    #if __linux__ || __APPLE__ || __CYGWIN__
     if (::getsockopt(m_fd, SOL_SOCKET, SO_ERROR, (void*)(&connectStatus), &argLen) < 0)
+    #elif __MINGW32__
+    if (::getsockopt(m_fd, SOL_SOCKET, SO_ERROR, (char*)(&connectStatus), &argLen) < 0)
+    #else
+    #error What platform are you on!?
+    #endif
     {
         m_finalize();
         throw eSocketCreationError("Cannot get socket error status after select.");
@@ -122,11 +151,22 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
         throw eHostUnreachableError(errorStr.str());
     }
 
+    #if __linux__ || __APPLE__ || __CYGWIN__
     if (::fcntl(m_fd, F_SETFL, currentFlags) < 0)
     {
         m_finalize();
         throw eSocketCreationError("Cannot set the socket back to blocking mode after connect.");
     }
+    #elif __MINGW32__
+    nonblockflag = 0;
+    if (ioctlsocket(m_fd, FIONBIO, &nonblockflag) == -1)
+    {
+        m_finalize();
+        throw eSocketCreationError("Cannot set the socket back to blocking mode after connect.");
+    }
+    #else
+    #error What platform are you on!?
+    #endif
 }
 
 void tSocket::m_init(const tAddrGroup& addrGroup, u16 port, u32 timeoutMS)
