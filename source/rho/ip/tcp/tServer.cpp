@@ -50,7 +50,7 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
     #if __APPLE__ || __CYGWIN__
     if (fcntl(m_fd, F_SETFD, fcntl(m_fd, F_GETFD, 0) | FD_CLOEXEC) == -1)
     #else
-    if (!SetHandleInformation(m_fd, HANDLE_FLAG_INHERIT, 0))
+    if (!SetHandleInformation((HANDLE)m_fd, HANDLE_FLAG_INHERIT, 0))
     #endif
     {
         m_finalize();
@@ -65,6 +65,8 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
         #if __linux__ || __APPLE__
         m_finalize();
         throw eSocketCreationError("Cannot set server socket to ipv6-only.");
+        #else
+        std::cerr << "Cannot set server socket to ipv6-only." << std::endl;
         #endif
     }
 
@@ -150,10 +152,17 @@ refc<tSocket> tServer::accept()
     #if __APPLE__ || __CYGWIN__
     if (fcntl(fd, F_SETFD, fcntl(fd, F_GETFD, 0) | FD_CLOEXEC) == -1)
     #else
-    if (!SetHandleInformation(fd, HANDLE_FLAG_INHERIT, 0))
+    if (!SetHandleInformation((HANDLE)fd, HANDLE_FLAG_INHERIT, 0))
     #endif
     {
-        close(fd);
+        #if __linux__ || __APPLE__ || __CYGWIN__
+        ::close(fd);
+        #elif __MINGW32__
+        ::closesocket(fd);
+        #else
+        #error What platform are you on!?
+        #endif
+        fd = -1;
         std::ostringstream o;
         o << "Cannot set close-on-exec on the new accept()ed connection, error: "
           << strerror(errno);
@@ -163,7 +172,14 @@ refc<tSocket> tServer::accept()
 
     if (returnedLen > sockAddrLen)
     {
-        close(fd);
+        #if __linux__ || __APPLE__ || __CYGWIN__
+        ::close(fd);
+        #elif __MINGW32__
+        ::closesocket(fd);
+        #else
+        #error What platform are you on!?
+        #endif
+        fd = -1;
         throw eLogicError("Something is crazy wrong.");
     }
 
