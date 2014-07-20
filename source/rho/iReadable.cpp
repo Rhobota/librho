@@ -81,7 +81,15 @@ bool tBufferedReadable::m_refill()
 tFileReadable::tFileReadable(std::string filename)
     : m_filename(filename), m_file(NULL), m_eof(false)
 {
+    #if __linux__ || __APPLE__ || __CYGWIN__
     int fd = open(filename.c_str(), O_RDONLY|O_CLOEXEC);
+    #elif __MINGW32__
+    int fd = open(filename.c_str(), O_RDONLY);
+    if (fd >= 0 && !SetHandleInformation((HANDLE)fd, HANDLE_FLAG_INHERIT, 0))
+        throw eRuntimeError("Cannot set CLOEXEC on file descriptor.");
+    #else
+    #error What platform are you on!?
+    #endif
     if (fd >= 0)
         m_file = fdopen(fd, "rb");
     if (m_file == NULL)
