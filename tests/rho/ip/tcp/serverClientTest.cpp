@@ -4,6 +4,7 @@
 #include <rho/tCrashReporter.h>
 #include <rho/tTest.h>
 #include <rho/types.h>
+#include <rho/algo/tLCG.h>
 
 #include <cstdlib>
 #include <cmath>
@@ -12,61 +13,25 @@
 #include <string>
 #include <vector>
 
-
 using namespace rho;
 using std::cout;
 using std::endl;
 using std::vector;
 
 
-const int kTestIterations = 5;
-const int kMaxSendRecvIterations = 50;
-
-u16 gServerBindPort = 15001;
-
-vector<u8> gServerWriteData;
-vector<u8> gClientWriteData;
-
-int gSendRecvIterations = 0;
+const int kMaxIters = 100;
+const int kMaxMessageLen = 1000000;
+const int kTestIterations = 2;
 
 
-void randomizeWriteData(vector<u8>& data)
+static
+vector<u8> s_genMessage(algo::iLCG& lcg)
 {
-    int writeDataSize = (rand() % 100000) + 1;
-    data = vector<u8>(writeDataSize);
-    for (int i = 0; i < writeDataSize; i++)
-        data[i] = (u8) (rand() % 256);
-}
-
-
-void writeHelper(ip::tcp::tSocket& socket, const vector<u8>& data)
-{
-    int length = (int)data.size();
-    u8* buff = new u8[length];
-    for (int i = 0; i < length; i++)
-        buff[i] = data[i];
-    int currLen = 0;
-    while (length > currLen)
-    {
-        currLen += socket.write(buff+currLen, length-currLen);
-    }
-    delete buff;
-}
-
-
-vector<u8> readHelper(ip::tcp::tSocket& socket, int length)
-{
-    vector<u8> data;
-    u8 buff[1024];
-    int currLen = 0;
-    while (length > currLen)
-    {
-        int r = socket.read(buff, std::min(1024, length-currLen));
-        for (int i = 0; i < r; i++)
-            data.push_back(buff[i]);
-        currLen += r;
-    }
-    return data;
+    u32 len = (lcg.next() % kMaxMessageLen) + 1;
+    vector<u8> mess(len);
+    for (u32 i = 0; i < len; i++)
+        mess[i] = (lcg.next() % 256);
+    return mess;
 }
 
 
@@ -74,41 +39,56 @@ class tServerRunnable : public sync::iRunnable
 {
     public:
 
-        tServerRunnable(const tTest& t) : m_t(t) { }
+        tServerRunnable(const tTest& t, u16 serverBindPort, int seed)
+            : m_t(t), m_serverBindPort(serverBindPort), m_seed(seed)
+        {
+        }
 
         void run()
         {
-            ip::tcp::tServer server(gServerBindPort);
+            ip::tcp::tServer server(m_serverBindPort);
             refc<ip::tcp::tSocket> socket = server.accept();
 
-            bool serverFirst = gServerWriteData[0] > gClientWriteData[0];
+            algo::tKnuthLCG lcg(m_seed);
+            u32 iters = (lcg.next() % kMaxIters);
+            bool serverFirst = ((lcg.next() % 2) == 0);
+            vector<u8> correct, rcv, snd;
 
-            int iterations = gSendRecvIterations;
+            if (iters == 0)
+                return;
 
-            if (serverFirst)
+            if (!serverFirst)
             {
-                writeHelper(*socket, gServerWriteData);
-                iterations--;
+                correct = s_genMessage(lcg);
+                rcv.resize(correct.size());
+                socket->readAll(&rcv[0], (i32)rcv.size());
+                m_t.assert(rcv == correct);
+                --iters;
             }
 
-            for (int i = 0; i < iterations; i++)
+            for (u32 i = 0; i < iters; i++)
             {
-                vector<u8> read = readHelper(*socket, (int)gClientWriteData.size());
-                m_t.iseq(read, gClientWriteData);
-                randomizeWriteData(gClientWriteData);
-                writeHelper(*socket, gServerWriteData);
+                snd = s_genMessage(lcg);
+                socket->writeAll(&snd[0], (i32)snd.size());
+
+                correct = s_genMessage(lcg);
+                rcv.resize(correct.size());
+                socket->readAll(&rcv[0], (i32)rcv.size());
+                m_t.assert(rcv == correct);
             }
 
-            if (serverFirst)
+            if (!serverFirst)
             {
-                vector<u8> read = readHelper(*socket, (int)gClientWriteData.size());
-                m_t.iseq(read, gClientWriteData);
+                snd = s_genMessage(lcg);
+                socket->writeAll(&snd[0], (i32)snd.size());
             }
         }
 
     private:
 
         const tTest& m_t;
+        u16 m_serverBindPort;
+        int m_seed;
 };
 
 
@@ -116,55 +96,68 @@ class tClientRunnable : public sync::iRunnable
 {
     public:
 
-        tClientRunnable(const tTest& t) : m_t(t) { }
+        tClientRunnable(const tTest& t, u16 serverBindPort, int seed)
+            : m_t(t), m_serverBindPort(serverBindPort), m_seed(seed)
+        {
+        }
 
         void run()
         {
             sync::tThread::msleep(10);
-
             ip::tAddrGroup addrGroup(ip::tAddrGroup::kLocalhostConnect);
-            ip::tcp::tSocket socket(addrGroup, gServerBindPort);
+            refc<ip::tcp::tSocket> socket(new ip::tcp::tSocket(addrGroup, m_serverBindPort));
 
-            bool serverFirst = gServerWriteData[0] > gClientWriteData[0];
+            algo::tKnuthLCG lcg(m_seed);
+            u32 iters = (lcg.next() % kMaxIters);
+            bool serverFirst = ((lcg.next() % 2) == 0);
+            vector<u8> correct, rcv, snd;
 
-            int iterations = gSendRecvIterations;
+            if (iters == 0)
+                return;
 
-            if (!serverFirst)
+            if (serverFirst)
             {
-                writeHelper(socket, gClientWriteData);
-                iterations--;
+                correct = s_genMessage(lcg);
+                rcv.resize(correct.size());
+                socket->readAll(&rcv[0], (i32)rcv.size());
+                m_t.assert(rcv == correct);
+                --iters;
             }
 
-            for (int i = 0; i < iterations; i++)
+            for (u32 i = 0; i < iters; i++)
             {
-                vector<u8> read = readHelper(socket, (int)gServerWriteData.size());
-                m_t.iseq(read, gServerWriteData);
-                randomizeWriteData(gServerWriteData);
-                writeHelper(socket, gClientWriteData);
+                snd = s_genMessage(lcg);
+                socket->writeAll(&snd[0], (i32)snd.size());
+
+                correct = s_genMessage(lcg);
+                rcv.resize(correct.size());
+                socket->readAll(&rcv[0], (i32)rcv.size());
+                m_t.assert(rcv == correct);
             }
 
-            if (!serverFirst)
+            if (serverFirst)
             {
-                vector<u8> read = readHelper(socket, (int)gServerWriteData.size());
-                m_t.iseq(read, gServerWriteData);
+                snd = s_genMessage(lcg);
+                socket->writeAll(&snd[0], (i32)snd.size());
             }
         }
 
     private:
 
         const tTest& m_t;
+        u16 m_serverBindPort;
+        int m_seed;
 };
 
 
 void test(const tTest& t)
 {
-    ++gServerBindPort;
-    randomizeWriteData(gServerWriteData);
-    randomizeWriteData(gClientWriteData);
-    gSendRecvIterations = (rand() % kMaxSendRecvIterations) + 1;
+    static u16 sServerBindPort = 15001;
+    ++sServerBindPort;
+    int seed = rand();
 
-    sync::tThread serverThread(refc<sync::iRunnable>(new tServerRunnable(t)));
-    sync::tThread clientThread(refc<sync::iRunnable>(new tClientRunnable(t)));
+    sync::tThread serverThread(refc<sync::iRunnable>(new tServerRunnable(t,sServerBindPort,seed)));
+    sync::tThread clientThread(refc<sync::iRunnable>(new tClientRunnable(t,sServerBindPort,seed)));
 
     serverThread.join();
     clientThread.join();
@@ -174,8 +167,8 @@ void test(const tTest& t)
 int main()
 {
     tCrashReporter::init();
-
     srand((u32)time(0));
+
     tTest("Server/client test", test, kTestIterations);
 
     return 0;
