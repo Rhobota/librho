@@ -470,23 +470,23 @@ void f32posinftest(const tTest& t)
     t.reject(std::isfinite(inf));
 
     f32 big = 1e30f;
-    f32 small = 1.0f;
+    f32 smal = 1.0f;
     t.assert(std::isfinite(big));
-    t.assert(std::isfinite(small));
+    t.assert(std::isfinite(smal));
 
     t.assert(inf > big);
-    t.assert(inf > small);
+    t.assert(inf > smal);
     t.assert(big < inf);
-    t.assert(small < inf);
+    t.assert(smal < inf);
     t.assert(big != inf);
     t.assert(big != inf);
 
     t.reject(inf < big);
-    t.reject(inf < small);
+    t.reject(inf < smal);
     t.reject(big > inf);
-    t.reject(small > inf);
+    t.reject(smal > inf);
     t.reject(big == inf);
-    t.reject(small == inf);
+    t.reject(smal == inf);
 
     t.reject(inf > inf);
     t.reject(inf < inf);
@@ -523,23 +523,23 @@ void f32neginftest(const tTest& t)
     t.reject(ninf == INFINITY);
 
     f32 big = 1e30f;
-    f32 small = 1.0f;
+    f32 smal = 1.0f;
     t.assert(std::isfinite(big));
-    t.assert(std::isfinite(small));
+    t.assert(std::isfinite(smal));
 
     t.assert(ninf < big);
-    t.assert(ninf < small);
+    t.assert(ninf < smal);
     t.assert(big > ninf);
-    t.assert(small > ninf);
+    t.assert(smal > ninf);
     t.assert(big != ninf);
     t.assert(big != ninf);
 
     t.reject(ninf > big);
-    t.reject(ninf > small);
+    t.reject(ninf > smal);
     t.reject(big < ninf);
-    t.reject(small < ninf);
+    t.reject(smal < ninf);
     t.reject(big == ninf);
-    t.reject(small == ninf);
+    t.reject(smal == ninf);
 
     t.reject(ninf > ninf);
     t.reject(ninf < ninf);
@@ -581,21 +581,21 @@ void f32nantest(const tTest& t)
     t.reject(nan > -INFINITY);
 
     f32 big = 1e30f;
-    f32 small = 1.0f;
+    f32 smal = 1.0f;
     t.reject(std::isnan(big));
-    t.reject(std::isnan(small));
+    t.reject(std::isnan(smal));
 
     t.assert(std::isnan(nan*big));
-    t.assert(std::isnan(nan*small));
+    t.assert(std::isnan(nan*smal));
     t.assert(std::isnan(nan*nan));
     t.assert(std::isnan(nan/big));
-    t.assert(std::isnan(nan/small));
+    t.assert(std::isnan(nan/smal));
     t.assert(std::isnan(nan/nan));
     t.assert(std::isnan(nan+big));
-    t.assert(std::isnan(nan+small));
+    t.assert(std::isnan(nan+smal));
     t.assert(std::isnan(nan+nan));
     t.assert(std::isnan(nan-big));
-    t.assert(std::isnan(nan-small));
+    t.assert(std::isnan(nan-smal));
     t.assert(std::isnan(nan-nan));
 }
 
@@ -684,23 +684,23 @@ void f64posinftest(const tTest& t)
     t.reject(std::isfinite(inf));
 
     f64 big = 1e99;
-    f64 small = 1.0;
+    f64 smal = 1.0;
     t.assert(std::isfinite(big));
-    t.assert(std::isfinite(small));
+    t.assert(std::isfinite(smal));
 
     t.assert(inf > big);
-    t.assert(inf > small);
+    t.assert(inf > smal);
     t.assert(big < inf);
-    t.assert(small < inf);
+    t.assert(smal < inf);
     t.assert(big != inf);
     t.assert(big != inf);
 
     t.reject(inf < big);
-    t.reject(inf < small);
+    t.reject(inf < smal);
     t.reject(big > inf);
-    t.reject(small > inf);
+    t.reject(smal > inf);
     t.reject(big == inf);
-    t.reject(small == inf);
+    t.reject(smal == inf);
 
     t.reject(inf > inf);
     t.reject(inf < inf);
@@ -737,23 +737,23 @@ void f64neginftest(const tTest& t)
     t.reject(ninf == (f64)(INFINITY));
 
     f64 big = 1e99;
-    f64 small = 1.0;
+    f64 smal = 1.0;
     t.assert(std::isfinite(big));
-    t.assert(std::isfinite(small));
+    t.assert(std::isfinite(smal));
 
     t.assert(ninf < big);
-    t.assert(ninf < small);
+    t.assert(ninf < smal);
     t.assert(big > ninf);
-    t.assert(small > ninf);
+    t.assert(smal > ninf);
     t.assert(big != ninf);
     t.assert(big != ninf);
 
     t.reject(ninf > big);
-    t.reject(ninf > small);
+    t.reject(ninf > smal);
     t.reject(big < ninf);
-    t.reject(small < ninf);
+    t.reject(smal < ninf);
     t.reject(big == ninf);
-    t.reject(small == ninf);
+    t.reject(smal == ninf);
 
     t.reject(ninf > ninf);
     t.reject(ninf < ninf);
@@ -795,21 +795,21 @@ void f64nantest(const tTest& t)
     t.reject(nan > (f64)(-INFINITY));
 
     f64 big = 1e99;
-    f64 small = 1.0;
+    f64 smal = 1.0;
     t.reject(std::isnan(big));
-    t.reject(std::isnan(small));
+    t.reject(std::isnan(smal));
 
     t.assert(std::isnan(nan*big));
-    t.assert(std::isnan(nan*small));
+    t.assert(std::isnan(nan*smal));
     t.assert(std::isnan(nan*nan));
     t.assert(std::isnan(nan/big));
-    t.assert(std::isnan(nan/small));
+    t.assert(std::isnan(nan/smal));
     t.assert(std::isnan(nan/nan));
     t.assert(std::isnan(nan+big));
-    t.assert(std::isnan(nan+small));
+    t.assert(std::isnan(nan+smal));
     t.assert(std::isnan(nan+nan));
     t.assert(std::isnan(nan-big));
-    t.assert(std::isnan(nan-small));
+    t.assert(std::isnan(nan-smal));
     t.assert(std::isnan(nan-nan));
 }
 
