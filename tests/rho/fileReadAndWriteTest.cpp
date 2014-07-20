@@ -11,6 +11,15 @@ using namespace rho;
 using std::vector;
 
 
+#if __linux__ || __APPLE__ || __CYGWIN__
+std::string gFilePath = "/tmp/randfile.bin";
+#elif __MINGW32__
+std::string gFilePath = "C:\\randfile.bin";
+#else
+#error What platform are you on!?
+#endif
+
+
 void test(const tTest& t)
 {
     i32 buflen = (rand() % 10000000);
@@ -18,10 +27,8 @@ void test(const tTest& t)
     for (i32 i = 0; i < buflen; i++)
         buf[i] = (rand() % 256);
 
-    std::string filename = "/tmp/randfile.bin";
-
     {
-        tFileWritable file(filename);
+        tFileWritable file(gFilePath);
         if (buflen > 0)
             file.writeAll(&buf[0], buflen);
     }
@@ -29,7 +36,7 @@ void test(const tTest& t)
     vector<u8> buffromfile;
 
     {
-        tFileReadable file(filename);
+        tFileReadable file(gFilePath);
         u8 part[1000];
         i32 r;
         while ((r = file.read(part, 1000)) > 0)
