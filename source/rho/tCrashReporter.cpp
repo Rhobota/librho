@@ -52,21 +52,25 @@ static void simpleTerminate()
     cleanExitWithFailure();
 }
 
+#if __linux__ || __APPLE__ || __CYGWIN__
 static void simpleSigHandler(int sig)
 {
     simpleTerminate();
 }
+#endif
 
 static void uninit()
 {
     std::set_terminate(rho::simpleTerminate);
     std::set_unexpected(rho::simpleTerminate);
 
+    #if __linux__ || __APPLE__ || __CYGWIN__
     struct sigaction act;
     memset(&act, 0, sizeof(act));
     act.sa_handler = rho::simpleSigHandler;
     ::sigaction(SIGSEGV, &act, NULL);
     ::sigaction(SIGILL, &act, NULL);
+    #endif
 }
 
 static void terminate()
@@ -87,6 +91,7 @@ static void unexpected()
     cleanExitWithFailure();
 }
 
+#if __linux__ || __APPLE__ || __CYGWIN__
 static void segmentationFault(int sig)
 {
     uninit();
@@ -98,17 +103,20 @@ static void segmentationFault(int sig)
     }
     cleanExitWithFailure();
 }
+#endif
 
 void tCrashReporter::init()
 {
     std::set_terminate(rho::terminate);
     std::set_unexpected(rho::unexpected);
 
+    #if __linux__ || __APPLE__ || __CYGWIN__
     struct sigaction act;
     memset(&act, 0, sizeof(act));
     act.sa_handler = rho::segmentationFault;
     ::sigaction(SIGSEGV, &act, NULL);
     ::sigaction(SIGILL, &act, NULL);
+    #endif
 }
 
 void tCrashReporter::terminate()
