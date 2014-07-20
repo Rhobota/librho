@@ -3,42 +3,47 @@
 #include <rho/tTest.h>
 
 #include <iostream>
+#include <set>
 #include <vector>
-
 
 using namespace rho;
 using std::cout;
 using std::endl;
+using std::set;
 using std::vector;
 
 
-static const int kNumTests = 1000;
-static const int kRandBufSize = 16;
-
-
-bool same(u8* buf1, u8* buf2, int size)
-{
-    for (int i = 0; i < size; i++)
-        if (buf1[i] != buf2[i])
-            return false;
-    return true;
-}
+static const int kNumTests = 2;
+static const int kRandBufSize = 16;   // <-- like a GUID
+static const int kNumBufs = 1000000;
 
 
 void test(const tTest& t)
 {
-    crypt::tSecureRandom sr;
+    set< vector<u8> > bufs;
 
-    u8 buf1[kRandBufSize];
-    u8 buf2[kRandBufSize];
+    crypt::tSecureRandom sr1;
+    crypt::tSecureRandom sr2;
 
-    i32 r1 = sr.read(buf1, kRandBufSize);
-    i32 r2 = sr.read(buf2, kRandBufSize);
+    for (int i = 0; i < kNumBufs; i++)
+    {
+        vector<u8> b1(kRandBufSize, 0);
+        vector<u8> b2(kRandBufSize, 0);
 
-    t.assert(r1 == kRandBufSize);
-    t.assert(r2 == kRandBufSize);
+        i32 r1 = sr1.read(&b1[0], kRandBufSize);
+        i32 r2 = sr2.read(&b2[0], kRandBufSize);
 
-    t.assert(! same(buf1, buf2, kRandBufSize));
+        t.assert(r1 == kRandBufSize);
+        t.assert(r2 == kRandBufSize);
+
+        t.assert(bufs.find(b1) == bufs.end());
+        bufs.insert(b1);
+        t.assert(bufs.find(b1) != bufs.end());
+
+        t.assert(bufs.find(b2) == bufs.end());
+        bufs.insert(b2);
+        t.assert(bufs.find(b2) != bufs.end());
+    }
 }
 
 
