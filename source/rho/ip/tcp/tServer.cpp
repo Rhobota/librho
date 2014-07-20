@@ -64,9 +64,9 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
     {
         #if __linux__ || __APPLE__
         m_finalize();
-        throw eSocketCreationError("Cannot set server socket to ipv6-only.");
+        throw eSocketCreationError("Cannot turn off ipv6-only on server socket.");
         #else
-        std::cerr << "Cannot set server socket to ipv6-only." << std::endl;
+        std::cerr << "Cannot turn off ipv6-only on server socket." << std::endl;
         #endif
     }
 
