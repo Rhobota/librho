@@ -219,6 +219,9 @@ class tLittleClientRunnable : public sync::iRunnable
 
 void v6onlyOffTest(const tTest& t)
 {
+    // NOTE: This test fails on Windows XP, because XP doesn't support the IPV6_V6ONLY feature.
+    // SEE: http://msdn.microsoft.com/en-us/library/windows/desktop/ms738574(v=vs.85).aspx
+
     static u16 sServerBindPort = 16001;
     ++sServerBindPort;
 
