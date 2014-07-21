@@ -150,7 +150,7 @@ class tClientRunnable : public sync::iRunnable
 };
 
 
-void test(const tTest& t)
+void dataTest(const tTest& t)
 {
     static u16 sServerBindPort = 15001;
     ++sServerBindPort;
@@ -164,12 +164,79 @@ void test(const tTest& t)
 }
 
 
+class tLittleServerRunnable : public sync::iRunnable
+{
+    public:
+
+        tLittleServerRunnable(const tTest& t, u16 serverBindPort)
+            : m_t(t), m_serverBindPort(serverBindPort)
+        {
+        }
+
+        void run()
+        {
+            // This server will listen on IPv6 localhost (aka, "::").
+            // But it SHOULD be configured to also accept connections
+            // from IPv4 hosts.
+            ip::tAddrGroup addrGroup(ip::tAddrGroup::kWildcardBind);
+            ip::tcp::tServer server(addrGroup, m_serverBindPort);
+            refc<ip::tcp::tSocket> socket = server.accept();
+            m_t.assert(socket);
+        }
+
+    private:
+
+        const tTest& m_t;
+        u16 m_serverBindPort;
+};
+
+
+class tLittleClientRunnable : public sync::iRunnable
+{
+    public:
+
+        tLittleClientRunnable(const tTest& t, u16 serverBindPort)
+            : m_t(t), m_serverBindPort(serverBindPort)
+        {
+        }
+
+        void run()
+        {
+            // We will be an IPv4 host by specifying the localhost IPv4 address.
+            // If the server accepts IPv4 connection like it is supposed to, all
+            // will go well. Otherwise we'll get an exception here.
+            sync::tThread::msleep(10);
+            refc<ip::tcp::tSocket> socket(new ip::tcp::tSocket("127.0.0.1", m_serverBindPort));
+            m_t.assert(socket);
+        }
+
+    private:
+
+        const tTest& m_t;
+        u16 m_serverBindPort;
+};
+
+
+void v6onlyOffTest(const tTest& t)
+{
+    static u16 sServerBindPort = 16001;
+    ++sServerBindPort;
+
+    sync::tThread serverThread(refc<sync::iRunnable>(new tLittleServerRunnable(t, sServerBindPort)));
+    sync::tThread clientThread(refc<sync::iRunnable>(new tLittleClientRunnable(t, sServerBindPort)));
+
+    serverThread.join();
+    clientThread.join();
+}
+
+
 int main()
 {
     tCrashReporter::init();
     srand((u32)time(0));
 
-    tTest("Server/client test", test, kTestIterations);
+    tTest("Server/client data test", dataTest, kTestIterations);
+    tTest("Server/client v6only is off test", v6onlyOffTest, kTestIterations);
 
     return 0;
 }
