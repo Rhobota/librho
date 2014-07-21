@@ -2,6 +2,7 @@
 #include <rho/iWritable.h>
 #include <rho/tCrashReporter.h>
 #include <rho/tTest.h>
+#include <rho/algo/tLCG.h>
 
 #include <vector>
 #include <cstdlib>
@@ -22,15 +23,19 @@ std::string gFilePath = "C:\\randfile.bin";
 
 void test(const tTest& t)
 {
-    i32 buflen = (rand() % 10000000);
+    algo::tKnuthLCG lcg(rand());
+    i32 buflen = (lcg.next() % 10000000);
     vector<u8> buf(buflen);
     for (i32 i = 0; i < buflen; i++)
-        buf[i] = (rand() % 256);
+        buf[i] = (lcg.next() % 256);
 
     {
         tFileWritable file(gFilePath);
         if (buflen > 0)
-            file.writeAll(&buf[0], buflen);
+        {
+            i32 w = file.writeAll(&buf[0], buflen);
+            t.assert(w == buflen);
+        }
     }
 
     vector<u8> buffromfile;

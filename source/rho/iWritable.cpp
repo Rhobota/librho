@@ -91,15 +91,17 @@ tFileWritable::tFileWritable(std::string filename)
 {
     #if __linux__ || __APPLE__ || __CYGWIN__
     int fd = open(filename.c_str(), O_WRONLY|O_CREAT|O_TRUNC|O_CLOEXEC, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
+    if (fd >= 0)
+        m_file = fdopen(fd, "wb");
     #elif __MINGW32__
-    int fd = open(filename.c_str(), O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
+    int fd = _open(filename.c_str(), _O_WRONLY|_O_CREAT|_O_TRUNC|_O_BINARY, _S_IREAD|_S_IWRITE);
     if (fd >= 0 && !SetHandleInformation((HANDLE)fd, HANDLE_FLAG_INHERIT, 0))
         throw eRuntimeError("Cannot set CLOEXEC on file descriptor.");
+    if (fd >= 0)
+        m_file = _fdopen(fd, "wbc");
     #else
     #error What platform are you on!?
     #endif
-    if (fd >= 0)
-        m_file = fdopen(fd, "wb");
     if (m_file == NULL)
     {
         if (fd >= 0)
