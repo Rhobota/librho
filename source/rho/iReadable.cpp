@@ -83,15 +83,17 @@ tFileReadable::tFileReadable(std::string filename)
 {
     #if __linux__ || __APPLE__ || __CYGWIN__
     int fd = open(filename.c_str(), O_RDONLY|O_CLOEXEC);
+    if (fd >= 0)
+        m_file = fdopen(fd, "rb");
     #elif __MINGW32__
-    int fd = open(filename.c_str(), O_RDONLY);
+    int fd = _open(filename.c_str(), _O_RDONLY|_O_BINARY);
     if (fd >= 0 && !SetHandleInformation((HANDLE)fd, HANDLE_FLAG_INHERIT, 0))
         throw eRuntimeError("Cannot set CLOEXEC on file descriptor.");
+    if (fd >= 0)
+        m_file = _fdopen(fd, "rbc");
     #else
     #error What platform are you on!?
     #endif
-    if (fd >= 0)
-        m_file = fdopen(fd, "rb");
     if (m_file == NULL)
     {
         if (fd >= 0)
