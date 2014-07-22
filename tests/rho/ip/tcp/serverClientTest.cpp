@@ -13,6 +13,10 @@
 #include <string>
 #include <vector>
 
+#if __MINGW32__
+#include <winbase.h>
+#endif
+
 using namespace rho;
 using std::cout;
 using std::endl;
@@ -219,8 +223,16 @@ class tLittleClientRunnable : public sync::iRunnable
 
 void v6onlyOffTest(const tTest& t)
 {
+#if __MINGW32__
     // NOTE: This test fails on Windows XP, because XP doesn't support the IPV6_V6ONLY feature.
     // SEE: http://msdn.microsoft.com/en-us/library/windows/desktop/ms738574(v=vs.85).aspx
+    // I don't ever plan to fix this. I don't think it's worth the time since XP is so damn old.
+    if (((DWORD)(LOBYTE(LOWORD(GetVersion())))) <= 5)
+    {
+        cout << "Skipping test because we're running on Windows XP (or earlier). This test would fail." << endl;
+        return;
+    }
+#endif
 
     static u16 sServerBindPort = 16001;
     ++sServerBindPort;
