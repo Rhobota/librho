@@ -95,7 +95,7 @@ tFileWritable::tFileWritable(std::string filename)
         m_file = fdopen(fd, "wb");
     #elif __MINGW32__
     int fd = _open(filename.c_str(), _O_WRONLY|_O_CREAT|_O_TRUNC|_O_BINARY, _S_IREAD|_S_IWRITE);
-    if (fd >= 0 && !SetHandleInformation((HANDLE)fd, HANDLE_FLAG_INHERIT, 0))
+    if (fd >= 0 && !SetHandleInformation(_get_osfhandle(fd), HANDLE_FLAG_INHERIT, 0))
         throw eRuntimeError("Cannot set CLOEXEC on file descriptor.");
     if (fd >= 0)
         m_file = _fdopen(fd, "wbc");

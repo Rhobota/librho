@@ -87,7 +87,7 @@ tFileReadable::tFileReadable(std::string filename)
         m_file = fdopen(fd, "rb");
     #elif __MINGW32__
     int fd = _open(filename.c_str(), _O_RDONLY|_O_BINARY);
-    if (fd >= 0 && !SetHandleInformation((HANDLE)fd, HANDLE_FLAG_INHERIT, 0))
+    if (fd >= 0 && !SetHandleInformation(_get_osfhandle(fd), HANDLE_FLAG_INHERIT, 0))
         throw eRuntimeError("Cannot set CLOEXEC on file descriptor.");
     if (fd >= 0)
         m_file = _fdopen(fd, "rbc");
