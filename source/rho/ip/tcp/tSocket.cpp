@@ -82,7 +82,7 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
     }
     #elif __MINGW32__
     unsigned long nonblockflag = 1;
-    if (ioctlsocket(m_fd, FIONBIO, &nonblockflag) == -1)
+    if (ioctlsocket(m_fd, FIONBIO, &nonblockflag) != 0)
     {
         m_finalize();
         throw eSocketCreationError("Cannot set the socket to be non-blocking during the connect phase.");
@@ -159,7 +159,7 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
     }
     #elif __MINGW32__
     nonblockflag = 0;
-    if (ioctlsocket(m_fd, FIONBIO, &nonblockflag) == -1)
+    if (ioctlsocket(m_fd, FIONBIO, &nonblockflag) != 0)
     {
         m_finalize();
         throw eSocketCreationError("Cannot set the socket back to blocking mode after connect.");
@@ -257,6 +257,8 @@ void tSocket::setNagles(bool on)
 
 void tSocket::setTimeout(u16 seconds)
 {
+#if __linux__ || __APPLE__ || __CYGWIN__
+
     struct timeval timeout;
     timeout.tv_sec = seconds;
     timeout.tv_usec = 0;
@@ -272,6 +274,30 @@ void tSocket::setTimeout(u16 seconds)
     {
         throw eRuntimeError(strerror(errno));
     }
+
+#elif __MINGW32__
+
+    // Windows sucks. For setsockopt() with params SO_*TIMEO, it expects
+    // integer arguments which are in milliseconds. Why would they deviate
+    // from the standard!!!!????
+
+    DWORD milliseconds = seconds * 1000;
+
+    if (::setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, (char*)&milliseconds,
+                sizeof(milliseconds)) != 0)
+    {
+        throw eRuntimeError(strerror(errno));
+    }
+
+    if (::setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, (char*)&milliseconds,
+                sizeof(milliseconds)) != 0)
+    {
+        throw eRuntimeError(strerror(errno));
+    }
+
+#else
+#error What platform are you on!?
+#endif
 }
 
 i32 tSocket::read(u8* buffer, i32 length)
