@@ -13,15 +13,24 @@ namespace tcp
 {
 
 
+#if __linux__ || __APPLE__ || __CYGWIN__
+static const int kInvalidSocket = -1;
+#elif __MINGW32__
+static const int kInvalidSocket = INVALID_SOCKET;
+#else
+#error What platform are you on!?
+#endif
+
+
 tServer::tServer(u16 bindPort)
-    : m_fd(-1)
+    : m_fd(kInvalidSocket)
 {
     tAddrGroup addrGroup(tAddrGroup::kLocalhostBind);
     m_init(addrGroup, bindPort);
 }
 
 tServer::tServer(const tAddrGroup& addrGroup, u16 bindPort)
-    : m_fd(-1)
+    : m_fd(kInvalidSocket)
 {
     m_init(addrGroup, bindPort);
 }
@@ -41,7 +50,7 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
     #elif __APPLE__ || __CYGWIN__ || __MINGW32__
     m_fd = ::socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
     #endif
-    if (m_fd == -1)
+    if (m_fd == kInvalidSocket)
     {
         throw eSocketCreationError("Cannot create posix server socket.");
     }
@@ -100,7 +109,7 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
 
 void tServer::m_finalize()
 {
-    if (m_fd >= 0)
+    if (m_fd != kInvalidSocket)
     {
         #if __linux__ || __APPLE__ || __CYGWIN__
         ::close(m_fd);
@@ -109,7 +118,7 @@ void tServer::m_finalize()
         #else
         #error What platform are you on!?
         #endif
-        m_fd = -1;
+        m_fd = kInvalidSocket;
     }
 }
 
@@ -140,7 +149,7 @@ refc<tSocket> tServer::accept()
     int fd = ::accept(m_fd, (struct sockaddr*)&sockAddr, &returnedLen);
     #endif
 
-    if (fd == -1)
+    if (fd == kInvalidSocket)
     {
         std::ostringstream o;
         o << "Server socket failed to accept() a new connection, error: "
@@ -162,7 +171,7 @@ refc<tSocket> tServer::accept()
         #else
         #error What platform are you on!?
         #endif
-        fd = -1;
+        fd = kInvalidSocket;
         std::ostringstream o;
         o << "Cannot set close-on-exec on the new accept()ed connection, error: "
           << strerror(errno);
@@ -179,7 +188,7 @@ refc<tSocket> tServer::accept()
         #else
         #error What platform are you on!?
         #endif
-        fd = -1;
+        fd = kInvalidSocket;
         throw eLogicError("Something is crazy wrong.");
     }
 

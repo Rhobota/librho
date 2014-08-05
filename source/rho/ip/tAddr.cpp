@@ -110,10 +110,10 @@ void tAddr::setUpperProtoPort(u16 port)
 std::string tAddr::toString(bool reverseLookup) const
 {
     // Get the hostname.
-    char hostname[NI_MAXHOST];
+    char hostname[2*NI_MAXHOST+1];
     int res;
     int flags = 0; if (!reverseLookup) flags = NI_NUMERICHOST;
-    while ((res = ::getnameinfo(((struct sockaddr*)m_sockaddr), m_sockaddrlen, hostname, NI_MAXHOST, NULL, 0, flags))
+    while ((res = ::getnameinfo(((struct sockaddr*)m_sockaddr), m_sockaddrlen, hostname, 2*NI_MAXHOST, NULL, 0, flags))
             == EAI_AGAIN) { }
     if (res != 0)
         throw eRuntimeError("cannot toString() the IP address");

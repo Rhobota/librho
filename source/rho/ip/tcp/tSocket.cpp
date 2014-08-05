@@ -13,20 +13,29 @@ namespace tcp
 {
 
 
+#if __linux__ || __APPLE__ || __CYGWIN__
+static const int kInvalidSocket = -1;
+#elif __MINGW32__
+static const int kInvalidSocket = INVALID_SOCKET;
+#else
+#error What platform are you on!?
+#endif
+
+
 tSocket::tSocket(const tAddr& addr, u16 port, u32 timeoutMS)
-    : m_fd(-1), m_readEOF(false), m_writeEOF(false), m_nodelay(false)
+    : m_fd(kInvalidSocket), m_readEOF(false), m_writeEOF(false), m_nodelay(false)
 {
     m_init(addr, port, timeoutMS);
 }
 
 tSocket::tSocket(const tAddrGroup& addrGroup, u16 port, u32 timeoutMS)
-    : m_fd(-1), m_readEOF(false), m_writeEOF(false), m_nodelay(false)
+    : m_fd(kInvalidSocket), m_readEOF(false), m_writeEOF(false), m_nodelay(false)
 {
     m_init(addrGroup, port, timeoutMS);
 }
 
 tSocket::tSocket(std::string hostStr, u16 port, u32 timeoutMS)
-    : m_fd(-1), m_readEOF(false), m_writeEOF(false), m_nodelay(false)
+    : m_fd(kInvalidSocket), m_readEOF(false), m_writeEOF(false), m_nodelay(false)
 {
     tAddrGroup addrGroup(hostStr);
     m_init(addrGroup, port, timeoutMS);
@@ -51,7 +60,7 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
     m_fd = (addr.getVersion() == kIPv4) ? ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)
                                         : ::socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
     #endif
-    if (m_fd == -1)
+    if (m_fd == kInvalidSocket)
     {
         throw eSocketCreationError("Cannot create posix tcp socket.");
     }
@@ -75,7 +84,7 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
         m_finalize();
         throw eSocketCreationError("Cannot get the current file status flags.");
     }
-    if (::fcntl(m_fd, F_SETFL, (currentFlags | O_NONBLOCK)) < 0)
+    if (::fcntl(m_fd, F_SETFL, (currentFlags | O_NONBLOCK)) != 0)
     {
         m_finalize();
         throw eSocketCreationError("Cannot set the socket to be non-blocking during the connect phase.");
@@ -130,9 +139,9 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
 
     socklen_t argLen = sizeof(int);
     #if __linux__ || __APPLE__ || __CYGWIN__
-    if (::getsockopt(m_fd, SOL_SOCKET, SO_ERROR, (void*)(&connectStatus), &argLen) < 0)
+    if (::getsockopt(m_fd, SOL_SOCKET, SO_ERROR, (void*)(&connectStatus), &argLen) != 0)
     #elif __MINGW32__
-    if (::getsockopt(m_fd, SOL_SOCKET, SO_ERROR, (char*)(&connectStatus), &argLen) < 0)
+    if (::getsockopt(m_fd, SOL_SOCKET, SO_ERROR, (char*)(&connectStatus), &argLen) != 0)
     #else
     #error What platform are you on!?
     #endif
@@ -152,7 +161,7 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
     }
 
     #if __linux__ || __APPLE__ || __CYGWIN__
-    if (::fcntl(m_fd, F_SETFL, currentFlags) < 0)
+    if (::fcntl(m_fd, F_SETFL, currentFlags) != 0)
     {
         m_finalize();
         throw eSocketCreationError("Cannot set the socket back to blocking mode after connect.");
@@ -188,7 +197,7 @@ void tSocket::m_init(const tAddrGroup& addrGroup, u16 port, u32 timeoutMS)
 
 void tSocket::m_finalize()
 {
-    if (m_fd >= 0)
+    if (m_fd != kInvalidSocket)
     {
         #if __linux__ || __APPLE__ || __CYGWIN__
         ::close(m_fd);
@@ -197,7 +206,7 @@ void tSocket::m_finalize()
         #else
         #error What platform are you on!?
         #endif
-        m_fd = -1;
+        m_fd = kInvalidSocket;
     }
 }
 
@@ -224,7 +233,7 @@ tAddr tSocket::getLocalAddress() const
 
     int fd = ::getsockname(m_fd, (struct sockaddr*)&sockAddr, &returnedLen);
 
-    if (fd == -1)
+    if (fd == kInvalidSocket)
     {
         throw eResourceAcquisitionError(strerror(errno));
     }
