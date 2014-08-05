@@ -57,6 +57,10 @@ static void simpleSigHandler(int sig)
 {
     simpleTerminate();
 }
+#elif __MINGW32__
+// No equivalent function.
+#else
+#error What platform are you on!?
 #endif
 
 static void uninit()
@@ -70,6 +74,10 @@ static void uninit()
     act.sa_handler = rho::simpleSigHandler;
     ::sigaction(SIGSEGV, &act, NULL);
     ::sigaction(SIGILL, &act, NULL);
+    #elif __MINGW32__
+    // No equivalent function.
+    #else
+    #error What platform are you on!?
     #endif
 }
 
@@ -103,6 +111,10 @@ static void segmentationFault(int sig)
     }
     cleanExitWithFailure();
 }
+#elif __MINGW32__
+// No equivalent function.
+#else
+#error What platform are you on!?
 #endif
 
 void tCrashReporter::init()
@@ -116,6 +128,10 @@ void tCrashReporter::init()
     act.sa_handler = rho::segmentationFault;
     ::sigaction(SIGSEGV, &act, NULL);
     ::sigaction(SIGILL, &act, NULL);
+    #elif __MINGW32__
+    // No equivalent function.
+    #else
+    #error What platform are you on!?
     #endif
 }
 

@@ -59,6 +59,8 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
     #elif __APPLE__ || __CYGWIN__ || __MINGW32__
     m_fd = (addr.getVersion() == kIPv4) ? ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)
                                         : ::socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+    #else
+    #error What platform are you on!?
     #endif
     if (m_fd == kInvalidSocket)
     {

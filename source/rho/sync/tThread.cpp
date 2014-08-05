@@ -119,8 +119,10 @@ void tThread::yield()
     pthread_yield();
     #elif __APPLE__
     pthread_yield_np();
+    #elif __MINGW32__
+    // No op.
     #else
-    throw eNotImplemented("tThread::yield() is not implemented on this platform.");
+    #error What platform are you on!?
     #endif
 }
 
