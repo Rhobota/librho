@@ -67,7 +67,7 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
 
     #if __APPLE__ || __CYGWIN__ || __MINGW32__
     #if __APPLE__ || __CYGWIN__
-    if (::fcntl(m_fd, F_SETFD, ::fcntl(m_fd, F_GETFD, 0) | FD_CLOEXEC) == -1)
+    if (::fcntl(m_fd, F_SETFD, ::fcntl(m_fd, F_GETFD, 0) | FD_CLOEXEC) != 0)
     #else
     if (!SetHandleInformation((HANDLE)m_fd, HANDLE_FLAG_INHERIT, 0))
     #endif
@@ -104,7 +104,7 @@ void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)
     #if __linux__ || __APPLE__ || __CYGWIN__
     if (connectStatus != -1 || errno != EINPROGRESS)
     #elif __MINGW32__
-    if (connectStatus != -1 || WSAGetLastError() != WSAEWOULDBLOCK)
+    if (connectStatus != SOCKET_ERROR || WSAGetLastError() != WSAEWOULDBLOCK)
     #else
     #error What platform are you on!?
     #endif
@@ -258,7 +258,7 @@ void tSocket::setNagles(bool on)
     int flag = on ? 0 : 1;    // Nagle's on == TCP_NODELAY off
     m_nodelay = (flag == 1);
     if(::setsockopt(m_fd, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(int))
-            == -1)
+            != 0)
     {
         throw eRuntimeError(strerror(errno));
     }
@@ -422,9 +422,9 @@ void tSocket::closeRead()
         return;
     m_readEOF = true;
     #if __linux__ || __APPLE__ || __CYGWIN__
-    if (::shutdown(m_fd, SHUT_RD) == -1)
+    if (::shutdown(m_fd, SHUT_RD) != 0)
     #elif __MINGW32__
-    if (::shutdown(m_fd, SD_RECEIVE) == -1)
+    if (::shutdown(m_fd, SD_RECEIVE) != 0)
     #else
     #error What platform are you on!?
     #endif
@@ -443,9 +443,9 @@ void tSocket::closeWrite()
         return;
     m_writeEOF = true;
     #if __linux__ || __APPLE__ || __CYGWIN__
-    if (::shutdown(m_fd, SHUT_WR) == -1)
+    if (::shutdown(m_fd, SHUT_WR) != 0)
     #elif __MINGW32__
-    if (::shutdown(m_fd, SD_SEND) == -1)
+    if (::shutdown(m_fd, SD_SEND) != 0)
     #else
     #error What platform are you on!?
     #endif

@@ -57,7 +57,7 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
 
     #if __APPLE__ || __CYGWIN__ || __MINGW32__
     #if __APPLE__ || __CYGWIN__
-    if (fcntl(m_fd, F_SETFD, fcntl(m_fd, F_GETFD, 0) | FD_CLOEXEC) == -1)
+    if (fcntl(m_fd, F_SETFD, fcntl(m_fd, F_GETFD, 0) | FD_CLOEXEC) != 0)
     #else
     if (!SetHandleInformation((HANDLE)m_fd, HANDLE_FLAG_INHERIT, 0))
     #endif
@@ -69,7 +69,7 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
 
     int off = 0;
     if (::setsockopt(m_fd, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&off, sizeof(off))
-            == -1)
+            != 0)
     {
         #if __linux__ || __APPLE__
         m_finalize();
@@ -81,9 +81,9 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
 
     int on  = 1;
     #if __linux__ || __APPLE__ || __CYGWIN__
-    if (::setsockopt(m_fd, SOL_SOCKET, SO_REUSEADDR, (char*)&on, sizeof(on)) == -1)
+    if (::setsockopt(m_fd, SOL_SOCKET, SO_REUSEADDR, (char*)&on, sizeof(on)) != 0)
     #elif __MINGW32__
-    if (::setsockopt(m_fd, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (char*)&on, sizeof(on)) == -1)
+    if (::setsockopt(m_fd, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (char*)&on, sizeof(on)) != 0)
     #else
     #error What platform are you on!?
     #endif
@@ -92,7 +92,7 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
         throw eSocketCreationError("Cannot enable reuse-addr on server socket.");
     }
 
-    if (::bind(m_fd, (struct sockaddr*)(m_addr.m_sockaddr), m_addr.m_sockaddrlen) == -1)
+    if (::bind(m_fd, (struct sockaddr*)(m_addr.m_sockaddr), m_addr.m_sockaddrlen) != 0)
     {
         m_finalize();
         std::ostringstream o;
@@ -100,7 +100,7 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
         throw eSocketBindError(o.str());
     }
 
-    if (::listen(m_fd, kServerAcceptQueueLength) == -1)
+    if (::listen(m_fd, kServerAcceptQueueLength) != 0)
     {
         m_finalize();
         throw eSocketBindError("Cannot put server socket into the listening state.");
@@ -159,7 +159,7 @@ refc<tSocket> tServer::accept()
 
     #if __APPLE__ || __CYGWIN__ || __MINGW32__
     #if __APPLE__ || __CYGWIN__
-    if (fcntl(fd, F_SETFD, fcntl(fd, F_GETFD, 0) | FD_CLOEXEC) == -1)
+    if (fcntl(fd, F_SETFD, fcntl(fd, F_GETFD, 0) | FD_CLOEXEC) != 0)
     #else
     if (!SetHandleInformation((HANDLE)fd, HANDLE_FLAG_INHERIT, 0))
     #endif
