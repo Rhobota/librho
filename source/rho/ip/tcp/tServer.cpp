@@ -49,6 +49,8 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
     m_fd = ::socket(AF_INET6, SOCK_STREAM|SOCK_CLOEXEC, IPPROTO_TCP);
     #elif __APPLE__ || __CYGWIN__ || __MINGW32__
     m_fd = ::socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+    #else
+    #error What platform are you on!?
     #endif
     if (m_fd == kInvalidSocket)
     {
@@ -147,6 +149,8 @@ refc<tSocket> tServer::accept()
     int fd = ::accept4(m_fd, (struct sockaddr*)&sockAddr, &returnedLen, SOCK_CLOEXEC);
     #elif __APPLE__ || __CYGWIN__ || __MINGW32__
     int fd = ::accept(m_fd, (struct sockaddr*)&sockAddr, &returnedLen);
+    #else
+    #error What platform are you on!?
     #endif
 
     if (fd == kInvalidSocket)
