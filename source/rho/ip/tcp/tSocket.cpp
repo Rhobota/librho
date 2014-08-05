@@ -231,9 +231,7 @@ tAddr tSocket::getLocalAddress() const
     socklen_t sockAddrLen = sizeof(sockAddr);
     socklen_t returnedLen = sockAddrLen;
 
-    int fd = ::getsockname(m_fd, (struct sockaddr*)&sockAddr, &returnedLen);
-
-    if (fd == kInvalidSocket)
+    if (::getsockname(m_fd, (struct sockaddr*)&sockAddr, &returnedLen) != 0)
     {
         throw eResourceAcquisitionError(strerror(errno));
     }
