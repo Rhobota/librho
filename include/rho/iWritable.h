@@ -109,6 +109,37 @@ class tFileWritable : public iWritable, public iFlushable,
 };
 
 
+class tZlibWritable : public iWritable, public iFlushable,
+                      public bNonCopyable
+{
+    public:
+
+        /**
+         * Writes to the 'internalStream' deflated data in the
+         * zlib format.
+         *
+         * The compression level is in [0,9], just like you'd expect
+         * with a zlib deflate stream.
+         */
+        tZlibWritable(iWritable* internalStream, int compressionLevel=6);
+
+        ~tZlibWritable();
+
+        i32 write(const u8* buffer, i32 length);
+        i32 writeAll(const u8* buffer, i32 length);
+
+        bool flush();
+
+    private:
+
+        iWritable* m_stream;
+
+        void* m_zlibContext;
+        u8* m_inBuf;
+        u8* m_outBuf;
+};
+
+
 class tByteWritable : public iWritable, public bNonCopyable
 {
     public:

@@ -108,6 +108,34 @@ class tFileReadable : public iReadable, public bNonCopyable
 };
 
 
+class tZlibReadable : public iReadable, public bNonCopyable
+{
+    public:
+
+        /**
+         * Reads from the 'internalStream' and inflates what
+         * is read. The 'internalStream' is assumed to be a valid
+         * stream of zlib formatted deflated data.
+         *
+         * Errors are thrown if the stream is not in the zlib format.
+         */
+        tZlibReadable(iReadable* internalStream);
+
+        ~tZlibReadable();
+
+        i32 read(u8* buffer, i32 length);
+        i32 readAll(u8* buffer, i32 length);
+
+    private:
+
+        iReadable* m_stream;
+
+        void* m_zlibContext;
+        u8* m_inBuf;
+        u8* m_outBuf;
+};
+
+
 class tByteReadable : public iReadable, public bNonCopyable
 {
     public:
