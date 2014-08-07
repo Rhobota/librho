@@ -139,6 +139,7 @@ class tZlibReadable : public iReadable, public bNonCopyable
         u8* m_outBuf;
         u32 m_outUsed;
         u32 m_outPos;
+        bool m_eof;
 };
 
 
