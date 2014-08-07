@@ -90,7 +90,7 @@ bool tZlibReadable::m_refill()
     m_outPos = 0;
     m_outUsed = 0;
 
-    while (m_outUsed == 0)
+    while (m_outUsed == 0 && !m_eof)
     {
         // If this is being called, it means we've
         // read everything that's available in the
@@ -105,17 +105,10 @@ bool tZlibReadable::m_refill()
         if ((ctx->avail_in) == 0)
         {
             i32 r = m_stream->read(m_inBuf, READ_CHUNK_SIZE);
-            if (r < 0)
+            if (r > 0)
             {
-                m_eof = true;
-                return false;
+                ctx->avail_in = r;
             }
-            if (r == 0)
-            {
-                m_eof = true;
-                return true;
-            }
-            ctx->avail_in = r;
             ctx->next_in = m_inBuf;
         }
 
@@ -129,7 +122,7 @@ bool tZlibReadable::m_refill()
         m_outUsed = READ_CHUNK_SIZE - (ctx->avail_out);
     }
 
-    // m_outUsed must be positive, so we're good to go.
+    // m_outUsed must be positive, or we found the eof, so we're good to go.
     return true;
 }
 
