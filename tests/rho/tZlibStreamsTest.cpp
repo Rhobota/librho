@@ -178,10 +178,15 @@ int main()
     tCrashReporter::init();
     srand(time(0));
 
-    tTest("zlib stream little test", littleTest, kNumTestIters);
-    tTest("zlib stream large test", largeTest, kNumTestIters);
-    tTest("zlib stream large with random flush test (1)", largeWithRandomFlushesTest1, kNumTestIters);
-    tTest("zlib stream large with random flush test (2)", largeWithRandomFlushesTest2, kNumTestIters);
+    tTest("zlib stream rand-data little test", littleTest, kNumTestIters);
+    tTest("zlib stream rand-data large test", largeTest, kNumTestIters);
+    tTest("zlib stream rand-data large with random flush test (1)", largeWithRandomFlushesTest1, kNumTestIters);
+    tTest("zlib stream rand-data large with random flush test (2)", largeWithRandomFlushesTest2, kNumTestIters);
+
+    tTest("zlib stream pattern-data little test", patter_littleTest, kNumTestIters);
+    tTest("zlib stream pattern-data large test", patter_largeTest, kNumTestIters);
+    tTest("zlib stream pattern-data large with random flush test (1)", patter_largeWithRandomFlushesTest1, kNumTestIters);
+    tTest("zlib stream pattern-data large with random flush test (2)", patter_largeWithRandomFlushesTest2, kNumTestIters);
 
     return 0;
 }
