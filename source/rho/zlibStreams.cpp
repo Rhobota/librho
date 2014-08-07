@@ -101,7 +101,7 @@ bool tZlibReadable::m_refill()
         ctx->next_out = m_outBuf;
 
         // If there's nothing in the in-buffer, we need
-        // to obtain more from the underlying stream.
+        // to try to obtain more from the underlying stream.
         if ((ctx->avail_in) == 0)
         {
             i32 r = m_stream->read(m_inBuf, READ_CHUNK_SIZE);
@@ -112,8 +112,14 @@ bool tZlibReadable::m_refill()
             ctx->next_in = m_inBuf;
         }
 
-        // Now that we have space in the in- and out-buffers,
-        // we can decrompress stuff.
+        // Now we can try to decrompress stuff.
+        //
+        // inflate() will return:
+        //     - Z_STREAM_END if all output has been produced, or
+        //     - Z_OK if the stream is still valid and progress was made, or
+        //     - an error if (1) the stream is invalid or (2) the stream
+        //       seems valid but no progress was made.
+        //
         int ret = inflate(ctx, Z_SYNC_FLUSH);
         if (ret == Z_STREAM_END)
             m_eof = true;
