@@ -17,7 +17,9 @@ tZlibReadable::tZlibReadable(iReadable* internalStream)
     : m_stream(internalStream),
       m_zlibContext(NULL),
       m_inBuf(NULL),
-      m_outBuf(NULL)
+      m_outBuf(NULL),
+      m_outUsed(0),
+      m_outPos(0)
 {
     z_stream ctx;
     memset(&ctx, 0, sizeof(ctx));
@@ -44,18 +46,22 @@ tZlibReadable::~tZlibReadable()
     delete [] m_outBuf;
     m_outBuf = NULL;
     m_stream = NULL;
+    m_outUsed = 0;
+    m_outPos = 0;
 }
 
 i32 tZlibReadable::read(u8* buffer, i32 length)
 {
     if (length <= 0)
         throw eInvalidArgument("Stream read/write length must be >0");
-    if (buffer == NULL)
-        throw eNullPointer("The read buffer may not be null.");
 
-    //z_stream* ctx = (z_stream*) m_zlibContext;
-
-    return 0;
+    if (m_outPos >= m_outUsed)
+        if (! m_refill())      // sets m_outPos and m_outUsed
+            return -1;
+    i32 i;
+    for (i = 0; i < length && m_outPos < m_outUsed; i++)
+        buffer[i] = m_outBuf[m_outPos++];
+    return i;
 }
 
 i32 tZlibReadable::readAll(u8* buffer, i32 length)
@@ -72,6 +78,17 @@ i32 tZlibReadable::readAll(u8* buffer, i32 length)
         amountRead += n;
     }
     return amountRead;
+}
+
+bool tZlibReadable::m_refill()
+{
+    m_outPos = 0;
+    m_outUsed = 0;
+    i32 r = m_stream->read(m_outBuf, READ_CHUNK_SIZE);
+    if (r < 0)
+        return false;
+    m_outUsed = r;
+    return true;
 }
 
 

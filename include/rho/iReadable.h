@@ -128,11 +128,17 @@ class tZlibReadable : public iReadable, public bNonCopyable
 
     private:
 
+        bool m_refill();
+
+    private:
+
         iReadable* m_stream;
 
         void* m_zlibContext;
         u8* m_inBuf;
         u8* m_outBuf;
+        u32 m_outUsed;
+        u32 m_outPos;
 };
 
 
