@@ -23,9 +23,6 @@ void littleTest(const tTest& t)
     tByteWritable bw;
     tByteReadable br;
 
-    tZlibWritable zw(&bw, (rand()%10));
-    tZlibReadable zr(&br);
-
     // Gen a random message.
     int messagelen = (rand() % 50);
     vector<u8> pt1(messagelen);
@@ -33,16 +30,20 @@ void littleTest(const tTest& t)
         pt1[j] = rand() % 256;
 
     // Write the message to the zlib writer (deflation).
-    if (pt1.size() > 0)
     {
-        i32 w = zw.writeAll(&pt1[0], pt1.size());
-        t.assert(w >= 0 && ((size_t)w) == pt1.size());
+        tZlibWritable zw(&bw, (rand()%10));
+        if (pt1.size() > 0)
+        {
+            i32 w = zw.writeAll(&pt1[0], pt1.size());
+            t.assert(w >= 0 && ((size_t)w) == pt1.size());
+        }
+        t.assert(zw.flush());
     }
-    t.assert(zw.flush());
+    vector<u8> ct = bw.getBuf();
 
     // Read the message through the zlib reader (inflations).
-    vector<u8> ct = bw.getBuf();
     br.reset(ct);
+    tZlibReadable zr(&br);
     vector<u8> pt2(messagelen);
     i32 r = zr.readAll(&pt2[0], 1000000);
     t.assert(r >= 0 && ((size_t)r) == pt2.size());
@@ -184,24 +185,25 @@ void patter_littleTest(const tTest& t)
     tByteWritable bw;
     tByteReadable br;
 
-    tZlibWritable zw(&bw, (rand()%10));
-    tZlibReadable zr(&br);
-
     // Gen a random message.
     int messagelen = (rand() % 50);
     vector<u8> pt1 = getPatterData(messagelen);
 
     // Write the message to the zlib writer (deflation).
-    if (pt1.size() > 0)
     {
-        i32 w = zw.writeAll(&pt1[0], pt1.size());
-        t.assert(w >= 0 && ((size_t)w) == pt1.size());
+        tZlibWritable zw(&bw, (rand()%10));
+        if (pt1.size() > 0)
+        {
+            i32 w = zw.writeAll(&pt1[0], pt1.size());
+            t.assert(w >= 0 && ((size_t)w) == pt1.size());
+        }
+        t.assert(zw.flush());
     }
-    t.assert(zw.flush());
+    vector<u8> ct = bw.getBuf();
 
     // Read the message through the zlib reader (inflations).
-    vector<u8> ct = bw.getBuf();
     br.reset(ct);
+    tZlibReadable zr(&br);
     vector<u8> pt2(messagelen);
     i32 r = zr.readAll(&pt2[0], 1000000);
     t.assert(r >= 0 && ((size_t)r) == pt2.size());
