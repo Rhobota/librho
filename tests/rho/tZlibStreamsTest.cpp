@@ -69,12 +69,13 @@ void randomFlushTest(const tTest& t)
     {
         if ((rand() % 10) == 0)
             t.assert(zw.flush());
-        size_t len = (rand() % 1000) + 1;
+        size_t len = (rand() % 20000) + 1;
         i32 w_here = zw.write(&pt1[w], std::min(len, pt1.size()-w));
         if (w_here <= 0)
             t.fail();
         w += w_here;
     }
+    t.assert(w == pt1.size());
     t.assert(zw.flush());
 
     // Read the message through the zlib reader (inflations).
