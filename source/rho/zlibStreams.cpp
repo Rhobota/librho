@@ -2,6 +2,7 @@
 #include <rho/iWritable.h>
 
 #include <zlib.h>
+#include <cassert>
 #include <string.h>
 
 
@@ -19,7 +20,8 @@ tZlibReadable::tZlibReadable(iReadable* internalStream)
       m_inBuf(NULL),
       m_outBuf(NULL),
       m_outUsed(0),
-      m_outPos(0)
+      m_outPos(0),
+      m_eof(false)
 {
     z_stream ctx;
     memset(&ctx, 0, sizeof(ctx));
@@ -82,12 +84,51 @@ i32 tZlibReadable::readAll(u8* buffer, i32 length)
 
 bool tZlibReadable::m_refill()
 {
+    if (m_eof)
+        return false;
+
     m_outPos = 0;
     m_outUsed = 0;
-    i32 r = m_stream->read(m_outBuf, READ_CHUNK_SIZE);
-    if (r < 0)
-        return false;
-    m_outUsed = r;
+
+    while (m_outUsed == 0)
+    {
+        // If this is being called, it means we've
+        // read everything that's available in the
+        // out-buffer. In that case, we can reset it
+        // and potentially re-use the entire thing.
+        z_stream* ctx = (z_stream*) m_zlibContext;
+        ctx->avail_out = READ_CHUNK_SIZE;
+        ctx->next_out = m_outBuf;
+
+        // If there's nothing in the in-buffer, we need
+        // to obtain more from the underlying stream.
+        if ((ctx->avail_in) == 0)
+        {
+            i32 r = m_stream->read(m_inBuf, READ_CHUNK_SIZE);
+            if (r < 0)
+            {
+                m_eof = true;
+                return false;
+            }
+            if (r == 0)
+            {
+                m_eof = true;
+                return true;
+            }
+            ctx->avail_in = r;
+            ctx->next_in = m_inBuf;
+        }
+
+        // Now that we have space in the in- and out-buffers,
+        // we can decrompress stuff.
+        int ret = inflate(ctx, Z_SYNC_FLUSH);
+        assert(ret == Z_STREAM_END || ret == Z_OK);
+        if (ret == Z_STREAM_END)
+            m_eof = true;
+        m_outUsed = READ_CHUNK_SIZE - (ctx->avail_out);
+    }
+
+    // m_outUsed must be positive, so we're good to go.
     return true;
 }
 
