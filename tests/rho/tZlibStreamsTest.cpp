@@ -18,6 +18,107 @@ static const int kNumTestIters = 1000;
 static const int kMaxMessageLength = 1000000;
 
 
+void warpData(vector<u8>& data)
+{
+    switch (rand() % 3)
+    {
+        case 0:
+            data.erase(data.begin() + (rand()%data.size()));
+            break;
+        case 1:
+            data.insert(data.begin() + (rand()%data.size()), rand()%256);
+            break;
+        case 2:
+            data[(rand()%data.size())] = rand()%256;
+            break;
+    }
+}
+
+
+void littleInvalidStreamTest(const tTest& t)
+{
+    tByteWritable bw;
+    tByteReadable br;
+
+    // Gen a random message.
+    int messagelen = (rand() % 50) + 50;
+    vector<u8> pt1(messagelen);
+    for (size_t j = 0; j < pt1.size(); j++)
+        pt1[j] = rand() % 256;
+
+    // Write the message to the zlib writer (deflation).
+    {
+        tZlibWritable zw(&bw, (rand()%10));
+        if (pt1.size() > 0)
+        {
+            i32 w = zw.writeAll(&pt1[0], pt1.size());
+            t.assert(w >= 0 && ((size_t)w) == pt1.size());
+        }
+        t.assert(zw.flush());
+    }
+    vector<u8> ct = bw.getBuf();
+
+    // Read the message through the zlib reader (inflations).
+    warpData(ct);
+    br.reset(ct);
+    tZlibReadable zr(&br);
+    try
+    {
+        vector<u8> pt2(kMaxMessageLength);
+        i32 r = zr.readAll(&pt2[0], kMaxMessageLength);
+        for (i32 i = 0; i < r; i++)
+            t.assert(pt2[i] == pt1[i]);
+    }
+    catch (eRuntimeError& e)
+    {
+        // This is okay. Actually, this error is preferred given
+        // the circumstances.
+    }
+}
+
+
+void largeInvalidStreamTest(const tTest& t)
+{
+    tByteWritable bw;
+    tByteReadable br;
+
+    // Gen a random message.
+    int messagelen = (rand() % kMaxMessageLength) + 50;
+    vector<u8> pt1(messagelen);
+    for (size_t j = 0; j < pt1.size(); j++)
+        pt1[j] = rand() % 256;
+
+    // Write the message to the zlib writer (deflation).
+    {
+        tZlibWritable zw(&bw, (rand()%10));
+        if (pt1.size() > 0)
+        {
+            i32 w = zw.writeAll(&pt1[0], pt1.size());
+            t.assert(w >= 0 && ((size_t)w) == pt1.size());
+        }
+        t.assert(zw.flush());
+    }
+    vector<u8> ct = bw.getBuf();
+
+    // Read the message through the zlib reader (inflations).
+    warpData(ct);
+    br.reset(ct);
+    tZlibReadable zr(&br);
+    try
+    {
+        vector<u8> pt2(kMaxMessageLength);
+        i32 r = zr.readAll(&pt2[0], kMaxMessageLength);
+        for (i32 i = 0; i < r; i++)
+            t.assert(pt2[i] == pt1[i]);
+    }
+    catch (eRuntimeError& e)
+    {
+        // This is okay. Actually, this error is preferred given
+        // the circumstances.
+    }
+}
+
+
 void littleTest(const tTest& t)
 {
     tByteWritable bw;
@@ -45,7 +146,7 @@ void littleTest(const tTest& t)
     br.reset(ct);
     tZlibReadable zr(&br);
     vector<u8> pt2(messagelen);
-    i32 r = zr.readAll(&pt2[0], 1000000);
+    i32 r = zr.readAll(&pt2[0], kMaxMessageLength);
     t.assert(r >= 0 && ((size_t)r) == pt2.size());
 
     // See if the original buf matches the resulting buf.
@@ -205,7 +306,7 @@ void patter_littleTest(const tTest& t)
     br.reset(ct);
     tZlibReadable zr(&br);
     vector<u8> pt2(messagelen);
-    i32 r = zr.readAll(&pt2[0], 1000000);
+    i32 r = zr.readAll(&pt2[0], kMaxMessageLength);
     t.assert(r >= 0 && ((size_t)r) == pt2.size());
 
     // See if the original buf matches the resulting buf.
@@ -332,6 +433,9 @@ int main()
 {
     tCrashReporter::init();
     srand(time(0));
+
+    tTest("zlib little invalid stream test", littleInvalidStreamTest, kNumTestIters);
+    tTest("zlib large invalid stream test", largeInvalidStreamTest, kNumTestIters);
 
     tTest("zlib stream rand-data little test", littleTest, kNumTestIters);
     tTest("zlib stream rand-data large test", largeTest, kNumTestIters);
