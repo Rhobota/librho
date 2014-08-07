@@ -2,7 +2,6 @@
 #include <rho/iWritable.h>
 
 #include <zlib.h>
-#include <cassert>
 #include <string.h>
 
 
@@ -28,8 +27,9 @@ tZlibReadable::tZlibReadable(iReadable* internalStream)
     ctx.zalloc = Z_NULL;
     ctx.zfree = Z_NULL;
     ctx.opaque = Z_NULL;
-    if (inflateInit(&ctx) != Z_OK)
-        throw eRuntimeError("Cannot create zlib context.");
+    int ret = inflateInit(&ctx);
+    if (ret != Z_OK)
+        throw eRuntimeError(std::string("Zlib error: ") + zError(ret));
     ctx.avail_in = ctx.avail_out = 0;
     ctx.next_in = ctx.next_out = NULL;
     m_zlibContext = malloc(sizeof(ctx));
@@ -122,9 +122,10 @@ bool tZlibReadable::m_refill()
         // Now that we have space in the in- and out-buffers,
         // we can decrompress stuff.
         int ret = inflate(ctx, Z_SYNC_FLUSH);
-        assert(ret == Z_STREAM_END || ret == Z_OK);
         if (ret == Z_STREAM_END)
             m_eof = true;
+        else if (ret != Z_OK)
+            throw eRuntimeError(std::string("Zlib error: ") + zError(ret));
         m_outUsed = READ_CHUNK_SIZE - (ctx->avail_out);
     }
 
@@ -144,8 +145,9 @@ tZlibWritable::tZlibWritable(iWritable* internalStream, int compressionLevel)
     ctx.zalloc = Z_NULL;
     ctx.zfree = Z_NULL;
     ctx.opaque = Z_NULL;
-    if (deflateInit(&ctx, compressionLevel) != Z_OK)
-        throw eRuntimeError("Cannot create zlib context.");
+    int ret = deflateInit(&ctx, compressionLevel);
+    if (ret != Z_OK)
+        throw eRuntimeError(std::string("Zlib error: ") + zError(ret));
     m_zlibContext = malloc(sizeof(ctx));
     memcpy(m_zlibContext, &ctx, sizeof(ctx));
     m_inBuf = new u8[WRITE_CHUNK_SIZE];
@@ -207,7 +209,7 @@ i32 tZlibWritable::write(const u8* buffer, i32 length)
         ctx->next_out = m_outBuf;
         int ret = deflate(ctx, Z_NO_FLUSH);
         if (ret != Z_OK)
-            throw eRuntimeError("Cannot deflate data using zlib.");
+            throw eRuntimeError(std::string("Zlib error: ") + zError(ret));
         i32 have = WRITE_CHUNK_SIZE - (ctx->avail_out);
         if (have > 0)
             if (m_stream->writeAll(m_outBuf, have) != have)
@@ -244,7 +246,7 @@ bool tZlibWritable::flush()
         ctx->next_out = m_outBuf;
         int ret = deflate(ctx, Z_SYNC_FLUSH);
         if (ret != Z_OK)
-            throw eRuntimeError("Cannot deflate data using zlib.");
+            throw eRuntimeError(std::string("Zlib error: ") + zError(ret));
         i32 have = WRITE_CHUNK_SIZE - (ctx->avail_out);
         if (have > 0)
             if (m_stream->writeAll(m_outBuf, have) != have)
