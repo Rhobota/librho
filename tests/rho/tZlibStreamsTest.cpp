@@ -214,7 +214,7 @@ void largeTest2(const tTest& t)
     br.reset(ct);
     tZlibReadable zr(&br);
     vector<u8> pt2(messagelen);
-    i32 r = zr.readAll(&pt2[0], pt2.size());
+    i32 r = zr.readAll(&pt2[0], 2*kMaxMessageLength);
     t.assert(r >= 0 && ((size_t)r) == pt2.size());
 
     // See if the original buf matches the resulting buf.
@@ -422,7 +422,7 @@ void patter_largeTest2(const tTest& t)
     br.reset(ct);
     tZlibReadable zr(&br);
     vector<u8> pt2(messagelen);
-    i32 r = zr.readAll(&pt2[0], pt2.size());
+    i32 r = zr.readAll(&pt2[0], 2*kMaxMessageLength);
     t.assert(r >= 0 && ((size_t)r) == pt2.size());
 
     // See if the original buf matches the resulting buf.
