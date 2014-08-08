@@ -157,7 +157,7 @@ void littleTest(const tTest& t)
 }
 
 
-void largeTest(const tTest& t)
+void largeTest1(const tTest& t)
 {
     tByteWritable bw;
     tByteReadable br;
@@ -180,6 +180,39 @@ void largeTest(const tTest& t)
     vector<u8> ct = bw.getBuf();
     //cout << "orig: " << messagelen << "    deflated: " << ct.size() << endl;
     br.reset(ct);
+    vector<u8> pt2(messagelen);
+    i32 r = zr.readAll(&pt2[0], pt2.size());
+    t.assert(r >= 0 && ((size_t)r) == pt2.size());
+
+    // See if the original buf matches the resulting buf.
+    t.assert(pt1 == pt2);
+}
+
+
+void largeTest2(const tTest& t)
+{
+    tByteWritable bw;
+    tByteReadable br;
+
+    // Gen a random message.
+    int messagelen = (rand() % kMaxMessageLength) + 1;
+    vector<u8> pt1(messagelen);
+    for (size_t j = 0; j < pt1.size(); j++)
+        pt1[j] = rand() % 256;
+
+    // Write the message to the zlib writer (deflation).
+    {
+        tZlibWritable zw(&bw, (rand()%10));
+        i32 w = zw.writeAll(&pt1[0], pt1.size());
+        t.assert(w >= 0 && ((size_t)w) == pt1.size());
+        t.assert(zw.flush());
+    }
+    vector<u8> ct = bw.getBuf();
+    //cout << "orig: " << messagelen << "    deflated: " << ct.size() << endl;
+
+    // Read the message through the zlib reader (inflations).
+    br.reset(ct);
+    tZlibReadable zr(&br);
     vector<u8> pt2(messagelen);
     i32 r = zr.readAll(&pt2[0], pt2.size());
     t.assert(r >= 0 && ((size_t)r) == pt2.size());
@@ -336,7 +369,7 @@ void patter_littleTest(const tTest& t)
 }
 
 
-void patter_largeTest(const tTest& t)
+void patter_largeTest1(const tTest& t)
 {
     tByteWritable bw;
     tByteReadable br;
@@ -357,6 +390,37 @@ void patter_largeTest(const tTest& t)
     vector<u8> ct = bw.getBuf();
     //cout << "orig: " << messagelen << "    deflated: " << ct.size() << endl;
     br.reset(ct);
+    vector<u8> pt2(messagelen);
+    i32 r = zr.readAll(&pt2[0], pt2.size());
+    t.assert(r >= 0 && ((size_t)r) == pt2.size());
+
+    // See if the original buf matches the resulting buf.
+    t.assert(pt1 == pt2);
+}
+
+
+void patter_largeTest2(const tTest& t)
+{
+    tByteWritable bw;
+    tByteReadable br;
+
+    // Gen a random message.
+    int messagelen = (rand() % kMaxMessageLength) + 1;
+    vector<u8> pt1 = getPatterData(messagelen);
+
+    // Write the message to the zlib writer (deflation).
+    {
+        tZlibWritable zw(&bw, (rand()%10));
+        i32 w = zw.writeAll(&pt1[0], pt1.size());
+        t.assert(w >= 0 && ((size_t)w) == pt1.size());
+        t.assert(zw.flush());
+    }
+    vector<u8> ct = bw.getBuf();
+    //cout << "orig: " << messagelen << "    deflated: " << ct.size() << endl;
+
+    // Read the message through the zlib reader (inflations).
+    br.reset(ct);
+    tZlibReadable zr(&br);
     vector<u8> pt2(messagelen);
     i32 r = zr.readAll(&pt2[0], pt2.size());
     t.assert(r >= 0 && ((size_t)r) == pt2.size());
@@ -459,18 +523,20 @@ int main()
     tCrashReporter::init();
     srand(time(0));
 
-    tTest("zlib mem test", littleTest, 2000000000);
+    //tTest("zlib mem test", littleTest, 2000000000);
 
     tTest("zlib little invalid stream test", littleInvalidStreamTest, kNumTestIters);
     tTest("zlib large invalid stream test", largeInvalidStreamTest, kNumTestIters);
 
     tTest("zlib stream rand-data little test", littleTest, kNumTestIters);
-    tTest("zlib stream rand-data large test", largeTest, kNumTestIters);
+    tTest("zlib stream rand-data large test (1)", largeTest1, kNumTestIters);
+    tTest("zlib stream rand-data large test (2)", largeTest2, kNumTestIters);
     tTest("zlib stream rand-data large with random flush test (1)", largeWithRandomFlushesTest1, kNumTestIters);
     tTest("zlib stream rand-data large with random flush test (2)", largeWithRandomFlushesTest2, kNumTestIters);
 
     tTest("zlib stream pattern-data little test", patter_littleTest, kNumTestIters);
-    tTest("zlib stream pattern-data large test", patter_largeTest, kNumTestIters);
+    tTest("zlib stream pattern-data large test (1)", patter_largeTest1, kNumTestIters);
+    tTest("zlib stream pattern-data large test (2)", patter_largeTest2, kNumTestIters);
     tTest("zlib stream pattern-data large with random flush test (1)", patter_largeWithRandomFlushesTest1, kNumTestIters);
     tTest("zlib stream pattern-data large with random flush test (2)", patter_largeWithRandomFlushesTest2, kNumTestIters);
 
