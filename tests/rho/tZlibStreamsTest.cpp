@@ -459,6 +459,8 @@ int main()
     tCrashReporter::init();
     srand(time(0));
 
+    tTest("zlib mem test", littleTest, 2000000000);
+
     tTest("zlib little invalid stream test", littleInvalidStreamTest, kNumTestIters);
     tTest("zlib large invalid stream test", largeInvalidStreamTest, kNumTestIters);
 

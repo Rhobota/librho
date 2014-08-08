@@ -120,6 +120,11 @@ class tZlibWritable : public iWritable, public iFlushable,
          *
          * The compression level is in [0,9], just like you'd expect
          * with a zlib deflate stream.
+         *
+         * Warning: This class will not write the STREAM_END until it
+         * is destructed. If you have a tZlibReadable which is waiting
+         * to receive STREAM_END, you will need to allow this class to
+         * destruct.
          */
         tZlibWritable(iWritable* internalStream, int compressionLevel=6);
 
