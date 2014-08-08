@@ -137,6 +137,7 @@ class tZlibWritable : public iWritable, public iFlushable,
         void* m_zlibContext;
         u8* m_inBuf;
         u8* m_outBuf;
+        bool m_broken;
 };
 
 

@@ -112,7 +112,7 @@ bool tZlibReadable::m_refill()
             ctx->next_in = m_inBuf;
         }
 
-        // Now we can try to decrompress stuff.
+        // Now we can try to decompress stuff.
         //
         // inflate() will return:
         //     - Z_STREAM_END if all output has been produced, or
@@ -137,7 +137,8 @@ tZlibWritable::tZlibWritable(iWritable* internalStream, int compressionLevel)
     : m_stream(internalStream),
       m_zlibContext(NULL),
       m_inBuf(NULL),
-      m_outBuf(NULL)
+      m_outBuf(NULL),
+      m_broken(false)
 {
     z_stream ctx;
     memset(&ctx, 0, sizeof(ctx));
@@ -155,26 +156,34 @@ tZlibWritable::tZlibWritable(iWritable* internalStream, int compressionLevel)
 
 tZlibWritable::~tZlibWritable()
 {
-    z_stream* ctx = (z_stream*) m_zlibContext;
-    ctx->avail_in = 0;
-    ctx->next_in = m_inBuf;
-    int ret;
-    do
+    if (!m_broken)
     {
-        ctx->avail_out = WRITE_CHUNK_SIZE;
-        ctx->next_out = m_outBuf;
-        ret = deflate(ctx, Z_FINISH);
-        if (ret != Z_OK && ret != Z_STREAM_END)
-            break;
-        i32 have = WRITE_CHUNK_SIZE - (ctx->avail_out);
-        if (have > 0)
-            if (m_stream->writeAll(m_outBuf, have) != have)
-                break;
-    } while (ret != Z_STREAM_END);
+        z_stream* ctx = (z_stream*) m_zlibContext;
+        ctx->avail_in = 0;
+        ctx->next_in = m_inBuf;
+        int ret;
+        do
+        {
+            ctx->avail_out = WRITE_CHUNK_SIZE;
+            ctx->next_out = m_outBuf;
+            ret = deflate(ctx, Z_FINISH);
+            if (ret != Z_OK && ret != Z_STREAM_END)
+                break;   // zlib error occurred!
+            i32 have = WRITE_CHUNK_SIZE - (ctx->avail_out);
+            if (have > 0 && m_stream->writeAll(m_outBuf, have) != have)
+            {
+                m_broken = true;
+                break;    // underlying stream error occurred!
+            }
+        } while (ret != Z_STREAM_END);
+    }
 
-    iFlushable* flushable = dynamic_cast<iFlushable*>(m_stream);
-    if (flushable)
-        flushable->flush();
+    if (!m_broken)
+    {
+        iFlushable* flushable = dynamic_cast<iFlushable*>(m_stream);
+        if (flushable)
+            flushable->flush();
+    }
 
     deflateEnd((z_stream*)m_zlibContext);
     free(m_zlibContext);
@@ -193,6 +202,9 @@ i32 tZlibWritable::write(const u8* buffer, i32 length)
     if (buffer == NULL)
         throw eNullPointer("The write buffer may not be null.");
 
+    if (m_broken)
+        return 0;
+
     if (length > WRITE_CHUNK_SIZE)
         length = WRITE_CHUNK_SIZE;
 
@@ -210,9 +222,11 @@ i32 tZlibWritable::write(const u8* buffer, i32 length)
         if (ret != Z_OK)
             throw eRuntimeError(std::string("Zlib error: ") + zError(ret));
         i32 have = WRITE_CHUNK_SIZE - (ctx->avail_out);
-        if (have > 0)
-            if (m_stream->writeAll(m_outBuf, have) != have)
-                return 0;
+        if (have > 0 && m_stream->writeAll(m_outBuf, have) != have)
+        {
+            m_broken = true;
+            return 0;
+        }
     }
 
     return length;
@@ -236,6 +250,9 @@ i32 tZlibWritable::writeAll(const u8* buffer, i32 length)
 
 bool tZlibWritable::flush()
 {
+    if (m_broken)
+        return false;
+
     z_stream* ctx = (z_stream*) m_zlibContext;
     ctx->avail_in = 0;
     ctx->next_in = m_inBuf;
@@ -244,17 +261,27 @@ bool tZlibWritable::flush()
         ctx->avail_out = WRITE_CHUNK_SIZE;
         ctx->next_out = m_outBuf;
         int ret = deflate(ctx, Z_SYNC_FLUSH);
-        if (ret != Z_OK)
+        if (ret != Z_OK && ret != Z_BUF_ERROR)
             throw eRuntimeError(std::string("Zlib error: ") + zError(ret));
         i32 have = WRITE_CHUNK_SIZE - (ctx->avail_out);
-        if (have > 0)
-            if (m_stream->writeAll(m_outBuf, have) != have)
-                return false;
+        if (have > 0 && m_stream->writeAll(m_outBuf, have) != have)
+        {
+            m_broken = true;
+            return false;
+        }
     } while ((ctx->avail_out) == 0);
 
     iFlushable* flushable = dynamic_cast<iFlushable*>(m_stream);
     if (flushable)
-        return flushable->flush();
+    {
+        if (!flushable->flush())
+        {
+            m_broken = true;
+            return false;
+        }
+        else
+            return true;
+    }
     else
         return true;
 }
