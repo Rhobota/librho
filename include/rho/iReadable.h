@@ -118,6 +118,17 @@ class tZlibReadable : public iReadable, public bNonCopyable
          * stream of zlib formatted deflated data.
          *
          * Errors are thrown if the stream is not in the zlib format.
+         *
+         * Warning: This class will throw an error if the eof of
+         * the underlaying stream is encountered before the logical eof
+         * of the zlib stream. This is by design. You should treat that
+         * thrown error as fatal, and you should assume that the data
+         * which was read previous to the error might be corrupted.
+         * On the other hand, if you read until read() returns 0 or -1,
+         * you can assume that the eof of the zlib stream was encountered
+         * and that the data was received intact. The reason it works
+         * this way is that zlib cannot fully verify the checksum until
+         * STREAM_END is found.
          */
         tZlibReadable(iReadable* internalStream);
 
