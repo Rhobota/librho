@@ -8,7 +8,7 @@
 #ifndef ZCONF_H
 #define ZCONF_H
 
-#include <rho/types.h>
+#include <stdint.h>
 
 #define z_const const
 
@@ -53,9 +53,9 @@
 #define ZEXPORTVA
 #define FAR
 
-typedef rho::u8   Byte;  /* 8 bits */
-typedef rho::u32  uInt;  /* 16 bits or more */
-typedef rho::u64  uLong; /* 32 bits or more */
+typedef uint8_t   Byte;  /* 8 bits */
+typedef uint32_t  uInt;  /* 16 bits or more */
+typedef uint64_t  uLong; /* 32 bits or more */
 
 typedef Byte  FAR Bytef;
 typedef char  FAR charf;
@@ -67,10 +67,10 @@ typedef void const *voidpc;
 typedef void FAR   *voidpf;
 typedef void       *voidp;
 
-typedef rho::u64 z_crc_t;
+typedef uint64_t z_crc_t;
 
 #define z_off_t long
 
-#define z_off64_t off64_t
+#define z_off64_t long
 
 #endif /* ZCONF_H */
