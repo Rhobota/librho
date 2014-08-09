@@ -14,7 +14,7 @@ using std::endl;
 using std::vector;
 
 
-static const int kNumTestIters = 1000;
+static const int kNumTestIters = 100;
 static const int kMaxMessageLength = 1000000;
 
 
@@ -57,7 +57,6 @@ void littleInvalidStreamTest(const tTest& t)
         t.assert(zw.flush());
     }
     vector<u8> ct = bw.getBuf();
-    //cout << "orig: " << messagelen << "    deflated: " << ct.size() << endl;
 
     // Read the message through the zlib reader (inflations).
     warpData(ct);
@@ -100,7 +99,6 @@ void largeInvalidStreamTest(const tTest& t)
         t.assert(zw.flush());
     }
     vector<u8> ct = bw.getBuf();
-    //cout << "orig: " << messagelen << "    deflated: " << ct.size() << endl;
 
     // Read the message through the zlib reader (inflations).
     warpData(ct);
@@ -143,7 +141,6 @@ void littleTest(const tTest& t)
         t.assert(zw.flush());
     }
     vector<u8> ct = bw.getBuf();
-    //cout << "orig: " << messagelen << "    deflated: " << ct.size() << endl;
 
     // Read the message through the zlib reader (inflations).
     br.reset(ct);
@@ -178,7 +175,6 @@ void largeTest1(const tTest& t)
 
     // Read the message through the zlib reader (inflations).
     vector<u8> ct = bw.getBuf();
-    //cout << "orig: " << messagelen << "    deflated: " << ct.size() << endl;
     br.reset(ct);
     vector<u8> pt2(messagelen);
     i32 r = zr.readAll(&pt2[0], pt2.size());
@@ -208,7 +204,6 @@ void largeTest2(const tTest& t)
         t.assert(zw.flush());
     }
     vector<u8> ct = bw.getBuf();
-    //cout << "orig: " << messagelen << "    deflated: " << ct.size() << endl;
 
     // Read the message through the zlib reader (inflations).
     br.reset(ct);
@@ -253,7 +248,6 @@ void largeWithRandomFlushesTest1(const tTest& t)
 
     // Read the message through the zlib reader (inflations).
     vector<u8> ct = bw.getBuf();
-    //cout << "orig: " << messagelen << "    deflated: " << ct.size() << endl;
     br.reset(ct);
     vector<u8> pt2(messagelen);
     i32 r = zr.readAll(&pt2[0], pt2.size());
@@ -295,7 +289,6 @@ void largeWithRandomFlushesTest2(const tTest& t)
 
     // Read the message through the zlib reader (inflations).
     vector<u8> ct = bw.getBuf();
-    //cout << "orig: " << messagelen << "    deflated: " << ct.size() << endl;
     br.reset(ct);
     vector<u8> pt2(messagelen);
     size_t r = 0;
@@ -355,7 +348,6 @@ void patter_littleTest(const tTest& t)
         t.assert(zw.flush());
     }
     vector<u8> ct = bw.getBuf();
-    //cout << "orig: " << messagelen << "    deflated: " << ct.size() << endl;
 
     // Read the message through the zlib reader (inflations).
     br.reset(ct);
@@ -388,7 +380,6 @@ void patter_largeTest1(const tTest& t)
 
     // Read the message through the zlib reader (inflations).
     vector<u8> ct = bw.getBuf();
-    //cout << "orig: " << messagelen << "    deflated: " << ct.size() << endl;
     br.reset(ct);
     vector<u8> pt2(messagelen);
     i32 r = zr.readAll(&pt2[0], pt2.size());
@@ -416,7 +407,6 @@ void patter_largeTest2(const tTest& t)
         t.assert(zw.flush());
     }
     vector<u8> ct = bw.getBuf();
-    //cout << "orig: " << messagelen << "    deflated: " << ct.size() << endl;
 
     // Read the message through the zlib reader (inflations).
     br.reset(ct);
@@ -459,7 +449,6 @@ void patter_largeWithRandomFlushesTest1(const tTest& t)
 
     // Read the message through the zlib reader (inflations).
     vector<u8> ct = bw.getBuf();
-    //cout << "orig: " << messagelen << "    deflated: " << ct.size() << endl;
     br.reset(ct);
     vector<u8> pt2(messagelen);
     i32 r = zr.readAll(&pt2[0], pt2.size());
@@ -499,7 +488,6 @@ void patter_largeWithRandomFlushesTest2(const tTest& t)
 
     // Read the message through the zlib reader (inflations).
     vector<u8> ct = bw.getBuf();
-    //cout << "orig: " << messagelen << "    deflated: " << ct.size() << endl;
     br.reset(ct);
     vector<u8> pt2(messagelen);
     size_t r = 0;
