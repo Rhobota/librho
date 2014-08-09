@@ -1,8 +1,9 @@
 #include <rho/iReadable.h>
 #include <rho/iWritable.h>
 
-#include <zlib.h>
 #include <string.h>
+
+#include "zlib_source/zlib-1.2.8/zlib.h"
 
 
 namespace rho
