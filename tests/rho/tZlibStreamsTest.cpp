@@ -108,8 +108,8 @@ void largeInvalidStreamTest(const tTest& t)
     tZlibReadable zr(&br);
     try
     {
-        vector<u8> pt2(kMaxMessageLength);
-        i32 r = zr.readAll(&pt2[0], kMaxMessageLength);
+        vector<u8> pt2(kMaxMessageLength+50);
+        i32 r = zr.readAll(&pt2[0], kMaxMessageLength+50);
         for (i32 i = 0; i < r; i++)
             t.assert(pt2[i] == pt1[i]);
     }
