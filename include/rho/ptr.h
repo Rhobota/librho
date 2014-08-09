@@ -25,9 +25,11 @@ class ptr : public bNonCopyable
 
         T& operator* ();
         T* operator-> ();
+        operator T* ();
 
         const T& operator* () const;
         const T* operator-> () const;
+        operator const T* () const;
 
         bool operator== (const ptr& other) const;
         bool operator!= (const ptr& other) const;
@@ -90,6 +92,18 @@ const T* ptr<T>::operator-> () const
 {
     if (!m_p)
         throw eNullPointer("Dereferencing NULL, oh no!");
+    return m_p;
+}
+
+template <class T>
+ptr<T>::operator T* ()
+{
+    return m_p;
+}
+
+template <class T>
+ptr<T>::operator const T* () const
+{
     return m_p;
 }
 
