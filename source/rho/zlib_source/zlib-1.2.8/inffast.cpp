@@ -3,6 +3,12 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
+
+/*
+ * Modified by Ryan Henning in August 2014 for inclusion in librho.
+ */
+
+
 #include "zutil.h"
 #include "inftrees.h"
 #include "inflate.h"

@@ -5,6 +5,12 @@
 
 /* @(#) $Id$ */
 
+
+/*
+ * Modified by Ryan Henning in August 2014 for inclusion in librho.
+ */
+
+
 #include "zutil.h"
 
 z_const char * const z_errmsg[10] = {
@@ -49,7 +55,7 @@ const char * ZEXPORT zError(
     return ERR_MSG(err);
 }
 
-#include <stdlib.h>
+#include <cstdlib>
 
 voidpf ZLIB_INTERNAL zcalloc (
     voidpf opaque,

@@ -10,6 +10,12 @@
 
 /* @(#) $Id$ */
 
+
+/*
+ * Modified by Ryan Henning in August 2014 for inclusion in librho.
+ */
+
+
 #ifndef ZUTIL_H
 #define ZUTIL_H
 
@@ -63,7 +69,7 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 
          /* functions */
 
-#include <string.h>
+#include <cstring>
 
 #define zmemcpy memcpy
 #define zmemcmp memcmp
@@ -71,7 +77,7 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 
 /* Diagnostic functions */
 #ifdef DEBUG
-#  include <stdio.h>
+#  include <cstdio>
    extern int ZLIB_INTERNAL z_verbose;
    extern void ZLIB_INTERNAL z_error OF((char *m));
 #  define Assert(cond,msg) {if(!(cond)) z_error(msg);}

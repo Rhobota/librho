@@ -9,11 +9,17 @@
  * factor of two increase in speed on a Power PC G4 (PPC7455) using gcc -O3.
  */
 
+
+/*
+ * Modified by Ryan Henning in August 2014 for inclusion in librho.
+ */
+
+
 /* @(#) $Id$ */
 
 #include "zutil.h"
 
-#include <stddef.h>
+#include <cstddef>
 
 #define local static
 

@@ -5,6 +5,12 @@
 
 /* @(#) $Id$ */
 
+
+/*
+ * Modified by Ryan Henning in August 2014 for inclusion in librho.
+ */
+
+
 #ifndef ZCONF_H
 #define ZCONF_H
 

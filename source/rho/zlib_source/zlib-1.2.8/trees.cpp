@@ -32,12 +32,18 @@
 
 /* @(#) $Id$ */
 
+
+/*
+ * Modified by Ryan Henning in August 2014 for inclusion in librho.
+ */
+
+
 /* #define GEN_TREES_H */
 
 #include "deflate.h"
 
 #ifdef DEBUG
-#  include <ctype.h>
+#  include <cctype>
 #endif
 
 /* ===========================================================================

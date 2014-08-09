@@ -49,6 +49,12 @@
 
 /* @(#) $Id$ */
 
+
+/*
+ * Modified by Ryan Henning in August 2014 for inclusion in librho.
+ */
+
+
 #include "deflate.h"
 
 const char deflate_copyright[] =
