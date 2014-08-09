@@ -22,7 +22,7 @@
 #  define local static
 #endif
 
-typedef rho::u8  uch;
+typedef uint8_t  uch;
 typedef uch FAR uchf;
 typedef unsigned int ush;
 typedef ush FAR ushf;
