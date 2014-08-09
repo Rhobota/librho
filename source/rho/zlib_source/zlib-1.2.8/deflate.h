@@ -8,6 +8,12 @@
    subject to change. Applications should only use zlib.h.
  */
 
+
+/*
+ * Modified by Ryan Henning in August 2014 for inclusion in librho.
+ */
+
+
 /* @(#) $Id$ */
 
 #ifndef DEFLATE_H

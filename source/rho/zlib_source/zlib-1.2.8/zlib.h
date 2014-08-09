@@ -28,6 +28,12 @@
   (zlib format), rfc1951 (deflate format) and rfc1952 (gzip format).
 */
 
+
+/*
+ * Modified by Ryan Henning in August 2014 for inclusion in librho.
+ */
+
+
 #ifndef ZLIB_H
 #define ZLIB_H
 

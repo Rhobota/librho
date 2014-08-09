@@ -10,6 +10,12 @@
    inflate_fast() can be used with either inflate.c or infback.c.
  */
 
+
+/*
+ * Modified by Ryan Henning in August 2014 for inclusion in librho.
+ */
+
+
 #include "zutil.h"
 #include "inftrees.h"
 #include "inflate.h"

@@ -2,6 +2,12 @@
  * Generated automatically by crc32.c
  */
 
+
+/*
+ * Modified by Ryan Henning in August 2014 for inclusion in librho.
+ */
+
+
 local const z_crc_t FAR crc_table[TBLS][256] =
 {
   {

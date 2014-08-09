@@ -80,6 +80,12 @@
  * The history for versions after 1.2.0 are in ChangeLog in zlib distribution.
  */
 
+
+/*
+ * Modified by Ryan Henning in August 2014 for inclusion in librho.
+ */
+
+
 #include "zutil.h"
 #include "inftrees.h"
 #include "inflate.h"
