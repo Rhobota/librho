@@ -21,13 +21,8 @@
    - Pentium III (Anderson)
    - M68060 (Nikl)
  */
-#ifdef POSTINC
-#  define OFF 0
-#  define PUP(a) *(a)++
-#else
-#  define OFF 1
-#  define PUP(a) *++(a)
-#endif
+#define OFF 1
+#define PUP(a) *++(a)
 
 /*
    Decode literal, length, and distance codes and write out the resulting
@@ -74,9 +69,6 @@ unsigned start)         /* inflate()'s starting value for strm->avail_out */
     unsigned char FAR *out;     /* local strm->next_out */
     unsigned char FAR *beg;     /* inflate()'s initial strm->next_out */
     unsigned char FAR *end;     /* while out < end, enough space available */
-#ifdef INFLATE_STRICT
-    unsigned dmax;              /* maximum distance from zlib header */
-#endif
     unsigned wsize;             /* window size or zero if not using window */
     unsigned whave;             /* valid bytes in the window */
     unsigned wnext;             /* window write index */
@@ -101,9 +93,6 @@ unsigned start)         /* inflate()'s starting value for strm->avail_out */
     out = strm->next_out - OFF;
     beg = out - (start - strm->avail_out);
     end = out + (strm->avail_out - 257);
-#ifdef INFLATE_STRICT
-    dmax = state->dmax;
-#endif
     wsize = state->wsize;
     whave = state->whave;
     wnext = state->wnext;
@@ -173,13 +162,6 @@ unsigned start)         /* inflate()'s starting value for strm->avail_out */
                     }
                 }
                 dist += (unsigned)hold & ((1U << op) - 1);
-#ifdef INFLATE_STRICT
-                if (dist > dmax) {
-                    strm->msg = "invalid distance too far back";
-                    state->mode = BAD;
-                    break;
-                }
-#endif
                 hold >>= op;
                 bits -= op;
                 Tracevv((stderr, "inflate:         distance %u\n", dist));
@@ -193,25 +175,6 @@ unsigned start)         /* inflate()'s starting value for strm->avail_out */
                             state->mode = BAD;
                             break;
                         }
-#ifdef INFLATE_ALLOW_INVALID_DISTANCE_TOOFAR_ARRR
-                        if (len <= op - whave) {
-                            do {
-                                PUP(out) = 0;
-                            } while (--len);
-                            continue;
-                        }
-                        len -= op - whave;
-                        do {
-                            PUP(out) = 0;
-                        } while (--op > whave);
-                        if (op == 0) {
-                            from = out - dist;
-                            do {
-                                PUP(out) = PUP(from);
-                            } while (--len);
-                            continue;
-                        }
-#endif
                     }
                     from = window - OFF;
                     if (wnext == 0) {           /* very common case */
