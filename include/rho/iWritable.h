@@ -170,7 +170,7 @@ class tByteWritable : public iWritable, public bNonCopyable
             return length;
         }
 
-        std::vector<u8> getBuf() const
+        const std::vector<u8>& getBuf() const
         {
             return m_buf;
         }
