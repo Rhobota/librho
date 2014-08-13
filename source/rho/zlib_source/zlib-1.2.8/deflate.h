@@ -313,6 +313,8 @@ void ZLIB_INTERNAL _tr_stored_block OF((deflate_state *s, charf *buf,
 extern const uch ZLIB_INTERNAL _length_code[];
 extern const uch ZLIB_INTERNAL _dist_code[];
 
+extern const char deflate_copyright[];
+
 # define _tr_tally_lit(s, c, flush) \
   { uch cc = (c); \
     s->d_buf[s->last_lit] = 0; \
