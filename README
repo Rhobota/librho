@@ -13,11 +13,11 @@ This library compiles under:
 Following are instructions for compiling on each platform.
 
 
----------------------
---- Linux, Cygwin ---
----------------------
+--------------------------
+--- Linux, Cygwin, OSX ---
+--------------------------
 
-Compiling and testing under Linux and Cygwin is easy.  Do the following:
+Compiling and testing under Linux, Cygwin, and OSX is easy.  Do the following:
 
 To make the library, run:
 
@@ -40,13 +40,6 @@ examples in 'examples/'.
 To clean-up, run:
 
           make clean
-
-
------------
---- OSX ---
------------
-
-Same as the instructions for compiling under Linux.
 
 
 -----------
@@ -95,7 +88,6 @@ $CC_FLAGS equal to '-m32' just for the duration of the `make` command.
 for doing some sort of cross-compilation), you can set the $TARGET variable
 to the desired g++-prefix before running `make`. Do this in the same way as
 described in the Mingw section.
-
 
 
 -------------------

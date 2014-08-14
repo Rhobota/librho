@@ -27,6 +27,10 @@ documentation and/or software.
  */
 
 
+/*
+ * Modified by Ryan Henning at some point.
+ */
+
 
 #include <rho/types.h>
 
