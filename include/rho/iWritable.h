@@ -5,6 +5,7 @@
 #include <rho/ppcheck.h>
 #include <rho/bNonCopyable.h>
 #include <rho/iFlushable.h>
+#include <rho/iClosable.h>
 #include <rho/types.h>
 #include <rho/eRho.h>
 
@@ -109,7 +110,7 @@ class tFileWritable : public iWritable, public iFlushable,
 };
 
 
-class tZlibWritable : public iWritable, public iFlushable,
+class tZlibWritable : public iWritable, public iFlushable, public iClosable,
                       public bNonCopyable
 {
     public:
@@ -134,6 +135,8 @@ class tZlibWritable : public iWritable, public iFlushable,
         i32 writeAll(const u8* buffer, i32 length);
 
         bool flush();
+
+        void close();
 
     private:
 

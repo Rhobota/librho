@@ -157,34 +157,7 @@ tZlibWritable::tZlibWritable(iWritable* internalStream, int compressionLevel)
 
 tZlibWritable::~tZlibWritable()
 {
-    if (!m_broken)
-    {
-        z_stream* ctx = (z_stream*) m_zlibContext;
-        ctx->avail_in = 0;
-        ctx->next_in = m_inBuf;
-        int ret;
-        do
-        {
-            ctx->avail_out = WRITE_CHUNK_SIZE;
-            ctx->next_out = m_outBuf;
-            ret = deflate(ctx, Z_FINISH);
-            if (ret != Z_OK && ret != Z_STREAM_END)
-                break;   // zlib error occurred!
-            i32 have = WRITE_CHUNK_SIZE - (ctx->avail_out);
-            if (have > 0 && m_stream->writeAll(m_outBuf, have) != have)
-            {
-                m_broken = true;
-                break;    // underlying stream error occurred!
-            }
-        } while (ret != Z_STREAM_END);
-    }
-
-    if (!m_broken)
-    {
-        iFlushable* flushable = dynamic_cast<iFlushable*>(m_stream);
-        if (flushable)
-            flushable->flush();
-    }
+    this->close();
 
     deflateEnd((z_stream*)m_zlibContext);
     free(m_zlibContext);
@@ -285,6 +258,44 @@ bool tZlibWritable::flush()
     }
     else
         return true;
+}
+
+void tZlibWritable::close()
+{
+    if (!m_broken)
+    {
+        z_stream* ctx = (z_stream*) m_zlibContext;
+        ctx->avail_in = 0;
+        ctx->next_in = m_inBuf;
+        int ret;
+        do
+        {
+            ctx->avail_out = WRITE_CHUNK_SIZE;
+            ctx->next_out = m_outBuf;
+            ret = deflate(ctx, Z_FINISH);
+            if (ret != Z_OK && ret != Z_STREAM_END)
+                break;   // zlib error occurred!
+            i32 have = WRITE_CHUNK_SIZE - (ctx->avail_out);
+            if (have > 0 && m_stream->writeAll(m_outBuf, have) != have)
+            {
+                m_broken = true;
+                break;    // underlying stream error occurred!
+            }
+        } while (ret != Z_STREAM_END);
+    }
+
+    if (!m_broken)
+    {
+        iFlushable* flushable = dynamic_cast<iFlushable*>(m_stream);
+        if (flushable)
+            flushable->flush();
+    }
+
+    m_broken = true;
+
+    iClosable* closable = dynamic_cast<iClosable*>(m_stream);
+    if (closable)
+        closable->close();
 }
 
 
