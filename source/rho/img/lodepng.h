@@ -23,6 +23,12 @@ freely, subject to the following restrictions:
     distribution.
 */
 
+
+/*
+ * Modified by Ryan Henning at some point.
+ */
+
+
 #ifndef LODEPNG_H
 #define LODEPNG_H
 

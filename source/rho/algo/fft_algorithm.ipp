@@ -11,6 +11,11 @@
  */
 
 
+/*
+ * Modified by Ryan Henning at some point.
+ */
+
+
 #if __linux__
 #pragma GCC optimize 3
 #endif
