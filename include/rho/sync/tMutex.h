@@ -35,6 +35,8 @@ class tMutex : public bNonCopyable, public iSync
     private:
 
         pthread_mutex_t m_mutex;
+
+        friend class tCondition;
 };
 
 
