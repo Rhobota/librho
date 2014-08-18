@@ -54,6 +54,21 @@ u32  secureRand_u32()
     return val;
 }
 
+u64  secureRand_u64()
+{
+    sync::tAutoSync as(gSecureRandMutex);
+    u8 vals[8];
+    if (gSecureRand.readAll(vals, 8) != 8)
+        throw eRuntimeError("Cannot read from the secure random stream!");
+    u64 val = 0;
+    for (int i = 0; i < 8; i++)
+    {
+        val <<= 8;
+        val |= vals[i];
+    }
+    return val;
+}
+
 void secureRand_readAll(u8* buffer, i32 length)
 {
     sync::tAutoSync as(gSecureRandMutex);
