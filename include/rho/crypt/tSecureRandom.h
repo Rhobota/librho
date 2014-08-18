@@ -21,6 +21,7 @@ namespace crypt
 u8   secureRand_u8();
 u16  secureRand_u16();
 u32  secureRand_u32();
+u64  secureRand_u64();
 void secureRand_readAll(u8* buffer, i32 length);
 
 

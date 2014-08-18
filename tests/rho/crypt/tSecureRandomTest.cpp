@@ -53,5 +53,21 @@ int main()
 
     tTest("tSecureRandom test", test, kNumTests);
 
+//     for (int i = 0; i < 10; i++)
+//         std::cout << (int)crypt::secureRand_u8() << std::endl;
+//     std::cout << std::endl;
+//
+//     for (int i = 0; i < 10; i++)
+//         std::cout << crypt::secureRand_u16() << std::endl;
+//     std::cout << std::endl;
+//
+//     for (int i = 0; i < 10; i++)
+//         std::cout << crypt::secureRand_u32() << std::endl;
+//     std::cout << std::endl;
+//
+//     for (int i = 0; i < 10; i++)
+//         std::cout << crypt::secureRand_u64() << std::endl;
+//     std::cout << std::endl;
+
     return 0;
 }
