@@ -80,7 +80,7 @@ std::string platformVersionString()
         << "_"
         << osvi.wServicePackMajor << "." << osvi.wServicePackMinor
         << "_"
-        << osvi.wSuiteMask << "." << osvi.wProductType;
+        << osvi.wSuiteMask << "." << (int)osvi.wProductType;
     return out.str();
 #else
 #error What platform are you on!?
