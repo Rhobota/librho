@@ -67,30 +67,30 @@
  */
 void ZLIB_INTERNAL inflate_fast(
 z_streamp strm,
-unsigned start)         /* inflate()'s starting value for strm->avail_out */
+uInt start)         /* inflate()'s starting value for strm->avail_out */
 {
     struct inflate_state FAR *state;
-    z_const unsigned char FAR *in;      /* local strm->next_in */
-    z_const unsigned char FAR *last;    /* have enough input while in < last */
-    unsigned char FAR *out;     /* local strm->next_out */
-    unsigned char FAR *beg;     /* inflate()'s initial strm->next_out */
-    unsigned char FAR *end;     /* while out < end, enough space available */
-    unsigned wsize;             /* window size or zero if not using window */
-    unsigned whave;             /* valid bytes in the window */
-    unsigned wnext;             /* window write index */
-    unsigned char FAR *window;  /* allocated sliding window, if wsize != 0 */
-    unsigned long hold;         /* local strm->hold */
-    unsigned bits;              /* local strm->bits */
+    z_const Byte FAR *in;      /* local strm->next_in */
+    z_const Byte FAR *last;    /* have enough input while in < last */
+    Byte FAR *out;     /* local strm->next_out */
+    Byte FAR *beg;     /* inflate()'s initial strm->next_out */
+    Byte FAR *end;     /* while out < end, enough space available */
+    uInt wsize;             /* window size or zero if not using window */
+    uInt whave;             /* valid bytes in the window */
+    uInt wnext;             /* window write index */
+    Byte FAR *window;  /* allocated sliding window, if wsize != 0 */
+    uLong hold;         /* local strm->hold */
+    uInt bits;              /* local strm->bits */
     code const FAR *lcode;      /* local strm->lencode */
     code const FAR *dcode;      /* local strm->distcode */
-    unsigned lmask;             /* mask for first level of length codes */
-    unsigned dmask;             /* mask for first level of distance codes */
+    uInt lmask;             /* mask for first level of length codes */
+    uInt dmask;             /* mask for first level of distance codes */
     code here;                  /* retrieved table entry */
-    unsigned op;                /* code bits, operation, extra bits, or */
+    uInt op;                /* code bits, operation, extra bits, or */
                                 /*  window position, window bytes to copy */
-    unsigned len;               /* match length, unused bytes */
-    unsigned dist;              /* match distance */
-    unsigned char FAR *from;    /* where to copy match from */
+    uInt len;               /* match length, unused bytes */
+    uInt dist;              /* match distance */
+    Byte FAR *from;    /* where to copy match from */
 
     /* copy state to local variables */
     state = (struct inflate_state FAR *)strm->state;
@@ -114,64 +114,64 @@ unsigned start)         /* inflate()'s starting value for strm->avail_out */
        input data or output space */
     do {
         if (bits < 15) {
-            hold += (unsigned long)(PUP(in)) << bits;
+            hold += (uLong)(PUP(in)) << bits;
             bits += 8;
-            hold += (unsigned long)(PUP(in)) << bits;
+            hold += (uLong)(PUP(in)) << bits;
             bits += 8;
         }
         here = lcode[hold & lmask];
       dolen:
-        op = (unsigned)(here.bits);
+        op = (uInt)(here.bits);
         hold >>= op;
         bits -= op;
-        op = (unsigned)(here.op);
+        op = (uInt)(here.op);
         if (op == 0) {                          /* literal */
             Tracevv((stderr, here.val >= 0x20 && here.val < 0x7f ?
                     "inflate:         literal '%c'\n" :
                     "inflate:         literal 0x%02x\n", here.val));
-            PUP(out) = (unsigned char)(here.val);
+            PUP(out) = (Byte)(here.val);
         }
         else if (op & 16) {                     /* length base */
-            len = (unsigned)(here.val);
+            len = (uInt)(here.val);
             op &= 15;                           /* number of extra bits */
             if (op) {
                 if (bits < op) {
-                    hold += (unsigned long)(PUP(in)) << bits;
+                    hold += (uLong)(PUP(in)) << bits;
                     bits += 8;
                 }
-                len += (unsigned)hold & ((1U << op) - 1);
+                len += (uInt)hold & ((1U << op) - 1);
                 hold >>= op;
                 bits -= op;
             }
             Tracevv((stderr, "inflate:         length %u\n", len));
             if (bits < 15) {
-                hold += (unsigned long)(PUP(in)) << bits;
+                hold += (uLong)(PUP(in)) << bits;
                 bits += 8;
-                hold += (unsigned long)(PUP(in)) << bits;
+                hold += (uLong)(PUP(in)) << bits;
                 bits += 8;
             }
             here = dcode[hold & dmask];
           dodist:
-            op = (unsigned)(here.bits);
+            op = (uInt)(here.bits);
             hold >>= op;
             bits -= op;
-            op = (unsigned)(here.op);
+            op = (uInt)(here.op);
             if (op & 16) {                      /* distance base */
-                dist = (unsigned)(here.val);
+                dist = (uInt)(here.val);
                 op &= 15;                       /* number of extra bits */
                 if (bits < op) {
-                    hold += (unsigned long)(PUP(in)) << bits;
+                    hold += (uLong)(PUP(in)) << bits;
                     bits += 8;
                     if (bits < op) {
-                        hold += (unsigned long)(PUP(in)) << bits;
+                        hold += (uLong)(PUP(in)) << bits;
                         bits += 8;
                     }
                 }
-                dist += (unsigned)hold & ((1U << op) - 1);
+                dist += (uInt)hold & ((1U << op) - 1);
                 hold >>= op;
                 bits -= op;
                 Tracevv((stderr, "inflate:         distance %u\n", dist));
-                op = (unsigned)(out - beg);     /* max distance in output */
+                op = (uInt)(out - beg);     /* max distance in output */
                 if (dist > op) {                /* see if copy from window */
                     op = dist - op;             /* distance back in window */
                     if (op > whave) {
@@ -284,8 +284,8 @@ unsigned start)         /* inflate()'s starting value for strm->avail_out */
     /* update state and return */
     strm->next_in = in + OFF;
     strm->next_out = out + OFF;
-    strm->avail_in = (unsigned)(in < last ? 5 + (last - in) : 5 - (in - last));
-    strm->avail_out = (unsigned)(out < end ?
+    strm->avail_in = (uInt)(in < last ? 5 + (last - in) : 5 - (in - last));
+    strm->avail_out = (uInt)(out < end ?
                                  257 + (end - out) : 257 - (out - end));
     state->hold = hold;
     state->bits = bits;

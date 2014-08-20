@@ -34,7 +34,7 @@ local uLong adler32_combine_ OF((uLong adler1, uLong adler2, z_off64_t len2));
    (thank you to John Reiser for pointing this out) */
 #  define CHOP(a) \
     do { \
-        unsigned long tmp = a >> 16; \
+        uLong tmp = a >> 16; \
         a &= 0xffffUL; \
         a += (tmp << 4) - tmp; \
     } while (0)
@@ -73,8 +73,8 @@ uLong ZEXPORT adler32(
     const Bytef *buf,
     uInt len)
 {
-    unsigned long sum2;
-    unsigned n;
+    uLong sum2;
+    uInt n;
 
     /* split Adler-32 into component sums */
     sum2 = (adler >> 16) & 0xffff;
@@ -144,9 +144,9 @@ local uLong adler32_combine_(
     uLong adler2,
     z_off64_t len2)
 {
-    unsigned long sum1;
-    unsigned long sum2;
-    unsigned rem;
+    uLong sum1;
+    uLong sum2;
+    uInt rem;
 
     /* for negative len, return invalid adler32 as a clue for debugging */
     if (len2 < 0)
@@ -154,7 +154,7 @@ local uLong adler32_combine_(
 
     /* the derivation of this formula is left as an exercise for the reader */
     MOD63(len2);                /* assumes len2 >= 0 */
-    rem = (unsigned)len2;
+    rem = (uInt)len2;
     sum1 = adler1 & 0xffff;
     sum2 = rem * sum1;
     MOD(sum2);

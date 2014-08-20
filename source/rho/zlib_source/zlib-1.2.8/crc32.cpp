@@ -24,16 +24,16 @@
 #define local static
 
 /* Definitions for doing the crc four data bytes at a time. */
-   local unsigned long crc32_little OF((unsigned long,
-                        const unsigned char FAR *, unsigned));
-   local unsigned long crc32_big OF((unsigned long,
-                        const unsigned char FAR *, unsigned));
+   local uLong crc32_little OF((uLong,
+                        const Byte FAR *, uInt));
+   local uLong crc32_big OF((uLong,
+                        const Byte FAR *, uInt));
 #define TBLS 8
 
 /* Local functions for crc concatenation */
-local unsigned long gf2_matrix_times OF((unsigned long *mat,
-                                         unsigned long vec));
-local void gf2_matrix_square OF((unsigned long *square, unsigned long *mat));
+local uLong gf2_matrix_times OF((uLong *mat,
+                                         uLong vec));
+local void gf2_matrix_square OF((uLong *square, uLong *mat));
 local uLong crc32_combine_ OF((uLong crc1, uLong crc2, z_off64_t len2));
 
 
@@ -51,7 +51,7 @@ const z_crc_t FAR * ZEXPORT get_crc_table()
 }
 
 /* ========================================================================= */
-#define DO1 crc = crc_table[0][((int)crc ^ (*buf++)) & 0xff] ^ (crc >> 8)
+#define DO1 crc = crc_table[0][((sInt)crc ^ (*buf++)) & 0xff] ^ (crc >> 8)
 #define DO8 DO1; DO1; DO1; DO1; DO1; DO1; DO1; DO1
 
 /* ========================================================================= */
@@ -66,7 +66,7 @@ uLong ZEXPORT crc32(
         z_crc_t endian;
 
         endian = 1;
-        if (*((unsigned char *)(&endian)))
+        if (*((Byte *)(&endian)))
             return crc32_little(crc, buf, len);
         else
             return crc32_big(crc, buf, len);
@@ -90,10 +90,10 @@ uLong ZEXPORT crc32(
 #define DOLIT32 DOLIT4; DOLIT4; DOLIT4; DOLIT4; DOLIT4; DOLIT4; DOLIT4; DOLIT4
 
 /* ========================================================================= */
-local unsigned long crc32_little(
-    unsigned long crc,
-    const unsigned char FAR *buf,
-    unsigned len)
+local uLong crc32_little(
+    uLong crc,
+    const Byte FAR *buf,
+    uInt len)
 {
     register z_crc_t c;
     register const z_crc_t FAR *buf4;
@@ -114,13 +114,13 @@ local unsigned long crc32_little(
         DOLIT4;
         len -= 4;
     }
-    buf = (const unsigned char FAR *)buf4;
+    buf = (const Byte FAR *)buf4;
 
     if (len) do {
         c = crc_table[0][(c ^ *buf++) & 0xff] ^ (c >> 8);
     } while (--len);
     c = ~c;
-    return (unsigned long)c;
+    return (uLong)c;
 }
 
 /* ========================================================================= */
@@ -130,10 +130,10 @@ local unsigned long crc32_little(
 #define DOBIG32 DOBIG4; DOBIG4; DOBIG4; DOBIG4; DOBIG4; DOBIG4; DOBIG4; DOBIG4
 
 /* ========================================================================= */
-local unsigned long crc32_big(
-    unsigned long crc,
-    const unsigned char FAR *buf,
-    unsigned len)
+local uLong crc32_big(
+    uLong crc,
+    const Byte FAR *buf,
+    uInt len)
 {
     register z_crc_t c;
     register const z_crc_t FAR *buf4;
@@ -156,23 +156,23 @@ local unsigned long crc32_big(
         len -= 4;
     }
     buf4++;
-    buf = (const unsigned char FAR *)buf4;
+    buf = (const Byte FAR *)buf4;
 
     if (len) do {
         c = crc_table[4][(c >> 24) ^ *buf++] ^ (c << 8);
     } while (--len);
     c = ~c;
-    return (unsigned long)(ZSWAP32(c));
+    return (uLong)(ZSWAP32(c));
 }
 
 #define GF2_DIM 32      /* dimension of GF(2) vectors (length of CRC) */
 
 /* ========================================================================= */
-local unsigned long gf2_matrix_times(
-    unsigned long *mat,
-    unsigned long vec)
+local uLong gf2_matrix_times(
+    uLong *mat,
+    uLong vec)
 {
-    unsigned long sum;
+    uLong sum;
 
     sum = 0;
     while (vec) {
@@ -186,10 +186,10 @@ local unsigned long gf2_matrix_times(
 
 /* ========================================================================= */
 local void gf2_matrix_square(
-    unsigned long *square,
-    unsigned long *mat)
+    uLong *square,
+    uLong *mat)
 {
-    int n;
+    sInt n;
 
     for (n = 0; n < GF2_DIM; n++)
         square[n] = gf2_matrix_times(mat, mat[n]);
@@ -201,10 +201,10 @@ local uLong crc32_combine_(
     uLong crc2,
     z_off64_t len2)
 {
-    int n;
-    unsigned long row;
-    unsigned long even[GF2_DIM];    /* even-power-of-two zeros operator */
-    unsigned long odd[GF2_DIM];     /* odd-power-of-two zeros operator */
+    sInt n;
+    uLong row;
+    uLong even[GF2_DIM];    /* even-power-of-two zeros operator */
+    uLong odd[GF2_DIM];     /* odd-power-of-two zeros operator */
 
     /* degenerate case (also disallow negative lengths) */
     if (len2 <= 0)

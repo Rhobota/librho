@@ -60,12 +60,17 @@
 #define FAR
 
 typedef uint8_t   Byte;  /* 8 bits */
+typedef char   sByte;  /* 8 bits */
+typedef uint16_t  uShort;  /* 16 bits or more */
+typedef int16_t  sShort;  /* 16 bits or more */
 typedef uint32_t  uInt;  /* 16 bits or more */
+typedef int32_t  sInt;  /* 16 bits or more */
 typedef uint32_t  uLong; /* 32 bits or more */
+typedef int32_t  sLong; /* 32 bits or more */
 
 typedef Byte  FAR Bytef;
-typedef char  FAR charf;
-typedef int   FAR intf;
+typedef sByte  FAR charf;
+typedef sInt   FAR intf;
 typedef uInt  FAR uIntf;
 typedef uLong FAR uLongf;
 
@@ -75,8 +80,8 @@ typedef void       *voidp;
 
 typedef uint32_t z_crc_t;
 
-#define z_off_t long
+#define z_off_t int32_t
 
-#define z_off64_t long
+#define z_off64_t int64_t
 
 #endif /* ZCONF_H */

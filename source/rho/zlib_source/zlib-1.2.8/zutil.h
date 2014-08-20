@@ -30,11 +30,11 @@
 
 typedef uint8_t  uch;
 typedef uch FAR uchf;
-typedef unsigned int ush;
+typedef uInt ush;
 typedef ush FAR ushf;
-typedef unsigned long  ulg;
+typedef uLong  ulg;
 
-extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
+extern z_const sByte * const z_errmsg[10]; /* indexed by 2-zlib_error */
 /* (size given to avoid silly warnings with Visual C++) */
 
 #define ERR_MSG(err) z_errmsg[Z_NEED_DICT-(err)]
@@ -78,8 +78,8 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 /* Diagnostic functions */
 #ifdef DEBUG
 #  include <cstdio>
-   extern int ZLIB_INTERNAL z_verbose;
-   extern void ZLIB_INTERNAL z_error OF((char *m));
+   extern sInt ZLIB_INTERNAL z_verbose;
+   extern void ZLIB_INTERNAL z_error OF((sByte *m));
 #  define Assert(cond,msg) {if(!(cond)) z_error(msg);}
 #  define Trace(x) {if (z_verbose>=0) fprintf x ;}
 #  define Tracev(x) {if (z_verbose>0) fprintf x ;}
@@ -95,8 +95,8 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 #  define Tracecv(c,x)
 #endif
 
-   voidpf ZLIB_INTERNAL zcalloc OF((voidpf opaque, unsigned items,
-                                    unsigned size));
+   voidpf ZLIB_INTERNAL zcalloc OF((voidpf opaque, uInt items,
+                                    uInt size));
    void ZLIB_INTERNAL zcfree  OF((voidpf opaque, voidpf ptr));
 
 #define ZALLOC(strm, items, size) \
