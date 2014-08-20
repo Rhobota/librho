@@ -46,6 +46,7 @@ void timeoutTest(const tTest& t, u32 correctTimeoutMS, u32 allowance)
         if (elapsedMS > correctTimeoutMS+allowance || elapsedMS < correctTimeoutMS-allowance)
         {
             std::cerr << "elapsedMS: " << elapsedMS << std::endl;
+            std::cerr << "expectedMS: " << correctTimeoutMS << std::endl;
             t.fail();
         }
 
@@ -56,10 +57,10 @@ void timeoutTest(const tTest& t, u32 correctTimeoutMS, u32 allowance)
 
 void timeoutTest(const tTest& t)
 {
-    timeoutTest(t,   50, 10);
-    timeoutTest(t,  100, 20);
-    timeoutTest(t,  200, 50);
-    timeoutTest(t,  500, 50);
+    timeoutTest(t,   50, 40);
+    timeoutTest(t,  100, 50);
+    timeoutTest(t,  200, 100);
+    timeoutTest(t,  500, 100);
     //timeoutTest(t, 1000, 50);
     //timeoutTest(t, 2000, 50);
 }
