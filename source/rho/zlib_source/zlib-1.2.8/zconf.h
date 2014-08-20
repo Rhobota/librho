@@ -61,7 +61,7 @@
 
 typedef uint8_t   Byte;  /* 8 bits */
 typedef uint32_t  uInt;  /* 16 bits or more */
-typedef uint64_t  uLong; /* 32 bits or more */
+typedef uint32_t  uLong; /* 32 bits or more */
 
 typedef Byte  FAR Bytef;
 typedef char  FAR charf;
@@ -73,7 +73,7 @@ typedef void const *voidpc;
 typedef void FAR   *voidpf;
 typedef void       *voidp;
 
-typedef uint64_t z_crc_t;
+typedef uint32_t z_crc_t;
 
 #define z_off_t long
 
