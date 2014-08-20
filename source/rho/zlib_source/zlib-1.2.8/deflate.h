@@ -80,30 +80,30 @@ typedef struct static_tree_desc_s  static_tree_desc;
 
 typedef struct tree_desc_s {
     ct_data *dyn_tree;           /* the dynamic tree */
-    int     max_code;            /* largest code with non zero frequency */
+    sInt     max_code;            /* largest code with non zero frequency */
     static_tree_desc *stat_desc; /* the corresponding static tree */
 } FAR tree_desc;
 
 typedef ush Pos;
 typedef Pos FAR Posf;
-typedef unsigned IPos;
+typedef uInt IPos;
 
-/* A Pos is an index in the character window. We use short instead of int to
+/* A Pos is an index in the character window. We use short instead of sInt to
  * save space in the various tables. IPos is used only for parameter passing.
  */
 
 typedef struct internal_state {
     z_streamp strm;      /* pointer back to this zlib stream */
-    int   status;        /* as the name implies */
+    sInt   status;        /* as the name implies */
     Bytef *pending_buf;  /* output still pending */
     ulg   pending_buf_size; /* size of pending_buf */
     Bytef *pending_out;  /* next pending byte to output to the stream */
     uInt   pending;      /* nb of bytes in the pending buffer */
-    int   wrap;          /* bit 0 true for zlib, bit 1 true for gzip */
+    sInt   wrap;          /* bit 0 true for zlib, bit 1 true for gzip */
     gz_headerp  gzhead;  /* gzip header information to write */
     uInt   gzindex;      /* where in extra, name, or comment */
     Byte  method;        /* can only be DEFLATED */
-    int   last_flush;    /* value of flush param for previous deflate call */
+    sInt   last_flush;    /* value of flush param for previous deflate call */
 
                 /* used by deflate.c: */
 
@@ -146,14 +146,14 @@ typedef struct internal_state {
      *   hash_shift * MIN_MATCH >= hash_bits
      */
 
-    long block_start;
+    sLong block_start;
     /* Window position at the beginning of the current output block. Gets
      * negative when the window is moved backwards.
      */
 
     uInt match_length;           /* length of best match */
     IPos prev_match;             /* previous match */
-    int match_available;         /* set if previous match exists */
+    sInt match_available;         /* set if previous match exists */
     uInt strstart;               /* start of string to insert */
     uInt match_start;            /* start of matching string */
     uInt lookahead;              /* number of valid bytes ahead in window */
@@ -180,13 +180,13 @@ typedef struct internal_state {
      * max_insert_length is used only for compression levels <= 3.
      */
 
-    int level;    /* compression level (1..9) */
-    int strategy; /* favor or force Huffman coding*/
+    sInt level;    /* compression level (1..9) */
+    sInt strategy; /* favor or force Huffman coding*/
 
     uInt good_match;
     /* Use a faster search when the previous match is longer than this */
 
-    int nice_match; /* Stop searching when current match exceeds this */
+    sInt nice_match; /* Stop searching when current match exceeds this */
 
                 /* used by trees.c: */
     /* Didn't use ct_data typedef below to suppress compiler warning */
@@ -201,9 +201,9 @@ typedef struct internal_state {
     ush bl_count[MAX_BITS+1];
     /* number of codes at each bit length for an optimal tree */
 
-    int heap[2*L_CODES+1];      /* heap used to build the Huffman trees */
-    int heap_len;               /* number of elements in the heap */
-    int heap_max;               /* element of largest frequency */
+    sInt heap[2*L_CODES+1];      /* heap used to build the Huffman trees */
+    sInt heap_len;               /* number of elements in the heap */
+    sInt heap_max;               /* element of largest frequency */
     /* The sons of heap[n] are heap[2*n] and heap[2*n+1]. heap[0] is not used.
      * The same heap array is used to build all trees.
      */
@@ -256,7 +256,7 @@ typedef struct internal_state {
     /* Output buffer. bits are inserted starting at the bottom (least
      * significant bits).
      */
-    int bi_valid;
+    sInt bi_valid;
     /* Number of valid bits in bi_buf.  All bits above the last valid bit
      * are always zero.
      */
@@ -292,13 +292,13 @@ typedef struct internal_state {
 
         /* in trees.c */
 void ZLIB_INTERNAL _tr_init OF((deflate_state *s));
-int ZLIB_INTERNAL _tr_tally OF((deflate_state *s, unsigned dist, unsigned lc));
+sInt ZLIB_INTERNAL _tr_tally OF((deflate_state *s, uInt dist, uInt lc));
 void ZLIB_INTERNAL _tr_flush_block OF((deflate_state *s, charf *buf,
-                        ulg stored_len, int last));
+                        ulg stored_len, sInt last));
 void ZLIB_INTERNAL _tr_flush_bits OF((deflate_state *s));
 void ZLIB_INTERNAL _tr_align OF((deflate_state *s));
 void ZLIB_INTERNAL _tr_stored_block OF((deflate_state *s, charf *buf,
-                        ulg stored_len, int last));
+                        ulg stored_len, sInt last));
 
 #define d_code(dist) \
    ((dist) < 256 ? _dist_code[dist] : _dist_code[256+((dist)>>7)])
@@ -313,7 +313,7 @@ void ZLIB_INTERNAL _tr_stored_block OF((deflate_state *s, charf *buf,
 extern const uch ZLIB_INTERNAL _length_code[];
 extern const uch ZLIB_INTERNAL _dist_code[];
 
-extern const char deflate_copyright[];
+extern const sByte deflate_copyright[];
 
 # define _tr_tally_lit(s, c, flush) \
   { uch cc = (c); \

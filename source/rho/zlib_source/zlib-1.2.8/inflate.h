@@ -78,43 +78,43 @@ typedef enum {
 /* state maintained between inflate() calls.  Approximately 10K bytes. */
 struct inflate_state {
     inflate_mode mode;          /* current inflate mode */
-    int last;                   /* true if processing last block */
-    int wrap;                   /* bit 0 true for zlib, bit 1 true for gzip */
-    int havedict;               /* true if dictionary provided */
-    int flags;                  /* gzip header method and flags (0 if zlib) */
-    unsigned dmax;              /* zlib header max distance (INFLATE_STRICT) */
-    unsigned long check;        /* protected copy of check value */
-    unsigned long total;        /* protected copy of output count */
+    sInt last;                   /* true if processing last block */
+    sInt wrap;                   /* bit 0 true for zlib, bit 1 true for gzip */
+    sInt havedict;               /* true if dictionary provided */
+    sInt flags;                  /* gzip header method and flags (0 if zlib) */
+    uInt dmax;              /* zlib header max distance (INFLATE_STRICT) */
+    uLong check;        /* protected copy of check value */
+    uLong total;        /* protected copy of output count */
     gz_headerp head;            /* where to save gzip header information */
         /* sliding window */
-    unsigned wbits;             /* log base 2 of requested window size */
-    unsigned wsize;             /* window size or zero if not using window */
-    unsigned whave;             /* valid bytes in the window */
-    unsigned wnext;             /* window write index */
-    unsigned char FAR *window;  /* allocated sliding window, if needed */
+    uInt wbits;             /* log base 2 of requested window size */
+    uInt wsize;             /* window size or zero if not using window */
+    uInt whave;             /* valid bytes in the window */
+    uInt wnext;             /* window write index */
+    Byte FAR *window;  /* allocated sliding window, if needed */
         /* bit accumulator */
-    unsigned long hold;         /* input bit accumulator */
-    unsigned bits;              /* number of bits in "in" */
+    uLong hold;         /* input bit accumulator */
+    uInt bits;              /* number of bits in "in" */
         /* for string and stored block copying */
-    unsigned length;            /* literal or length of data to copy */
-    unsigned offset;            /* distance back to copy string from */
+    uInt length;            /* literal or length of data to copy */
+    uInt offset;            /* distance back to copy string from */
         /* for table and code decoding */
-    unsigned extra;             /* extra bits needed */
+    uInt extra;             /* extra bits needed */
         /* fixed and dynamic code tables */
     code const FAR *lencode;    /* starting table for length/literal codes */
     code const FAR *distcode;   /* starting table for distance codes */
-    unsigned lenbits;           /* index bits for lencode */
-    unsigned distbits;          /* index bits for distcode */
+    uInt lenbits;           /* index bits for lencode */
+    uInt distbits;          /* index bits for distcode */
         /* dynamic table building */
-    unsigned ncode;             /* number of code length code lengths */
-    unsigned nlen;              /* number of length code lengths */
-    unsigned ndist;             /* number of distance code lengths */
-    unsigned have;              /* number of code lengths in lens[] */
+    uInt ncode;             /* number of code length code lengths */
+    uInt nlen;              /* number of length code lengths */
+    uInt ndist;             /* number of distance code lengths */
+    uInt have;              /* number of code lengths in lens[] */
     code FAR *next;             /* next available space in codes[] */
-    unsigned short lens[320];   /* temporary storage for code lengths */
-    unsigned short work[288];   /* work area for code table building */
+    uShort lens[320];   /* temporary storage for code lengths */
+    uShort work[288];   /* work area for code table building */
     code codes[ENOUGH];         /* space for code tables */
-    int sane;                   /* if false, allow invalid distance too far */
-    int back;                   /* bits back of last unprocessed length/lit */
-    unsigned was;               /* initial length of match */
+    sInt sane;                   /* if false, allow invalid distance too far */
+    sInt back;                   /* bits back of last unprocessed length/lit */
+    uInt was;               /* initial length of match */
 };
