@@ -947,7 +947,7 @@ local uInt bi_reverse(
     uInt code, /* the value to invert */
     sInt len)       /* its bit length */
 {
-    register uInt res = 0;
+    uInt res = 0;
     do {
         res |= code & 1;
         code >>= 1, res <<= 1;
