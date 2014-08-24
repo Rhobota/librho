@@ -95,8 +95,8 @@ local uLong crc32_little(
     const Byte FAR *buf,
     uInt len)
 {
-    register z_crc_t c;
-    register const z_crc_t FAR *buf4;
+    z_crc_t c;
+    const z_crc_t FAR *buf4;
 
     c = (z_crc_t)crc;
     c = ~c;
@@ -135,8 +135,8 @@ local uLong crc32_big(
     const Byte FAR *buf,
     uInt len)
 {
-    register z_crc_t c;
-    register const z_crc_t FAR *buf4;
+    z_crc_t c;
+    const z_crc_t FAR *buf4;
 
     c = ZSWAP32((z_crc_t)crc);
     c = ~c;
