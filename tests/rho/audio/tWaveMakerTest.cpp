@@ -24,7 +24,7 @@ std::vector<double> normalize(const std::vector<double>& v)
     std::vector<double> n(v.size());
     double maxVal = 0.0;
     for (u32 i = 0; i < v.size(); i++)
-        maxVal = std::max(v[i], maxVal);
+        maxVal = std::max(std::fabs(v[i]), maxVal);
     if (maxVal < 1.0)
         maxVal = 1.0;
     for (u32 i = 0; i < v.size(); i++)
