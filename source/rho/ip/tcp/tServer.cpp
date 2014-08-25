@@ -54,7 +54,14 @@ void tServer::m_init(const tAddrGroup& addrGroup, u16 bindPort)
     #endif
     if (m_fd == kInvalidSocket)
     {
-        throw eSocketCreationError("Cannot create posix server socket.");
+        throw eSocketCreationError(
+                std::string("Cannot create posix server socket. Error: ") +
+                strerror(errno));
+        // If you get an "Address family not supported by protocol" error here,
+        // it's probably because the kernel doesn't have the IPv6 module enabled.
+        // For Raspberry PIs, that is the default, so you'll have to enable IPv6
+        // as described here:
+        //     http://www.raspbian.org/RaspbianFAQ#How_do_I_enable_or_use_IPv6.3F
     }
 
     #if __APPLE__ || __CYGWIN__ || __MINGW32__

@@ -149,7 +149,7 @@ void makeWAV(ostream& out, u32 bitsPerSample, u32 sampleRate,
             writeByte( out, (u8) round(255.0 * (sound[i]+1)/2.0) );
     else if (bitsPerSample == 16)
         for (size_t i = 0; i < sound.size(); i++)
-            writeShort( out, (u16) round(sound[i] * ((1 << 15) - 1)) );
+            writeShort( out, (i16) round(sound[i] * ((1 << 15) - 1)) );
     else
         throw eImpossiblePath();
 }
@@ -194,8 +194,8 @@ void makeWAV(ostream& out, u32 bitsPerSample, u32 sampleRate,
                 writeByte( out, (u8) round(255.0*(right[i]+1)/2.0) );
     else if (bitsPerSample == 16)
         for (size_t i = 0; i < left.size(); i++)
-            writeShort( out, (u16) round(left[i] * ((1 << 15) - 1)) ),
-                writeShort( out, (u16) round(right[i] * ((1 << 15) - 1)) );
+            writeShort( out, (i16) round(left[i] * ((1 << 15) - 1)) ),
+                writeShort( out, (i16) round(right[i] * ((1 << 15) - 1)) );
     else
         throw eImpossiblePath();
 }
