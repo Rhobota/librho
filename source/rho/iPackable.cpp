@@ -34,7 +34,7 @@ void unpack(iReadable* in, i8& x)
 
 void pack(iWritable* out, u16  x)
 {
-    x = htons(x);
+    x = (u16)htons(x);
     u8* p = (u8*)(&x);
     pack(out, p[0]);
     pack(out, p[1]);
@@ -45,7 +45,7 @@ void unpack(iReadable* in, u16& x)
     u8* p = (u8*)(&x);
     unpack(in, p[0]);
     unpack(in, p[1]);
-    x = ntohs(x);
+    x = (u16)ntohs(x);
 }
 
 void pack(iWritable* out, i16  x)

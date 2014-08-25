@@ -207,6 +207,16 @@ static void HASH_BLOCK_DATA_ORDER (SHA_CTX *c, const void *p, size_t num)
 
     for (;;)
     {
+#if 0
+        //
+        // I disabled this code because it gives a compilation error about
+        // unaligned data.
+        //
+        // This code is just an optimization for big-endian CPUs; it's not
+        // a necessary piece of code, so there *shouldn't* be a problem
+        // disabling it, even for big-endian CPUs... I don't think...
+        //
+
         const union { rho::i32 one; rho::i8 little; } is_endian = {1};
 
         if (!is_endian.little && sizeof(SHA_LONG)==4 && ((size_t)p%4)==0)
@@ -234,6 +244,7 @@ static void HASH_BLOCK_DATA_ORDER (SHA_CTX *c, const void *p, size_t num)
             data += SHA_CBLOCK;
         }
         else
+#endif
         {
             (void)HOST_c2l(data,l); X( 0)=l;    (void)HOST_c2l(data,l); X( 1)=l;
             BODY_00_15( 0,A,B,C,D,E,T,X( 0));   (void)HOST_c2l(data,l); X( 2)=l;
