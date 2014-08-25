@@ -140,12 +140,23 @@ static void sha256_block_data_order (SHA256_CTX *ctx, const void *in, size_t num
     SHA_LONG    X[16];
     rho::i32 i;
     const rho::u8 *data = (const rho::u8*)in;
-    const union { rho::i32 one; rho::i8 little; } is_endian = {1};
 
     while (num--) {
 
         a = ctx->h[0];  b = ctx->h[1];  c = ctx->h[2];  d = ctx->h[3];
         e = ctx->h[4];  f = ctx->h[5];  g = ctx->h[6];  h = ctx->h[7];
+
+#if 0
+        //
+        // I disabled this code because it gives a compilation error about
+        // unaligned data.
+        //
+        // This code is just an optimization for big-endian CPUs; it's not
+        // a necessary piece of code, so there *shouldn't* be a problem
+        // disabling it, even for big-endian CPUs... I don't think...
+        //
+
+        const union { rho::i32 one; rho::i8 little; } is_endian = {1};
 
         if (!is_endian.little && sizeof(SHA_LONG)==4 && ((size_t)in%4)==0)
         {
@@ -171,6 +182,7 @@ static void sha256_block_data_order (SHA256_CTX *ctx, const void *in, size_t num
             data += SHA256_CBLOCK;
         }
         else
+#endif
         {
             SHA_LONG l;
 

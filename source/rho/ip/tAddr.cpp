@@ -72,12 +72,12 @@ u16 tAddr::getUpperProtoPort() const
     if (((struct sockaddr*)m_sockaddr)->sa_family == AF_INET)
     {
         struct sockaddr_in* ip4sockAddr = (struct sockaddr_in*) m_sockaddr;
-        port = ntohs(ip4sockAddr->sin_port);
+        port = (u16) ntohs(ip4sockAddr->sin_port);
     }
     else if (((struct sockaddr*)m_sockaddr)->sa_family == AF_INET6)
     {
         struct sockaddr_in6* ip6sockAddr = (struct sockaddr_in6*) m_sockaddr;
-        port = ntohs(ip6sockAddr->sin6_port);
+        port = (u16) ntohs(ip6sockAddr->sin6_port);
     }
     else
     {
@@ -93,12 +93,12 @@ void tAddr::setUpperProtoPort(u16 port)
     if (((struct sockaddr*)m_sockaddr)->sa_family == AF_INET)
     {
         struct sockaddr_in* ip4sockAddr = (struct sockaddr_in*) m_sockaddr;
-        ip4sockAddr->sin_port = htons(port);
+        ip4sockAddr->sin_port = (u16) htons(port);
     }
     else if (((struct sockaddr*)m_sockaddr)->sa_family == AF_INET6)
     {
         struct sockaddr_in6* ip6sockAddr = (struct sockaddr_in6*) m_sockaddr;
-        ip6sockAddr->sin6_port = htons(port);
+        ip6sockAddr->sin6_port = (u16) htons(port);
     }
     else
     {
