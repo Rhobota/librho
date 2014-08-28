@@ -21,7 +21,7 @@ endif
 all : $(EXECUTABLES)
 
 %.exec : %.cpp
-	$(TARGET)g++ -fvisibility=hidden -Wall -Werror -I../../../include $^ ../../../objects/librho.a $(LIB_FLAGS) -o $@
+	$(TARGET)g++ -fvisibility=hidden -Wall -Werror -D_FILE_OFFSET_BITS=64 -I../../../include $^ ../../../objects/librho.a $(LIB_FLAGS) -o $@
 	@echo
 
 clean :
