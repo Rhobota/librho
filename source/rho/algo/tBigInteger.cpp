@@ -299,33 +299,63 @@ void keepOnly(tArray<u32>& v, size_t n)
     cleanup(v);
 }
 
+#define ADD_LOOP_BODY \
+        carry += (*bp); \
+        carry += (*ap); \
+        (*ap) = (u32)carry; \
+        carry >>= 32; \
+        ++ap; \
+        ++bp;
+
 static
 void add(tArray<u32>& a, const tArray<u32>& b, size_t bShift = 0)  // bShift is in u32 chunks
 {
     while (a.size() < b.size()+bShift)
         a.push_back(0);
 
-    u32 carry = 0;
-    size_t i;
-    for (i = bShift; i < a.size() && (i-bShift) < b.size(); i++)
+    u64 carry = 0;
+    size_t lcount = std::min(a.size()-bShift, b.size());
+    u32* ap = &a[bShift];
+    const u32* bp = &b[0];
+    for (size_t i = 0; i < lcount; i += 20)
     {
-        u64 sum = ((u64)a[i]) + b[(i-bShift)] + carry;
-        a[i] = (u32)(sum & 0xFFFFFFFF);
-        carry = (u32)((sum >> 32) & 0xFFFFFFFF);
+        switch (lcount - i)
+        {
+            default: ADD_LOOP_BODY
+            case 19: ADD_LOOP_BODY
+            case 18: ADD_LOOP_BODY
+            case 17: ADD_LOOP_BODY
+            case 16: ADD_LOOP_BODY
+            case 15: ADD_LOOP_BODY
+            case 14: ADD_LOOP_BODY
+            case 13: ADD_LOOP_BODY
+            case 12: ADD_LOOP_BODY
+            case 11: ADD_LOOP_BODY
+            case 10: ADD_LOOP_BODY
+            case 9:  ADD_LOOP_BODY
+            case 8:  ADD_LOOP_BODY
+            case 7:  ADD_LOOP_BODY
+            case 6:  ADD_LOOP_BODY
+            case 5:  ADD_LOOP_BODY
+            case 4:  ADD_LOOP_BODY
+            case 3:  ADD_LOOP_BODY
+            case 2:  ADD_LOOP_BODY
+            case 1:  ADD_LOOP_BODY
+        }
     }
 
-    for (; carry > 0; i++)
+    for (size_t i = lcount + bShift; carry > 0; i++)
     {
         if (i == a.size())
         {
-            a.push_back(carry);
+            a.push_back((u32)carry);
             break;
         }
         else
         {
-            u64 sum = ((u64)a[i]) + carry;
-            a[i] = (u32)(sum & 0xFFFFFFFF);
-            carry = (u32)((sum >> 32) & 0xFFFFFFFF);
+            carry += a[i];
+            a[i] = (u32)carry;
+            carry >>= 32;
         }
     }
 
@@ -354,6 +384,11 @@ void subtract(tArray<u32>& a, const tArray<u32>& b)
     cleanup(a);
 }
 
+#define MULT_LOOP_BODY \
+            carry += ahere * b[j]; \
+            aux1[j++] = (u32)carry; \
+            carry >>= 32;
+
 static
 void multiplyNaive(const tArray<u32>& a, const tArray<u32>& b,  // does "grade school multiplication"
                    tArray<u32>& result,
@@ -364,18 +399,41 @@ void multiplyNaive(const tArray<u32>& a, const tArray<u32>& b,  // does "grade s
     if (a.size() == 0 || b.size() == 0)
         return;
 
+    size_t lcount = b.size();
+
     aux1.setSize(b.size()+1);
 
     for (size_t i = 0; i < a.size(); i++)
     {
-        u32 carry = 0;
-        for (size_t j = 0; j < b.size(); j++)
+        u64 carry = 0;
+        u64 ahere = (u64)a[i];
+        for (size_t j = 0; j < lcount; )
         {
-            u64 mult = ((u64)a[i]) * b[j] + carry;
-            aux1[j] = (u32) (mult & 0xFFFFFFFF);
-            carry = (u32) ((mult >> 32) & 0xFFFFFFFF);
+            switch (lcount - j)
+            {
+                default: MULT_LOOP_BODY
+                case 19: MULT_LOOP_BODY
+                case 18: MULT_LOOP_BODY
+                case 17: MULT_LOOP_BODY
+                case 16: MULT_LOOP_BODY
+                case 15: MULT_LOOP_BODY
+                case 14: MULT_LOOP_BODY
+                case 13: MULT_LOOP_BODY
+                case 12: MULT_LOOP_BODY
+                case 11: MULT_LOOP_BODY
+                case 10: MULT_LOOP_BODY
+                case 9:  MULT_LOOP_BODY
+                case 8:  MULT_LOOP_BODY
+                case 7:  MULT_LOOP_BODY
+                case 6:  MULT_LOOP_BODY
+                case 5:  MULT_LOOP_BODY
+                case 4:  MULT_LOOP_BODY
+                case 3:  MULT_LOOP_BODY
+                case 2:  MULT_LOOP_BODY
+                case 1:  MULT_LOOP_BODY
+            }
         }
-        aux1[b.size()] = carry;
+        aux1[b.size()] = (u32)carry;
         add(result, aux1, i);
     }
 }
