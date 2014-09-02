@@ -5,6 +5,7 @@
 #include <rho/algo/tBigInteger.h>
 #include <rho/crypt/tSecureRandom.h>
 #include <sstream>
+#include <cassert>
 using namespace std;
 
 #ifndef KARATSUBA_CUTOFF
@@ -464,7 +465,6 @@ void divideNaive(const tArray<u32>& a, const tArray<u32>& b,      // "long divis
 
     // Long division:
     tArray<u32>& mult = aux1;
-    tArray<u32>& sub = aux2;
     for (int i = (int)a.size()-1; i >= 0; i--)
     {
         if (remainder.size() > 0 || a[i] != 0)
@@ -481,26 +481,33 @@ void divideNaive(const tArray<u32>& a, const tArray<u32>& b,      // "long divis
             continue;
         }
 
-        u64 left = 0, right = 0xFFFFFFFF, mid;
-        while (true)
+        u32 digit;
+        if (remainder.size() == b.size())
         {
-            mid = (left + right) / 2;
-            mult = b;
-            multiplyWord(mult, (u32)mid);
-            if (isLess(remainder, mult))
-                right = mid - 1;
+            digit = remainder.back() / b.back();
+        }
+        else
+        {
+            assert(remainder.size() == b.size()+1);
+            u64 digit64 = ((((u64)(remainder.back()))<<32) |
+                           ((u64)(remainder[remainder.size()-2])))
+                                     / b.back();
+            if (digit64 > 0xFFFFFFFF)
+                digit = 0xFFFFFFFF;
             else
-            {
-                sub = remainder;
-                subtract(sub, mult);
-                if (isLess(b, sub) || b == sub)
-                    left = mid + 1;
-                else
-                    break;
-            }
+                digit = (u32)digit64;
         }
 
-        quotient.push_back((u32)mid);
+        mult = b;
+        multiplyWord(mult, digit);
+
+        while (isLess(remainder, mult))
+        {
+            --digit;
+            subtract(mult, b);
+        }
+
+        quotient.push_back(digit);
         subtract(remainder, mult);
     }
 
