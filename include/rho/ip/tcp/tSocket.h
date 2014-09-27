@@ -87,6 +87,8 @@ class tSocket :
         /**
          * Set read/write timeout. If cannot read or write in the given
          * time, give up.
+         *
+         * Pass 0 for infinity (which is also the default).
          */
         void setTimeout(u16 seconds);
 
