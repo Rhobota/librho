@@ -1,7 +1,5 @@
-======================================================================
-=========================       LIBRHO       =========================
-======================================================================
-
+LIBRHO
+======
 
 This library compiles under:
  - Linux
@@ -13,9 +11,8 @@ This library compiles under:
 Following are instructions for compiling on each platform.
 
 
---------------------------
---- Linux, Cygwin, OSX ---
---------------------------
+Linux, Cygwin, OSX
+------------------
 
 Compiling and testing under Linux, Cygwin, and OSX is easy.  Do the following:
 
@@ -42,9 +39,8 @@ To clean-up, run:
           make clean
 
 
------------
---- iOS ---
------------
+iOS
+---
 
 Compiling for iOS takes a little love, but not too much. Do the following:
 
@@ -60,9 +56,8 @@ Compiling for iOS takes a little love, but not too much. Do the following:
       - CoreMedia.framework
 
 
--------------
---- Mingw ---
--------------
+Mingw
+-----
 
 Compiling for Mingw is easy if you do so using the Cygwin environment. Simply
 install Cygwin (make sure the Mingw package is installed along with it), then
@@ -76,9 +71,8 @@ You can then proceed as the Linux instructions dictate, setting the $TARGET
 variable for each command as is done above.
 
 
--------------------------------
---- Other compilation notes ---
--------------------------------
+Other compilation notes
+-----------------------
 
 1. To compile the library for x86 (as opposed to for x86_64), you must pass '-m32'
 to `g++`. You can easily do this by running `CC_FLAGS=-m32 make`. That sets
@@ -90,9 +84,8 @@ to the desired g++-prefix before running `make`. Do this in the same way as
 described in the Mingw section.
 
 
--------------------
---- Usage notes ---
--------------------
+Usage notes
+-----------
 
 1. This library contains static data which gets initialized in some arbitrary
 order by the compiler. Within the library there are no dependencies between
@@ -123,12 +116,8 @@ you could end up leaking file descriptors. Using tFileReadable, tFileWritable,
 ip::tcp::tSocket, and ip::tcp::tServer are all safe, however.
 
 
--------------
---- Other ---
--------------
-
-This directory is version-controlled by Mercurial, so feel free to make changes
-and commit them.
+Other
+-----
 
 Here are a few things I'd like the library to have soon:
 
@@ -137,3 +126,9 @@ Here are a few things I'd like the library to have soon:
     - graph library
 
 Things left to do are marked with a comment that contains 'libtodo' or 'LIBTODO'.
+
+
+Contributing
+------------
+
+This library is built with portability in mind. For that reason, it doesn't have any external dependencies and it only contains highly portable C++ code (i.e. code that is agnostic to platform and CPU architecture). We welcome pull requests, but we only accept changelists that contain portable code with no external dependencies. :)
