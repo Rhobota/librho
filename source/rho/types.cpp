@@ -90,7 +90,7 @@ std::string platformVersionString()
 
 int getMachineBitness()
 {
-    return (sizeof(void*) * 8);
+    return (int)(sizeof(void*) * 8);
 }
 
 
