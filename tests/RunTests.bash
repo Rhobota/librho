@@ -19,7 +19,7 @@ then
     CC_LIB_FLAGS+=" "
 elif [ $(uname) == "Darwin" ]
 then
-    CC_FLAGS_LOCAL+=" -rdynamic"
+    CC_FLAGS_LOCAL+=" -rdynamic -mmacosx-version-min=10.6"
     CC_LIB_FLAGS+=" -framework Foundation -framework AVFoundation"
     CC_LIB_FLAGS+=" -framework CoreVideo -framework CoreMedia"
     CC_LIB_FLAGS+=" -framework OpenGL -framework IOKit"
