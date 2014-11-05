@@ -30,6 +30,7 @@ class tThreadPool : public bNonCopyable
 
         tTaskKey push(refc<iRunnable> runnable);
         void     wait(tTaskKey key);
+        void     forget(tTaskKey key);
 
     private:
 
@@ -46,6 +47,7 @@ class tThreadPool : public bNonCopyable
         tPCQ<tTask>                  m_queue;
         tTaskKey                     m_nextKey;
 
+        std::set<tTaskKey>           m_forgotten;
         std::set<tTaskKey>           m_completed;
         pthread_mutex_t              m_completedMutex;
         pthread_cond_t               m_completedWasUpdated;

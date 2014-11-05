@@ -57,6 +57,12 @@ class tWorker : public iRunnable
                               << " threw an exception: "
                               << e.what() << std::endl;
                 }
+                catch (...)
+                {
+                    std::cerr << "Thread pool task " << task.first
+                              << " threw an unknown exception type."
+                              << std::endl;
+                }
                 m_pool->m_addToCompleted(task.first);
             }
         }
@@ -125,10 +131,21 @@ void tThreadPool::wait(tTaskKey key)
     tAutoLock autolock(&m_completedMutex);
     while (m_completed.find(key) == m_completed.end())
     {
+        if (m_forgotten.find(key) != m_forgotten.end())
+            throw eRuntimeError("Don't wait on a key you've forgotten!");
         if (pthread_cond_wait(&m_completedWasUpdated, &m_completedMutex) != 0)
             throw eRuntimeError("Why can't I wait on the condition?");
     }
     m_completed.erase(key);
+}
+
+void tThreadPool::forget(tTaskKey key)
+{
+    tAutoLock autolock(&m_completedMutex);
+    if (m_completed.find(key) != m_completed.end())
+        m_completed.erase(key);
+    else
+        m_forgotten.insert(key);
 }
 
 tThreadPool::tTaskKey tThreadPool::m_incrementKey()
@@ -141,9 +158,14 @@ tThreadPool::tTaskKey tThreadPool::m_incrementKey()
 void tThreadPool::m_addToCompleted(tTaskKey key)
 {
     tAutoLock autolock(&m_completedMutex);
-    m_completed.insert(key);
-    if (pthread_cond_broadcast(&m_completedWasUpdated) != 0)
-        throw eRuntimeError("Why can't I broadcast?");
+    if (m_forgotten.find(key) != m_forgotten.end())
+        m_forgotten.erase(key);
+    else
+    {
+        m_completed.insert(key);
+        if (pthread_cond_broadcast(&m_completedWasUpdated) != 0)
+            throw eRuntimeError("Why can't I broadcast?");
+    }
 }
 
 tThreadPool::tTaskKey tThreadPool::m_push(refc<iRunnable> runnable)
