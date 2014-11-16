@@ -90,7 +90,7 @@ tAddrGroup::tAddrGroup(std::string host, bool resolve)
 void tAddrGroup::m_init_helper(const char* hostStr, const char* serviceStr,
                                void* hints)
 {
-    int a;
+    int a = 0;
     for (int i = 0; i < 10; i++)
     {
         a = getaddrinfo(hostStr, serviceStr, (struct addrinfo*)hints, (struct addrinfo**)(&m_addrinfohead));

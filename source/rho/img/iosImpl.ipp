@@ -102,7 +102,7 @@ class tImageCapParamsEnumerator : public iImageCapParamsEnumerator
 
         int size() const
         {
-            return m_params.size();
+            return (int)(m_params.size());
         }
 
         const tImageCapParams& operator[] (int i)
@@ -379,7 +379,7 @@ class tImageCap : public iImageCap
                 "The captured frame's dimensions must be wrong...");
     if (bytesPerRow / width != 4)
         throw rho::eLogicError("The format must be wrong...");
-    self->m_imageCap->addFrame((rho::u8*)baseAddress, bytesPerRow * height);
+    self->m_imageCap->addFrame((rho::u8*)baseAddress, (int)(bytesPerRow * height));
     CVPixelBufferUnlockBaseAddress(imageBuffer, 0);
 }
 

@@ -639,7 +639,7 @@ void modMultiply(const tArray<u32>& a, const tArray<u32>& b, const tArray<u32>& 
                  tArray<u32>& result,
                  tArray<u32>& aux1, tArray<u32>& aux2, tArray<u32>& aux3, tArray<u32>& aux4)
 {
-    if (false)
+    if (/* DISABLES CODE */ (false))
         modMultiplyBlakley(a, b, m, result, aux1, aux2, aux3, aux4);
     else
         modMultiplyNaive(a, b, m, result, aux1, aux2, aux3, aux4);
