@@ -7,6 +7,10 @@ namespace algo
 {
 
 
+static const int kShiftBitsLCG = 9;
+static const int kShiftBitsKnuthLCG = 9;
+
+
 tLCG::tLCG(u32 seed)
     : m_x(seed), m_curr(0), m_currLeft(0)
 {
@@ -43,12 +47,12 @@ u64 tLCG::next()
     const u32 a = 1103515245;
     const u32 c = 12345;
     m_x = (a*m_x + c) & 0x7FFFFFFF;
-    return m_x;
+    return (m_x >> kShiftBitsLCG);
 }
 
 u64 tLCG::randMax()
 {
-    return 0x7FFFFFFF;
+    return (0x7FFFFFFF >> kShiftBitsLCG);
 }
 
 
@@ -88,12 +92,12 @@ u64 tKnuthLCG::next()
     const u64 a = 6364136223846793005LL;
     const u64 c = 1442695040888963407LL;
     m_x = a*m_x + c;
-    return m_x;
+    return (m_x >> kShiftBitsKnuthLCG);
 }
 
 u64 tKnuthLCG::randMax()
 {
-    return 0xFFFFFFFFFFFFFFFF;
+    return (0xFFFFFFFFFFFFFFFF >> kShiftBitsKnuthLCG);
 }
 
 
