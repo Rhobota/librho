@@ -527,7 +527,12 @@ int readFrame(int fd, int numBuffers, u8* buffers[], u8* outData, int outSize)
     buf.memory = V4L2_MEMORY_MMAP;
 
     if (xioctl(fd, (int)VIDIOC_DQBUF, &buf) == -1)
-        throw eInvalidDeviceAttributes("Buffer dequeue failed. :(");
+    {
+        int err = errno;
+        std::ostringstream o;
+        o << "Buffer dequeue failed. errno=" << err << " strerror=" << strerror(err);
+        throw eInvalidDeviceAttributes(o.str());
+    }
 
     int bufIndex  = buf.index;
     int bufLength = buf.bytesused;
