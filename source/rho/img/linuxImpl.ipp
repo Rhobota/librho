@@ -99,7 +99,7 @@ void verrifyDeviceCapabilities(int fd)
 static
 int openDevice(std::string devicePath)
 {
-    int fd = ::open(devicePath.c_str(), O_RDWR | O_NONBLOCK, 0);
+    int fd = ::open(devicePath.c_str(), O_RDWR | O_NONBLOCK, 0); // try: remove O_NONBLOCK
     if (fd < 0)
     {
         std::ostringstream o;
@@ -265,7 +265,8 @@ void setFormat(int fd, unsigned int pixelformat, unsigned int width, unsigned in
     pixinf.pixelformat = pixelformat;
     pixinf.width = width;
     pixinf.height = height;
-    pixinf.colorspace = V4L2_COLORSPACE_SRGB;
+    pixinf.colorspace = V4L2_COLORSPACE_SRGB; // try: delete this?
+    pixinf.field = V4L2_FIELD_ANY;
 
     struct v4l2_format format;
     memset(&format, 0, sizeof(format));
@@ -304,6 +305,8 @@ void setFormat(int fd, unsigned int pixelformat, unsigned int width, unsigned in
         o << "Height was coerced to: " << pixinf.height;
         throw eInvalidDeviceAttributes(o.str());
     }
+
+    // try: check field == interlaced?
 }
 
 
@@ -337,6 +340,8 @@ void printCurrentFormat(int fd)                 // use for debugging!!!
 static
 void setStreamParameters(int fd, unsigned int timeperframeNum, unsigned int timeperframeDenom)
 {
+    // try: set starndard?
+
     struct v4l2_captureparm capparm;
     memset(&capparm, 0, sizeof(capparm));
     capparm.capturemode = 0;                        // could be V4L2_MODE_HIGHQUALITY ?
@@ -468,6 +473,7 @@ void obtainBuffers(int fd, unsigned int numBuffers, u8* buffers[], int bufSizes[
         memset(&buf, 0, sizeof(buf));
         buf.index = i;
         buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        buf.memory = V4L2_MEMORY_MMAP;
 
         if (xioctl(fd, (int)VIDIOC_QUERYBUF, &buf) == -1)
         {
@@ -482,11 +488,22 @@ void obtainBuffers(int fd, unsigned int numBuffers, u8* buffers[], int bufSizes[
         buffers[i] = (u8*) mmap(NULL, buf.length, PROT_READ|PROT_WRITE, MAP_SHARED,
                                 fd, buf.m.offset);
         bufSizes[i] = buf.length;
+
+        if (buffers[i] == MAP_FAILED)
+        {
+            throw eInvalidDeviceAttributes("Bad driver! Couldn't map buffer.");
+        }
     }
 
     for (unsigned int i = 0; i < rbufs.count; i++)
     {
-        if (xioctl(fd, (int)VIDIOC_QBUF, &bufs[i]) == -1)
+        struct v4l2_buffer& buf = bufs[i];
+        memset(&buf, 0, sizeof(buf));
+        buf.index = i;
+        buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        buf.memory = V4L2_MEMORY_MMAP;
+
+        if (xioctl(fd, (int)VIDIOC_QBUF, &buf) == -1)
         {
             throw eInvalidDeviceAttributes("Cannot enqueue a buffer update. :(");
         }
@@ -607,7 +624,7 @@ class tImageCap : public iImageCap
         tImageCapParams m_params;
         int             m_fd;
 
-        static const int kNumBuffers = 8;
+        static const int kNumBuffers = 8;  // try: more buffers? 256
 
         u8* m_buffers[kNumBuffers];
         int m_bufSizes[kNumBuffers];
@@ -641,9 +658,9 @@ tImageCap::tImageCap(const tImageCapParams& params)
         o << "/dev/video" << params.deviceIndex;
         m_fd = openDevice(o.str());
         verrifyDeviceCapabilities(m_fd);
-        setInput(m_fd, params.inputIndex);
         setFormat(m_fd, nImageFormat_to_v4l2_pixelformat(params.captureFormat),
                   params.imageWidth, params.imageHeight);
+        setInput(m_fd, params.inputIndex);
         setStreamParameters(m_fd, params.frameIntervalNumerator, params.frameIntervalDenominator);
         obtainBuffers(m_fd, kNumBuffers, m_buffers, m_bufSizes);
         enableStreaming(m_fd);
