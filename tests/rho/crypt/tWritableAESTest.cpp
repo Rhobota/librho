@@ -1,6 +1,7 @@
 #include <rho/crypt/tWritableAES.h>
 #include <rho/tCrashReporter.h>
 #include <rho/tTest.h>
+#include <rho/sync/tTimer.h>
 
 #include <iostream>
 #include <vector>
@@ -78,6 +79,29 @@ void test256(const tTest& t)
 }
 
 
+void testSpeed128(const tTest& t)
+{
+    u8 key128[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+    t.assert(sizeof(key128) == 128/8);
+
+    tByteWritable bw;
+    crypt::tWritableAES cw(&bw, crypt::kOpModeCBC, key128, crypt::k128bit);
+
+    f64 start = sync::tTimer::usecTime();
+    const i32 kBufSize = 4096;
+    u8 buf[kBufSize];
+    const i32 kTotalSize = 1000000000;
+    for (i32 i = 0; i < kTotalSize; i += kBufSize)
+    {
+        i32 w = cw.writeAll(buf, kBufSize);
+        t.assert(w == kBufSize);
+    }
+    cw.flush();
+    f64 end = sync::tTimer::usecTime();
+    std::cout << (end - start) / 1000000 << std::endl;
+}
+
+
 int main()
 {
     tCrashReporter::init();
@@ -86,6 +110,8 @@ int main()
     tTest("tWritableAES 128bit test", test128);
     tTest("tWritableAES 192bit test", test192);
     tTest("tWritableAES 256bit test", test256);
+
+    //tTest("tWritableAES 128bit speed test", testSpeed128);
 
     return 0;
 }
