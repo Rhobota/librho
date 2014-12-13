@@ -167,9 +167,7 @@ class tByteWritable : public iWritable, public bNonCopyable
         {
             if (length <= 0)
                 throw eInvalidArgument("Stream read/write length must be >0");
-
-            for (i32 i = 0; i < length; i++)
-                m_buf.push_back(buffer[i]);
+            m_buf.insert(m_buf.end(), buffer, buffer+length);
             return length;
         }
 
