@@ -49,6 +49,7 @@ class tWritableAES : public iWritable, public iFlushable, public bNonCopyable
         u32 m_bufSize;   // <-- must be a multiple of the cypher block size
         u32 m_bufUsed;
         u64 m_seq;
+        u8 m_parity[4];
 
         // Operation mode stuff:
         nOperationModeAES m_opmode;
