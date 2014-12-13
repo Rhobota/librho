@@ -57,6 +57,8 @@ tWritableAES::tWritableAES(iWritable* internalStream, nOperationModeAES opmode,
                                   //       1. the size of the chunk (4 bytes)
                                   //       2. the sequence number of this chunk (8 bytes)
                                   //       3. the parity of this chunk (4 bytes)
+    for (int i = 0; i < 4; i++)
+        m_parity[i] = 0;
 }
 
 tWritableAES::~tWritableAES()
@@ -79,7 +81,10 @@ i32 tWritableAES::write(const u8* buffer, i32 length)
             return 0;
     i32 i;
     for (i = 0; i < length && m_bufUsed < m_bufSize; i++)
+    {
+        m_parity[m_bufUsed%4] ^= buffer[i];
         m_buf[m_bufUsed++] = buffer[i];
+    }
     return i;
 }
 
@@ -134,13 +139,12 @@ bool tWritableAES::flush()
     m_seq += m_bufUsed;
 
     // Store the parity of this chunk.
-    u8 parity[4] = { 0, 0, 0, 0 };
-    for (u32 i = 0; i < 12; i++)         parity[i%4] ^= m_buf[i];
-    for (u32 i = 16; i < m_bufUsed; i++) parity[i%4] ^= m_buf[i];
-    m_buf[12] = parity[0];
-    m_buf[13] = parity[1];
-    m_buf[14] = parity[2];
-    m_buf[15] = parity[3];
+    for (u32 i = 0; i < 12; i++)
+        m_parity[i%4] ^= m_buf[i];
+    m_buf[12] = m_parity[0]; m_parity[0] = 0;
+    m_buf[13] = m_parity[1]; m_parity[1] = 0;
+    m_buf[14] = m_parity[2]; m_parity[2] = 0;
+    m_buf[15] = m_parity[3]; m_parity[3] = 0;
 
     // Randomize the end of the last block.
     // (Removes potential predictable plain text.)
