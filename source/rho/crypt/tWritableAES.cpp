@@ -154,21 +154,17 @@ bool tWritableAES::flush()
         secureRand_readAll(m_buf+m_bufUsed, bytesToSend-m_bufUsed);
 
     // Encrypt the whole chunk.
-    u8 ct[AES_BLOCK_SIZE];
     for (u32 i = 0; i < m_bufUsed; i += AES_BLOCK_SIZE)
     {
         if (m_opmode == kOpModeCBC)
             for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
                 m_buf[i+j] ^= m_last_ct[j];
 
-        rijndaelEncrypt(m_rk, m_Nr, m_buf+i, ct);
-
-        for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
-            m_buf[i+j] = ct[j];
+        rijndaelEncrypt(m_rk, m_Nr, m_buf+i, m_buf+i);
 
         if (m_opmode == kOpModeCBC)
             for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
-                m_last_ct[j] = ct[j];
+                m_last_ct[j] = m_buf[i+j];
     }
 
     // Send the chunk.
