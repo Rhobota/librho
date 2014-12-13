@@ -185,21 +185,17 @@ bool tReadableAES::m_refill()
         // Decrypt this block.
         for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
             ct[j] = m_buf[i+j];
-        rijndaelDecrypt(m_rk, m_Nr, ct, pt);
+        rijndaelDecrypt(m_rk, m_Nr, ct, m_buf+i);
 
         // If in CBC mode, deal with the xor chaining stuff.
         if (m_opmode == kOpModeCBC)
         {
             for (int j = 0; j < AES_BLOCK_SIZE; j++)
             {
-                pt[j] ^= m_last_ct[j];
+                m_buf[i+j] ^= m_last_ct[j];
                 m_last_ct[j] = ct[j];
             }
         }
-
-        // Copy the plain text back to our buffer.
-        for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
-            m_buf[i+j] = pt[j];
     }
 
     // Make sure the parity works out.
