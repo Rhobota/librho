@@ -170,9 +170,9 @@ bool tReadableAES::m_refill()
         parity[i%4] ^= pt[i];
 
     // Read the rest of the chunk into our buffer.
+    chunkLen -= AES_BLOCK_SIZE;
     u32 extraBytes = (chunkLen % AES_BLOCK_SIZE);
     u32 bytesToRead = (extraBytes > 0) ? (chunkLen + (AES_BLOCK_SIZE-extraBytes)) : (chunkLen);
-    bytesToRead -= AES_BLOCK_SIZE;
     r = m_stream.readAll(m_buf, bytesToRead);
     if (r < 0 || ((u32)r) != bytesToRead)
     {
@@ -193,14 +193,21 @@ bool tReadableAES::m_refill()
             for (int j = 0; j < AES_BLOCK_SIZE; j++)
             {
                 m_buf[i+j] ^= m_last_ct[j];
+                parity[(i+j)%4] ^= m_buf[i+j];
                 m_last_ct[j] = ct[j];
+            }
+        }
+        else
+        {
+            for (int j = 0; j < AES_BLOCK_SIZE; j++)
+            {
+                parity[(i+j)%4] ^= m_buf[i+j];
             }
         }
     }
 
     // Make sure the parity works out.
-    chunkLen -= AES_BLOCK_SIZE;
-    for (u32 i = 0; i < chunkLen; i++)
+    for (u32 i = chunkLen; i < bytesToRead; i++)
         parity[i%4] ^= m_buf[i];
     for (u32 i = 0; i < 4; i++)
         if (parity[i] != 0)

@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <string>
 #include <vector>
+#include <string.h>
 
 
 namespace rho
@@ -173,10 +174,13 @@ class tByteReadable : public iReadable, public bNonCopyable
 
             if (m_pos >= m_buf.size())
                 return m_eof ? -1 : ((m_eof = true), 0);
-            i32 i;
-            for (i = 0; i < length && m_pos < m_buf.size(); i++)
-                buffer[i] = m_buf[m_pos++];
-            return i;
+
+            size_t rem = m_buf.size() - m_pos;
+            if (rem > (size_t)length)
+                rem = (size_t)length;
+            memcpy(buffer, &m_buf[m_pos], rem);
+            m_pos += rem;
+            return (i32)rem;
         }
 
         i32 readAll(u8* buffer, i32 length)
