@@ -79,13 +79,24 @@ i32 tWritableAES::write(const u8* buffer, i32 length)
     if (m_bufUsed >= m_bufSize)
         if (! flush())    // <-- if successful, resets m_bufUsed to 16
             return 0;
-    i32 i;
-    for (i = 0; i < length && m_bufUsed < m_bufSize; i++)
+
+    u32 rem = m_bufSize - m_bufUsed;
+    if (rem > (u32)length)
+        rem = (u32)length;
+
+    u8* parity = m_parity;
+    u8* buf = m_buf;
+    u32 bufUsed = m_bufUsed;
+
+    for (u32 i = 0; i < rem; i++)
     {
-        m_parity[m_bufUsed%4] ^= buffer[i];
-        m_buf[m_bufUsed++] = buffer[i];
+        parity[bufUsed%4] ^= buffer[i];
+        buf[bufUsed++] = buffer[i];
     }
-    return i;
+
+    m_bufUsed = bufUsed;
+
+    return (i32)rem;
 }
 
 i32 tWritableAES::writeAll(const u8* buffer, i32 length)
