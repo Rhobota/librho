@@ -10,8 +10,8 @@ namespace rho
 {
 
 
-#define READ_CHUNK_SIZE 16384
-#define WRITE_CHUNK_SIZE 16384
+#define READ_CHUNK_SIZE 65000
+#define WRITE_CHUNK_SIZE 65000
 
 
 tZlibReadable::tZlibReadable(iReadable* internalStream)
