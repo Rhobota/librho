@@ -132,54 +132,60 @@ bool tWritableAES::flush()
         m_hasSentInitializationVector = true;
     }
 
+    // Pointer aliasing.
+    u8* buf = m_buf;
+
     // Store the size of the chunk.
-    m_buf[0] = (u8)((m_bufUsed >> 24) & 0xFF);
-    m_buf[1] = (u8)((m_bufUsed >> 16) & 0xFF);
-    m_buf[2] = (u8)((m_bufUsed >>  8) & 0xFF);
-    m_buf[3] = (u8)((m_bufUsed      ) & 0xFF);
+    buf[0] = (u8)((m_bufUsed >> 24) & 0xFF);
+    buf[1] = (u8)((m_bufUsed >> 16) & 0xFF);
+    buf[2] = (u8)((m_bufUsed >>  8) & 0xFF);
+    buf[3] = (u8)((m_bufUsed      ) & 0xFF);
 
     // Store the sequence number of this chunk.
-    m_buf[ 4] = (u8)((m_seq >> 56) & 0xFF);
-    m_buf[ 5] = (u8)((m_seq >> 48) & 0xFF);
-    m_buf[ 6] = (u8)((m_seq >> 40) & 0xFF);
-    m_buf[ 7] = (u8)((m_seq >> 32) & 0xFF);
-    m_buf[ 8] = (u8)((m_seq >> 24) & 0xFF);
-    m_buf[ 9] = (u8)((m_seq >> 16) & 0xFF);
-    m_buf[10] = (u8)((m_seq >>  8) & 0xFF);
-    m_buf[11] = (u8)((m_seq      ) & 0xFF);
+    buf[ 4] = (u8)((m_seq >> 56) & 0xFF);
+    buf[ 5] = (u8)((m_seq >> 48) & 0xFF);
+    buf[ 6] = (u8)((m_seq >> 40) & 0xFF);
+    buf[ 7] = (u8)((m_seq >> 32) & 0xFF);
+    buf[ 8] = (u8)((m_seq >> 24) & 0xFF);
+    buf[ 9] = (u8)((m_seq >> 16) & 0xFF);
+    buf[10] = (u8)((m_seq >>  8) & 0xFF);
+    buf[11] = (u8)((m_seq      ) & 0xFF);
     m_seq += m_bufUsed;
 
     // Store the parity of this chunk.
     for (u32 i = 0; i < 12; i++)
-        m_parity[i%4] ^= m_buf[i];
-    m_buf[12] = m_parity[0]; m_parity[0] = 0;
-    m_buf[13] = m_parity[1]; m_parity[1] = 0;
-    m_buf[14] = m_parity[2]; m_parity[2] = 0;
-    m_buf[15] = m_parity[3]; m_parity[3] = 0;
+        m_parity[i%4] ^= buf[i];
+    buf[12] = m_parity[0]; m_parity[0] = 0;
+    buf[13] = m_parity[1]; m_parity[1] = 0;
+    buf[14] = m_parity[2]; m_parity[2] = 0;
+    buf[15] = m_parity[3]; m_parity[3] = 0;
 
     // Randomize the end of the last block.
     // (Removes potential predictable plain text.)
     u32 extraBytes = (m_bufUsed % AES_BLOCK_SIZE);
     u32 bytesToSend = (extraBytes > 0) ? (m_bufUsed + (AES_BLOCK_SIZE-extraBytes)) : (m_bufUsed);
     if (bytesToSend > m_bufUsed)
-        secureRand_readAll(m_buf+m_bufUsed, bytesToSend-m_bufUsed);
+        secureRand_readAll(buf+m_bufUsed, bytesToSend-m_bufUsed);
 
     // Encrypt the whole chunk.
-    for (u32 i = 0; i < m_bufUsed; i += AES_BLOCK_SIZE)
+    u32 bufUsed = m_bufUsed;
+    nOperationModeAES opmode = m_opmode;
+    u8* last_ct = m_last_ct;
+    for (u32 i = 0; i < bufUsed; i += AES_BLOCK_SIZE)
     {
-        if (m_opmode == kOpModeCBC)
+        if (opmode == kOpModeCBC)
             for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
-                m_buf[i+j] ^= m_last_ct[j];
+                buf[i+j] ^= last_ct[j];
 
-        rijndaelEncrypt(m_rk, m_Nr, m_buf+i, m_buf+i);
+        rijndaelEncrypt(m_rk, m_Nr, buf+i, buf+i);
 
-        if (m_opmode == kOpModeCBC)
+        if (opmode == kOpModeCBC)
             for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
-                m_last_ct[j] = m_buf[i+j];
+                last_ct[j] = buf[i+j];
     }
 
     // Send the chunk.
-    i32 r = m_stream->writeAll(m_buf, bytesToSend);
+    i32 r = m_stream->writeAll(buf, bytesToSend);
     if (r < 0 || ((u32)r) != bytesToSend)
         return false;
     m_bufUsed = 16;
