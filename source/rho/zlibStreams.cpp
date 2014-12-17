@@ -61,10 +61,15 @@ i32 tZlibReadable::read(u8* buffer, i32 length)
     if (m_outPos >= m_outUsed)
         if (! m_refill())      // sets m_outPos and m_outUsed
             return -1;
-    i32 i;
-    for (i = 0; i < length && m_outPos < m_outUsed; i++)
-        buffer[i] = m_outBuf[m_outPos++];
-    return i;
+
+    u32 rem = m_outUsed - m_outPos;
+    if (rem > (u32)length)
+        rem = (u32)length;
+
+    memcpy(buffer, m_outBuf+m_outPos, rem);
+    m_outPos += rem;
+
+    return (i32)rem;
 }
 
 i32 tZlibReadable::readAll(u8* buffer, i32 length)
