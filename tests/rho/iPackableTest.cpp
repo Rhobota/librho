@@ -37,6 +37,7 @@ class tMyPackable : public iPackable
             rho::pack(out, e);
             rho::pack(out, f);
             rho::pack(out, str);
+            rho::pack(out, byteVector);
             rho::pack(out, intVector);
             rho::pack(out, stringVector);
             rho::pack(out, stringMatrix);
@@ -51,6 +52,7 @@ class tMyPackable : public iPackable
             rho::unpack(in, e);
             rho::unpack(in, f);
             rho::unpack(in, str);
+            rho::unpack(in, byteVector);
             rho::unpack(in, intVector);
             rho::unpack(in, stringVector);
             rho::unpack(in, stringMatrix);
@@ -68,6 +70,10 @@ class tMyPackable : public iPackable
             int len = rand() % 500;
             for (int i = 0; i < len; i++)
                 str += (char)((rand() % 26) + 'a');
+
+            len = rand() % 500;
+            for (int i = 0; i < len; i++)
+                byteVector.push_back((u8) (rand() % 256));
 
             len = rand() % 500;
             for (int i = 0; i < len; i++)
@@ -111,6 +117,11 @@ class tMyPackable : public iPackable
 
             if (str != other.str) return false;
 
+            if (byteVector.size() != other.byteVector.size()) return false;
+            for (size_t i = 0; i < byteVector.size(); i++)
+                if (byteVector[i] != other.byteVector[i])
+                    return false;
+
             if (intVector.size() != other.intVector.size()) return false;
             for (size_t i = 0; i < intVector.size(); i++)
                 if (intVector[i] != other.intVector[i])
@@ -145,6 +156,11 @@ class tMyPackable : public iPackable
 
             out << "str = " << str << endl;
 
+            out << "byteVector =";
+            for (size_t i = 0; i < byteVector.size(); i++)
+                out << " " << (int)byteVector[i];
+            out << endl;
+
             out << "intVector =";
             for (size_t i = 0; i < intVector.size(); i++)
                 out << " " << intVector[i];
@@ -176,6 +192,7 @@ class tMyPackable : public iPackable
 
         string str;
 
+        vector<u8> byteVector;
         vector<i16> intVector;
         vector<string> stringVector;
         vector< vector<string> > stringMatrix;
