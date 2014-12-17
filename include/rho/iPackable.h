@@ -85,6 +85,48 @@ void unpack(iReadable* in, std::vector<T>& vtr, u64 maxlen = 0xFFFFFFFFFFFFFFFF)
         unpack(in, vtr[(size_t)i]);
 }
 
+template <> inline
+void pack(iWritable* out, const std::vector<u8>& vtr)
+{
+    u64 size = (u64)vtr.size();
+    u64 w = 0;
+    pack(out, size);
+    while (w < size)
+    {
+        i32 where = 0;
+        if (size - w > 0x7FFFFFFF)
+            where = 0x7FFFFFFF;
+        else
+            where = (i32)(size - w);
+        if (out->writeAll(&vtr[w], where) != where)
+            throw eBufferOverflow("Cannot pack to the given output stream.");
+        w += where;
+    }
+}
+
+template <> inline
+void unpack(iReadable* in, std::vector<u8>& vtr, u64 maxlen)
+{
+    u64 size; unpack(in, size);
+    if (size > maxlen)
+        throw eBufferOverflow("Unpacking a vector: the max length was exceeded!");
+    if ((sizeof(u64) > sizeof(size_t)) && (size > ((size_t)(-1))))
+        throw eBufferOverflow("Unpacking a vector: size too big for machine.");
+    vtr.resize((size_t)size);
+    u64 r = 0;
+    while (r < size)
+    {
+        i32 rhere = 0;
+        if (size - r > 0x7FFFFFFF)
+            rhere = 0x7FFFFFFF;
+        else
+            rhere = (i32)(size - r);
+        if (in->readAll(&vtr[r], rhere) != rhere)
+            throw eBufferUnderflow("Cannot unpack from the given input stream.");
+        r += rhere;
+    }
+}
+
 
 }   // namespace rho
 
