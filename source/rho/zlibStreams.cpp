@@ -144,7 +144,8 @@ tZlibWritable::tZlibWritable(iWritable* internalStream, int compressionLevel)
       m_zlibContext(NULL),
       m_inBuf(NULL),
       m_outBuf(NULL),
-      m_broken(false)
+      m_broken(false),
+      m_inBufPos(0)
 {
     z_stream ctx;
     memset(&ctx, 0, sizeof(ctx));
@@ -184,31 +185,18 @@ i32 tZlibWritable::write(const u8* buffer, i32 length)
     if (m_broken)
         return 0;
 
-    if (length > WRITE_CHUNK_SIZE)
-        length = WRITE_CHUNK_SIZE;
-
-    memcpy(m_inBuf, buffer, length);
-
-    z_stream* ctx = (z_stream*) m_zlibContext;
-    ctx->avail_in = length;
-    ctx->next_in = m_inBuf;
-
-    while ((ctx->avail_in) > 0)
-    {
-        ctx->avail_out = WRITE_CHUNK_SIZE;
-        ctx->next_out = m_outBuf;
-        int ret = deflate(ctx, Z_NO_FLUSH);
-        if (ret != Z_OK)
-            throw eRuntimeError(std::string("Zlib error: ") + zError(ret));
-        i32 have = WRITE_CHUNK_SIZE - (ctx->avail_out);
-        if (have > 0 && m_stream->writeAll(m_outBuf, have) != have)
-        {
-            m_broken = true;
+    if (m_inBufPos >= WRITE_CHUNK_SIZE)
+        if (!flush())   // <-- resets m_inBufPos if successful
             return 0;
-        }
-    }
 
-    return length;
+    i32 rem = WRITE_CHUNK_SIZE - m_inBufPos;
+    if (rem > length)
+        rem = length;
+
+    memcpy(m_inBuf+m_inBufPos, buffer, rem);
+    m_inBufPos += rem;
+
+    return rem;
 }
 
 i32 tZlibWritable::writeAll(const u8* buffer, i32 length)
@@ -233,6 +221,25 @@ bool tZlibWritable::flush()
         return false;
 
     z_stream* ctx = (z_stream*) m_zlibContext;
+    ctx->avail_in = m_inBufPos;
+    ctx->next_in = m_inBuf;
+    m_inBufPos = 0;
+
+    while ((ctx->avail_in) > 0)
+    {
+        ctx->avail_out = WRITE_CHUNK_SIZE;
+        ctx->next_out = m_outBuf;
+        int ret = deflate(ctx, Z_NO_FLUSH);
+        if (ret != Z_OK)
+            throw eRuntimeError(std::string("Zlib error: ") + zError(ret));
+        i32 have = WRITE_CHUNK_SIZE - (ctx->avail_out);
+        if (have > 0 && m_stream->writeAll(m_outBuf, have) != have)
+        {
+            m_broken = true;
+            return false;
+        }
+    }
+
     ctx->avail_in = 0;
     ctx->next_in = m_inBuf;
     do
