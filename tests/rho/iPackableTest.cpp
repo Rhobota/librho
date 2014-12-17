@@ -1,6 +1,7 @@
 #include <rho/iPackable.h>
 #include <rho/tTest.h>
 #include <rho/tCrashReporter.h>
+#include <rho/sync/tTimer.h>
 
 #include <cstdlib>
 #include <cmath>
@@ -867,6 +868,67 @@ void supertest(const tTest& t)
     }
 }
 
+void vector_u8_emptytest(const tTest& t)
+{
+    vector<u8> buf;
+
+    tByteWritable bw;
+
+    rho::pack(&bw, buf);
+
+    tByteReadable br(bw.getBuf());
+    vector<u8> buf2;
+    buf2.push_back(192);
+    buf2.push_back(238);
+
+    rho::unpack(&br, buf2);
+
+    t.assert(buf == buf2);
+}
+
+void vector_u8_test(const tTest& t)
+{
+    const int kBufSize = rand() % 1000;
+    vector<u8> buf(kBufSize);
+
+    tByteWritable bw;
+
+    rho::pack(&bw, buf);
+
+    tByteReadable br(bw.getBuf());
+    vector<u8> buf2;
+    buf2.push_back(192);
+    buf2.push_back(238);
+
+    rho::unpack(&br, buf2);
+
+    t.assert(buf == buf2);
+}
+
+void vector_u8_speedtest(const tTest& t)
+{
+    const int kBufSize = 100000000;
+    vector<u8> buf(kBufSize);
+
+    tByteWritable bw;
+
+    f64 start = sync::tTimer::usecTime();
+    rho::pack(&bw, buf);
+    f64 end = sync::tTimer::usecTime();
+    cout << (end - start) / 1000000 << " seconds" << endl;
+
+    tByteReadable br(bw.getBuf());
+    vector<u8> buf2;
+    buf2.push_back(192);
+    buf2.push_back(238);
+
+    start = sync::tTimer::usecTime();
+    rho::unpack(&br, buf2);
+    end = sync::tTimer::usecTime();
+    cout << (end - start) / 1000000 << " seconds" << endl;
+
+    t.assert(buf == buf2);
+}
 
 int main()
 {
@@ -895,6 +957,10 @@ int main()
     tTest("string test", stringtest);
 
     tTest("super test", supertest);
+
+    tTest("vector<u8> empty test", vector_u8_emptytest);
+    tTest("vector<u8> test", vector_u8_test, 10000);
+    //tTest("vector<u8> speed test", vector_u8_speedtest);
 
     return 0;
 }
