@@ -146,6 +146,7 @@ class tZlibWritable : public iWritable, public iFlushable, public iClosable,
         u8* m_inBuf;
         u8* m_outBuf;
         bool m_broken;
+        u32 m_inBufPos;
 };
 
 
