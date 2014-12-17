@@ -171,13 +171,15 @@ bool tWritableAES::flush()
     u32 bufUsed = m_bufUsed;
     nOperationModeAES opmode = m_opmode;
     u8* last_ct = m_last_ct;
+    u32* rk = m_rk;
+    int Nr = m_Nr;
     for (u32 i = 0; i < bufUsed; i += AES_BLOCK_SIZE)
     {
         if (opmode == kOpModeCBC)
             for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
                 buf[i+j] ^= last_ct[j];
 
-        rijndaelEncrypt(m_rk, m_Nr, buf+i, buf+i);
+        rijndaelEncrypt(rk, Nr, buf+i, buf+i);
 
         if (opmode == kOpModeCBC)
             for (u32 j = 0; j < AES_BLOCK_SIZE; j++)

@@ -102,10 +102,11 @@ bool tReadableAES::m_refill()
     // Reset indices.
     m_pos = 0;
     m_bufUsed = 0;
+    nOperationModeAES opmode = m_opmode;
 
     // If in cbc mode and this is the first time m_refill is called, read the
     // initialization vector off the stream and decrypt it.
-    if (m_opmode == kOpModeCBC && !m_hasReadInitializationVector)
+    if (opmode == kOpModeCBC && !m_hasReadInitializationVector)
     {
         u8 initVectorCt[AES_BLOCK_SIZE];
         i32 r = m_stream.readAll(initVectorCt, AES_BLOCK_SIZE);
@@ -129,13 +130,19 @@ bool tReadableAES::m_refill()
     u8 pt[AES_BLOCK_SIZE];
     rijndaelDecrypt(m_rk, m_Nr, ct, pt);
 
+    // Pointer aliasing.
+    u8* buf = m_buf;
+    u8* last_ct = m_last_ct;
+    u32* rk = m_rk;
+    int Nr = m_Nr;
+
     // If in CBC mode, deal with the xor chaining stuff.
-    if (m_opmode == kOpModeCBC)
+    if (opmode == kOpModeCBC)
     {
         for (int i = 0; i < AES_BLOCK_SIZE; i++)
         {
-            pt[i] ^= m_last_ct[i];
-            m_last_ct[i] = ct[i];
+            pt[i] ^= last_ct[i];
+            last_ct[i] = ct[i];
         }
     }
 
@@ -178,7 +185,7 @@ bool tReadableAES::m_refill()
     chunkLen -= AES_BLOCK_SIZE;
     u32 extraBytes = (chunkLen % AES_BLOCK_SIZE);
     u32 bytesToRead = (extraBytes > 0) ? (chunkLen + (AES_BLOCK_SIZE-extraBytes)) : (chunkLen);
-    r = m_stream.readAll(m_buf, bytesToRead);
+    r = m_stream.readAll(buf, bytesToRead);
     if (r < 0 || ((u32)r) != bytesToRead)
     {
         return (r >= 0);  // <-- makes read() give the expected behavior
@@ -189,31 +196,31 @@ bool tReadableAES::m_refill()
     {
         // Decrypt this block.
         for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
-            ct[j] = m_buf[i+j];
-        rijndaelDecrypt(m_rk, m_Nr, ct, m_buf+i);
+            ct[j] = buf[i+j];
+        rijndaelDecrypt(rk, Nr, ct, buf+i);
 
         // If in CBC mode, deal with the xor chaining stuff.
-        if (m_opmode == kOpModeCBC)
+        if (opmode == kOpModeCBC)
         {
             for (int j = 0; j < AES_BLOCK_SIZE; j++)
             {
-                m_buf[i+j] ^= m_last_ct[j];
-                parity[(i+j)%4] ^= m_buf[i+j];
-                m_last_ct[j] = ct[j];
+                buf[i+j] ^= last_ct[j];
+                parity[(i+j)%4] ^= buf[i+j];
+                last_ct[j] = ct[j];
             }
         }
         else
         {
             for (int j = 0; j < AES_BLOCK_SIZE; j++)
             {
-                parity[(i+j)%4] ^= m_buf[i+j];
+                parity[(i+j)%4] ^= buf[i+j];
             }
         }
     }
 
     // Make sure the parity works out.
     for (u32 i = chunkLen; i < bytesToRead; i++)
-        parity[i%4] ^= m_buf[i];
+        parity[i%4] ^= buf[i];
     for (u32 i = 0; i < 4; i++)
         if (parity[i] != 0)
             throw eRuntimeError("This stream is not a valid AES stream. The parity is broken.");
