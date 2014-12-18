@@ -44,10 +44,15 @@ i32 tBufferedReadable::read(u8* buffer, i32 length)
     if (m_pos >= m_bufUsed)
         if (! m_refill())      // sets m_pos and m_bufUsed
             return -1;
-    i32 i;
-    for (i = 0; i < length && m_pos < m_bufUsed; i++)
-        buffer[i] = m_buf[m_pos++];
-    return i;
+
+    u32 rem = m_bufUsed - m_pos;
+    if (rem > (u32)length)
+        rem = (u32)length;
+
+    memcpy(buffer, m_buf+m_pos, rem);
+    m_pos += rem;
+
+    return (i32)rem;
 }
 
 i32 tBufferedReadable::readAll(u8* buffer, i32 length)
