@@ -163,7 +163,16 @@ tZlibWritable::tZlibWritable(iWritable* internalStream, int compressionLevel)
 
 tZlibWritable::~tZlibWritable()
 {
-    this->close();
+    try
+    {
+        if (m_inBufPos > 0)
+            this->flush();
+        this->close();
+    }
+    catch (...)
+    {
+        // Well... we tried.
+    }
 
     deflateEnd((z_stream*)m_zlibContext);
     free(m_zlibContext);
