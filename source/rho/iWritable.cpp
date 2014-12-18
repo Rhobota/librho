@@ -45,10 +45,15 @@ i32 tBufferedWritable::write(const u8* buffer, i32 length)
     if (m_bufUsed >= m_bufSize)
         if (! flush())    // <-- if successful, resets m_bufUsed to 0
             return 0;
-    i32 i;
-    for (i = 0; i < length && m_bufUsed < m_bufSize; i++)
-        m_buf[m_bufUsed++] = buffer[i];
-    return i;
+
+    u32 rem = m_bufSize - m_bufUsed;
+    if (rem > (u32)length)
+        rem = (u32)length;
+
+    memcpy(m_buf+m_bufUsed, buffer, rem);
+    m_bufUsed += rem;
+
+    return (i32)rem;
 }
 
 i32 tBufferedWritable::writeAll(const u8* buffer, i32 length)

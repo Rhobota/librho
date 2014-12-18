@@ -116,8 +116,7 @@ class tStreamPCQ : public iReadable, public iWritable, public iClosable, public 
                 throw eInvalidArgument("Stream read/write length must be >0");
 
             u8* cbuf = new u8[length];
-            for (i32 i = 0; i < length; i++)
-                cbuf[i] = buffer[i];
+            memcpy(cbuf, buffer, (size_t)length);
             m_pcq->push(std::make_pair(cbuf, length));
             return length;
         }
