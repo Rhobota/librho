@@ -20,8 +20,7 @@ tCanvas::tCanvas(nImageFormat format, const u8 bgColor[], u32 bgColorSize)
         throw eInvalidArgument("The bg color size does not match the image format's pixel size.");
     m_format = format;
     m_bgColor = new u8[bgColorSize];
-    for (u32 i = 0; i < bgColorSize; i++)
-        m_bgColor[i] = bgColor[i];
+    memcpy(m_bgColor, bgColor, bgColorSize);
     m_bgColorSize = bgColorSize;
 }
 
@@ -92,8 +91,9 @@ void tCanvas::genImage(tImage* dest)
     dest->setBufUsed(width * height * bpp);
     u8* buf = dest->buf();
     for (u32 i = 0; i < dest->bufUsed(); i += bpp)
-        for (u32 j = 0; j < bpp; j++)
-            buf[i+j] = m_bgColor[j];
+    {
+        memcpy(buf+i, m_bgColor, bpp);
+    }
 
     for (size_t i = 0; i < m_images.size(); i++)
     {
@@ -124,9 +124,9 @@ void s_drawImage(const tImage* image, u32 x, u32 y, tImage* dest)
     for (u32 h = 0; h < sheight; h++)
     {
         u8* dbufrow = dbuf;
-        for (u32 w = 0; w < swidth; w++)
-            for (u32 b = 0; b < bpp; b++)
-                *dbufrow++ = *sbuf++;
+        u32 numbytes = swidth*bpp;
+        memcpy(dbufrow, sbuf, numbytes);
+        sbuf += numbytes;
         dbuf += drowwidth;
     }
 }

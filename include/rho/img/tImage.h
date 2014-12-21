@@ -140,12 +140,27 @@ class tImage : public bNonCopyable, public iPackable
             u8* m_rowbuf;
             u32 m_bpp;
 
-            u8*       operator[] (size_t index);
-            const u8* operator[] (size_t index) const;
+            u8*       operator[] (size_t index)       { return m_rowbuf+index*m_bpp; }
+            const u8* operator[] (size_t index) const { return m_rowbuf+index*m_bpp; }
         };
 
-        tRow       operator[] (size_t index);
-        const tRow operator[] (size_t index) const;
+        tRow       operator[] (size_t index)
+        {
+            tRow row;
+            u32 bpp = getBPP(m_format);
+            row.m_rowbuf = m_buf + index*m_width*bpp;
+            row.m_bpp = bpp;
+            return row;
+        }
+
+        const tRow operator[] (size_t index) const
+        {
+            tRow row;
+            u32 bpp = getBPP(m_format);
+            row.m_rowbuf = m_buf + index*m_width*bpp;
+            row.m_bpp = bpp;
+            return row;
+        }
 
     public:
 
