@@ -45,6 +45,29 @@ class iAsyncReadable
 };
 
 
+class tZlibAsyncReadable : public iAsyncReadable, public bNonCopyable
+{
+    public:
+
+        tZlibAsyncReadable(iAsyncReadable* nextReadable);
+
+        ~tZlibAsyncReadable();
+
+        void takeInput(const u8* buffer, i32 length);
+
+    private:
+
+        iAsyncReadable* m_nextReadable;
+
+        void* m_zlibContext;
+        u8* m_inBuf;
+        u8* m_outBuf;
+        u32 m_outUsed;
+        u32 m_outPos;
+        bool m_eof;
+};
+
+
 }   // namespace rho
 
 
