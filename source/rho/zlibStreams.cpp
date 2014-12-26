@@ -221,10 +221,15 @@ void tZlibAsyncReadable::takeInput(const u8* buffer, i32 length)
 
 void tZlibAsyncReadable::endStream()
 {
-    if (m_eof)
-        return;
-    m_eof = true;
-    m_nextReadable->endStream();
+    if (!m_eof)
+    {
+        // This is bad! With a zlib stream, there is an EOS marker that
+        // we should have found inside takeInput(). But we didn't. So
+        // we'll set eof here and throw.
+        m_eof = true;
+        m_nextReadable->endStream();
+        throw eRuntimeError("Zlib error: no EOS marker found");
+    }
 }
 
 
