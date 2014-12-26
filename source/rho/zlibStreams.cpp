@@ -192,24 +192,27 @@ void tZlibAsyncReadable::takeInput(const u8* buffer, i32 length)
     z_stream* ctx = (z_stream*) m_zlibContext;
     ctx->avail_in = length;
     ctx->next_in = buffer;
+    ctx->avail_out = READ_CHUNK_SIZE;
+    ctx->next_out = m_outBuf;
 
-    while (ctx->avail_in > 0)
+    while (ctx->avail_in > 0 || ctx->avail_out == 0)
     {
         ctx->avail_out = READ_CHUNK_SIZE;
         ctx->next_out = m_outBuf;
 
         int ret = inflate(ctx, Z_SYNC_FLUSH);
         if (ret == Z_STREAM_END)
-        {
             m_eof = true;
-            m_nextReadable->endStream();
-        }
-        else if (ret != Z_OK)
+        else if (ret != Z_OK && ret != Z_BUF_ERROR)
             throw eRuntimeError(std::string("Zlib error: ") + zError(ret));
+
         i32 outUsed = READ_CHUNK_SIZE - (ctx->avail_out);
 
         if (outUsed > 0)
             m_nextReadable->takeInput(m_outBuf, outUsed);
+
+        if (m_eof)
+            m_nextReadable->endStream();
     }
 }
 
