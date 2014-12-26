@@ -2,8 +2,12 @@
 #define __rho_iAsyncReadable_h__
 
 
-#include <rho/types.h>
+#include <rho/ppcheck.h>
 #include <rho/bNonCopyable.h>
+#include <rho/types.h>
+#include <rho/eRho.h>
+
+#include <vector>
 
 
 namespace rho
@@ -54,6 +58,37 @@ class iAsyncReadable
         virtual void endStream() = 0;
 
         virtual ~iAsyncReadable() { }
+};
+
+
+/**
+ * This class just capture all input to a vector.
+ */
+class tByteAsyncReadable : public iAsyncReadable, public bNonCopyable
+{
+    public:
+
+        void takeInput(const u8* buffer, i32 length)
+        {
+            if (length <= 0)
+                throw eInvalidArgument("Stream read/write length must be >0");
+
+            m_buf.insert(m_buf.end(), buffer, buffer+length);
+        }
+
+        void endStream()
+        {
+            // Nothing to do here.
+        }
+
+        const std::vector<u8>& getBuf() const
+        {
+            return m_buf;
+        }
+
+    private:
+
+        std::vector<u8> m_buf;
 };
 
 

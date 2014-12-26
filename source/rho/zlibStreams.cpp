@@ -212,7 +212,10 @@ void tZlibAsyncReadable::takeInput(const u8* buffer, i32 length)
             m_nextReadable->takeInput(m_outBuf, outUsed);
 
         if (m_eof)
+        {
             m_nextReadable->endStream();
+            break;
+        }
     }
 }
 
