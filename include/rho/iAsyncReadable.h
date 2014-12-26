@@ -41,10 +41,25 @@ class iAsyncReadable
          */
         virtual void takeInput(const u8* buffer, i32 length) = 0;
 
+        /**
+         * This method is called to indicate the end of stream (EOS).
+         *
+         * This method will only be called once. No more calls to
+         * takeInput() will happen after this call.
+         *
+         * If this object is part of a chain, you should forward this
+         * call up the chain.
+         */
+        virtual void endStream() = 0;
+
         virtual ~iAsyncReadable() { }
 };
 
 
+/**
+ * This is the asynchronous version of the tZlibReadable. See that
+ * class for info.
+ */
 class tZlibAsyncReadable : public iAsyncReadable, public bNonCopyable
 {
     public:
@@ -54,6 +69,7 @@ class tZlibAsyncReadable : public iAsyncReadable, public bNonCopyable
         ~tZlibAsyncReadable();
 
         void takeInput(const u8* buffer, i32 length);
+        void endStream();
 
     private:
 
