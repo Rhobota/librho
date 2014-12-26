@@ -3,6 +3,7 @@
 
 
 #include <rho/types.h>
+#include <rho/bNonCopyable.h>
 
 
 namespace rho
@@ -76,10 +77,7 @@ class tZlibAsyncReadable : public iAsyncReadable, public bNonCopyable
         iAsyncReadable* m_nextReadable;
 
         void* m_zlibContext;
-        u8* m_inBuf;
         u8* m_outBuf;
-        u32 m_outUsed;
-        u32 m_outPos;
         bool m_eof;
 };
 

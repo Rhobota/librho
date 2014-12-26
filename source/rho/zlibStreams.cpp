@@ -1,3 +1,4 @@
+#include <rho/iAsyncReadable.h>
 #include <rho/iReadable.h>
 #include <rho/iWritable.h>
 
@@ -150,12 +151,11 @@ bool tZlibReadable::m_refill()
 tZlibAsyncReadable::tZlibAsyncReadable(iAsyncReadable* nextReadable)
     : m_nextReadable(nextReadable),
       m_zlibContext(NULL),
-      m_inBuf(NULL),
       m_outBuf(NULL),
-      m_outUsed(0),
-      m_outPos(0),
       m_eof(false)
 {
+    if (!m_nextReadable)
+        throw eInvalidArgument("nextReadable should not be NULL!");
     z_stream ctx;
     memset(&ctx, 0, sizeof(ctx));
     ctx.zalloc = Z_NULL;
@@ -168,7 +168,6 @@ tZlibAsyncReadable::tZlibAsyncReadable(iAsyncReadable* nextReadable)
     ctx.next_in = ctx.next_out = NULL;
     m_zlibContext = malloc(sizeof(ctx));
     memcpy(m_zlibContext, &ctx, sizeof(ctx));
-    m_inBuf = new u8[READ_CHUNK_SIZE];
     m_outBuf = new u8[READ_CHUNK_SIZE];
 }
 
@@ -177,22 +176,49 @@ tZlibAsyncReadable::~tZlibAsyncReadable()
     inflateEnd((z_stream*)m_zlibContext);
     free(m_zlibContext);
     m_zlibContext = NULL;
-    delete [] m_inBuf;
-    m_inBuf = NULL;
     delete [] m_outBuf;
     m_outBuf = NULL;
-    m_stream = NULL;
-    m_outUsed = 0;
-    m_outPos = 0;
     m_nextReadable = NULL;
 }
 
 void tZlibAsyncReadable::takeInput(const u8* buffer, i32 length)
 {
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
+    if (m_eof)
+        return;
+
+    z_stream* ctx = (z_stream*) m_zlibContext;
+    ctx->avail_in = length;
+    ctx->next_in = buffer;
+
+    while (ctx->avail_in > 0)
+    {
+        ctx->avail_out = READ_CHUNK_SIZE;
+        ctx->next_out = m_outBuf;
+
+        int ret = inflate(ctx, Z_SYNC_FLUSH);
+        if (ret == Z_STREAM_END)
+        {
+            m_eof = true;
+            m_nextReadable->endStream();
+        }
+        else if (ret != Z_OK)
+            throw eRuntimeError(std::string("Zlib error: ") + zError(ret));
+        i32 outUsed = READ_CHUNK_SIZE - (ctx->avail_out);
+
+        if (outUsed > 0)
+            m_nextReadable->takeInput(m_outBuf, outUsed);
+    }
 }
 
 void tZlibAsyncReadable::endStream()
 {
+    if (m_eof)
+        return;
+    m_eof = true;
+    m_nextReadable->endStream();
 }
 
 
