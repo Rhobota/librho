@@ -1,5 +1,6 @@
 #include <rho/iReadable.h>
 #include <rho/iWritable.h>
+#include <rho/iAsyncReadable.h>
 #include <rho/tCrashReporter.h>
 #include <rho/tTest.h>
 
@@ -35,10 +36,58 @@ void warpData(vector<u8>& data)
 }
 
 
+void readInvalidStream(const tTest& t,
+                       vector<u8>& ct,
+                       const vector<u8>& pt1)
+{
+    warpData(ct);
+
+    // Read the message through the zlib reader (inflations).
+    {
+        tByteReadable br;
+        br.reset(ct);
+        tZlibReadable zr(&br);
+        try
+        {
+            vector<u8> pt2(kMaxMessageLength+50);
+            i32 r = zr.readAll(&pt2[0], kMaxMessageLength+50);
+            t.assert(r <= pt1.size());
+            t.assert(r <= pt2.size());
+            for (i32 i = 0; i < r; i++)
+                t.assert(pt2[i] == pt1[i]);
+        }
+        catch (eRuntimeError& e)
+        {
+            // This is okay. Actually, this error is preferred given
+            // the circumstances.
+        }
+    }
+
+    // Read the message through the asynchronous zlib reader (inflations).
+    {
+        tByteAsyncReadable br;
+        tZlibAsyncReadable zr(&br);
+        try
+        {
+            zr.takeInput(&ct[0], (i32)ct.size());
+            zr.endStream();
+            const vector<u8>& pt2 = br.getBuf();
+            t.assert(pt2.size() <= pt1.size());
+            for (size_t i = 0; i < pt2.size(); i++)
+                t.assert(pt2[i] == pt1[i]);
+        }
+        catch (eRuntimeError& e)
+        {
+            // This is okay. Actually, this error is preferred given
+            // the circumstances.
+        }
+    }
+}
+
+
 void littleInvalidStreamTest(const tTest& t)
 {
     tByteWritable bw;
-    tByteReadable br;
 
     // Gen a random message.
     int messagelen = (rand() % 50) + 50;
@@ -58,29 +107,14 @@ void littleInvalidStreamTest(const tTest& t)
     }
     vector<u8> ct = bw.getBuf();
 
-    // Read the message through the zlib reader (inflations).
-    warpData(ct);
-    br.reset(ct);
-    tZlibReadable zr(&br);
-    try
-    {
-        vector<u8> pt2(kMaxMessageLength);
-        i32 r = zr.readAll(&pt2[0], kMaxMessageLength);
-        for (i32 i = 0; i < r; i++)
-            t.assert(pt2[i] == pt1[i]);
-    }
-    catch (eRuntimeError& e)
-    {
-        // This is okay. Actually, this error is preferred given
-        // the circumstances.
-    }
+    // Ensure the stream doesn't emit bad data.
+    readInvalidStream(t, ct, pt1);
 }
 
 
 void largeInvalidStreamTest(const tTest& t)
 {
     tByteWritable bw;
-    tByteReadable br;
 
     // Gen a random message.
     int messagelen = (rand() % kMaxMessageLength) + 50;
@@ -100,22 +134,8 @@ void largeInvalidStreamTest(const tTest& t)
     }
     vector<u8> ct = bw.getBuf();
 
-    // Read the message through the zlib reader (inflations).
-    warpData(ct);
-    br.reset(ct);
-    tZlibReadable zr(&br);
-    try
-    {
-        vector<u8> pt2(kMaxMessageLength+50);
-        i32 r = zr.readAll(&pt2[0], kMaxMessageLength+50);
-        for (i32 i = 0; i < r; i++)
-            t.assert(pt2[i] == pt1[i]);
-    }
-    catch (eRuntimeError& e)
-    {
-        // This is okay. Actually, this error is preferred given
-        // the circumstances.
-    }
+    // Ensure the stream doesn't emit bad data.
+    readInvalidStream(t, ct, pt1);
 }
 
 
