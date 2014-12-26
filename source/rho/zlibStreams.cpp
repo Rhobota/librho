@@ -148,11 +148,43 @@ bool tZlibReadable::m_refill()
 ///////////////////////////////////////////////////////////////////////////////
 
 tZlibAsyncReadable::tZlibAsyncReadable(iAsyncReadable* nextReadable)
+    : m_nextReadable(nextReadable),
+      m_zlibContext(NULL),
+      m_inBuf(NULL),
+      m_outBuf(NULL),
+      m_outUsed(0),
+      m_outPos(0),
+      m_eof(false)
 {
+    z_stream ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    ctx.zalloc = Z_NULL;
+    ctx.zfree = Z_NULL;
+    ctx.opaque = Z_NULL;
+    int ret = inflateInit(&ctx);
+    if (ret != Z_OK)
+        throw eRuntimeError(std::string("Zlib error: ") + zError(ret));
+    ctx.avail_in = ctx.avail_out = 0;
+    ctx.next_in = ctx.next_out = NULL;
+    m_zlibContext = malloc(sizeof(ctx));
+    memcpy(m_zlibContext, &ctx, sizeof(ctx));
+    m_inBuf = new u8[READ_CHUNK_SIZE];
+    m_outBuf = new u8[READ_CHUNK_SIZE];
 }
 
 tZlibAsyncReadable::~tZlibAsyncReadable()
 {
+    inflateEnd((z_stream*)m_zlibContext);
+    free(m_zlibContext);
+    m_zlibContext = NULL;
+    delete [] m_inBuf;
+    m_inBuf = NULL;
+    delete [] m_outBuf;
+    m_outBuf = NULL;
+    m_stream = NULL;
+    m_outUsed = 0;
+    m_outPos = 0;
+    m_nextReadable = NULL;
 }
 
 void tZlibAsyncReadable::takeInput(const u8* buffer, i32 length)
