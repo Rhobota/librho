@@ -51,8 +51,8 @@ void readInvalidStream(const tTest& t,
         {
             vector<u8> pt2(kMaxMessageLength+50);
             i32 r = zr.readAll(&pt2[0], kMaxMessageLength+50);
-            t.assert(r <= pt1.size());
-            t.assert(r <= pt2.size());
+            t.assert(r <= (i32)pt1.size());
+            t.assert(r <= (i32)pt2.size());
             for (i32 i = 0; i < r; i++)
                 t.assert(pt2[i] == pt1[i]);
         }
@@ -139,10 +139,86 @@ void largeInvalidStreamTest(const tTest& t)
 }
 
 
+void readValidStream(const tTest& t,
+                     vector<u8>& ct,
+                     const vector<u8>& pt1,
+                     i32 readlength,
+                     bool endasyncstream)
+{
+    // Read the message through the zlib reader (inflations).
+    {
+        tByteReadable br;
+        br.reset(ct);
+        tZlibReadable zr(&br);
+        i32 messagelen = (i32)pt1.size();
+        vector<u8> pt2(messagelen);
+        i32 r = zr.readAll(&pt2[0], readlength);
+        t.assert(r >= 0 && ((size_t)r) == pt2.size());
+        t.assert(pt1 == pt2);
+    }
+
+    // Read the message through the asynchronous zlib reader (inflations).
+    {
+        tByteAsyncReadable br;
+        tZlibAsyncReadable zr(&br);
+        zr.takeInput(&ct[0], (i32)ct.size());
+        if (endasyncstream)
+            zr.endStream();
+        const vector<u8>& pt2 = br.getBuf();
+        t.assert(pt1 == pt2);
+    }
+}
+
+
+void readValidStream_randomized(const tTest& t,
+                                vector<u8>& ct,
+                                const vector<u8>& pt1,
+                                i32 readlength,
+                                bool endasyncstream)
+{
+    // Read the message through the zlib reader (inflations).
+    {
+        tByteReadable br;
+        br.reset(ct);
+        tZlibReadable zr(&br);
+        i32 messagelen = (i32)pt1.size();
+        vector<u8> pt2(messagelen);
+        size_t r = 0;
+        while (r < pt2.size())
+        {
+            size_t len = (rand() % 20000) + 1;
+            i32 r_here = zr.read(&pt2[r], std::min(len, pt2.size()-r));
+            if (r_here <= 0 || ((size_t)r_here) > std::min(len, pt2.size()-r))
+                t.fail();
+            r += r_here;
+        }
+        t.assert(r == pt2.size());
+        t.assert(pt1 == pt2);
+    }
+
+    // Read the message through the asynchronous zlib reader (inflations).
+    {
+        tByteAsyncReadable br;
+        tZlibAsyncReadable zr(&br);
+        size_t r = 0;
+        while (r < ct.size())
+        {
+            size_t len = (rand() % 20000) + 1;
+            zr.takeInput(&ct[r], std::min(len, ct.size()-r));
+            r += std::min(len, ct.size()-r);
+        }
+        t.assert(r == ct.size());
+        if (endasyncstream)
+            zr.endStream();
+        const vector<u8>& pt2 = br.getBuf();
+        t.assert(pt1 == pt2);
+    }
+}
+
+
 void littleTest(const tTest& t)
 {
     tByteWritable bw;
-    tByteReadable br;
 
     // Gen a random message.
     int messagelen = (rand() % 50);
@@ -162,25 +238,15 @@ void littleTest(const tTest& t)
     }
     vector<u8> ct = bw.getBuf();
 
-    // Read the message through the zlib reader (inflations).
-    br.reset(ct);
-    tZlibReadable zr(&br);
-    vector<u8> pt2(messagelen);
-    i32 r = zr.readAll(&pt2[0], kMaxMessageLength);
-    t.assert(r >= 0 && ((size_t)r) == pt2.size());
-
-    // See if the original buf matches the resulting buf.
-    t.assert(pt1 == pt2);
+    // Read back through the zlib readables.
+    readValidStream(t, ct, pt1, kMaxMessageLength+50, true);
 }
 
 
 void largeTest1(const tTest& t)
 {
     tByteWritable bw;
-    tByteReadable br;
-
     tZlibWritable zw(&bw, (rand()%10));
-    tZlibReadable zr(&br);
 
     // Gen a random message.
     int messagelen = (rand() % kMaxMessageLength) + 1;
@@ -192,23 +258,16 @@ void largeTest1(const tTest& t)
     i32 w = zw.writeAll(&pt1[0], pt1.size());
     t.assert(w >= 0 && ((size_t)w) == pt1.size());
     t.assert(zw.flush());
-
-    // Read the message through the zlib reader (inflations).
     vector<u8> ct = bw.getBuf();
-    br.reset(ct);
-    vector<u8> pt2(messagelen);
-    i32 r = zr.readAll(&pt2[0], pt2.size());
-    t.assert(r >= 0 && ((size_t)r) == pt2.size());
 
-    // See if the original buf matches the resulting buf.
-    t.assert(pt1 == pt2);
+    // Read back through the zlib readables.
+    readValidStream(t, ct, pt1, pt1.size(), false);
 }
 
 
 void largeTest2(const tTest& t)
 {
     tByteWritable bw;
-    tByteReadable br;
 
     // Gen a random message.
     int messagelen = (rand() % kMaxMessageLength) + 1;
@@ -225,25 +284,15 @@ void largeTest2(const tTest& t)
     }
     vector<u8> ct = bw.getBuf();
 
-    // Read the message through the zlib reader (inflations).
-    br.reset(ct);
-    tZlibReadable zr(&br);
-    vector<u8> pt2(messagelen);
-    i32 r = zr.readAll(&pt2[0], 2*kMaxMessageLength);
-    t.assert(r >= 0 && ((size_t)r) == pt2.size());
-
-    // See if the original buf matches the resulting buf.
-    t.assert(pt1 == pt2);
+    // Read back through the zlib readables.
+    readValidStream(t, ct, pt1, kMaxMessageLength+50, true);
 }
 
 
 void largeWithRandomFlushesTest1(const tTest& t)
 {
     tByteWritable bw;
-    tByteReadable br;
-
     tZlibWritable zw(&bw, (rand()%10));
-    tZlibReadable zr(&br);
 
     // Gen a random message.
     int messagelen = (rand() % kMaxMessageLength) + 1;
@@ -265,26 +314,17 @@ void largeWithRandomFlushesTest1(const tTest& t)
     }
     t.assert(w == pt1.size());
     t.assert(zw.flush());
-
-    // Read the message through the zlib reader (inflations).
     vector<u8> ct = bw.getBuf();
-    br.reset(ct);
-    vector<u8> pt2(messagelen);
-    i32 r = zr.readAll(&pt2[0], pt2.size());
-    t.assert(r >= 0 && ((size_t)r) == pt2.size());
 
-    // See if the original buf matches the resulting buf.
-    t.assert(pt1 == pt2);
+    // Read back through the zlib readables.
+    readValidStream(t, ct, pt1, pt1.size(), false);
 }
 
 
 void largeWithRandomFlushesTest2(const tTest& t)
 {
     tByteWritable bw;
-    tByteReadable br;
-
     tZlibWritable zw(&bw, (rand()%10));
-    tZlibReadable zr(&br);
 
     // Gen a random message.
     int messagelen = (rand() % kMaxMessageLength) + 1;
@@ -306,24 +346,10 @@ void largeWithRandomFlushesTest2(const tTest& t)
     }
     t.assert(w == pt1.size());
     t.assert(zw.flush());
-
-    // Read the message through the zlib reader (inflations).
     vector<u8> ct = bw.getBuf();
-    br.reset(ct);
-    vector<u8> pt2(messagelen);
-    size_t r = 0;
-    while (r < pt2.size())
-    {
-        size_t len = (rand() % 20000) + 1;
-        i32 r_here = zr.read(&pt2[r], std::min(len, pt2.size()-r));
-        if (r_here <= 0 || ((size_t)r_here) > std::min(len, pt2.size()-r))
-            t.fail();
-        r += r_here;
-    }
-    t.assert(r == pt2.size());
 
-    // See if the original buf matches the resulting buf.
-    t.assert(pt1 == pt2);
+    // Read back through the zlib readables.
+    readValidStream_randomized(t, ct, pt1, pt1.size(), false);
 }
 
 
@@ -351,7 +377,6 @@ vector<u8> getPatterData(int len)
 void patter_littleTest(const tTest& t)
 {
     tByteWritable bw;
-    tByteReadable br;
 
     // Gen a random message.
     int messagelen = (rand() % 50);
@@ -369,25 +394,15 @@ void patter_littleTest(const tTest& t)
     }
     vector<u8> ct = bw.getBuf();
 
-    // Read the message through the zlib reader (inflations).
-    br.reset(ct);
-    tZlibReadable zr(&br);
-    vector<u8> pt2(messagelen);
-    i32 r = zr.readAll(&pt2[0], kMaxMessageLength);
-    t.assert(r >= 0 && ((size_t)r) == pt2.size());
-
-    // See if the original buf matches the resulting buf.
-    t.assert(pt1 == pt2);
+    // Read back through the zlib readables.
+    readValidStream(t, ct, pt1, kMaxMessageLength+50, true);
 }
 
 
 void patter_largeTest1(const tTest& t)
 {
     tByteWritable bw;
-    tByteReadable br;
-
     tZlibWritable zw(&bw, (rand()%10));
-    tZlibReadable zr(&br);
 
     // Gen a random message.
     int messagelen = (rand() % kMaxMessageLength) + 1;
@@ -397,23 +412,16 @@ void patter_largeTest1(const tTest& t)
     i32 w = zw.writeAll(&pt1[0], pt1.size());
     t.assert(w >= 0 && ((size_t)w) == pt1.size());
     t.assert(zw.flush());
-
-    // Read the message through the zlib reader (inflations).
     vector<u8> ct = bw.getBuf();
-    br.reset(ct);
-    vector<u8> pt2(messagelen);
-    i32 r = zr.readAll(&pt2[0], pt2.size());
-    t.assert(r >= 0 && ((size_t)r) == pt2.size());
 
-    // See if the original buf matches the resulting buf.
-    t.assert(pt1 == pt2);
+    // Read back through the zlib readables.
+    readValidStream(t, ct, pt1, pt1.size(), false);
 }
 
 
 void patter_largeTest2(const tTest& t)
 {
     tByteWritable bw;
-    tByteReadable br;
 
     // Gen a random message.
     int messagelen = (rand() % kMaxMessageLength) + 1;
@@ -428,25 +436,15 @@ void patter_largeTest2(const tTest& t)
     }
     vector<u8> ct = bw.getBuf();
 
-    // Read the message through the zlib reader (inflations).
-    br.reset(ct);
-    tZlibReadable zr(&br);
-    vector<u8> pt2(messagelen);
-    i32 r = zr.readAll(&pt2[0], 2*kMaxMessageLength);
-    t.assert(r >= 0 && ((size_t)r) == pt2.size());
-
-    // See if the original buf matches the resulting buf.
-    t.assert(pt1 == pt2);
+    // Read back through the zlib readables.
+    readValidStream(t, ct, pt1, kMaxMessageLength+50, true);
 }
 
 
 void patter_largeWithRandomFlushesTest1(const tTest& t)
 {
     tByteWritable bw;
-    tByteReadable br;
-
     tZlibWritable zw(&bw, (rand()%10));
-    tZlibReadable zr(&br);
 
     // Gen a random message.
     int messagelen = (rand() % kMaxMessageLength) + 1;
@@ -466,26 +464,17 @@ void patter_largeWithRandomFlushesTest1(const tTest& t)
     }
     t.assert(w == pt1.size());
     t.assert(zw.flush());
-
-    // Read the message through the zlib reader (inflations).
     vector<u8> ct = bw.getBuf();
-    br.reset(ct);
-    vector<u8> pt2(messagelen);
-    i32 r = zr.readAll(&pt2[0], pt2.size());
-    t.assert(r >= 0 && ((size_t)r) == pt2.size());
 
-    // See if the original buf matches the resulting buf.
-    t.assert(pt1 == pt2);
+    // Read back through the zlib readables.
+    readValidStream(t, ct, pt1, pt1.size(), false);
 }
 
 
 void patter_largeWithRandomFlushesTest2(const tTest& t)
 {
     tByteWritable bw;
-    tByteReadable br;
-
     tZlibWritable zw(&bw, (rand()%10));
-    tZlibReadable zr(&br);
 
     // Gen a random message.
     int messagelen = (rand() % kMaxMessageLength) + 1;
@@ -505,24 +494,10 @@ void patter_largeWithRandomFlushesTest2(const tTest& t)
     }
     t.assert(w == pt1.size());
     t.assert(zw.flush());
-
-    // Read the message through the zlib reader (inflations).
     vector<u8> ct = bw.getBuf();
-    br.reset(ct);
-    vector<u8> pt2(messagelen);
-    size_t r = 0;
-    while (r < pt2.size())
-    {
-        size_t len = (rand() % 20000) + 1;
-        i32 r_here = zr.read(&pt2[r], std::min(len, pt2.size()-r));
-        if (r_here <= 0 || ((size_t)r_here) > std::min(len, pt2.size()-r))
-            t.fail();
-        r += r_here;
-    }
-    t.assert(r == pt2.size());
 
-    // See if the original buf matches the resulting buf.
-    t.assert(pt1 == pt2);
+    // Read back through the zlib readables.
+    readValidStream_randomized(t, ct, pt1, pt1.size(), false);
 }
 
 
