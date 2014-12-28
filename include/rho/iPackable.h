@@ -98,7 +98,7 @@ void pack(iWritable* out, const std::vector<u8>& vtr)
             where = 0x7FFFFFFF;
         else
             where = (i32)(size - w);
-        if (out->writeAll(&vtr[w], where) != where)
+        if (out->writeAll(&vtr[(size_t)w], where) != where)
             throw eBufferOverflow("Cannot pack to the given output stream.");
         w += where;
     }
@@ -121,7 +121,7 @@ void unpack(iReadable* in, std::vector<u8>& vtr, u64 maxlen)
             rhere = 0x7FFFFFFF;
         else
             rhere = (i32)(size - r);
-        if (in->readAll(&vtr[r], rhere) != rhere)
+        if (in->readAll(&vtr[(size_t)r], rhere) != rhere)
             throw eBufferUnderflow("Cannot unpack from the given input stream.");
         r += rhere;
     }

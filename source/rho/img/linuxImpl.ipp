@@ -527,7 +527,8 @@ void relinquishBuffers(int numBuffers, u8* buffers[], int bufSizes[])
 
 
 static
-int readFrame(int fd, int numBuffers, u8* buffers[], u8* outData, int outSize)
+struct v4l2_buffer
+readFrame_begin(int fd, int numBuffers, u8* buffers[], u8** outData, int* outSize)
 {
     bool ready = false;
     while (!ready)
@@ -558,18 +559,17 @@ int readFrame(int fd, int numBuffers, u8* buffers[], u8* outData, int outSize)
     if (bufIndex < 0 || bufIndex >= numBuffers)
         throw eInvalidDeviceAttributes("Bad driver! It gave an invalid buffer index.");
 
-    u8* bufPtr = buffers[bufIndex];
+    *outData = buffers[bufIndex];
+    *outSize = bufLength;
+    return buf;
+}
 
-    if (outSize < bufLength)
-        throw eBufferOverflow("The given buffer is not long enough to hold the captured frame.");
 
-    for (int i = 0; i < bufLength; i++)
-        outData[i] = bufPtr[i];
-
+static
+void readFrame_end(int fd, struct v4l2_buffer buf)
+{
     if (xioctl(fd, (int)VIDIOC_QBUF, &buf) == -1)
         throw eInvalidDeviceAttributes("Cannot re-queue buffer. :(");
-
-    return bufLength;
 }
 
 
@@ -633,17 +633,12 @@ class tImageCap : public iImageCap
 
         u8* m_buffers[kNumBuffers];
         int m_bufSizes[kNumBuffers];
-
-        u8* m_tempBuffer;
-        u32 m_tempBufferSize;
 };
 
 
 tImageCap::tImageCap(const tImageCapParams& params)
     : m_params(params),
-      m_fd(-1),
-      m_tempBuffer(NULL),
-      m_tempBufferSize(0)
+      m_fd(-1)
 {
     for (int i = 0; i < kNumBuffers; i++)
     {
@@ -675,9 +670,6 @@ tImageCap::tImageCap(const tImageCapParams& params)
         m_finalize();
         throw;
     }
-
-    m_tempBufferSize = getRequiredBufSize();
-    m_tempBuffer = new u8[m_tempBufferSize];
 }
 
 
@@ -698,10 +690,6 @@ void tImageCap::m_finalize()
     relinquishBuffers(kNumBuffers, m_buffers, m_bufSizes);
     closeDevice(m_fd);
     m_fd = -1;
-
-    delete [] m_tempBuffer;
-    m_tempBuffer = NULL;
-    m_tempBufferSize = 0;
 }
 
 
@@ -735,20 +723,28 @@ void tImageCap::getFrame(tImage* image)
     if (image->bufSize() < getRequiredBufSize())
         image->setBufSize(getRequiredBufSize());
 
-    int bufUsed = readFrame(m_fd, kNumBuffers, m_buffers,
-                            image->buf(), image->bufSize());
+    u8* imgBuf = NULL;
+    int bufUsed = 0;
+    struct v4l2_buffer v4l2buf = readFrame_begin(m_fd, kNumBuffers, m_buffers,
+                                                 &imgBuf, &bufUsed);
     image->setBufUsed( bufUsed );
+    if (image->bufUsed() > image->bufSize())
+        throw eBufferOverflow("The returned image buffer cannot fit into the image object.");
 
     if (m_params.captureFormat == m_params.displayFormat)
-        return;
+    {
+        memcpy(image->buf(), imgBuf, bufUsed);
+    }
+    else
+    {
+        int newBufUsed = colorspace_conversion(
+                    m_params.captureFormat, m_params.displayFormat,
+                    imgBuf, bufUsed,
+                    image->buf(), image->bufSize());
+        image->setBufUsed( newBufUsed );
+    }
 
-    bufUsed = colorspace_conversion(
-                m_params.captureFormat, m_params.displayFormat,
-                image->buf(), image->bufUsed(),
-                m_tempBuffer, std::min(image->bufSize(), m_tempBufferSize));
-    image->setBufUsed( bufUsed );
-
-    memcpy(image->buf(), m_tempBuffer, bufUsed);
+    readFrame_end(m_fd, v4l2buf);
 }
 
 

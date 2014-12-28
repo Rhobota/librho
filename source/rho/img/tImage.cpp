@@ -111,8 +111,7 @@ void tImage::copyTo(tImage* other) const
     other->setWidth(m_width);
     other->setHeight(m_height);
     other->setFormat(m_format);
-    for (u32 i = 0; i < m_bufUsed; i++)
-        other->m_buf[i] = m_buf[i];
+    memcpy(other->m_buf, m_buf, m_bufUsed);
 }
 
 void tImage::saveToFile(std::string filepath) const
@@ -345,13 +344,10 @@ void s_crop(const tImage* image, geo::tRect rect, tImage* dest)
 
     for (u32 j = 0; j < height; j++)
     {
-        for (u32 i = 0; i < width; i++)
-        {
-            for (i32 k = 0; k < bpp; k++)
-            {
-                *dbuf++ = *sbuf++;
-            }
-        }
+        u32 numbytes = width * bpp;
+        memcpy(dbuf, sbuf, numbytes);
+        dbuf += numbytes;
+        sbuf += numbytes;
         sbuf += (image->width() - width) * bpp;
     }
 }
@@ -843,39 +839,11 @@ std::vector<tImage::tHoughCircle> tImage::houghCircles(std::vector< std::vector<
                           voteThresh);
 }
 
-u8* tImage::tRow::operator[] (size_t index)
-{
-    return m_rowbuf+index*m_bpp;
-}
-
-const u8* tImage::tRow::operator[] (size_t index) const
-{
-    return m_rowbuf+index*m_bpp;
-}
-
-tImage::tRow tImage::operator[] (size_t index)
-{
-    tRow row;
-    u32 bpp = getBPP(m_format);
-    row.m_rowbuf = m_buf + index*m_width*bpp;
-    row.m_bpp = bpp;
-    return row;
-}
-
-const tImage::tRow tImage::operator[] (size_t index) const
-{
-    tRow row;
-    u32 bpp = getBPP(m_format);
-    row.m_rowbuf = m_buf + index*m_width*bpp;
-    row.m_bpp = bpp;
-    return row;
-}
-
 void tImage::pack(iWritable* out) const
 {
     rho::pack(out, m_bufUsed);
-    for (u32 i = 0; i < m_bufUsed; i++)
-        rho::pack(out, m_buf[i]);
+    if (out->writeAll(m_buf, m_bufUsed) != (i32)m_bufUsed)
+        throw eBufferUnderflow("Cannot pack image buffer to output stream.");
     rho::pack(out, m_width);
     rho::pack(out, m_height);
     rho::pack(out, (u32)m_format);
@@ -893,8 +861,8 @@ void tImage::unpack(iReadable* in)
         rho::unpack(in, m_bufUsed);
         m_bufSize = m_bufUsed;
         m_buf = new u8[m_bufSize];
-        for (u32 i = 0; i < m_bufUsed; i++)
-            rho::unpack(in, m_buf[i]);
+        if (in->readAll(m_buf, m_bufUsed) != (i32)m_bufUsed)
+            throw eBufferUnderflow("Cannot unpack image buffer from input stream.");
         rho::unpack(in, m_width);
         rho::unpack(in, m_height);
         u32 format; rho::unpack(in, format);

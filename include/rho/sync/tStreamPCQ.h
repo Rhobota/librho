@@ -78,13 +78,20 @@ class tStreamPCQ : public iReadable, public iWritable, public iClosable, public 
                 m_curr = m_pcq->pop();
                 m_off = 0;
                 if (m_curr.second <= 0)
+                {
+                    m_curr.second = 0;
                     m_eof = true;
+                }
             }
 
-            i32 i;
-            for (i = 0; i < length && m_off < m_curr.second; i++)
-                buffer[i] = m_curr.first[m_off++];
-            return i;
+            u32 rem = m_curr.second - m_off;
+            if (rem > (u32)length)
+                rem = (u32)length;
+
+            memcpy(buffer, m_curr.first+m_off, rem);
+            m_off += rem;
+
+            return (i32)rem;
         }
 
         i32 readAll(u8* buffer, i32 length)
@@ -109,8 +116,7 @@ class tStreamPCQ : public iReadable, public iWritable, public iClosable, public 
                 throw eInvalidArgument("Stream read/write length must be >0");
 
             u8* cbuf = new u8[length];
-            for (i32 i = 0; i < length; i++)
-                cbuf[i] = buffer[i];
+            memcpy(cbuf, buffer, (size_t)length);
             m_pcq->push(std::make_pair(cbuf, length));
             return length;
         }
