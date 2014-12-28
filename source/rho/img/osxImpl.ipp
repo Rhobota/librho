@@ -332,8 +332,7 @@ class tImageCap : public iImageCap
             if (!destructed)
             {
                 u8* b = m_outQueue.pop();
-                for (int i = 0; i < bufSize; i++)
-                    b[i] = buf[i];
+                memcpy(b, buf, bufSize);
                 m_inQueue.push(b);
             }
             destructMutex.release();

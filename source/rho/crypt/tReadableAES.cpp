@@ -75,7 +75,7 @@ i32 tReadableAES::read(u8* buffer, i32 length)
     if (rem > (u32)length)
         rem = (u32)length;
 
-    memcpy(buffer, m_buf, rem);
+    memcpy(buffer, m_buf+m_pos, rem);
     m_pos += rem;
 
     return (i32)rem;

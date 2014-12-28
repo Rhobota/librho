@@ -5,6 +5,8 @@
 #include <rho/img/nImageFormat.h>
 #include <rho/img/ebImg.h>
 
+#include <string.h>
+
 
 namespace rho
 {
@@ -51,8 +53,7 @@ i32 no_conversion(u8* source, i32 sourceSize,
 {
     if (destSize < sourceSize)
         throw eBufferOverflow("You're doing it wrong.");
-    for (i32 i = 0; i < sourceSize; i++)
-        dest[i] = source[i];
+    memcpy(dest, source, sourceSize);
     return sourceSize;
 }
 
