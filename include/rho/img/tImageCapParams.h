@@ -3,6 +3,7 @@
 
 
 #include <rho/ppcheck.h>
+#include <rho/iPackable.h>
 #include <rho/img/nImageFormat.h>
 
 #include <ostream>
@@ -15,7 +16,7 @@ namespace img
 {
 
 
-class tImageCapParams
+class tImageCapParams : public iPackable
 {
     public:
 
@@ -39,6 +40,15 @@ class tImageCapParams
 
         u32          frameIntervalNumerator;      // seconds per frame
         u32          frameIntervalDenominator;    //
+
+    public:
+
+        //////////////////////////////////////////////////////////////////////
+        // iPackable interface
+        //////////////////////////////////////////////////////////////////////
+
+        void pack(iWritable* out) const;
+        void unpack(iReadable* in);
 };
 
 
