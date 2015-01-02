@@ -29,6 +29,51 @@ tImageCapParams::tImageCapParams()
 }
 
 
+void tImageCapParams::pack(iWritable* out) const
+{
+    rho::pack(out, deviceIndex);
+
+    rho::pack(out, inputIndex);
+    rho::pack(out, inputDescription);
+
+    rho::pack(out, (u32)displayFormat);
+    rho::pack(out, displayFormatDescription);
+
+    rho::pack(out, (u32)captureFormat);
+    rho::pack(out, captureFormatDescription);
+
+    rho::pack(out, imageWidth);
+    rho::pack(out, imageHeight);
+
+    rho::pack(out, frameIntervalNumerator);
+    rho::pack(out, frameIntervalDenominator);
+}
+
+
+void tImageCapParams::unpack(iReadable* in)
+{
+    rho::unpack(in, deviceIndex);
+
+    rho::unpack(in, inputIndex);
+    rho::unpack(in, inputDescription);
+
+    u32 format;
+    rho::unpack(in, format);
+    displayFormat = (nImageFormat)format;
+    rho::unpack(in, displayFormatDescription);
+
+    rho::unpack(in, format);
+    captureFormat = (nImageFormat)format;
+    rho::unpack(in, captureFormatDescription);
+
+    rho::unpack(in, imageWidth);
+    rho::unpack(in, imageHeight);
+
+    rho::unpack(in, frameIntervalNumerator);
+    rho::unpack(in, frameIntervalDenominator);
+}
+
+
 std::ostream& operator<< (std::ostream& o, const tImageCapParams& params)
 {
     o << "Device #: " << params.deviceIndex << std::endl;
