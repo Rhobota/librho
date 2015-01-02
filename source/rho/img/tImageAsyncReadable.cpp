@@ -131,7 +131,9 @@ void tImageAsyncReadable::takeInput(const u8* buffer, i32 length)
 
 void tImageAsyncReadable::endStream()
 {
-    // Nothing to do here.
+    try {
+        m_observer->endStream();
+    } catch (...) { }
 }
 
 
