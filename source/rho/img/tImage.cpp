@@ -841,6 +841,12 @@ std::vector<tImage::tHoughCircle> tImage::houghCircles(std::vector< std::vector<
 
 void tImage::pack(iWritable* out) const
 {
+    /*
+     * Attention! If you change this method, you'll of course have to
+     * change tImage::unpack() to match. But you'll also have to change
+     * tImageAsyncReadable to match as well!
+     */
+
     rho::pack(out, m_bufUsed);
     if (out->writeAll(m_buf, m_bufUsed) != (i32)m_bufUsed)
         throw eBufferUnderflow("Cannot pack image buffer to output stream.");
