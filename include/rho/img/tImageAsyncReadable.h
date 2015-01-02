@@ -34,6 +34,21 @@ class tImageAsyncReadable : public iAsyncReadable, public bNonCopyable
     private:
 
         iAsyncReadableImageObserver* m_observer;
+
+        tImage m_image;
+
+        enum nStage {
+            kStageBufUsed,
+            kStageBufData,
+            kStageWidth,
+            kStageHeight,
+            kStageFormat
+        };
+
+        nStage m_stage;
+
+        u8 m_buf[4];
+        u32 m_bufPos;
 };
 
 
