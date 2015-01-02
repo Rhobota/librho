@@ -1,8 +1,8 @@
 #!/bin/bash
 
 TEST_DIR="$(dirname "$0")"
-INCLUDE_DIR="$TEST_DIR/../include"
-LIBRHO_PATH="$TEST_DIR/../objects/librho.a"
+INCLUDE_FLAGS="-I $TEST_DIR/../include"
+LIB_PATH="$TEST_DIR/../objects/librho.a"
 OUT_FILE="a.out"
 
 CC="$TARGET""g++"
@@ -10,8 +10,8 @@ CC_FLAGS_LOCAL="$CC_FLAGS \
     -g -O0 -fvisibility=hidden -fno-inline -Wall -Wextra \
     -Wno-unused-parameter -Wno-long-long -Werror -pedantic \
     -D_FILE_OFFSET_BITS=64 \
-    -I $INCLUDE_DIR"
-CC_LIB_FLAGS="$LIBRHO_PATH -lpthread $CC_LIB_FLAGS"
+    $INCLUDE_FLAGS"
+CC_LIB_FLAGS="$LIB_PATH -lpthread $CC_LIB_FLAGS"
 
 if [ $(uname) == "Linux" ]
 then
