@@ -16,7 +16,7 @@ class iAsyncReadableImageObserver
 {
     public:
 
-        virtual void gotImage(tImage* image) = 0;
+        virtual void gotImage(const tImage& image) = 0;
         virtual void endStream() = 0;
 
         virtual ~iAsyncReadableImageObserver() { }

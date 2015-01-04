@@ -115,7 +115,7 @@ void tImageAsyncReadable::takeInput(const u8* buffer, i32 length)
                     m_stage = kStageBufUsed;
                     m_image.setFormat((nImageFormat)(s_toU32(m_buf)));
                     try {
-                        m_observer->gotImage(&m_image);
+                        m_observer->gotImage(m_image);
                     } catch (...) { }
                 }
                 break;
