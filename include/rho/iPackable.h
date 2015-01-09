@@ -11,6 +11,7 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include <map>
 
 
 namespace rho
@@ -124,6 +125,31 @@ void unpack(iReadable* in, std::vector<u8>& vtr, u64 maxlen)
         if (in->readAll(&vtr[(size_t)r], rhere) != rhere)
             throw eBufferUnderflow("Cannot unpack from the given input stream.");
         r += rhere;
+    }
+}
+
+template <class T, class U>
+void pack(iWritable* out, const std::map<T,U>& mp)
+{
+    pack(out, (u64)mp.size());
+    typename std::map<T,U>::const_iterator itr;
+    for (itr = mp.begin(); itr != mp.end(); itr++)
+    {
+        pack(out, itr->first);
+        pack(out, itr->second);
+    }
+}
+
+template <class T, class U>
+void unpack(iReadable* in, std::map<T,U>& mp)
+{
+    u64 size; unpack(in, size);
+    mp.clear();
+    for (u64 i = 0; i < size; i++)
+    {
+        T t; unpack(in, t);
+        U u; unpack(in, u);
+        mp[t] = u;
     }
 }
 
