@@ -15,6 +15,7 @@ using std::cout;
 using std::endl;
 using std::string;
 using std::vector;
+using std::map;
 
 
 static const int kRandIters = 50000;
@@ -42,6 +43,7 @@ class tMyPackable : public iPackable
             rho::pack(out, intVector);
             rho::pack(out, stringVector);
             rho::pack(out, stringMatrix);
+            rho::pack(out, stringMap);
         }
 
         void unpack(iReadable* in)
@@ -57,6 +59,7 @@ class tMyPackable : public iPackable
             rho::unpack(in, intVector);
             rho::unpack(in, stringVector);
             rho::unpack(in, stringMatrix);
+            rho::unpack(in, stringMap);
         }
 
         void randomize()
@@ -105,6 +108,21 @@ class tMyPackable : public iPackable
                 }
                 stringMatrix.push_back(vs);
             }
+
+            len = rand() % 10;
+            for (int i = 0; i < len; i++)
+            {
+                vector<string> vs;
+                for (int j = 0; j < 2; j++)
+                {
+                    string s;
+                    int len3 = rand() % 10;
+                    for (int i = 0; i < len3; i++)
+                        s += (char) (((rand() % 26) + 'a'));
+                    vs.push_back(s);
+                }
+                stringMap[vs[0]] = vs[1];
+            }
         }
 
         bool operator== (const tMyPackable& other) const
@@ -118,30 +136,15 @@ class tMyPackable : public iPackable
 
             if (str != other.str) return false;
 
-            if (byteVector.size() != other.byteVector.size()) return false;
-            for (size_t i = 0; i < byteVector.size(); i++)
-                if (byteVector[i] != other.byteVector[i])
-                    return false;
+            if (byteVector != other.byteVector) return false;
 
-            if (intVector.size() != other.intVector.size()) return false;
-            for (size_t i = 0; i < intVector.size(); i++)
-                if (intVector[i] != other.intVector[i])
-                    return false;
+            if (intVector != other.intVector) return false;
 
-            if (stringVector.size() != other.stringVector.size()) return false;
-            for (size_t i = 0; i < stringVector.size(); i++)
-                if (stringVector[i] != other.stringVector[i])
-                    return false;
+            if (stringVector != other.stringVector) return false;
 
-            if (stringMatrix.size() != other.stringMatrix.size()) return false;
-            for (size_t i = 0; i < stringMatrix.size(); i++)
-            {
-                if (stringMatrix[i].size() != other.stringMatrix[i].size())
-                    return false;
-                for (size_t j = 0; j < stringMatrix[i].size(); j++)
-                    if (stringMatrix[i][j] != other.stringMatrix[i][j])
-                        return false;
-            }
+            if (stringMatrix != other.stringMatrix) return false;
+
+            if (stringMap != other.stringMap) return false;
 
             return true;
         }
@@ -180,6 +183,14 @@ class tMyPackable : public iPackable
                 out << endl;
             }
             out << endl;
+
+            out << "stringMap =";
+            map<string,string>::const_iterator itr;
+            for (itr = stringMap.begin(); itr != stringMap.end(); itr++)
+            {
+                out << itr->first << " --> " << itr->second << endl;
+            }
+            out << endl;
         }
 
     private:
@@ -197,6 +208,8 @@ class tMyPackable : public iPackable
         vector<i16> intVector;
         vector<string> stringVector;
         vector< vector<string> > stringMatrix;
+
+        map<string,string> stringMap;
 };
 
 
