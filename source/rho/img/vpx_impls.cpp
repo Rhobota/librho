@@ -19,10 +19,29 @@ tVpxImageEncoder::tVpxImageEncoder(iWritable* writable,
       m_height(imageHeight),
       m_tempImage()
 {
+    // TODO
 }
 
 void tVpxImageEncoder::encodeImage(const tImage& image)
 {
+    // TODO
+}
+
+
+tVpxImageAsyncReadable::tVpxImageAsyncReadable(iAsyncReadableImageObserver* observer)
+    : m_observer(observer)
+{
+    // TODO
+}
+
+void tVpxImageAsyncReadable::takeInput(const u8* buffer, i32 length)
+{
+    // TODO
+}
+
+void tVpxImageAsyncReadable::endStream()
+{
+    // TODO
 }
 
 

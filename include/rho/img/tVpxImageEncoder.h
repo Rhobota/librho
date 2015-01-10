@@ -1,5 +1,5 @@
-#ifndef __tVpxImageEncoder_h__
-#define __tVpxImageEncoder_h__
+#ifndef __rho_img_tVpxImageEncoder_h__
+#define __rho_img_tVpxImageEncoder_h__
 
 
 #include <rho/bNonCopyable.h>
@@ -40,4 +40,4 @@ class tVpxImageEncoder : public bNonCopyable
 }  // namespace rho
 
 
-#endif // __tVpxImageEncoder_h__
+#endif // __rho_img_tVpxImageEncoder_h__
