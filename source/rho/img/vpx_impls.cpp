@@ -1,4 +1,10 @@
 #include <rho/img/tVpxImageEncoder.h>
+#include <rho/img/tVpxImageAsyncReadable.h>
+
+#include <vpx/vpx_encoder.h>  // the base header for encoding with libvpx
+#include <vpx/vp8cx.h>        // the specific encoder stuff for the vp8 and vp9 codecs
+
+#include <sstream>
 
 
 namespace rho
@@ -17,9 +23,31 @@ tVpxImageEncoder::tVpxImageEncoder(iWritable* writable,
       m_fps(fps),
       m_width(imageWidth),
       m_height(imageHeight),
-      m_tempImage()
+      m_tempImage(),
+      m_codec(NULL)
 {
-    // TODO
+    // This will hold the returns values of the calls below (it's an enum).
+    // Use vpx_codec_err_to_string() to convert its value to a string.
+    vpx_codec_err_t res = VPX_CODEC_OK;
+
+    // Declare which codec we want to use for encoding.
+    // We will use vp9 because it is the current best
+    // that libvpx offers.
+    vpx_codec_iface_t* codec_interface = vpx_codec_vp9_cx();
+
+    // Grab the name of the codec we're using.
+    std::string codec_name = vpx_codec_iface_name(codec_interface);
+
+    // Grab the default configuration for our codec.
+    vpx_codec_enc_cfg_t codec_config;
+    res = vpx_codec_enc_config_default(codec_interface, &codec_config, 0);
+    if (res != VPX_CODEC_OK)
+    {
+        std::ostringstream out;
+        out << "Failed to get default config for codec [" << codec_name << "]. "
+            << "Error: " << vpx_codec_err_to_string(res);
+        throw eRuntimeError(out.str());
+    }
 }
 
 void tVpxImageEncoder::encodeImage(const tImage& image)

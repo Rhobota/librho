@@ -33,6 +33,8 @@ class tVpxImageEncoder : public bNonCopyable
         u32 m_width;
         u32 m_height;
         tImage m_tempImage;
+
+        void* m_codec;  // this is secretly a vpx_codec_ctx_t*
 };
 
 
