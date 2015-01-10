@@ -18,7 +18,7 @@ class tVpxImageEncoder : public bNonCopyable
     public:
 
         tVpxImageEncoder(iWritable* writable,   // <-- the stream to write encoded images to
-                         u32 bitrate,           // <-- in bits per second
+                         u32 bitrate,           // <-- in kbits/second
                          u32 fps,               // <-- what to expect the frames-per-second to be
                          u32 imageWidth,        // <-- what to expect image widths to be
                          u32 imageHeight);      // <-- what to expect image heights to be
