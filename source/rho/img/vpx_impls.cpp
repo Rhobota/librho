@@ -58,15 +58,25 @@ tVpxImageEncoder::tVpxImageEncoder(iWritable* writable,
     codec_config.g_error_resilient = 0;
 
     // Init the codec.
-    vpx_codec_ctx_t codec;
-    res = vpx_codec_enc_init(&codec, codec_interface, &codec_config, 0);
+    vpx_codec_ctx_t* codec = new vpx_codec_ctx_t;
+    res = vpx_codec_enc_init(codec, codec_interface, &codec_config, 0);
     if (res != VPX_CODEC_OK)
     {
+        delete codec; codec = NULL;
         std::ostringstream out;
         out << "Failed to init the codec [" << codec_name << "]. "
             << "Error: " << vpx_codec_err_to_string(res);
         throw eRuntimeError(out.str());
     }
+    m_codec = codec;
+}
+
+tVpxImageEncoder::~tVpxImageEncoder()
+{
+    vpx_codec_ctx_t* codec = (vpx_codec_ctx_t*)(m_codec);
+    delete codec;
+    codec = NULL;
+    m_codec = NULL;
 }
 
 void tVpxImageEncoder::encodeImage(const tImage& image)
