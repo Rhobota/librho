@@ -36,6 +36,28 @@ u32 getBPP(nImageFormat format)
 }
 
 
+u32 getBitsPP(nImageFormat format)
+{
+    switch (format)
+    {
+        case kRGB16:
+            return 16;
+        case kRGB24:
+            return 24;
+        case kRGBA:
+            return 32;
+        case kBGRA:
+            return 32;
+        case kYUYV:
+            return 12;
+        case kGrey:
+            return 8;
+        default:
+            throw eInvalidArgument("Invalid format given. Cannot return the correct bpp.");
+    }
+}
+
+
 static inline
 u8 clip(double val)
 {

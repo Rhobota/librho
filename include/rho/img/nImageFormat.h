@@ -33,6 +33,10 @@ enum nImageFormat
 u32 getBPP(nImageFormat format);
 
 
+// Gets the number of bits per pixel for the given image format.
+u32 getBitsPP(nImageFormat format);
+
+
 // Converts an image buffer. Returns the number of bytes used of 'dest'.
 i32 colorspace_conversion(nImageFormat from, nImageFormat to,
                           u8* source, i32 sourceSize,

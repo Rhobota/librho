@@ -212,16 +212,18 @@ void tVpxImageEncoder::encodeImage(const tImage& image, bool flushWrites, bool f
     // Copy the given image into the vimage buffer.
     u8* imagebuf = vimage->planes[VPX_PLANE_PACKED];
     int stride = vimage->stride[VPX_PLANE_PACKED];
-    int imageBPP = (int)getBPP(image.format());
+    int imageBPP = (int)getBitsPP(image.format());
     if (vimage->w != m_width)
         throw eRuntimeError("The width of vimage is unexpected.");
     if (vimage->h != m_height)
         throw eRuntimeError("The height of vimage is unexpected.");
-    if (imageBPP * 8 != vimage->bps)
+    if (imageBPP != vimage->bps)
         throw eRuntimeError("The bites-per-sample of vimage is unexpected.");
-    if (stride != (int)m_width * imageBPP)
+    if (((int)m_width * imageBPP) % 8)
+        throw eRuntimeError("Row size is not calculable.");
+    if (stride != ((int)m_width * imageBPP) / 8)
         throw eRuntimeError("The stride of vimage is unexpected.");
-    if (m_width * m_height * imageBPP != image.bufUsed())
+    if ((m_width * m_height * imageBPP) / 8 != image.bufUsed())
         throw eRuntimeError("The bufUsed() of image is unexpected.");
     memcpy(imagebuf, image.buf(), image.bufUsed());
 
@@ -449,8 +451,10 @@ void tVpxImageAsyncReadable::m_handleFrame()
         u32 width = img->w;
         u32 height = img->h;
 
-        u32 bpp = getBPP(format);
-        u32 row = width * bpp;
+        u32 bpp = getBitsPP(format);
+        if ((width * bpp) % 8)
+            throw eRuntimeError("Cannot calculate row size.");
+        u32 row = (width * bpp) / 8;
 
         m_image.setBufUsed(row * height);
         if (m_image.bufUsed() > m_image.bufSize())
