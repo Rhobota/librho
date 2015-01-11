@@ -138,10 +138,11 @@ tVpxImageEncoder::tVpxImageEncoder(iWritable* writable,
     res = vpx_codec_enc_init(codec, codec_interface, &codec_config, 0);
     if (res != VPX_CODEC_OK)
     {
-        delete codec; codec = NULL;
         std::ostringstream out;
         out << "Failed to init the codec [" << codec_name << "]. "
-            << "Error: " << vpx_codec_err_to_string(res);
+            << "Error: " << vpx_codec_err_to_string(res) << ". "
+            << "Error: " << vpx_codec_error_detail(codec);
+        delete codec; codec = NULL;
         throw eRuntimeError(out.str());
     }
     m_codec = codec;
@@ -236,7 +237,8 @@ void tVpxImageEncoder::encodeImage(const tImage& image, bool flushWrites, bool f
     {
         std::ostringstream out;
         out << "Call to vpx_codec_encode() failed. "
-            << "Error: " << vpx_codec_err_to_string(res);
+            << "Error: " << vpx_codec_err_to_string(res) << ". "
+            << "Error: " << vpx_codec_error_detail(codec);
         throw eRuntimeError(out.str());
     }
 
@@ -286,7 +288,8 @@ void tVpxImageEncoder::signalEndOfStream()
         {
             std::ostringstream out;
             out << "Call to vpx_codec_encode() failed. "
-                << "Error: " << vpx_codec_err_to_string(res);
+                << "Error: " << vpx_codec_err_to_string(res) << ". "
+                << "Error: " << vpx_codec_error_detail(codec);
             throw eRuntimeError(out.str());
         }
 
@@ -339,10 +342,11 @@ tVpxImageAsyncReadable::tVpxImageAsyncReadable(iAsyncReadableImageObserver* obse
     vpx_codec_err_t res = vpx_codec_dec_init(codec, codec_interface, NULL, 0);
     if (res != VPX_CODEC_OK)
     {
-        delete codec; codec = NULL;
         std::ostringstream out;
         out << "Failed to init the codec [" << codec_name << "]. "
-            << "Error: " << vpx_codec_err_to_string(res);
+            << "Error: " << vpx_codec_err_to_string(res) << ". "
+            << "Error: " << vpx_codec_error_detail(codec);
+        delete codec; codec = NULL;
         throw eRuntimeError(out.str());
     }
     m_codec = codec;
@@ -436,7 +440,8 @@ void tVpxImageAsyncReadable::m_handleFrame()
     {
         std::ostringstream out;
         out << "Call to vpx_codec_decode() failed. "
-            << "Error: " << vpx_codec_err_to_string(res);
+            << "Error: " << vpx_codec_err_to_string(res) << ". "
+            << "Error: " << vpx_codec_error_detail(codec);
         throw eRuntimeError(out.str());
     }
 
