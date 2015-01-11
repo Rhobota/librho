@@ -225,6 +225,50 @@ void tVpxImageEncoder::encodeImage(const tImage& image, bool flushWrites, bool f
     }
 }
 
+void tVpxImageEncoder::signalEndOfStream()
+{
+    vpx_codec_ctx_t* codec = (vpx_codec_ctx_t*)(m_codec);
+
+    bool didWrite = true;
+
+    while (didWrite)
+    {
+        didWrite = false;
+
+        vpx_codec_err_t res = vpx_codec_encode(codec, NULL, -1, 1, 0, VPX_DL_REALTIME);
+        if (res != VPX_CODEC_OK)
+        {
+            std::ostringstream out;
+            out << "Call to vpx_codec_encode() failed. "
+                << "Error: " << vpx_codec_err_to_string(res);
+            throw eRuntimeError(out.str());
+        }
+
+        vpx_codec_iter_t iter = NULL;
+        const vpx_codec_cx_pkt_t* pkt = NULL;
+        while ((pkt = vpx_codec_get_cx_data(codec, &iter)) != NULL)
+        {
+            if (pkt->kind == VPX_CODEC_CX_FRAME_PKT)
+            {
+                //const int keyframe = (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
+                const u8* compressedBuf = (const u8*)(pkt->data.frame.buf);
+                size_t compressedBufSize = pkt->data.frame.sz;
+                //i64 thisFrameNumber = pkt->data.frame.pts;
+
+                if (compressedBufSize <= 0)
+                    continue;
+
+                didWrite = true;
+                i32 w = m_writable->writeAll(compressedBuf, (i32)compressedBufSize);
+                if ((w < 0) || (((size_t)w) != compressedBufSize))
+                    throw eRuntimeError("Cannot write compressed data to underlying stream.");
+            }
+        }
+    }
+
+    s_flush(m_writable);
+}
+
 
 tVpxImageAsyncReadable::tVpxImageAsyncReadable(iAsyncReadableImageObserver* observer)
     : m_observer(observer)

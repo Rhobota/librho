@@ -27,6 +27,8 @@ class tVpxImageEncoder : public bNonCopyable
 
         void encodeImage(const tImage& image, bool flushWrites=true, bool forceKeyframe=false);
 
+        void signalEndOfStream();
+
     private:
 
         iWritable* m_writable;
