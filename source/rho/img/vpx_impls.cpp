@@ -421,7 +421,36 @@ void s_fillImage(vpx_image_t* vimage, tImage& image)
         throw eRuntimeError("Unexpected vimage format.");
 
     // Convert vimage from YV12 to YUYV.
-    // TODO
+    u8* destBuf = image.buf();
+    u8* yPlane = vimage->planes[VPX_PLANE_Y];
+    u8* uPlane = vimage->planes[VPX_PLANE_U];
+    u8* vPlane = vimage->planes[VPX_PLANE_V];
+    int yPlaneStride = vimage->stride[VPX_PLANE_Y];
+    int uPlaneStride = vimage->stride[VPX_PLANE_U];
+    int vPlaneStride = vimage->stride[VPX_PLANE_V];
+    u32 width = image.width();
+    u32 height = image.height();
+    for (u32 h = 0; h < height; h += 2)
+    {
+        for (u32 w = 0; w < width; w += 2)
+        {
+            *destBuf++ = yPlane[w];
+            *destBuf++ = uPlane[w>>1];
+            *destBuf++ = yPlane[w+1];
+            *destBuf++ = vPlane[w>>1];
+        }
+        yPlane += yPlaneStride;
+        for (u32 w = 0; w < width; w += 2)
+        {
+            *destBuf++ = yPlane[w];
+            *destBuf++ = uPlane[w>>1];
+            *destBuf++ = yPlane[w+1];
+            *destBuf++ = vPlane[w>>1];
+        }
+        yPlane += yPlaneStride;
+        uPlane += uPlaneStride;
+        vPlane += vPlaneStride;
+    }
 }
 
 void tVpxImageAsyncReadable::m_handleFrame()
