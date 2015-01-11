@@ -346,6 +346,23 @@ tVpxImageAsyncReadable::tVpxImageAsyncReadable(iAsyncReadableImageObserver* obse
     m_codec = codec;
 }
 
+tVpxImageAsyncReadable::~tVpxImageAsyncReadable()
+{
+    if (m_codec)
+    {
+        vpx_codec_ctx_t* codec = (vpx_codec_ctx_t*)(m_codec);
+        vpx_codec_destroy(codec);
+        delete codec;
+        codec = NULL;
+        m_codec = NULL;
+    }
+
+    delete [] m_compressedBuf;
+    m_compressedBuf = NULL;
+    m_compressedBufSize = 0;
+    m_compressedBufUsed = 0;
+}
+
 void tVpxImageAsyncReadable::takeInput(const u8* buffer, i32 length)
 {
     if (length <= 0)
