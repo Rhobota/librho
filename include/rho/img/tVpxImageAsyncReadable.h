@@ -40,6 +40,10 @@ class tVpxImageAsyncReadable : public iAsyncReadable, public bNonCopyable
 
         u8 m_buf[4];
         u32 m_bufPos;
+
+        u8* m_compressedBuf;
+        u32 m_compressedBufSize;
+        u32 m_compressedBufUsed;
 };
 
 

@@ -52,6 +52,18 @@ void s_flush(iWritable* writable)
 }
 
 
+static
+u32 s_toU32(u8 buf[4])
+{
+    u32 val = 0;
+    val |= (buf[0] << 24);
+    val |= (buf[1] << 16);
+    val |= (buf[2] <<  8);
+    val |= (buf[3] <<  0);
+    return val;
+}
+
+
 tVpxImageEncoder::tVpxImageEncoder(iWritable* writable,
                  u32 bitrate,
                  u32 fps,
@@ -284,7 +296,10 @@ tVpxImageAsyncReadable::tVpxImageAsyncReadable(iAsyncReadableImageObserver* obse
       m_codec(NULL),
       m_image(),
       m_stage(kStageFrameSize),
-      m_bufPos(0)
+      m_bufPos(0),
+      m_compressedBuf(NULL),
+      m_compressedBufSize(0),
+      m_compressedBufUsed(0)
 {
     // We use the vp9 decoder interface here because we use the vp9 encoder
     // in tVpxImageEncoder.
@@ -309,7 +324,60 @@ tVpxImageAsyncReadable::tVpxImageAsyncReadable(iAsyncReadableImageObserver* obse
 
 void tVpxImageAsyncReadable::takeInput(const u8* buffer, i32 length)
 {
-    // TODO
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
+    while (length > 0)
+    {
+        switch (m_stage)
+        {
+            case kStageFrameSize:
+            {
+                while (m_bufPos < 4 && length > 0)
+                {
+                    m_buf[m_bufPos++] = *buffer++;
+                    --length;
+                }
+                if (m_bufPos == 4)
+                {
+                    m_bufPos = 0;
+                    m_stage = kStageFrameData;
+                    m_compressedBufUsed = s_toU32(m_buf);
+                    if (m_compressedBufSize < m_compressedBufUsed)
+                    {
+                        delete [] m_compressedBuf;
+                        m_compressedBufSize = 2*m_compressedBufUsed;
+                        m_compressedBuf = new u8[m_compressedBufSize];
+                    }
+                }
+                break;
+            }
+
+            case kStageFrameData:
+            {
+                u32 bufUsed = m_compressedBufUsed;
+                u8* imagebuf = m_compressedBuf;
+                while (m_bufPos < bufUsed && length > 0)
+                {
+                    imagebuf[m_bufPos++] = *buffer++;
+                    --length;
+                }
+                if (m_bufPos == bufUsed)
+                {
+                    m_bufPos = 0;
+                    m_stage = kStageFrameSize;
+
+                    // TODO -- construct an image here.
+                }
+                break;
+            }
+
+            default:
+            {
+                throw eRuntimeError("Unknown state. How did this happen!?");
+            }
+        }
+    }
 }
 
 void tVpxImageAsyncReadable::endStream()
