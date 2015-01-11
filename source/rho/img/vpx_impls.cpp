@@ -219,6 +219,7 @@ void tVpxImageEncoder::encodeImage(const tImage& image, bool flushWrites, bool f
                 continue;
 
             didWrite = true;
+            rho::pack(m_writable, (i32)compressedBufSize);
             i32 w = m_writable->writeAll(compressedBuf, (i32)compressedBufSize);
             if ((w < 0) || (((size_t)w) != compressedBufSize))
                 throw eRuntimeError("Cannot write compressed data to underlying stream.");
@@ -266,6 +267,7 @@ void tVpxImageEncoder::signalEndOfStream()
                     continue;
 
                 didWrite = true;
+                rho::pack(m_writable, (i32)compressedBufSize);
                 i32 w = m_writable->writeAll(compressedBuf, (i32)compressedBufSize);
                 if ((w < 0) || (((size_t)w) != compressedBufSize))
                     throw eRuntimeError("Cannot write compressed data to underlying stream.");
