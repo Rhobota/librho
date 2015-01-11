@@ -26,6 +26,8 @@ class tVpxImageAsyncReadable : public iAsyncReadable, public bNonCopyable
     private:
 
         iAsyncReadableImageObserver* m_observer;
+
+        void* m_codec;  // this is secretly a vpx_codec_ctx_t*
 };
 
 

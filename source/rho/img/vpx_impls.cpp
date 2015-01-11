@@ -4,6 +4,9 @@
 #include <vpx/vpx_encoder.h>  // the base header for encoding with libvpx
 #include <vpx/vp8cx.h>        // the specific encoder stuff for the vp8 and vp9 codecs
 
+#include <vpx/vpx_decoder.h>  // the base header for decoding with libvpx
+#include <vpx/vp8dx.h>        // the specific decoder stuff for the vp8 and vp9 codecs
+
 #include <sstream>
 
 
@@ -275,9 +278,28 @@ void tVpxImageEncoder::signalEndOfStream()
 
 
 tVpxImageAsyncReadable::tVpxImageAsyncReadable(iAsyncReadableImageObserver* observer)
-    : m_observer(observer)
+    : m_observer(observer),
+      m_codec(NULL)
 {
-    // TODO
+    // We use the vp9 decoder interface here because we use the vp9 encoder
+    // in tVpxImageEncoder.
+    vpx_codec_iface_t* codec_interface = vpx_codec_vp9_dx();
+
+    // Get the name of our codec.
+    std::string codec_name = vpx_codec_iface_name(codec_interface);
+
+    // Init our decoder session.
+    vpx_codec_ctx_t* codec = new vpx_codec_ctx_t;
+    vpx_codec_err_t res = vpx_codec_dec_init(codec, codec_interface, NULL, 0);
+    if (res != VPX_CODEC_OK)
+    {
+        delete codec; codec = NULL;
+        std::ostringstream out;
+        out << "Failed to init the codec [" << codec_name << "]. "
+            << "Error: " << vpx_codec_err_to_string(res);
+        throw eRuntimeError(out.str());
+    }
+    m_codec = codec;
 }
 
 void tVpxImageAsyncReadable::takeInput(const u8* buffer, i32 length)
