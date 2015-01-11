@@ -17,30 +17,6 @@ namespace img
 
 
 static
-nImageFormat s_vpxFormatToRhoFormat(vpx_img_fmt_t fmt)
-{
-    switch (fmt)
-    {
-        case VPX_IMG_FMT_RGB565:
-            return kRGB16;
-        case VPX_IMG_FMT_RGB24:
-            return kRGB24;
-        case VPX_IMG_FMT_ARGB_LE:
-            return kBGRA;
-        case VPX_IMG_FMT_YUY2:
-            return kYUYV;
-
-        default:
-        {
-            std::ostringstream out;
-            out << "Cannot convert vpx_img_fmt_t to nImageFormat. Input: " << ((u32)fmt);
-            throw eRuntimeError(out.str());
-        }
-    }
-}
-
-
-static
 void s_flush(iWritable* writable)
 {
     iFlushable* flushable = dynamic_cast<iFlushable*>(writable);
@@ -437,6 +413,12 @@ void tVpxImageAsyncReadable::endStream()
     // TODO
 }
 
+static
+void s_fillImage(vpx_image_t* vimage, tImage& image)
+{
+    // TODO
+}
+
 void tVpxImageAsyncReadable::m_handleFrame()
 {
     // Decode the data we have.
@@ -456,34 +438,7 @@ void tVpxImageAsyncReadable::m_handleFrame()
     vpx_image_t* img = NULL;
     while ((img = vpx_codec_get_frame(codec, &iter)) != NULL)
     {
-        nImageFormat format = s_vpxFormatToRhoFormat(img->fmt);
-        const u8* imgBuf = img->planes[VPX_PLANE_PACKED];
-        const int stride = img->stride[VPX_PLANE_PACKED];
-        u32 width = img->w;
-        u32 height = img->h;
-
-        u32 bpp = getBitsPP(format);
-        if ((width * bpp) % 8)
-            throw eRuntimeError("Cannot calculate row size.");
-        u32 row = (width * bpp) / 8;
-
-        m_image.setBufUsed(row * height);
-        if (m_image.bufUsed() > m_image.bufSize())
-            m_image.setBufSize(m_image.bufUsed());
-
-        m_image.setWidth(width);
-        m_image.setHeight(height);
-
-        m_image.setFormat(format);
-
-        u8* destBuf = m_image.buf();
-        for (u32 h = 0; h < height; h++)
-        {
-            memcpy(destBuf, imgBuf, row);
-            destBuf += row;
-            imgBuf += stride;
-        }
-
+        s_fillImage(img, m_image);
         try {
             m_observer->gotImage(m_image);
         } catch (...) { }
