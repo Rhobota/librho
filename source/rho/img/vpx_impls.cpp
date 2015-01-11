@@ -277,11 +277,52 @@ void tVpxImageEncoder::m_convertImage(const tImage& image)
     if (image.format() != img::kYUYV)
         throw eRuntimeError("All images passed to encodeImage() must be in YUYV format.");
 
+    // Converting to YV12 requires that the image have even dimensions.
+    if ((m_width % 2) || (m_height % 2))
+        throw eRuntimeError("The image must have even dimensions!");
+
     // Grab the reference to our vimage.
     vpx_image_t* vimage = (vpx_image_t*)(m_vimage);
 
-    // Convert the image.
-    // TODO
+    // Convert the image. The vimage is in YV12 format, so that's what we're headed for.
+    const u8* srcBuf = image.buf();
+    u8* yPlane = vimage->planes[VPX_PLANE_Y];
+    u8* uPlane = vimage->planes[VPX_PLANE_U];
+    u8* vPlane = vimage->planes[VPX_PLANE_V];
+    int yPlaneStride = vimage->stride[VPX_PLANE_Y];
+    int uPlaneStride = vimage->stride[VPX_PLANE_U];
+    int vPlaneStride = vimage->stride[VPX_PLANE_V];
+    u32 width = m_width;
+    u32 height = m_height;
+    for (u32 h = 0; h < height; h += 2)
+    {
+        for (u32 w = 0; w < width; w += 2)
+        {
+            u8 y0 = *srcBuf++;
+            u8 u  = *srcBuf++;
+            u8 y1 = *srcBuf++;
+            u8 v  = *srcBuf++;
+            yPlane[w] = y0;
+            yPlane[w+1] = y1;
+            uPlane[w>>1] = (u8)(u>>1);
+            vPlane[w>>1] = (u8)(v>>1);
+        }
+        yPlane += yPlaneStride;
+        for (u32 w = 0; w < width; w += 2)
+        {
+            u8 y0 = *srcBuf++;
+            u8 u  = *srcBuf++;
+            u8 y1 = *srcBuf++;
+            u8 v  = *srcBuf++;
+            yPlane[w] = y0;
+            yPlane[w+1] = y1;
+            uPlane[w>>1] = (u8)(uPlane[w>>1] + (u>>1));
+            vPlane[w>>1] = (u8)(vPlane[w>>1] + (v>>1));
+        }
+        yPlane += yPlaneStride;
+        uPlane += uPlaneStride;
+        vPlane += vPlaneStride;
+    }
 }
 
 
