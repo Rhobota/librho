@@ -28,6 +28,18 @@ class tVpxImageAsyncReadable : public iAsyncReadable, public bNonCopyable
         iAsyncReadableImageObserver* m_observer;
 
         void* m_codec;  // this is secretly a vpx_codec_ctx_t*
+
+        tImage m_image;
+
+        enum nStage {
+            kStageFrameSize,
+            kStageFrameData
+        };
+
+        nStage m_stage;
+
+        u8 m_buf[4];
+        u32 m_bufPos;
 };
 
 
