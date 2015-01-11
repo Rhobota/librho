@@ -281,7 +281,10 @@ void tVpxImageEncoder::signalEndOfStream()
 
 tVpxImageAsyncReadable::tVpxImageAsyncReadable(iAsyncReadableImageObserver* observer)
     : m_observer(observer),
-      m_codec(NULL)
+      m_codec(NULL),
+      m_image(),
+      m_stage(kStageFrameSize),
+      m_bufPos(0)
 {
     // We use the vp9 decoder interface here because we use the vp9 encoder
     // in tVpxImageEncoder.
