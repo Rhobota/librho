@@ -43,6 +43,30 @@ vpx_img_fmt_t s_rhoFormatToVpxFormat(nImageFormat fmt)
 
 
 static
+nImageFormat s_vpxFormatToRhoFormat(vpx_img_fmt_t fmt)
+{
+    switch (fmt)
+    {
+        case VPX_IMG_FMT_RGB565:
+            return kRGB16;
+        case VPX_IMG_FMT_RGB24:
+            return kRGB24;
+        case VPX_IMG_FMT_ARGB_LE:
+            return kBGRA;
+        case VPX_IMG_FMT_YUY2:
+            return kYUYV;
+
+        default:
+        {
+            std::ostringstream out;
+            out << "Cannot convert vpx_img_fmt_t to nImageFormat. Input: " << ((u32)fmt);
+            throw eRuntimeError(out.str());
+        }
+    }
+}
+
+
+static
 void s_flush(iWritable* writable)
 {
     iFlushable* flushable = dynamic_cast<iFlushable*>(writable);
@@ -366,8 +390,7 @@ void tVpxImageAsyncReadable::takeInput(const u8* buffer, i32 length)
                 {
                     m_bufPos = 0;
                     m_stage = kStageFrameSize;
-
-                    // TODO -- construct an image here.
+                    m_handleFrame();
                 }
                 break;
             }
@@ -383,6 +406,56 @@ void tVpxImageAsyncReadable::takeInput(const u8* buffer, i32 length)
 void tVpxImageAsyncReadable::endStream()
 {
     // TODO
+}
+
+void tVpxImageAsyncReadable::m_handleFrame()
+{
+    // Decode the data we have.
+    vpx_codec_ctx_t* codec = (vpx_codec_ctx_t*)(m_codec);
+    vpx_codec_err_t res = vpx_codec_decode(codec, m_compressedBuf, m_compressedBufUsed, NULL, 0);
+    if (res != VPX_CODEC_OK)
+    {
+        std::ostringstream out;
+        out << "Call to vpx_codec_decode() failed. "
+            << "Error: " << vpx_codec_err_to_string(res);
+        throw eRuntimeError(out.str());
+    }
+
+    // Grab any frames that pop out of our data.
+    vpx_codec_iter_t iter = NULL;
+    vpx_image_t* img = NULL;
+    while ((img = vpx_codec_get_frame(codec, &iter)) != NULL)
+    {
+        nImageFormat format = s_vpxFormatToRhoFormat(img->fmt);
+        const u8* imgBuf = img->planes[VPX_PLANE_PACKED];
+        const int stride = img->stride[VPX_PLANE_PACKED];
+        u32 width = img->w;
+        u32 height = img->h;
+
+        u32 bpp = getBPP(format);
+        u32 row = width * bpp;
+
+        m_image.setBufUsed(row * height);
+        if (m_image.bufUsed() > m_image.bufSize())
+            m_image.setBufSize(m_image.bufUsed());
+
+        m_image.setWidth(width);
+        m_image.setHeight(height);
+
+        m_image.setFormat(format);
+
+        u8* destBuf = m_image.buf();
+        for (u32 h = 0; h < height; h++)
+        {
+            memcpy(destBuf, imgBuf, row);
+            destBuf += row;
+            imgBuf += stride;
+        }
+
+        try {
+            m_observer->gotImage(m_image);
+        } catch (...) { }
+    }
 }
 
 
