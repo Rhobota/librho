@@ -39,6 +39,16 @@ vpx_img_fmt_t s_rhoFormatToVpxFormat(nImageFormat fmt)
 }
 
 
+static
+void s_flush(iWritable* writable)
+{
+    iFlushable* flushable = dynamic_cast<iFlushable*>(writable);
+    if (flushable)
+        if (!flushable->flush())
+            throw eRuntimeError("Cannot flush the stream!");
+}
+
+
 tVpxImageEncoder::tVpxImageEncoder(iWritable* writable,
                  u32 bitrate,
                  u32 fps,
@@ -119,7 +129,7 @@ tVpxImageEncoder::~tVpxImageEncoder()
     }
 }
 
-void tVpxImageEncoder::encodeImage(const tImage& image)
+void tVpxImageEncoder::encodeImage(const tImage& image, bool flushWrites, bool forceKeyframe)
 {
     // Check the image size.
     if (image.width() != m_width)
@@ -173,7 +183,10 @@ void tVpxImageEncoder::encodeImage(const tImage& image)
     memcpy(imagebuf, image.buf(), image.bufUsed());
 
     // Encode this frame. (finally!)
-    vpx_codec_err_t res = vpx_codec_encode(codec, vimage, m_frameCount++, 1, 0, VPX_DL_REALTIME);
+    vpx_enc_frame_flags_t flags = 0;
+    if (forceKeyframe)
+        flags |= VPX_EFLAG_FORCE_KF;
+    vpx_codec_err_t res = vpx_codec_encode(codec, vimage, m_frameCount++, 1, flags, VPX_DL_REALTIME);
     if (res != VPX_CODEC_OK)
     {
         std::ostringstream out;
@@ -206,7 +219,7 @@ void tVpxImageEncoder::encodeImage(const tImage& image)
     }
 
     // Flush the stream.
-    if (didWrite)
+    if (didWrite && flushWrites)
     {
         s_flush(m_writable);
     }
