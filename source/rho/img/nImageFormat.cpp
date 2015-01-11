@@ -27,7 +27,7 @@ u32 getBPP(nImageFormat format)
         case kBGRA:
             return 4;
         case kYUYV:
-            throw eInvalidArgument("YUYV doesn't really have a simple bpp value...");
+            return 2;
         case kGrey:
             return 1;
         default:
@@ -49,7 +49,7 @@ u32 getBitsPP(nImageFormat format)
         case kBGRA:
             return 32;
         case kYUYV:
-            return 12;
+            return 16;
         case kGrey:
             return 8;
         default:
