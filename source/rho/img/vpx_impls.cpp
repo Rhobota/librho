@@ -13,6 +13,32 @@ namespace img
 {
 
 
+static
+vpx_img_fmt_t s_rhoFormatToVpxFormat(nImageFormat fmt)
+{
+    switch (fmt)
+    {
+        case kRGB16:
+            return VPX_IMG_FMT_RGB565;
+        case kRGB24:
+            return VPX_IMG_FMT_RGB24;
+        case kBGRA:
+            return VPX_IMG_FMT_ARGB_LE;
+        case kYUYV:
+            return VPX_IMG_FMT_YUY2;
+
+        case kGrey:
+        case kRGBA:
+        default:
+        {
+            std::ostringstream out;
+            out << "Cannot convert nImageFormat to vpx_img_fmt_t. Input: " << ((u32)fmt);
+            throw eRuntimeError(out.str());
+        }
+    }
+}
+
+
 tVpxImageEncoder::tVpxImageEncoder(iWritable* writable,
                  u32 bitrate,
                  u32 fps,
@@ -24,7 +50,8 @@ tVpxImageEncoder::tVpxImageEncoder(iWritable* writable,
       m_width(imageWidth),
       m_height(imageHeight),
       m_tempImage(),
-      m_codec(NULL)
+      m_codec(NULL),
+      m_vimage(NULL)
 {
     // This will hold the returns values of the calls below (it's an enum).
     // Use vpx_codec_err_to_string() to convert its value to a string.
@@ -73,15 +100,55 @@ tVpxImageEncoder::tVpxImageEncoder(iWritable* writable,
 
 tVpxImageEncoder::~tVpxImageEncoder()
 {
-    vpx_codec_ctx_t* codec = (vpx_codec_ctx_t*)(m_codec);
-    delete codec;
-    codec = NULL;
-    m_codec = NULL;
+    if (m_codec)
+    {
+        vpx_codec_ctx_t* codec = (vpx_codec_ctx_t*)(m_codec);
+        // TODO -- call whatever dealloc method we need to on "codec"
+        delete codec;
+        codec = NULL;
+        m_codec = NULL;
+    }
+
+    if (m_vimage)
+    {
+        vpx_image_t* vimage = (vpx_image_t*)(m_vimage);
+        vpx_img_free(vimage);
+        delete vimage;
+        vimage = NULL;
+        m_vimage = NULL;
+    }
 }
 
 void tVpxImageEncoder::encodeImage(const tImage& image)
 {
-    // TODO
+    // If this is the first call, we need to allocate m_vimage.
+    if (!m_vimage)
+    {
+        vpx_image_t* vimage = new vpx_image_t;
+        vpx_image_t* vimageDup = vpx_img_alloc(vimage,
+                                               s_rhoFormatToVpxFormat(image.format()),
+                                               image.width(),
+                                               image.height(),
+                                               1);
+        if (vimageDup != vimage)
+        {
+            delete vimage; vimage = NULL;
+            throw eRuntimeError("Cannot vpx_img_alloc()!");
+        }
+        m_vimage = vimage;
+    }
+
+    // Grab references to our stuff.
+    vpx_codec_ctx_t* codec = (vpx_codec_ctx_t*)(m_codec);
+    vpx_image_t* vimage = (vpx_image_t*)(m_vimage);
+
+    // Ensure the image we are given here has the format we expect.
+    if (s_rhoFormatToVpxFormat(image.format()) != vimage->fmt)
+    {
+        throw eRuntimeError("The given image has the wrong format. "
+                "The correct format is set on this first call to this method. "
+                "All subsequent calls must use the same format as the first one.");
+    }
 }
 
 

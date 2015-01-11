@@ -15,7 +15,7 @@ namespace img
 
 enum nImageFormat
 {
-    kRGB16          = 0,      // RGB,  16 bits == 1 pixel
+    kRGB16          = 0,      // RGB,  16 bits == 1 pixel    (565)
     kRGB24          = 1,      // RGB,  24 bits == 1 pixel
     kRGBA           = 2,      // RGBA, 32 bits == 1 pixel
     kBGRA           = 3,      // BGRA, 32 bits == 1 pixel
