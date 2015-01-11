@@ -20,6 +20,8 @@ class tVpxImageAsyncReadable : public iAsyncReadable, public bNonCopyable
 
         tVpxImageAsyncReadable(iAsyncReadableImageObserver* observer);
 
+        ~tVpxImageAsyncReadable();
+
         void takeInput(const u8* buffer, i32 length);
         void endStream();
 
