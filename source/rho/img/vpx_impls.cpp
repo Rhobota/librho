@@ -121,6 +121,12 @@ tVpxImageEncoder::~tVpxImageEncoder()
 
 void tVpxImageEncoder::encodeImage(const tImage& image)
 {
+    // Check the image size.
+    if (image.width() != m_width)
+        throw eRuntimeError("The given image has the wrong width.");
+    if (image.height() != m_height)
+        throw eRuntimeError("The given image has the wrong height.");
+
     // If this is the first call, we need to allocate m_vimage.
     if (!m_vimage)
     {
@@ -149,6 +155,22 @@ void tVpxImageEncoder::encodeImage(const tImage& image)
                 "The correct format is set on this first call to this method. "
                 "All subsequent calls must use the same format as the first one.");
     }
+
+    // Copy the given image into the vimage buffer.
+    u8* imagebuf = vimage->planes[VPX_PLANE_PACKED];
+    int stride = vimage->stride[VPX_PLANE_PACKED];
+    int imageBPP = (int)getBPP(image.format());
+    if (vimage->w != m_width)
+        throw eRuntimeError("The width of vimage is unexpected.");
+    if (vimage->h != m_height)
+        throw eRuntimeError("The height of vimage is unexpected.");
+    if (imageBPP * 8 != vimage->bps)
+        throw eRuntimeError("The bites-per-sample of vimage is unexpected.");
+    if (stride != (int)m_width * imageBPP)
+        throw eRuntimeError("The stride of vimage is unexpected.");
+    if (m_width * m_height * imageBPP != image.bufUsed())
+        throw eRuntimeError("The bufUsed() of image is unexpected.");
+    memcpy(imagebuf, image.buf(), image.bufUsed());
 }
 
 
