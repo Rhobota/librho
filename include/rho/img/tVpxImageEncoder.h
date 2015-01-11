@@ -25,9 +25,15 @@ class tVpxImageEncoder : public bNonCopyable
 
         ~tVpxImageEncoder();
 
-        void encodeImage(const tImage& image, bool flushWrites=true, bool forceKeyframe=false);
+        void encodeImage(const tImage& image,
+                         bool flushWrites=true,
+                         bool forceKeyframe=false);
 
         void signalEndOfStream();
+
+    private:
+
+        void m_convertImage(const tImage& image);
 
     private:
 

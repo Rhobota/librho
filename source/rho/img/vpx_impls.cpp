@@ -17,32 +17,6 @@ namespace img
 
 
 static
-vpx_img_fmt_t s_rhoFormatToVpxFormat(nImageFormat fmt)
-{
-    switch (fmt)
-    {
-        case kRGB16:
-            return VPX_IMG_FMT_RGB565;
-        case kRGB24:
-            return VPX_IMG_FMT_RGB24;
-        case kBGRA:
-            return VPX_IMG_FMT_ARGB_LE;
-        case kYUYV:
-            return VPX_IMG_FMT_YUY2;
-
-        case kGrey:
-        case kRGBA:
-        default:
-        {
-            std::ostringstream out;
-            out << "Cannot convert nImageFormat to vpx_img_fmt_t. Input: " << ((u32)fmt);
-            throw eRuntimeError(out.str());
-        }
-    }
-}
-
-
-static
 nImageFormat s_vpxFormatToRhoFormat(vpx_img_fmt_t fmt)
 {
     switch (fmt)
@@ -146,6 +120,22 @@ tVpxImageEncoder::tVpxImageEncoder(iWritable* writable,
         throw eRuntimeError(out.str());
     }
     m_codec = codec;
+
+    // Alloc the image buffer space.
+    vpx_image_t* vimage = new vpx_image_t;
+    vpx_image_t* vimageDup = vpx_img_alloc(vimage,
+                                           VPX_IMG_FMT_YV12,
+                                           m_width,
+                                           m_height,
+                                           1);
+    if (vimageDup != vimage)
+    {
+        delete vimage; vimage = NULL;
+        delete codec; codec = NULL;
+        m_codec = NULL;
+        throw eRuntimeError("Cannot vpx_img_alloc()!");
+    }
+    m_vimage = vimage;
 }
 
 tVpxImageEncoder::~tVpxImageEncoder()
@@ -175,60 +165,15 @@ tVpxImageEncoder::~tVpxImageEncoder()
 
 void tVpxImageEncoder::encodeImage(const tImage& image, bool flushWrites, bool forceKeyframe)
 {
-    // Check the image size.
-    if (image.width() != m_width)
-        throw eRuntimeError("The given image has the wrong width.");
-    if (image.height() != m_height)
-        throw eRuntimeError("The given image has the wrong height.");
-
-    // If this is the first call, we need to allocate m_vimage.
-    if (!m_vimage)
-    {
-        vpx_image_t* vimage = new vpx_image_t;
-        vpx_image_t* vimageDup = vpx_img_alloc(vimage,
-                                               s_rhoFormatToVpxFormat(image.format()),
-                                               image.width(),
-                                               image.height(),
-                                               1);
-        if (vimageDup != vimage)
-        {
-            delete vimage; vimage = NULL;
-            throw eRuntimeError("Cannot vpx_img_alloc()!");
-        }
-        m_vimage = vimage;
-    }
+    // Copy the given image into the vimage buffer
+    // (a conversion will be necessary for this).
+    m_convertImage(image);
 
     // Grab references to our stuff.
     vpx_codec_ctx_t* codec = (vpx_codec_ctx_t*)(m_codec);
     vpx_image_t* vimage = (vpx_image_t*)(m_vimage);
 
-    // Ensure the image we are given here has the format we expect.
-    if (s_rhoFormatToVpxFormat(image.format()) != vimage->fmt)
-    {
-        throw eRuntimeError("The given image has the wrong format. "
-                "The correct format is set on this first call to this method. "
-                "All subsequent calls must use the same format as the first one.");
-    }
-
-    // Copy the given image into the vimage buffer.
-    u8* imagebuf = vimage->planes[VPX_PLANE_PACKED];
-    int stride = vimage->stride[VPX_PLANE_PACKED];
-    int imageBPP = (int)getBitsPP(image.format());
-    if (vimage->w != m_width)
-        throw eRuntimeError("The width of vimage is unexpected.");
-    if (vimage->h != m_height)
-        throw eRuntimeError("The height of vimage is unexpected.");
-    if (imageBPP != vimage->bps)
-        throw eRuntimeError("The bites-per-sample of vimage is unexpected.");
-    if (((int)m_width * imageBPP) % 8)
-        throw eRuntimeError("Row size is not calculable.");
-    if (stride != ((int)m_width * imageBPP) / 8)
-        throw eRuntimeError("The stride of vimage is unexpected.");
-    if ((m_width * m_height * imageBPP) / 8 != image.bufUsed())
-        throw eRuntimeError("The bufUsed() of image is unexpected.");
-    memcpy(imagebuf, image.buf(), image.bufUsed());
-
-    // Encode this frame. (finally!)
+    // Encode this frame.
     vpx_enc_frame_flags_t flags = 0;
     if (forceKeyframe)
         flags |= VPX_EFLAG_FORCE_KF;
@@ -317,6 +262,26 @@ void tVpxImageEncoder::signalEndOfStream()
     }
 
     s_flush(m_writable);
+}
+
+void tVpxImageEncoder::m_convertImage(const tImage& image)
+{
+    // Check the image size.
+    if (image.width() != m_width)
+        throw eRuntimeError("The given image has the wrong width.");
+    if (image.height() != m_height)
+        throw eRuntimeError("The given image has the wrong height.");
+
+    // We will expect all images to be in YUYV format.
+    // (We might allow more input formats in the future...)
+    if (image.format() != img::kYUYV)
+        throw eRuntimeError("All images passed to encodeImage() must be in YUYV format.");
+
+    // Grab the reference to our vimage.
+    vpx_image_t* vimage = (vpx_image_t*)(m_vimage);
+
+    // Convert the image.
+    // TODO
 }
 
 
