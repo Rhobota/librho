@@ -23,6 +23,8 @@ class tVpxImageEncoder : public bNonCopyable
                          u32 imageWidth,        // <-- what to expect image widths to be
                          u32 imageHeight);      // <-- what to expect image heights to be
 
+        ~tVpxImageEncoder();
+
         void encodeImage(const tImage& image);
 
     private:
