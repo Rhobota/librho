@@ -110,14 +110,9 @@ tVpxImageEncoder::tVpxImageEncoder(iWritable* writable,
 
 tVpxImageEncoder::~tVpxImageEncoder()
 {
-    if (m_codec)
-    {
-        vpx_codec_ctx_t* codec = (vpx_codec_ctx_t*)(m_codec);
-        // TODO -- call whatever dealloc method we need to on "codec"
-        delete codec;
-        codec = NULL;
-        m_codec = NULL;
-    }
+    try {
+        s_flush(m_writable);
+    } catch (...) { }
 
     if (m_vimage)
     {
@@ -126,6 +121,15 @@ tVpxImageEncoder::~tVpxImageEncoder()
         delete vimage;
         vimage = NULL;
         m_vimage = NULL;
+    }
+
+    if (m_codec)
+    {
+        vpx_codec_ctx_t* codec = (vpx_codec_ctx_t*)(m_codec);
+        vpx_codec_destroy(codec);
+        delete codec;
+        codec = NULL;
+        m_codec = NULL;
     }
 }
 
