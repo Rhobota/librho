@@ -250,7 +250,7 @@ void tVpxImageEncoder::m_convertImage(const tImage& image)
 
     // We will expect all images to be in YUYV format.
     // (We might allow more input formats in the future...)
-    if (image.format() != img::kYUYV)
+    if (image.format() != kYUYV)
         throw eRuntimeError("All images passed to encodeImage() must be in YUYV format.");
 
     // Converting to YV12 requires that the image have even dimensions.
@@ -416,6 +416,11 @@ void tVpxImageAsyncReadable::endStream()
 static
 void s_fillImage(vpx_image_t* vimage, tImage& image)
 {
+    // Ensure vimage is in the format we expect.
+    if (vimage->fmt != VPX_IMG_FMT_YV12)
+        throw eRuntimeError("Unexpected vimage format.");
+
+    // Convert vimage from YV12 to YUYV.
     // TODO
 }
 
@@ -435,10 +440,19 @@ void tVpxImageAsyncReadable::m_handleFrame()
 
     // Grab any frames that pop out of our data.
     vpx_codec_iter_t iter = NULL;
-    vpx_image_t* img = NULL;
-    while ((img = vpx_codec_get_frame(codec, &iter)) != NULL)
+    vpx_image_t* vimage = NULL;
+    while ((vimage = vpx_codec_get_frame(codec, &iter)) != NULL)
     {
-        s_fillImage(img, m_image);
+        // Setup the image.
+        m_image.setWidth(vimage->w);
+        m_image.setHeight(vimage->h);
+        m_image.setFormat(kYUYV);
+        m_image.setBufUsed(m_image.width() * m_image.height() * 2);
+        if (m_image.bufSize() < m_image.bufUsed())
+            m_image.setBufSize(m_image.bufUsed());
+        s_fillImage(vimage, m_image);
+
+        // Notify the observer of this new frame.
         try {
             m_observer->gotImage(m_image);
         } catch (...) { }
