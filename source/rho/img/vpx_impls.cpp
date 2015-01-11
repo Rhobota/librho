@@ -49,7 +49,7 @@ tVpxImageEncoder::tVpxImageEncoder(iWritable* writable,
       m_fps(fps),
       m_width(imageWidth),
       m_height(imageHeight),
-      m_tempImage(),
+      m_frameCount(0),
       m_codec(NULL),
       m_vimage(NULL)
 {
@@ -171,6 +171,45 @@ void tVpxImageEncoder::encodeImage(const tImage& image)
     if (m_width * m_height * imageBPP != image.bufUsed())
         throw eRuntimeError("The bufUsed() of image is unexpected.");
     memcpy(imagebuf, image.buf(), image.bufUsed());
+
+    // Encode this frame. (finally!)
+    vpx_codec_err_t res = vpx_codec_encode(codec, vimage, m_frameCount++, 1, 0, VPX_DL_REALTIME);
+    if (res != VPX_CODEC_OK)
+    {
+        std::ostringstream out;
+        out << "Call to vpx_codec_encode() failed. "
+            << "Error: " << vpx_codec_err_to_string(res);
+        throw eRuntimeError(out.str());
+    }
+
+    // Grab the compressed bytes and write them out.
+    vpx_codec_iter_t iter = NULL;
+    const vpx_codec_cx_pkt_t* pkt = NULL;
+    bool didWrite = false;
+    while ((pkt = vpx_codec_get_cx_data(codec, &iter)) != NULL)
+    {
+        if (pkt->kind == VPX_CODEC_CX_FRAME_PKT)
+        {
+            //const int keyframe = (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
+            const u8* compressedBuf = (const u8*)(pkt->data.frame.buf);
+            size_t compressedBufSize = pkt->data.frame.sz;
+            //i64 thisFrameNumber = pkt->data.frame.pts;
+
+            if (compressedBufSize <= 0)
+                continue;
+
+            didWrite = true;
+            i32 w = m_writable->writeAll(compressedBuf, (i32)compressedBufSize);
+            if ((w < 0) || (((size_t)w) != compressedBufSize))
+                throw eRuntimeError("Cannot write compressed data to underlying stream.");
+        }
+    }
+
+    // Flush the stream.
+    if (didWrite)
+    {
+        s_flush(m_writable);
+    }
 }
 
 
