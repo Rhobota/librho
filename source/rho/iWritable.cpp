@@ -29,7 +29,9 @@ tBufferedWritable::tBufferedWritable(
 
 tBufferedWritable::~tBufferedWritable()
 {
-    flush();
+    try {
+        flush();
+    } catch (...) { }
     m_stream = NULL;
     delete [] m_buf;
     m_buf = NULL;
