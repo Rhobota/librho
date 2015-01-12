@@ -414,12 +414,8 @@ void tVpxImageAsyncReadable::endStream()
 }
 
 static
-void s_fillImage(vpx_image_t* vimage, tImage& image)
+void s_fillImage_fromYV12(vpx_image_t* vimage, tImage& image)
 {
-    // Ensure vimage is in the format we expect.
-    if (vimage->fmt != VPX_IMG_FMT_YV12)
-        throw eRuntimeError("Unexpected vimage format.");
-
     // Convert vimage from YV12 to YUYV.
     u8* destBuf = image.buf();
     u8* yPlane = vimage->planes[VPX_PLANE_Y];
@@ -450,6 +446,31 @@ void s_fillImage(vpx_image_t* vimage, tImage& image)
         yPlane += yPlaneStride;
         uPlane += uPlaneStride;
         vPlane += vPlaneStride;
+    }
+}
+
+static
+void s_fillImage_fromI420(vpx_image_t* vimage, tImage& image)
+{
+    // TODO
+}
+
+static
+void s_fillImage(vpx_image_t* vimage, tImage& image)
+{
+    // Ensure vimage is in the format we expect.
+    switch (vimage->fmt)
+    {
+        case VPX_IMG_FMT_YV12:
+            s_fillImage_fromYV12(vimage, image);
+            break;
+
+        case VPX_IMG_FMT_I420:
+            s_fillImage_fromI420(vimage, image);
+            break;
+
+        default:
+            throw eRuntimeError("Unexpected vimage format.");
     }
 }
 
