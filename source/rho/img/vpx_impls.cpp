@@ -81,7 +81,9 @@ tVpxImageEncoder::tVpxImageEncoder(iWritable* writable,
     codec_config.g_timebase.num = 1;
     codec_config.g_timebase.den = m_fps;
     codec_config.rc_target_bitrate = m_bitrate;
+    codec_config.rc_end_usage = VPX_CBR;    // VPX_VBR or VPX_CBR
     codec_config.g_error_resilient = 0;
+    codec_config.g_lag_in_frames = 0;    // <-- without this the frame may not pop out on each call to vpx_codec_encode().
 
     // Init the codec.
     vpx_codec_ctx_t* codec = new vpx_codec_ctx_t;
@@ -153,7 +155,8 @@ void tVpxImageEncoder::encodeImage(const tImage& image, bool flushWrites, bool f
     vpx_enc_frame_flags_t flags = 0;
     if (forceKeyframe)
         flags |= VPX_EFLAG_FORCE_KF;
-    vpx_codec_err_t res = vpx_codec_encode(codec, vimage, m_frameCount++, 1, flags, VPX_DL_REALTIME);
+    vpx_codec_err_t res = vpx_codec_encode(codec, vimage, m_frameCount++,
+                                           1, flags, VPX_DL_REALTIME);
     if (res != VPX_CODEC_OK)
     {
         std::ostringstream out;
@@ -184,6 +187,7 @@ void tVpxImageEncoder::encodeImage(const tImage& image, bool flushWrites, bool f
             i32 w = m_writable->writeAll(compressedBuf, (i32)compressedBufSize);
             if ((w < 0) || (((size_t)w) != compressedBufSize))
                 throw eRuntimeError("Cannot write compressed data to underlying stream.");
+            std::cout << "Wrote " << w << " bytes." << std::endl;
         }
     }
 
@@ -355,6 +359,8 @@ void tVpxImageAsyncReadable::takeInput(const u8* buffer, i32 length)
 {
     if (length <= 0)
         throw eInvalidArgument("Stream read/write length must be >0");
+
+    std::cout << "Received " << length << " bytes." << std::endl;
 
     while (length > 0)
     {
