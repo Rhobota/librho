@@ -124,10 +124,6 @@ tVpxImageEncoder::~tVpxImageEncoder()
         signalEndOfStream();
     } catch (...) { }
 
-    try {
-        s_flush(m_writable);
-    } catch (...) { }
-
     if (m_vimage)
     {
         vpx_image_t* vimage = (vpx_image_t*)(m_vimage);
