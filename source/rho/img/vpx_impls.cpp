@@ -50,7 +50,8 @@ tVpxImageEncoder::tVpxImageEncoder(iWritable* writable,
       m_height(imageHeight),
       m_frameCount(0),
       m_codec(NULL),
-      m_vimage(NULL)
+      m_vimage(NULL),
+      m_didSignalEnd(false)
 {
     // This will hold the returns values of the calls below (it's an enum).
     // Use vpx_codec_err_to_string() to convert its value to a string.
@@ -119,6 +120,10 @@ tVpxImageEncoder::tVpxImageEncoder(iWritable* writable,
 
 tVpxImageEncoder::~tVpxImageEncoder()
 {
+    try {
+        signalEndOfStream();
+    } catch (...) { }
+
     try {
         s_flush(m_writable);
     } catch (...) { }
@@ -200,6 +205,10 @@ void tVpxImageEncoder::encodeImage(const tImage& image, bool flushWrites, bool f
 
 void tVpxImageEncoder::signalEndOfStream()
 {
+    if (m_didSignalEnd)
+        return;
+    m_didSignalEnd = true;
+
     vpx_codec_ctx_t* codec = (vpx_codec_ctx_t*)(m_codec);
 
     bool didWrite = true;
@@ -314,7 +323,8 @@ tVpxImageAsyncReadable::tVpxImageAsyncReadable(iAsyncReadableImageObserver* obse
       m_bufPos(0),
       m_compressedBuf(NULL),
       m_compressedBufSize(0),
-      m_compressedBufUsed(0)
+      m_compressedBufUsed(0),
+      m_didEndStream(false)
 {
     // We use the vp8 decoder interface here because we use the vp8 encoder
     // in tVpxImageEncoder.
@@ -340,6 +350,10 @@ tVpxImageAsyncReadable::tVpxImageAsyncReadable(iAsyncReadableImageObserver* obse
 
 tVpxImageAsyncReadable::~tVpxImageAsyncReadable()
 {
+    try {
+        endStream();
+    } catch (...) { }
+
     if (m_codec)
     {
         vpx_codec_ctx_t* codec = (vpx_codec_ctx_t*)(m_codec);
@@ -478,6 +492,11 @@ void s_fillImage(vpx_image_t* vimage, tImage& image)
 
 void tVpxImageAsyncReadable::endStream()
 {
+    // We only want to execute the method once.
+    if (m_didEndStream)
+        return;
+    m_didEndStream = true;
+
     // End the decoding session.
     vpx_codec_ctx_t* codec = (vpx_codec_ctx_t*)(m_codec);
     vpx_codec_err_t res = vpx_codec_decode(codec, NULL, 0, NULL, 0);
