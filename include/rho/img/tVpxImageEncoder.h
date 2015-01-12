@@ -46,6 +46,8 @@ class tVpxImageEncoder : public bNonCopyable
 
         void* m_codec;  // this is secretly a vpx_codec_ctx_t*
         void* m_vimage; // this is secretly a vpx_image_t*
+
+        bool m_didSignalEnd;
 };
 
 
