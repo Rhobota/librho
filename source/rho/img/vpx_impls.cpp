@@ -412,11 +412,6 @@ void tVpxImageAsyncReadable::takeInput(const u8* buffer, i32 length)
     }
 }
 
-void tVpxImageAsyncReadable::endStream()
-{
-    // TODO
-}
-
 static
 void s_fillImage_fromYV12(vpx_image_t* vimage, tImage& image)
 {
@@ -481,6 +476,52 @@ void s_fillImage(vpx_image_t* vimage, tImage& image)
     }
 }
 
+void tVpxImageAsyncReadable::endStream()
+{
+    // End the decoding session.
+    vpx_codec_ctx_t* codec = (vpx_codec_ctx_t*)(m_codec);
+    vpx_codec_err_t res = vpx_codec_decode(codec, NULL, 0, NULL, 0);
+    if (res != VPX_CODEC_OK)
+    {
+        std::ostringstream out;
+        out << "Call to vpx_codec_decode() failed. "
+            << "Error: " << vpx_codec_err_to_string(res) << ". "
+            << "Error: " << vpx_codec_error_detail(codec);
+        throw eRuntimeError(out.str());
+    }
+
+    // Grab any frames that pop out as a result of ending our session.
+    vpx_codec_iter_t iter = NULL;
+    vpx_image_t* vimage = NULL;
+    while ((vimage = vpx_codec_get_frame(codec, &iter)) != NULL)
+    {
+        // Setup the image.
+        m_image.setWidth(vimage->d_w);
+        m_image.setHeight(vimage->d_h);
+        m_image.setFormat(kYUYV);
+        m_image.setBufUsed(m_image.width() * m_image.height() * 2);
+        if (m_image.bufSize() < m_image.bufUsed())
+            m_image.setBufSize(m_image.bufUsed());
+        s_fillImage(vimage, m_image);
+
+        // Notify the observer of this new frame.
+        try {
+            m_observer->gotImage(m_image);
+        }
+        catch (std::exception& e) {
+            std::cerr << "Exception thrown from the observer's gotImage(). Error: " << e.what() << std::endl;
+        }
+    }
+
+    // Notify the observer that there will be no more frames now.
+    try {
+        m_observer->endStream();
+    }
+    catch (std::exception& e) {
+        std::cerr << "Exception thrown from the observer's endStream(). Error: " << e.what() << std::endl;
+    }
+}
+
 void tVpxImageAsyncReadable::m_handleFrame()
 {
     // Decode the data we have.
@@ -514,7 +555,7 @@ void tVpxImageAsyncReadable::m_handleFrame()
             m_observer->gotImage(m_image);
         }
         catch (std::exception& e) {
-            std::cerr << "Exception thrown from gotImage(). Error: " << e.what() << std::endl;
+            std::cerr << "Exception thrown from the observer's gotImage(). Error: " << e.what() << std::endl;
         }
     }
 }
