@@ -57,9 +57,10 @@ tVpxImageEncoder::tVpxImageEncoder(iWritable* writable,
     vpx_codec_err_t res = VPX_CODEC_OK;
 
     // Declare which codec we want to use for encoding.
-    // We will use vp9 because it is the current best
-    // that libvpx offers.
-    vpx_codec_iface_t* codec_interface = vpx_codec_vp9_cx();
+    // The newest codec libvpx offers is vp9, but vp9 seems to not
+    // do well for realtime applications, which is what we want here.
+    // So we'll use the vp8 encoder.
+    vpx_codec_iface_t* codec_interface = vpx_codec_vp8_cx();
 
     // Grab the name of the codec we're using.
     std::string codec_name = vpx_codec_iface_name(codec_interface);
@@ -187,7 +188,6 @@ void tVpxImageEncoder::encodeImage(const tImage& image, bool flushWrites, bool f
             i32 w = m_writable->writeAll(compressedBuf, (i32)compressedBufSize);
             if ((w < 0) || (((size_t)w) != compressedBufSize))
                 throw eRuntimeError("Cannot write compressed data to underlying stream.");
-            std::cout << "Wrote " << w << " bytes." << std::endl;
         }
     }
 
@@ -316,9 +316,9 @@ tVpxImageAsyncReadable::tVpxImageAsyncReadable(iAsyncReadableImageObserver* obse
       m_compressedBufSize(0),
       m_compressedBufUsed(0)
 {
-    // We use the vp9 decoder interface here because we use the vp9 encoder
+    // We use the vp8 decoder interface here because we use the vp8 encoder
     // in tVpxImageEncoder.
-    vpx_codec_iface_t* codec_interface = vpx_codec_vp9_dx();
+    vpx_codec_iface_t* codec_interface = vpx_codec_vp8_dx();
 
     // Get the name of our codec.
     std::string codec_name = vpx_codec_iface_name(codec_interface);
@@ -359,8 +359,6 @@ void tVpxImageAsyncReadable::takeInput(const u8* buffer, i32 length)
 {
     if (length <= 0)
         throw eInvalidArgument("Stream read/write length must be >0");
-
-    std::cout << "Received " << length << " bytes." << std::endl;
 
     while (length > 0)
     {
@@ -514,7 +512,10 @@ void tVpxImageAsyncReadable::m_handleFrame()
         // Notify the observer of this new frame.
         try {
             m_observer->gotImage(m_image);
-        } catch (...) { }
+        }
+        catch (std::exception& e) {
+            std::cerr << "Exception thrown from gotImage(). Error: " << e.what() << std::endl;
+        }
     }
 }
 
