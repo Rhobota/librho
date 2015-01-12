@@ -452,7 +452,10 @@ void s_fillImage_fromYV12(vpx_image_t* vimage, tImage& image)
 static
 void s_fillImage_fromI420(vpx_image_t* vimage, tImage& image)
 {
-    // TODO
+    // I420 is the same as YV12, except that the U and V planes are
+    // switched in the byte stream. But the vpx_image_t interface
+    // hides that detail away, so we can treat these as YV12.
+    s_fillImage_fromYV12(vimage, image);
 }
 
 static
@@ -494,8 +497,8 @@ void tVpxImageAsyncReadable::m_handleFrame()
     while ((vimage = vpx_codec_get_frame(codec, &iter)) != NULL)
     {
         // Setup the image.
-        m_image.setWidth(vimage->w);
-        m_image.setHeight(vimage->h);
+        m_image.setWidth(vimage->d_w);
+        m_image.setHeight(vimage->d_h);
         m_image.setFormat(kYUYV);
         m_image.setBufUsed(m_image.width() * m_image.height() * 2);
         if (m_image.bufSize() < m_image.bufUsed())
