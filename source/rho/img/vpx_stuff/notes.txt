@@ -1,0 +1,39 @@
+
+-----------------------
+---- libvpx.tar.gz ----
+-----------------------
+
+This code was obtained in Jan 2015 from the git repo at:
+
+     https://chromium.googlesource.com/webm/libvpx
+
+The official website for libvpx (and webm) is at:
+
+     http://www.webmproject.org/
+
+I have saved a snapshot of the git repo as I found it in
+Jan 2015 at the following location on my computer (it might
+be useful to look at the git changelog sometime):
+
+     ~/cab/2015/libvpx_snapshot
+
+This library is generously distributed by Google for free!
+They have patent(s) on it, but the license is also free!
+See the relevant files inside libvpx.tar.gz for details.
+Thanks Google!
+
+
+----------------------------
+---- libvpx-test.tar.gz ----
+----------------------------
+
+This is a hacked-up version of libvpx.tar.gz that I made just
+to play around with.
+
+
+---------------------------
+---- yasm-1.3.0.tar.gz ----
+---------------------------
+
+The libvpx library depends on this library (yasm).
+
