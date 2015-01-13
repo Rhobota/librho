@@ -249,18 +249,26 @@ void tVpxImageEncoder::signalEndOfStream()
     s_flush(m_writable);
 }
 
-void tVpxImageEncoder::m_convertImage(const tImage& image)
+void tVpxImageEncoder::m_convertImage(const tImage& sourceImage)
 {
-    // Check the image size.
-    if (image.width() != m_width)
-        throw eRuntimeError("The given image has the wrong width.");
-    if (image.height() != m_height)
-        throw eRuntimeError("The given image has the wrong height.");
+    // Get the source image into YUYV format. We only know how to convert to
+    // YV12 from YUYV, so that's why we need YUYV right here.
+    const tImage* image = NULL;
+    if (sourceImage.format() == kYUYV)
+    {
+        image = &sourceImage;
+    }
+    else
+    {
+        sourceImage.convertToFormat(kYUYV, &m_tempImage);
+        image = &m_tempImage;
+    }
 
-    // We will expect all images to be in YUYV format.
-    // (We might allow more input formats in the future...)
-    if (image.format() != kYUYV)
-        throw eRuntimeError("All images passed to encodeImage() must be in YUYV format.");
+    // Check the image size.
+    if (image->width() != m_width)
+        throw eRuntimeError("The given image has the wrong width.");
+    if (image->height() != m_height)
+        throw eRuntimeError("The given image has the wrong height.");
 
     // Converting to YV12 requires that the image have even dimensions.
     if ((m_width % 2) || (m_height % 2))
@@ -270,7 +278,7 @@ void tVpxImageEncoder::m_convertImage(const tImage& image)
     vpx_image_t* vimage = (vpx_image_t*)(m_vimage);
 
     // Convert the image. The vimage is in YV12 format, so that's what we're headed for.
-    const u8* srcBuf = image.buf();
+    const u8* srcBuf = image->buf();
     u8* yPlane = vimage->planes[VPX_PLANE_Y];
     u8* uPlane = vimage->planes[VPX_PLANE_U];
     u8* vPlane = vimage->planes[VPX_PLANE_V];

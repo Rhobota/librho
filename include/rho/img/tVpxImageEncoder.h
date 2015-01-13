@@ -33,7 +33,7 @@ class tVpxImageEncoder : public bNonCopyable
 
     private:
 
-        void m_convertImage(const tImage& image);
+        void m_convertImage(const tImage& sourceImage);
 
     private:
 
@@ -43,6 +43,8 @@ class tVpxImageEncoder : public bNonCopyable
         u32 m_width;
         u32 m_height;
         i64 m_frameCount;
+
+        tImage m_tempImage;
 
         void* m_codec;  // this is secretly a vpx_codec_ctx_t*
         void* m_vimage; // this is secretly a vpx_image_t*
