@@ -145,7 +145,7 @@ i32 rgb24_to_yuyv(u8* rgb, i32 rgbSize,
     if (rgbSize % 3)
     {
         throw eColorspaceConversionError(
-                "The yuyv image buffer has an incorrect size");
+                "The rgb image buffer has an incorrect size");
     }
 
     i32 numPixels = rgbSize / 3;
@@ -159,8 +159,8 @@ i32 rgb24_to_yuyv(u8* rgb, i32 rgbSize,
     if (yuyvSize < numPixels * 2)
     {
         throw eBufferOverflow(
-                "The supplied rgb buffer cannot hold the image described by "
-                "the supplied yuyv buffer.");
+                "The supplied yuyv buffer cannot hold the image described by "
+                "the supplied rgb buffer.");
     }
 
     for (i32 i = 0; i < rgbSize; i += 6)
@@ -248,11 +248,50 @@ i32 rgba_to_rgb24(u8* source, i32 sourceSize,
 
 
 static
-i32 rgba_to_yuyv(u8* source, i32 sourceSize,
-                   u8* dest, i32 destSize)
+i32 rgba_to_yuyv(u8* rgba, i32 rgbaSize,
+                   u8* yuyv, i32 yuyvSize)
 {
-    throw eNotImplemented("This function will be lazy-implemented.");
-    return 0;
+    if (rgbaSize % 4)
+    {
+        throw eColorspaceConversionError(
+                "The rgba image buffer has an incorrect size");
+    }
+
+    i32 numPixels = rgbaSize / 4;
+
+    if (numPixels % 2)
+    {
+        throw eColorspaceConversionError(
+                "A yuyv image must have a multiple of two number of pixels.");
+    }
+
+    if (yuyvSize < numPixels * 2)
+    {
+        throw eBufferOverflow(
+                "The supplied yuyv buffer cannot hold the image described by "
+                "the supplied rgba buffer.");
+    }
+
+    for (i32 i = 0; i < rgbaSize; i += 8)
+    {
+        u8 r0 = rgba[i+0];
+        u8 g0 = rgba[i+1];
+        u8 b0 = rgba[i+2];
+        //u8 a0 = rgba[i+3];
+        u8 r1 = rgba[i+4];
+        u8 g1 = rgba[i+5];
+        u8 b1 = rgba[i+6];
+        //u8 a1 = rgba[i+7];
+
+        *yuyv++ = clip(0.299 * (r0 - 128) + 0.587 * (g0 - 128) + 0.114 * (b0 - 128) + 128);
+        *yuyv++ = clip(((- 0.147 * (r0 - 128) - 0.289 * (g0 - 128) + 0.436 * (b0 - 128) + 128) +
+                       (- 0.147 * (r1 - 128) - 0.289 * (g1 - 128) + 0.436 * (b1 - 128) + 128))/2);
+        *yuyv++ = clip(0.299 * (r1 - 128) + 0.587 * (g1 - 128) + 0.114 * (b1 - 128) + 128);
+        *yuyv++ = clip(((0.615 * (r0 - 128) - 0.515 * (g0 - 128) - 0.100 * (b0 - 128) + 128) +
+                       (0.615 * (r1 - 128) - 0.515 * (g1 - 128) - 0.100 * (b1 - 128) + 128))/2);
+    }
+
+    return numPixels * 2;
 }
 
 
