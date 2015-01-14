@@ -38,3 +38,17 @@ to play around with.
 The libvpx library depends on this library (yasm).
 
 
+------------------------------
+---- Compiling on Windows ----
+------------------------------
+
+I was able to compile both yasm and libvpx on Windows using MSYS (a bash
+emulator sort-of thing that comes with MinGW). I didn't have such success
+using Cygwin, although it probably could work. Using MSYS, I could do the
+normal `./configure && make && make install` on both yasm and libvpx. The
+install part put the headers and the .a files into MYSYS's virtual file
+system thing. I was able to copy them out of there and into whatever
+other include and lib directories I needed them to be in -- eg. the Cygwin
+include and lib dirs for Cygwin's MinGW port, which is what I use to
+compile everything else on Windows.
+
