@@ -60,6 +60,14 @@ void binTest(const tTest& t, algo::iLCG& lcg, size_t numBins, int seed)
     {
         cout << "Fail! seed = " << seed << endl;
 
+        //
+        // Ahh! I saw this test fail with seed == 579256165
+        //
+        // But that's just an outlier I'm pretty sure. After all,
+        // the chi-square table is for p=0.005 meaning this test
+        // ought to fail once every 200 runs.
+        //
+
         cout << "values:";
         for (size_t i = 0; i < bins.size(); i++)
             cout << " " << bins[i];
