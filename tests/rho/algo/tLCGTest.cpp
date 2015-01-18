@@ -62,6 +62,7 @@ void binTest(const tTest& t, algo::iLCG& lcg, size_t numBins, int seed)
 
         //
         // Ahh! I saw this test fail with seed == 579256165
+        // Edit: And seed == 2063266318
         //
         // But that's just an outlier I'm pretty sure. After all,
         // the chi-square table is for p=0.005 meaning this test
