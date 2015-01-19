@@ -38,6 +38,30 @@ to play around with.
 The libvpx library depends on this library (yasm).
 
 
+----------------------------
+---- Compiling on Linux ----
+----------------------------
+
+Just do the normal `./configure && make && sudo make install` commands.
+
+
+--------------------------
+---- Compiling on OSX ----
+--------------------------
+
+The configure script doesn't detect OSX for some reason, so it will
+default to the 'generic-gnu' target. You should specify the right target
+by running `./configure --target=x86_64-darwin13-gcc` ...
+Doing so enables some optimizations.
+
+
+--------------------------
+---- Compiling on iOS ----
+--------------------------
+
+See the 'ios-build' repository.
+
+
 ------------------------------
 ---- Compiling on Windows ----
 ------------------------------
