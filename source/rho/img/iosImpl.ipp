@@ -58,8 +58,8 @@ class tImageCapParamsEnumerator : public iImageCapParamsEnumerator
                 AVCaptureDevice* device = [devices objectAtIndex:i];
 
                 tImageCapParams params;
-                params.deviceIndex = i;
-                params.inputIndex = 0;
+                params.deviceIndex = 0;
+                params.inputIndex = i;
                 params.inputDescription = [device.localizedName UTF8String];
                 params.displayFormat = kBGRA;
                 params.displayFormatDescription = "BGRA";
@@ -145,17 +145,31 @@ class tImageCap : public iImageCap
                 throw eInvalidDeviceAttributes(
                         "You must capture in BGRA format.");
 
+            if (params.deviceIndex != 0)
+                throw eInvalidDeviceAttributes(
+                        "For iOS, we only ever say there is one device.");
+
             NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
             tAutoObjcRelease ar0(pool);
 
             NSArray* devices =
                 [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
 
-            if (params.deviceIndex >= (u32)devices.count)
+            /*
+             * Little note about something that might look confusing.
+             * The way we enumerate params for iOS is to only declare
+             * one device (with index 0), and then say that it has
+             * multiple inputs. Therefore, the weirdness below is just
+             * to match that behavior -- we don't use the device index,
+             * we instead use the input index to specify which camera
+             * to use.
+             */
+
+            if (params.inputIndex >= (u32)devices.count)
                 throw eInvalidDeviceAttributes("Bad device index.");
 
             AVCaptureDevice* device =
-                [devices objectAtIndex:params.deviceIndex];
+                [devices objectAtIndex:params.inputIndex];
 
             NSString* sessionPreset = nil;
 
