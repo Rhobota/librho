@@ -85,7 +85,7 @@ i32 yuyv_to_rgb24(u8* yuyv, i32 yuyvSize,
                   u8* rgb, i32 rgbSize)
 {
     // yuyv images use four bytes to describe two pixels.
-    // rbg images use three bytes to describe one pixel.
+    // rgb images use three bytes to describe one pixel.
 
     if (yuyvSize % 4)
     {
@@ -305,11 +305,66 @@ i32 yuyv_to_rgb16(u8* source, i32 sourceSize,
 
 
 static
-i32 yuyv_to_rgba(u8* source, i32 sourceSize,
-                   u8* dest, i32 destSize)
+i32 yuyv_to_rgba(u8* yuyv, i32 yuyvSize,
+                 u8* rgba, i32 rgbaSize)
 {
-    throw eNotImplemented("This function will be lazy-implemented.");
-    return 0;
+    // yuyv images use four bytes to describe two pixels.
+    // rgba images use four bytes to describe one pixel.
+
+    if (yuyvSize % 4)
+    {
+        throw eColorspaceConversionError(
+                "The yuyv image buffer has an incorrect size");
+    }
+
+    i32 numPixels = yuyvSize / 2;
+
+    if (rgbaSize < numPixels * 4)
+    {
+        throw eBufferOverflow(
+                "The supplied rgba buffer cannot hold the image described by "
+                "the supplied yuyv buffer.");
+    }
+
+    for(i32 i = 0; i < yuyvSize; i += 4)
+    {
+        u8 y0 = yuyv[i+0];
+        u8 u  = yuyv[i+1];
+        u8 y1 = yuyv[i+2];
+        u8 v  = yuyv[i+3];
+
+        /* standard: r0 = y0 + 1.402000*(v-128) */
+        /* logitech: r0 = y0 + 1.370705*(v-128) */
+        *rgba++ = clip(y0 + 1.402000*(v-128));
+
+        /* standard: g0 = y0 - 0.344140*(u-128) - 0.714140*(v-128) */
+        /* logitech: g0 = y0 - 0.337633*(u-128) - 0.698001*(v-128) */
+        *rgba++ = clip(y0 - 0.344140*(u-128) - 0.714140*(v-128));
+
+        /* standard: b0 = y0 + 1.772000*(u-128) */
+        /* logitech: b0 = y0 + 1.732446*(u-128) */
+        *rgba++ = clip(y0 + 1.772000*(u-128));
+
+        /* The alpha value */
+        *rgba++ = 255;
+
+        /* standard: r1 = y1 + 1.402000*(v-128) */
+        /* logitech: r1 = y1 + 1.370705*(v-128) */
+        *rgba++ = clip(y1 + 1.402000*(v-128));
+
+        /* standard: g1 = y1 - 0.344140*(u-128) - 0.714140*(v-128) */
+        /* logitech: g1 = y1 - 0.337633*(u-128) - 0.698001*(v-128) */
+        *rgba++ = clip(y1 - 0.344140*(u-128) - 0.714140*(v-128));
+
+        /* standard: b1 = y1 + 1.772000*(u-128) */
+        /* logitech: b1 = y1 + 1.732446*(u-128) */
+        *rgba++ = clip(y1 + 1.772000*(u-128));
+
+        /* The alpha value */
+        *rgba++ = 255;
+    }
+
+    return numPixels * 4;
 }
 
 static
@@ -483,11 +538,66 @@ i32 bgra_to_grey(u8* source, i32 sourceSize,
 }
 
 static
-i32 yuyv_to_bgra(u8* source, i32 sourceSize,
-                  u8* dest, i32 destSize)
+i32 yuyv_to_bgra(u8* yuyv, i32 yuyvSize,
+                 u8* bgra, i32 bgraSize)
 {
-    throw eNotImplemented("This function will be lazy-implemented.");
-    return 0;
+    // yuyv images use four bytes to describe two pixels.
+    // bgra images use four bytes to describe one pixel.
+
+    if (yuyvSize % 4)
+    {
+        throw eColorspaceConversionError(
+                "The yuyv image buffer has an incorrect size");
+    }
+
+    i32 numPixels = yuyvSize / 2;
+
+    if (bgraSize < numPixels * 4)
+    {
+        throw eBufferOverflow(
+                "The supplied bgra buffer cannot hold the image described by "
+                "the supplied yuyv buffer.");
+    }
+
+    for(i32 i = 0; i < yuyvSize; i += 4)
+    {
+        u8 y0 = yuyv[i+0];
+        u8 u  = yuyv[i+1];
+        u8 y1 = yuyv[i+2];
+        u8 v  = yuyv[i+3];
+
+        /* standard: b0 = y0 + 1.772000*(u-128) */
+        /* logitech: b0 = y0 + 1.732446*(u-128) */
+        *bgra++ = clip(y0 + 1.772000*(u-128));
+
+        /* standard: g0 = y0 - 0.344140*(u-128) - 0.714140*(v-128) */
+        /* logitech: g0 = y0 - 0.337633*(u-128) - 0.698001*(v-128) */
+        *bgra++ = clip(y0 - 0.344140*(u-128) - 0.714140*(v-128));
+
+        /* standard: r0 = y0 + 1.402000*(v-128) */
+        /* logitech: r0 = y0 + 1.370705*(v-128) */
+        *bgra++ = clip(y0 + 1.402000*(v-128));
+
+        /* The alpha value */
+        *bgra++ = 255;
+
+        /* standard: b1 = y1 + 1.772000*(u-128) */
+        /* logitech: b1 = y1 + 1.732446*(u-128) */
+        *bgra++ = clip(y1 + 1.772000*(u-128));
+
+        /* standard: g1 = y1 - 0.344140*(u-128) - 0.714140*(v-128) */
+        /* logitech: g1 = y1 - 0.337633*(u-128) - 0.698001*(v-128) */
+        *bgra++ = clip(y1 - 0.344140*(u-128) - 0.714140*(v-128));
+
+        /* standard: r1 = y1 + 1.402000*(v-128) */
+        /* logitech: r1 = y1 + 1.370705*(v-128) */
+        *bgra++ = clip(y1 + 1.402000*(v-128));
+
+        /* The alpha value */
+        *bgra++ = 255;
+    }
+
+    return numPixels * 4;
 }
 
 static
