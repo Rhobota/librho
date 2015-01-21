@@ -26,8 +26,8 @@ namespace sync
  * across threads. You can do something like this:
  *
  *     refc< sync::tPCQ<std::pair<u8*, u32> > > pcq(new sync::tPCQ<std::pair<u8*, u32> >(8, sync::kGrow));
- *     refc<iReadable> loopbackReadable(new sync::tStreamPCQ(pcq));
- *     refc<iWritable> loopbackWritable(new sync::tStreamPCQ(pcq));
+ *     refc<iReadable> loopbackReadable(new sync::tStreamPCQ(pcq, tStreamPCQ::kReadableEnd));
+ *     refc<iWritable> loopbackWritable(new sync::tStreamPCQ(pcq, tStreamPCQ::kWritableEnd));
  *
  * Then pass loopbackReadable to one thread and loopbackWritable to a second
  * thread. Note that written this way, the underlying PCQ object will grow
@@ -38,27 +38,41 @@ class tStreamPCQ : public iReadable, public iWritable, public iClosable, public 
 {
     public:
 
-        tStreamPCQ(refc< tPCQ< std::pair<u8*, u32> > > pcq)
+        enum nStreamRole { kReadableEnd, kWritableEnd };
+
+        tStreamPCQ(refc< tPCQ< std::pair<u8*, u32> > > pcq,
+                   nStreamRole role)
             : m_pcq(pcq),
               m_curr(NULL, 0),
               m_off(0),
-              m_eof(false)
+              m_eof(false),
+              m_role(role)
         {
+            if (m_role != kReadableEnd && m_role != kWritableEnd)
+                throw eInvalidArgument("role is an invalid value");
         }
 
         ~tStreamPCQ()
         {
-            delete [] m_curr.first;
-            m_curr.first = NULL;
-            m_curr.second = 0;
-            m_off = 0;
-
-            while (m_pcq->size() > 0)
+            if (m_role == kReadableEnd)
             {
-                m_curr = m_pcq->pop();
                 delete [] m_curr.first;
                 m_curr.first = NULL;
                 m_curr.second = 0;
+                m_off = 0;
+
+                while (m_pcq->size() > 0)
+                {
+                    m_curr = m_pcq->pop();
+                    delete [] m_curr.first;
+                    m_curr.first = NULL;
+                    m_curr.second = 0;
+                }
+            }
+
+            else
+            {
+                close();
             }
 
             m_pcq = NULL;
@@ -68,6 +82,9 @@ class tStreamPCQ : public iReadable, public iWritable, public iClosable, public 
         {
             if (length <= 0)
                 throw eInvalidArgument("Stream read/write length must be >0");
+
+            if (m_role != kReadableEnd)
+                throw eRuntimeError("This stream is not configured for reading. Do not call read().");
 
             if (m_eof)
                 return -1;
@@ -115,6 +132,9 @@ class tStreamPCQ : public iReadable, public iWritable, public iClosable, public 
             if (length <= 0)
                 throw eInvalidArgument("Stream read/write length must be >0");
 
+            if (m_role != kWritableEnd)
+                throw eRuntimeError("This stream is not configured for writing. Do not call write().");
+
             u8* cbuf = new u8[length];
             memcpy(cbuf, buffer, (size_t)length);
             m_pcq->push(std::make_pair(cbuf, length));
@@ -150,6 +170,7 @@ class tStreamPCQ : public iReadable, public iWritable, public iClosable, public 
         std::pair<u8*, u32> m_curr;
         u32 m_off;
         bool m_eof;
+        nStreamRole m_role;
 };
 
 

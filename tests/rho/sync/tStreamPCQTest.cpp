@@ -121,8 +121,8 @@ class tProducer : public sync::iRunnable
 void test(const tTest& t)
 {
     refc< sync::tPCQ<std::pair<u8*, u32> > > pcq(new sync::tPCQ<std::pair<u8*, u32> >(8, sync::kGrow));
-    refc<iReadable> loopbackReadable(new sync::tStreamPCQ(pcq));
-    refc<iWritable> loopbackWritable(new sync::tStreamPCQ(pcq));
+    refc<iReadable> loopbackReadable(new sync::tStreamPCQ(pcq, sync::tStreamPCQ::kReadableEnd));
+    refc<iWritable> loopbackWritable(new sync::tStreamPCQ(pcq, sync::tStreamPCQ::kWritableEnd));
 
     int sharedSeed = rand();
 
