@@ -30,6 +30,20 @@ class iTimerObserver
          */
         virtual bool timerAlert(u64 timerPeriod) = 0;
 
+        /**
+         * Called when the internal timer thread starts up.
+         * This is useful if you need to do a per-thread
+         * initialization of some sort in your application.
+         */
+        virtual void timerThreadInit() { }
+
+        /**
+         * Called when the internal timer thread is about to
+         * terminate. This is useful if you need to tear down
+         * what you did in timerThreadInit().
+         */
+        virtual void timerThreadEnd() { }
+
         virtual ~iTimerObserver() { }
 };
 

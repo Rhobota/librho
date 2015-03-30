@@ -13,6 +13,27 @@ const static u64 kMinSleepTime = 300;    // 0.3 milliseconds
 const static u64 kMaxSleeptime = 50000;  // 50.0 milliseconds
 
 
+class tTimerInitEndManager
+{
+    public:
+
+        tTimerInitEndManager(iTimerObserver* obs)
+            : m_obs(obs)
+        {
+            m_obs->timerThreadInit();
+        }
+
+        ~tTimerInitEndManager()
+        {
+            m_obs->timerThreadEnd();
+        }
+
+    private:
+
+        iTimerObserver* m_obs;
+};
+
+
 class tTimerThread : public iRunnable, public bNonCopyable
 {
     public:
@@ -24,6 +45,8 @@ class tTimerThread : public iRunnable, public bNonCopyable
 
         void run()
         {
+            tTimerInitEndManager initEndManager(m_timer->m_obs);
+
             while (m_timer->m_running)
             {
                 u64 currtime = tTimer::usecTime();
