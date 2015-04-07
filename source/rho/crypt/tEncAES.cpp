@@ -13,7 +13,8 @@ namespace crypt
 {
 
 
-u8* aligned_malloc(size_t size, size_t alignment)
+static
+u8* s_aligned_malloc(size_t size, size_t alignment)
 {
     // Inspired by: http://cottonvibes.blogspot.com/2011/01/dynamically-allocate-aligned-memory.html
     u8* r = (u8*) malloc(size + (--alignment) + sizeof(u8*));
@@ -25,7 +26,8 @@ u8* aligned_malloc(size_t size, size_t alignment)
 }
 
 
-void aligned_free(u8* buf)
+static
+void s_aligned_free(u8* buf)
 {
     if (buf)
     {
@@ -147,7 +149,7 @@ void tEncAES::m_init(nOperationModeAES opmode, const u8 key[], nKeyLengthAES key
     // Fast ASM setup:
     if (m_useASM)
     {
-        m_expandedKey = aligned_malloc(256, 16);
+        m_expandedKey = s_aligned_malloc(256, 16);
         switch (keylen)
         {
             case k128bit:
@@ -199,7 +201,7 @@ void tEncAES::m_init(nOperationModeAES opmode, const u8 key[], nKeyLengthAES key
 
 void tEncAES::m_finalize()
 {
-    aligned_free(m_expandedKey);
+    s_aligned_free(m_expandedKey);
     m_expandedKey = NULL;
 }
 
