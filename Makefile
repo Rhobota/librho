@@ -15,9 +15,13 @@ CC_FLAGS_LOCAL := $(CC_FLAGS) \
 	-D_FILE_OFFSET_BITS=64 \
 	-I $(INCLUDE_DIR)  # consider: -Wold-style-cast -Wshadow
 
+ASMCC := yasm
+ASMCC_FLAGS_LOCAL := -g dwarf2 -f elf64
+
 ifeq ($(shell uname),Linux)
 	# Linux stuff:
 	CC_FLAGS_LOCAL += -rdynamic -Wdouble-promotion
+	ASMCC_FLAGS_LOCAL += -D__linux__
 else
 ifeq ($(shell uname),Darwin)
 	# OSX stuff:
@@ -35,7 +39,10 @@ CPP_OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(CPP_SRC_FILES))
 MM_SRC_FILES = $(shell find $(SRC_DIR) -name '*.mm' -type f)
 MM_OBJ_FILES = $(patsubst $(SRC_DIR)/%.mm,$(OBJ_DIR)/%.o,$(MM_SRC_FILES))
 
-all : $(PRE_STEP) $(CPP_OBJ_FILES) $(MM_OBJ_FILES) $(POST_STEP)
+S_SRC_FILES = $(shell find $(SRC_DIR) -name '*.s' -type f)
+S_OBJ_FILES = $(patsubst $(SRC_DIR)/%.s,$(OBJ_DIR)/%.o,$(S_SRC_FILES))
+
+all : $(PRE_STEP) $(CPP_OBJ_FILES) $(MM_OBJ_FILES) $(S_OBJ_FILES) $(POST_STEP)
 
 install : ensure_root uninstall all
 	@echo
@@ -69,6 +76,13 @@ $(OBJ_DIR)/%.o : $(SRC_DIR)/%.mm
 	@echo "Compiling $< ..."
 	@mkdir -p $(@D)
 	$(CC) $(CC_FLAGS_LOCAL) -c -o $@ $<
+	$(AR) crsv $(OBJ_DIR)/$(STATIC_LIB_NAME) $@
+	@echo
+
+$(OBJ_DIR)/%.o : $(SRC_DIR)/%.s
+	@echo "Compiling $< ..."
+	@mkdir -p $(@D)
+	$(ASMCC) $(ASMCC_FLAGS_LOCAL) $< -o $@
 	$(AR) crsv $(OBJ_DIR)/$(STATIC_LIB_NAME) $@
 	@echo
 
