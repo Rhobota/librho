@@ -2,7 +2,6 @@
 #include <rho/crypt/tSecureRandom.h>
 
 #include <rho/eRho.h>
-#include "rijndael-alg-fst.h"
 #include <cstdlib>
 
 
@@ -16,38 +15,17 @@ tWritableAES::tWritableAES(iWritable* internalStream, nOperationModeAES opmode,
              const u8 key[], nKeyLengthAES keylen)
     : m_stream(internalStream), m_buf(NULL),
       m_bufSize(0), m_bufUsed(0), m_seq(0),
-      m_opmode(opmode)
+      m_opmode(opmode), m_aes(opmode, key, keylen)
 {
     if (m_stream == NULL)
         throw eNullPointer("internalStream must not be NULL.");
 
-    // Setup encryption state...
-    int keybits;
-    int expectedNr;
-    switch (keylen)
-    {
-        case k128bit: keybits = 128; expectedNr = 10; break;
-        case k192bit: keybits = 192; expectedNr = 12; break;
-        case k256bit: keybits = 256; expectedNr = 14; break;
-        default: throw eInvalidArgument("The keylen parameter is not valid!");
-    }
-    m_Nr = rijndaelKeySetupEnc(m_rk, key, keybits);
-    if (m_Nr != expectedNr)
-        throw eImpossiblePath();
-
     // Check the op mode.
-    switch (m_opmode)
+    if (m_opmode == kOpModeCBC)
     {
-        case kOpModeECB:
-            break;
-
-        case kOpModeCBC:
-            // Randomize the initialization vector
-            secureRand_readAll(m_last_ct, AES_BLOCK_SIZE);
-            m_hasSentInitializationVector = false;
-            break;
-
-        default: throw eInvalidArgument("opmode is not recognized!");
+        // Randomize the initialization vector
+        secureRand_readAll(m_last_ct, AES_BLOCK_SIZE);
+        m_hasSentInitializationVector = false;
     }
 
     // Alloc stuff...
@@ -125,7 +103,7 @@ bool tWritableAES::flush()
     if (m_opmode == kOpModeCBC && !m_hasSentInitializationVector)
     {
         u8 initVectorCt[AES_BLOCK_SIZE];
-        rijndaelEncrypt(m_rk, m_Nr, m_last_ct, initVectorCt);
+        m_aes.enc(m_last_ct, initVectorCt, 1);
         i32 w = m_stream->writeAll(initVectorCt, AES_BLOCK_SIZE);
         if (w != AES_BLOCK_SIZE)
             return false;
@@ -168,23 +146,7 @@ bool tWritableAES::flush()
         secureRand_readAll(buf+m_bufUsed, bytesToSend-m_bufUsed);
 
     // Encrypt the whole chunk.
-    u32 bufUsed = m_bufUsed;
-    nOperationModeAES opmode = m_opmode;
-    u8* last_ct = m_last_ct;
-    u32* rk = m_rk;
-    int Nr = m_Nr;
-    for (u32 i = 0; i < bufUsed; i += AES_BLOCK_SIZE)
-    {
-        if (opmode == kOpModeCBC)
-            for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
-                buf[i+j] ^= last_ct[j];
-
-        rijndaelEncrypt(rk, Nr, buf+i, buf+i);
-
-        if (opmode == kOpModeCBC)
-            for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
-                last_ct[j] = buf[i+j];
-    }
+    m_aes.enc(buf, buf, bytesToSend/AES_BLOCK_SIZE, m_last_ct);
 
     // Send the chunk.
     i32 r = m_stream->writeAll(buf, bytesToSend);
