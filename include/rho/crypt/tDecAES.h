@@ -28,8 +28,18 @@ class tDecAES : public bNonCopyable
          *    - if keylen == k128bit, then the 'key' buffer should be 16 bytes
          *    - if keylen == k192bit, then the 'key' buffer should be 24 bytes
          *    - if keylen == k256bit, then the 'key' buffer should be 32 bytes
+         *
+         * This c'tor automagically detects if the fast ASM impl can be used,
+         * and if so it uses it.
          */
         tDecAES(nOperationModeAES opmode, const u8 key[], nKeyLengthAES keylen);
+
+        /**
+         * Same as the c'tor above, but lets the caller explicitly decide whether
+         * the fast ASM impl is used or whether the fallback impl is used.
+         */
+        tDecAES(nOperationModeAES opmode, const u8 key[], nKeyLengthAES keylen,
+                bool useFastASM);
 
         /**
          * Decrypts cypher text data (in the 'ctbuf' buffer) and places
@@ -46,10 +56,26 @@ class tDecAES : public bNonCopyable
          */
         void dec(u8* ctbuf, u8* ptbuf, u32 numblocks, u8* iv=NULL);
 
+        /**
+         * Free stuff.
+         */
+        ~tDecAES();
+
+    private:
+
+        void m_init(nOperationModeAES opmode, const u8 key[], nKeyLengthAES keylen,
+                    bool useFastASM);
+
+        void m_finalize();
+
     private:
 
         nOperationModeAES m_opmode;
         nKeyLengthAES m_keylen;
+        bool m_useASM;
+
+        // State used by the fast ASM implementation:
+        u8* m_expandedKey;
 
         // State used by the fallback implementation:
         u32 m_rk[60];    // size is 4*(MAXNR+1)
