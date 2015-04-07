@@ -46,10 +46,19 @@ class tEncAES : public bNonCopyable
          */
         void enc(u8* ptbuf, u8* ctbuf, u32 numblocks, u8* iv=NULL);
 
+        /**
+         * Free stuff.
+         */
+        ~tEncAES();
+
     private:
 
         nOperationModeAES m_opmode;
         nKeyLengthAES m_keylen;
+        bool m_useASM;
+
+        // State used by the fast ASM implementation:
+        u8* m_expandedKey;
 
         // State used by the fallback implementation:
         u32 m_rk[60];    // size is 4*(MAXNR+1)
