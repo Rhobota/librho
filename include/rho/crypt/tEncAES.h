@@ -28,8 +28,18 @@ class tEncAES : public bNonCopyable
          *    - if keylen == k128bit, then the 'key' buffer should be 16 bytes
          *    - if keylen == k192bit, then the 'key' buffer should be 24 bytes
          *    - if keylen == k256bit, then the 'key' buffer should be 32 bytes
+         *
+         * This c'tor automagically detects if the fast ASM impl can be used,
+         * and if so it uses it.
          */
         tEncAES(nOperationModeAES opmode, const u8 key[], nKeyLengthAES keylen);
+
+        /**
+         * Same as the c'tor above, but lets the caller explicitly decide whether
+         * the fast ASM impl is used or whether the fallback impl is used.
+         */
+        tEncAES(nOperationModeAES opmode, const u8 key[], nKeyLengthAES keylen,
+                bool useFastASM);
 
         /**
          * Encrypts plain text data (in the 'ptbuf' buffer) and places
@@ -50,6 +60,13 @@ class tEncAES : public bNonCopyable
          * Free stuff.
          */
         ~tEncAES();
+
+    private:
+
+        void m_init(nOperationModeAES opmode, const u8 key[], nKeyLengthAES keylen,
+                    bool useFastASM);
+
+        void m_finalize();
 
     private:
 

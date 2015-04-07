@@ -35,78 +35,20 @@ void aligned_free(u8* buf)
 
 
 tEncAES::tEncAES(nOperationModeAES opmode, const u8 key[], nKeyLengthAES keylen)
-    : m_opmode(opmode), m_keylen(keylen), m_useASM(false), m_expandedKey(NULL)
 {
-    // Check the opmode.
-    switch (opmode)
-    {
-        case kOpModeECB: break;
-        case kOpModeCBC: break;
-        default: throw eInvalidArgument("The opmode parameter is not valid!");
-    }
-
-    // Check the keylen.
-    switch (keylen)
-    {
-        case k128bit: break;
-        case k192bit: break;
-        case k256bit: break;
-        default: throw eInvalidArgument("The keylen parameter is not valid!");
-    }
-
     // See if this CPU supports the Intel AES-NI instruction set (implemented in assembly (ASM)).
-    m_useASM = check_for_aes_instructions();
+    bool useFastASM = check_for_aes_instructions();
 
-    // Fast ASM setup:
-    if (m_useASM)
-    {
-        m_expandedKey = aligned_malloc(256, 16);
-        switch (keylen)
-        {
-            case k128bit:
-            {
-                u8* key_copy = new u8[16];
-                memcpy(key_copy, key, 16);
-                iEncExpandKey128(key_copy, m_expandedKey);
-                delete [] key_copy;
-                break;
-            }
-            case k192bit:
-            {
-                u8* key_copy = new u8[24];
-                memcpy(key_copy, key, 24);
-                iEncExpandKey192(key_copy, m_expandedKey);
-                delete [] key_copy;
-                break;
-            }
-            case k256bit:
-            {
-                u8* key_copy = new u8[32];
-                memcpy(key_copy, key, 32);
-                iEncExpandKey256(key_copy, m_expandedKey);
-                delete [] key_copy;
-                break;
-            }
-            default: throw eInvalidArgument("The keylen parameter is not valid!");
-        }
-    }
+    // Call init.
+    m_init(opmode, key, keylen, useFastASM);
+}
 
-    // Fallback setup:
-    else
-    {
-        int keybits;
-        int expectedNr;
-        switch (keylen)
-        {
-            case k128bit: keybits = 128; expectedNr = 10; break;
-            case k192bit: keybits = 192; expectedNr = 12; break;
-            case k256bit: keybits = 256; expectedNr = 14; break;
-            default: throw eInvalidArgument("The keylen parameter is not valid!");
-        }
-        m_Nr = rijndaelKeySetupEnc(m_rk, key, keybits);
-        if (m_Nr != expectedNr)
-            throw eImpossiblePath();
-    }
+
+tEncAES::tEncAES(nOperationModeAES opmode, const u8 key[], nKeyLengthAES keylen,
+                 bool useFastASM)
+{
+    // Call init.
+    m_init(opmode, key, keylen, useFastASM);
 }
 
 
@@ -171,6 +113,91 @@ void tEncAES::enc(u8* ptbuf, u8* ctbuf, u32 numblocks, u8* iv)
 
 
 tEncAES::~tEncAES()
+{
+    m_finalize();
+}
+
+
+void tEncAES::m_init(nOperationModeAES opmode, const u8 key[], nKeyLengthAES keylen,
+                     bool useFastASM)
+{
+    // Check the opmode.
+    switch (opmode)
+    {
+        case kOpModeECB: break;
+        case kOpModeCBC: break;
+        default: throw eInvalidArgument("The opmode parameter is not valid!");
+    }
+
+    // Check the keylen.
+    switch (keylen)
+    {
+        case k128bit: break;
+        case k192bit: break;
+        case k256bit: break;
+        default: throw eInvalidArgument("The keylen parameter is not valid!");
+    }
+
+    // Set fields.
+    m_opmode = opmode;
+    m_keylen = keylen;
+    m_useASM = useFastASM;
+    m_expandedKey = NULL;
+
+    // Fast ASM setup:
+    if (m_useASM)
+    {
+        m_expandedKey = aligned_malloc(256, 16);
+        switch (keylen)
+        {
+            case k128bit:
+            {
+                u8* key_copy = new u8[16];
+                memcpy(key_copy, key, 16);
+                iEncExpandKey128(key_copy, m_expandedKey);
+                delete [] key_copy;
+                break;
+            }
+            case k192bit:
+            {
+                u8* key_copy = new u8[24];
+                memcpy(key_copy, key, 24);
+                iEncExpandKey192(key_copy, m_expandedKey);
+                delete [] key_copy;
+                break;
+            }
+            case k256bit:
+            {
+                u8* key_copy = new u8[32];
+                memcpy(key_copy, key, 32);
+                iEncExpandKey256(key_copy, m_expandedKey);
+                delete [] key_copy;
+                break;
+            }
+            default: throw eInvalidArgument("The keylen parameter is not valid!");
+        }
+    }
+
+    // Fallback setup:
+    else
+    {
+        int keybits;
+        int expectedNr;
+        switch (keylen)
+        {
+            case k128bit: keybits = 128; expectedNr = 10; break;
+            case k192bit: keybits = 192; expectedNr = 12; break;
+            case k256bit: keybits = 256; expectedNr = 14; break;
+            default: throw eInvalidArgument("The keylen parameter is not valid!");
+        }
+        m_Nr = rijndaelKeySetupEnc(m_rk, key, keybits);
+        if (m_Nr != expectedNr)
+            throw eImpossiblePath();
+    }
+}
+
+
+void tEncAES::m_finalize()
 {
     aligned_free(m_expandedKey);
     m_expandedKey = NULL;
