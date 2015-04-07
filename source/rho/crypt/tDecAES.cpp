@@ -1,7 +1,10 @@
 #include <rho/crypt/tDecAES.h>
 #include <rho/eRho.h>
 
+#include "aesni/iaes_asm_interface.h"
 #include "rijndael-alg-fst.h"
+
+#include <string.h>
 
 
 namespace rho
@@ -10,8 +13,117 @@ namespace crypt
 {
 
 
+u8* aligned_malloc(size_t size, size_t alignment)
+{
+    // Inspired by: http://cottonvibes.blogspot.com/2011/01/dynamically-allocate-aligned-memory.html
+    u8* r = (u8*) malloc(size + (--alignment) + sizeof(u8*));
+    if (r == NULL) return NULL;
+    u8* t = r + sizeof(u8*);
+    u8* o = (u8*)( ( ((size_t)(t + alignment)) | alignment ) ^ alignment );
+    ((u8**)(o))[-1] = r;
+    return o;
+}
+
+
+void aligned_free(u8* buf)
+{
+    if (buf)
+    {
+        free(((u8**)(buf))[-1]);
+    }
+}
+
+
 tDecAES::tDecAES(nOperationModeAES opmode, const u8 key[], nKeyLengthAES keylen)
-    : m_opmode(opmode), m_keylen(keylen)
+{
+    // See if this CPU supports the Intel AES-NI instruction set (implemented in assembly (ASM)).
+    bool useFastASM = check_for_aes_instructions();
+
+    // Call init.
+    m_init(opmode, key, keylen, useFastASM);
+}
+
+
+tDecAES::tDecAES(nOperationModeAES opmode, const u8 key[], nKeyLengthAES keylen,
+                 bool useFastASM)
+{
+    // Call init.
+    m_init(opmode, key, keylen, useFastASM);
+}
+
+
+void tDecAES::dec(u8* ctbuf, u8* ptbuf, u32 numblocks, u8* iv)
+{
+    // Fast ASM impl:
+    if (m_useASM)
+    {
+        sAesData data;
+        data.in_block = ptbuf;
+        data.out_block = ctbuf;
+        data.expanded_key = m_expandedKey;
+        data.iv = iv;
+        data.num_blocks = numblocks;
+        if (m_opmode == kOpModeCBC && iv)
+        {
+            switch (m_keylen)
+            {
+                case k128bit: iDec128_CBC(&data); break;
+                case k192bit: iDec192_CBC(&data); break;
+                case k256bit: iDec256_CBC(&data); break;
+                default: throw eInvalidArgument("The keylen parameter is not valid!");
+            }
+        }
+        else
+        {
+            switch (m_keylen)
+            {
+                case k128bit: iDec128(&data); break;
+                case k192bit: iDec192(&data); break;
+                case k256bit: iDec256(&data); break;
+                default: throw eInvalidArgument("The keylen parameter is not valid!");
+            }
+        }
+    }
+
+    // Fallback impl:
+    else
+    {
+        u32* rk = m_rk;
+        int Nr = m_Nr;
+        if (m_opmode == kOpModeCBC && iv)
+        {
+            u8 ct[AES_BLOCK_SIZE];
+            for (u32 i = 0; numblocks > 0; i+=AES_BLOCK_SIZE, --numblocks)
+            {
+                for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
+                    ct[j] = ctbuf[i+j];
+                rijndaelDecrypt(rk, Nr, ct, ptbuf+i);
+                for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
+                {
+                    ptbuf[i+j] ^= iv[j];
+                    iv[j] = ct[j];
+                }
+            }
+        }
+        else
+        {
+            for (u32 i = 0; numblocks > 0; i+=AES_BLOCK_SIZE, --numblocks)
+            {
+                rijndaelDecrypt(rk, Nr, ctbuf+i, ptbuf+i);
+            }
+        }
+    }
+}
+
+
+tDecAES::~tDecAES()
+{
+    m_finalize();
+}
+
+
+void tDecAES::m_init(nOperationModeAES opmode, const u8 key[], nKeyLengthAES keylen,
+                     bool useFastASM)
 {
     // Check the opmode.
     switch (opmode)
@@ -21,49 +133,78 @@ tDecAES::tDecAES(nOperationModeAES opmode, const u8 key[], nKeyLengthAES keylen)
         default: throw eInvalidArgument("The opmode parameter is not valid!");
     }
 
-    // Fallback setup:
-    int keybits;
-    int expectedNr;
+    // Check the keylen.
     switch (keylen)
     {
-        case k128bit: keybits = 128; expectedNr = 10; break;
-        case k192bit: keybits = 192; expectedNr = 12; break;
-        case k256bit: keybits = 256; expectedNr = 14; break;
+        case k128bit: break;
+        case k192bit: break;
+        case k256bit: break;
         default: throw eInvalidArgument("The keylen parameter is not valid!");
     }
-    m_Nr = rijndaelKeySetupDec(m_rk, key, keybits);
-    if (m_Nr != expectedNr)
-        throw eImpossiblePath();
+
+    // Set fields.
+    m_opmode = opmode;
+    m_keylen = keylen;
+    m_useASM = useFastASM;
+    m_expandedKey = NULL;
+
+    // Fast ASM setup:
+    if (m_useASM)
+    {
+        m_expandedKey = aligned_malloc(256, 16);
+        switch (keylen)
+        {
+            case k128bit:
+            {
+                u8* key_copy = new u8[16];
+                memcpy(key_copy, key, 16);
+                iDecExpandKey128(key_copy, m_expandedKey);
+                delete [] key_copy;
+                break;
+            }
+            case k192bit:
+            {
+                u8* key_copy = new u8[24];
+                memcpy(key_copy, key, 24);
+                iDecExpandKey192(key_copy, m_expandedKey);
+                delete [] key_copy;
+                break;
+            }
+            case k256bit:
+            {
+                u8* key_copy = new u8[32];
+                memcpy(key_copy, key, 32);
+                iDecExpandKey256(key_copy, m_expandedKey);
+                delete [] key_copy;
+                break;
+            }
+            default: throw eInvalidArgument("The keylen parameter is not valid!");
+        }
+    }
+
+    // Fallback setup:
+    else
+    {
+        int keybits;
+        int expectedNr;
+        switch (keylen)
+        {
+            case k128bit: keybits = 128; expectedNr = 10; break;
+            case k192bit: keybits = 192; expectedNr = 12; break;
+            case k256bit: keybits = 256; expectedNr = 14; break;
+            default: throw eInvalidArgument("The keylen parameter is not valid!");
+        }
+        m_Nr = rijndaelKeySetupDec(m_rk, key, keybits);
+        if (m_Nr != expectedNr)
+            throw eImpossiblePath();
+    }
 }
 
 
-void tDecAES::dec(u8* ctbuf, u8* ptbuf, u32 numblocks, u8* iv)
+void tDecAES::m_finalize()
 {
-    // Fallback impl:
-    u32* rk = m_rk;
-    int Nr = m_Nr;
-    if (m_opmode == kOpModeCBC && iv)
-    {
-        u8 ct[AES_BLOCK_SIZE];
-        for (u32 i = 0; numblocks > 0; i+=AES_BLOCK_SIZE, --numblocks)
-        {
-            for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
-                ct[j] = ctbuf[i+j];
-            rijndaelDecrypt(rk, Nr, ct, ptbuf+i);
-            for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
-            {
-                ptbuf[i+j] ^= iv[j];
-                iv[j] = ct[j];
-            }
-        }
-    }
-    else
-    {
-        for (u32 i = 0; numblocks > 0; i+=AES_BLOCK_SIZE, --numblocks)
-        {
-            rijndaelDecrypt(rk, Nr, ctbuf+i, ptbuf+i);
-        }
-    }
+    aligned_free(m_expandedKey);
+    m_expandedKey = NULL;
 }
 
 
