@@ -58,8 +58,8 @@ void tDecAES::dec(u8* ctbuf, u8* ptbuf, u32 numblocks, u8* iv)
     if (m_useASM)
     {
         sAesData data;
-        data.in_block = ptbuf;
-        data.out_block = ctbuf;
+        data.in_block = ctbuf;
+        data.out_block = ptbuf;
         data.expanded_key = m_expandedKey;
         data.iv = iv;
         data.num_blocks = numblocks;
