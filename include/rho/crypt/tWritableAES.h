@@ -6,12 +6,7 @@
 #include <rho/iWritable.h>
 #include <rho/iFlushable.h>
 #include <rho/bNonCopyable.h>
-#include <rho/crypt/nKeyLength.h>
-#include <rho/crypt/nOperationModeAES.h>
-
-#ifndef AES_BLOCK_SIZE
-#define AES_BLOCK_SIZE 16
-#endif
+#include <rho/crypt/tEncAES.h>
 
 
 namespace rho
@@ -57,8 +52,7 @@ class tWritableAES : public iWritable, public iFlushable, public bNonCopyable
         bool m_hasSentInitializationVector;  // <-- only used in kOpModeCBC
 
         // Encryption state:
-        u32 m_rk[60];    // size is 4*(MAXNR+1)
-        int m_Nr;
+        tEncAES m_aes;
 };
 
 
