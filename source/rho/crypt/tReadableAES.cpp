@@ -1,8 +1,6 @@
 #include <rho/crypt/tReadableAES.h>
 #include <rho/eRho.h>
 
-#include "rijndael-alg-fst.h"
-
 #include <algorithm>
 #include <cstdlib>
 
@@ -19,33 +17,13 @@ tReadableAES::tReadableAES(iReadable* internalStream, nOperationModeAES opmode,
       m_buf(NULL), m_bufSize(0),
       m_bufUsed(0), m_pos(0),
       m_seq(0),
-      m_opmode(opmode)
+      m_opmode(opmode),
+      m_aes(opmode, key, keylen)
 {
-    // Setup encryption state...
-    int keybits;
-    int expectedNr;
-    switch (keylen)
-    {
-        case k128bit: keybits = 128; expectedNr = 10; break;
-        case k192bit: keybits = 192; expectedNr = 12; break;
-        case k256bit: keybits = 256; expectedNr = 14; break;
-        default: throw eInvalidArgument("The keylen parameter is not valid!");
-    }
-    m_Nr = rijndaelKeySetupDec(m_rk, key, keybits);
-    if (m_Nr != expectedNr)
-        throw eImpossiblePath();
-
     // Check the op mode.
-    switch (m_opmode)
+    if (m_opmode == kOpModeCBC)
     {
-        case kOpModeECB:
-            break;
-
-        case kOpModeCBC:
-            m_hasReadInitializationVector = false;
-            break;
-
-        default: throw eInvalidArgument("opmode is not recognized!");
+        m_hasReadInitializationVector = false;
     }
 
     // Alloc the chunk buffer.
@@ -114,7 +92,7 @@ bool tReadableAES::m_refill()
         {
             return (r >= 0);  // <-- makes read() give the expected behavior
         }
-        rijndaelDecrypt(m_rk, m_Nr, initVectorCt, m_last_ct);
+        m_aes.dec(initVectorCt, m_last_ct, 1);
         m_hasReadInitializationVector = true;
     }
 
@@ -128,23 +106,10 @@ bool tReadableAES::m_refill()
 
     // Decrypt the ct buffer into the pt buffer.
     u8 pt[AES_BLOCK_SIZE];
-    rijndaelDecrypt(m_rk, m_Nr, ct, pt);
+    m_aes.dec(ct, pt, 1, m_last_ct);
 
     // Pointer aliasing.
     u8* buf = m_buf;
-    u8* last_ct = m_last_ct;
-    u32* rk = m_rk;
-    int Nr = m_Nr;
-
-    // If in CBC mode, deal with the xor chaining stuff.
-    if (opmode == kOpModeCBC)
-    {
-        for (int i = 0; i < AES_BLOCK_SIZE; i++)
-        {
-            pt[i] ^= last_ct[i];
-            last_ct[i] = ct[i];
-        }
-    }
 
     // We just read the first block (16 bytes) of a chunk from the stream.
     // This block contains the chunk's length, sequence number, and parity.
@@ -192,29 +157,14 @@ bool tReadableAES::m_refill()
     }
 
     // Decrypt the bytes we just read.
+    m_aes.dec(buf, buf, bytesToRead/AES_BLOCK_SIZE, m_last_ct);
+
+    // Calculate the parity.
     for (u32 i = 0; i < bytesToRead; i += AES_BLOCK_SIZE)
     {
-        // Decrypt this block.
-        for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
-            ct[j] = buf[i+j];
-        rijndaelDecrypt(rk, Nr, ct, buf+i);
-
-        // If in CBC mode, deal with the xor chaining stuff.
-        if (opmode == kOpModeCBC)
+        for (int j = 0; j < AES_BLOCK_SIZE; j++)
         {
-            for (int j = 0; j < AES_BLOCK_SIZE; j++)
-            {
-                buf[i+j] ^= last_ct[j];
-                parity[(i+j)%4] ^= buf[i+j];
-                last_ct[j] = ct[j];
-            }
-        }
-        else
-        {
-            for (int j = 0; j < AES_BLOCK_SIZE; j++)
-            {
-                parity[(i+j)%4] ^= buf[i+j];
-            }
+            parity[(i+j)%4] ^= buf[i+j];
         }
     }
 

@@ -37,20 +37,23 @@ tDecAES::tDecAES(nOperationModeAES opmode, const u8 key[], nKeyLengthAES keylen)
 }
 
 
-void tDecAES::dec(u8* ctbuf, u8* ptbuf, u32 numblocks, u8* iv=NULL)
+void tDecAES::dec(u8* ctbuf, u8* ptbuf, u32 numblocks, u8* iv)
 {
     // Fallback impl:
     u32* rk = m_rk;
     int Nr = m_Nr;
     if (m_opmode == kOpModeCBC && iv)
     {
+        u8 ct[AES_BLOCK_SIZE];
         for (u32 i = 0; numblocks > 0; i+=AES_BLOCK_SIZE, --numblocks)
         {
-            rijndaelDecrypt(rk, Nr, ctbuf+i, ptbuf+i);
+            for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
+                ct[j] = ctbuf[i+j];
+            rijndaelDecrypt(rk, Nr, ct, ptbuf+i);
             for (u32 j = 0; j < AES_BLOCK_SIZE; j++)
             {
                 ptbuf[i+j] ^= iv[j];
-                iv[j] = ctbuf[i+j];
+                iv[j] = ct[j];
             }
         }
     }
