@@ -32,228 +32,11 @@
  */
 
 #include "iaesni.h"
-#include "iaes_asm_interface.h"
 
-#include <stdio.h>
 #include <string.h>
 
 
-void intel_AES_enc128(UCHAR *plainText,UCHAR *cipherText,UCHAR *key,size_t numBlocks)
-{
-	DEFINE_ROUND_KEYS
-	sAesData aesData;
-	aesData.in_block = plainText;
-	aesData.out_block = cipherText;
-	aesData.expanded_key = expandedKey;
-	aesData.num_blocks = numBlocks;
-
-	iEncExpandKey128(key,expandedKey);
-	iEnc128(&aesData);
-}
-
-
-void intel_AES_enc128_CBC(UCHAR *plainText,UCHAR *cipherText,UCHAR *key,size_t numBlocks,UCHAR *iv)
-{
-	DEFINE_ROUND_KEYS
-	sAesData aesData;
-	aesData.in_block = plainText;
-	aesData.out_block = cipherText;
-	aesData.expanded_key = expandedKey;
-	aesData.num_blocks = numBlocks;
-	aesData.iv = iv;
-
-	iEncExpandKey128(key,expandedKey);
-	iEnc128_CBC(&aesData);
-}
-
-
-void intel_AES_enc192(UCHAR *plainText,UCHAR *cipherText,UCHAR *key,size_t numBlocks)
-{
-	DEFINE_ROUND_KEYS
-	sAesData aesData;
-	aesData.in_block = plainText;
-	aesData.out_block = cipherText;
-	aesData.expanded_key = expandedKey;
-	aesData.num_blocks = numBlocks;
-
-	iEncExpandKey192(key,expandedKey);
-	iEnc192(&aesData);
-}
-
-
-void intel_AES_enc192_CBC(UCHAR *plainText,UCHAR *cipherText,UCHAR *key,size_t numBlocks,UCHAR *iv)
-{
-	DEFINE_ROUND_KEYS
-	sAesData aesData;
-	aesData.in_block = plainText;
-	aesData.out_block = cipherText;
-	aesData.expanded_key = expandedKey;
-	aesData.num_blocks = numBlocks;
-	aesData.iv = iv;
-
-	iEncExpandKey192(key,expandedKey);
-	iEnc192_CBC(&aesData);
-}
-
-
-void intel_AES_enc256(UCHAR *plainText,UCHAR *cipherText,UCHAR *key,size_t numBlocks)
-{
-	DEFINE_ROUND_KEYS
-	sAesData aesData;
-	aesData.in_block = plainText;
-	aesData.out_block = cipherText;
-	aesData.expanded_key = expandedKey;
-	aesData.num_blocks = numBlocks;
-
-	iEncExpandKey256(key,expandedKey);
-	iEnc256(&aesData);
-}
-
-
-void intel_AES_enc256_CBC(UCHAR *plainText,UCHAR *cipherText,UCHAR *key,size_t numBlocks,UCHAR *iv)
-{
-	DEFINE_ROUND_KEYS
-	sAesData aesData;
-	aesData.in_block = plainText;
-	aesData.out_block = cipherText;
-	aesData.expanded_key = expandedKey;
-	aesData.num_blocks = numBlocks;
-	aesData.iv = iv;
-
-	iEncExpandKey256(key,expandedKey);
-	iEnc256_CBC(&aesData);
-}
-
-
-void intel_AES_dec128(UCHAR *cipherText,UCHAR *plainText,UCHAR *key,size_t numBlocks)
-{
-	DEFINE_ROUND_KEYS
-	sAesData aesData;
-	aesData.in_block = cipherText;
-	aesData.out_block = plainText;
-	aesData.expanded_key = expandedKey;
-	aesData.num_blocks = numBlocks;
-
-	iDecExpandKey128(key,expandedKey);
-	iDec128(&aesData);
-}
-
-void intel_AES_dec128_CBC(UCHAR *cipherText,UCHAR *plainText,UCHAR *key,size_t numBlocks,UCHAR *iv)
-{
-	DEFINE_ROUND_KEYS
-	sAesData aesData;
-	aesData.in_block = cipherText;
-	aesData.out_block = plainText;
-	aesData.expanded_key = expandedKey;
-	aesData.num_blocks = numBlocks;
-	aesData.iv = iv;
-
-	iDecExpandKey128(key,expandedKey);
-	iDec128_CBC(&aesData);
-}
-
-
-void intel_AES_dec192(UCHAR *cipherText,UCHAR *plainText,UCHAR *key,size_t numBlocks)
-{
-	DEFINE_ROUND_KEYS
-	sAesData aesData;
-	aesData.in_block = cipherText;
-	aesData.out_block = plainText;
-	aesData.expanded_key = expandedKey;
-	aesData.num_blocks = numBlocks;
-
-	iDecExpandKey192(key,expandedKey);
-	iDec192(&aesData);
-}
-
-
-void intel_AES_dec192_CBC(UCHAR *cipherText,UCHAR *plainText,UCHAR *key,size_t numBlocks,UCHAR *iv)
-{
-	DEFINE_ROUND_KEYS
-	sAesData aesData;
-	aesData.in_block = cipherText;
-	aesData.out_block = plainText;
-	aesData.expanded_key = expandedKey;
-	aesData.num_blocks = numBlocks;
-	aesData.iv = iv;
-
-	iDecExpandKey192(key,expandedKey);
-	iDec192_CBC(&aesData);
-}
-
-
-void intel_AES_dec256(UCHAR *cipherText,UCHAR *plainText,UCHAR *key,size_t numBlocks)
-{
-	DEFINE_ROUND_KEYS
-	sAesData aesData;
-	aesData.in_block = cipherText;
-	aesData.out_block = plainText;
-	aesData.expanded_key = expandedKey;
-	aesData.num_blocks = numBlocks;
-
-	iDecExpandKey256(key,expandedKey);
-	iDec256(&aesData);
-}
-
-
-void intel_AES_dec256_CBC(UCHAR *cipherText,UCHAR *plainText,UCHAR *key,size_t numBlocks,UCHAR *iv)
-{
-	DEFINE_ROUND_KEYS
-	sAesData aesData;
-	aesData.in_block = cipherText;
-	aesData.out_block = plainText;
-	aesData.expanded_key = expandedKey;
-	aesData.num_blocks = numBlocks;
-	aesData.iv = iv;
-
-	iDecExpandKey256(key,expandedKey);
-	iDec256_CBC(&aesData);
-}
-
-
-
-void intel_AES_encdec256_CTR(UCHAR *in,UCHAR *out,UCHAR *key,size_t numBlocks,UCHAR *ic)
-{
-	DEFINE_ROUND_KEYS
-	sAesData aesData;
-	aesData.in_block = in;
-	aesData.out_block = out;
-	aesData.expanded_key = expandedKey;
-	aesData.num_blocks = numBlocks;
-	aesData.iv = ic;
-
-	iEncExpandKey256(key,expandedKey);
-	iEnc256_CTR(&aesData);
-}
-
-void intel_AES_encdec192_CTR(UCHAR *in,UCHAR *out,UCHAR *key,size_t numBlocks,UCHAR *ic)
-{
-	DEFINE_ROUND_KEYS
-	sAesData aesData;
-	aesData.in_block = in;
-	aesData.out_block = out;
-	aesData.expanded_key = expandedKey;
-	aesData.num_blocks = numBlocks;
-	aesData.iv = ic;
-
-	iEncExpandKey192(key,expandedKey);
-	iEnc192_CTR(&aesData);
-}
-
-void intel_AES_encdec128_CTR(UCHAR *in,UCHAR *out,UCHAR *key,size_t numBlocks,UCHAR *ic)
-{
-	DEFINE_ROUND_KEYS
-	sAesData aesData;
-	aesData.in_block = in;
-	aesData.out_block = out;
-	aesData.expanded_key = expandedKey;
-	aesData.num_blocks = numBlocks;
-	aesData.iv = ic;
-
-	iEncExpandKey128(key,expandedKey);
-	iEnc128_CTR(&aesData);
-}
-
+#define AES_INSTRCTIONS_CPUID_BIT (1<<25)
 
 
 static void __cpuid(unsigned int where[4], unsigned int leaf) {
@@ -261,20 +44,19 @@ static void __cpuid(unsigned int where[4], unsigned int leaf) {
   return;
 }
 
+
 /*
  * check_for_aes_instructions()
- *   return 1 if support AES-NI and 0 if don't support AES-NI
+ *   return true if support AES-NI and false if don't support AES-NI
  */
-
-int check_for_aes_instructions()
+bool check_for_aes_instructions()
 {
 	unsigned int cpuid_results[4];
-	int yes=1, no=0;
 
 	__cpuid(cpuid_results,0);
 
 	if (cpuid_results[0] < 1)
-		return no;
+		return false;
 /*
  *      MSB         LSB
  * EBX = 'u' 'n' 'e' 'G'
@@ -285,15 +67,12 @@ int check_for_aes_instructions()
 	if (memcmp((unsigned char *)&cpuid_results[1], "Genu", 4) != 0 ||
 		memcmp((unsigned char *)&cpuid_results[3], "ineI", 4) != 0 ||
 		memcmp((unsigned char *)&cpuid_results[2], "ntel", 4) != 0)
-		return no;
+		return false;
 
 	__cpuid(cpuid_results,1);
 
 	if (cpuid_results[2] & AES_INSTRCTIONS_CPUID_BIT)
-		return yes;
+		return true;
 
-	return no;
+	return false;
 }
-
-
-
