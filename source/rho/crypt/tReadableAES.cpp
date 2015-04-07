@@ -80,11 +80,10 @@ bool tReadableAES::m_refill()
     // Reset indices.
     m_pos = 0;
     m_bufUsed = 0;
-    nOperationModeAES opmode = m_opmode;
 
     // If in cbc mode and this is the first time m_refill is called, read the
     // initialization vector off the stream and decrypt it.
-    if (opmode == kOpModeCBC && !m_hasReadInitializationVector)
+    if (m_opmode == kOpModeCBC && !m_hasReadInitializationVector)
     {
         u8 initVectorCt[AES_BLOCK_SIZE];
         i32 r = m_stream.readAll(initVectorCt, AES_BLOCK_SIZE);
