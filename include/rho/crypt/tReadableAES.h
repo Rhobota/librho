@@ -5,12 +5,7 @@
 #include <rho/ppcheck.h>
 #include <rho/iReadable.h>
 #include <rho/bNonCopyable.h>
-#include <rho/crypt/nKeyLength.h>
-#include <rho/crypt/nOperationModeAES.h>
-
-#ifndef AES_BLOCK_SIZE
-#define AES_BLOCK_SIZE 16
-#endif
+#include <rho/crypt/tDecAES.h>
 
 
 namespace rho
@@ -95,8 +90,7 @@ class tReadableAES : public iReadable, public bNonCopyable
         bool m_hasReadInitializationVector;  // <-- used only in kOpModeCBC
 
         // Encryption state:
-        u32 m_rk[60];    // size is 4*(MAXNR+1)
-        int m_Nr;
+        tDecAES m_aes;
 };
 
 
