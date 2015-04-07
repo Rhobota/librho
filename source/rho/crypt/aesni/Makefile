@@ -2,9 +2,9 @@
 SRC_DIR     := .
 OBJ_DIR     := ../../../../objects/rho/crypt/aesni
 
-STATIC_LIB_NAME := ../../../objects/librho.a
+STATIC_LIB_NAME := ../../../../objects/librho.a
 
-CC    := $(TARGET)gcc
+CC    := $(TARGET)g++
 ASMCC := yasm
 AR    := $(TARGET)ar
 
@@ -45,7 +45,7 @@ $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.s
 	@echo "Compiling $< ..."
 	@mkdir -p $(@D)
-	$(ASMCC) $(ASMCC_FLAGS_LOCAL) -c -o $@ $<
+	$(ASMCC) $(ASMCC_FLAGS_LOCAL) $< -o $@
 	$(AR) crsv $(STATIC_LIB_NAME) $@
 	@echo
 
