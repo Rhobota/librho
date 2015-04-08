@@ -39,9 +39,11 @@
 #define AES_INSTRCTIONS_CPUID_BIT (1<<25)
 
 
-static void __cpuid(unsigned int where[4], unsigned int leaf) {
-  asm volatile("cpuid":"=a"(*where),"=b"(*(where+1)), "=c"(*(where+2)),"=d"(*(where+3)):"a"(leaf));
-  return;
+static
+void __cpuid(unsigned int where[4], unsigned int leaf)
+{
+    asm volatile("cpuid":"=a"(*where),"=b"(*(where+1)), "=c"(*(where+2)),"=d"(*(where+3)):"a"(leaf));
+    return;
 }
 
 
@@ -51,28 +53,28 @@ static void __cpuid(unsigned int where[4], unsigned int leaf) {
  */
 bool check_for_aes_instructions()
 {
-	unsigned int cpuid_results[4];
+    unsigned int cpuid_results[4];
 
-	__cpuid(cpuid_results,0);
+    __cpuid(cpuid_results,0);
 
-	if (cpuid_results[0] < 1)
-		return false;
-/*
- *      MSB         LSB
- * EBX = 'u' 'n' 'e' 'G'
- * EDX = 'I' 'e' 'n' 'i'
- * ECX = 'l' 'e' 't' 'n'
- */
+    if (cpuid_results[0] < 1)
+        return false;
+    /*
+     *      MSB         LSB
+     * EBX = 'u' 'n' 'e' 'G'
+     * EDX = 'I' 'e' 'n' 'i'
+     * ECX = 'l' 'e' 't' 'n'
+     */
 
-	if (memcmp((unsigned char *)&cpuid_results[1], "Genu", 4) != 0 ||
-		memcmp((unsigned char *)&cpuid_results[3], "ineI", 4) != 0 ||
-		memcmp((unsigned char *)&cpuid_results[2], "ntel", 4) != 0)
-		return false;
+    if (memcmp((unsigned char *)&cpuid_results[1], "Genu", 4) != 0 ||
+            memcmp((unsigned char *)&cpuid_results[3], "ineI", 4) != 0 ||
+            memcmp((unsigned char *)&cpuid_results[2], "ntel", 4) != 0)
+        return false;
 
-	__cpuid(cpuid_results,1);
+    __cpuid(cpuid_results,1);
 
-	if (cpuid_results[2] & AES_INSTRCTIONS_CPUID_BIT)
-		return true;
+    if (cpuid_results[2] & AES_INSTRCTIONS_CPUID_BIT)
+        return true;
 
-	return false;
+    return false;
 }
