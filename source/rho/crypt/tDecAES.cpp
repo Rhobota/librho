@@ -113,6 +113,12 @@ bool tDecAES::canRunFastASM()
 void tDecAES::m_init(nOperationModeAES opmode, const u8 key[], nKeyLengthAES keylen,
                      bool useFastASM)
 {
+    // Set fields.
+    m_opmode = opmode;
+    m_keylen = keylen;
+    m_useASM = useFastASM;
+    m_expandedKey = NULL;
+
     // Check the opmode.
     switch (opmode)
     {
@@ -129,12 +135,6 @@ void tDecAES::m_init(nOperationModeAES opmode, const u8 key[], nKeyLengthAES key
         case k256bit: break;
         default: throw eInvalidArgument("The keylen parameter is not valid!");
     }
-
-    // Set fields.
-    m_opmode = opmode;
-    m_keylen = keylen;
-    m_useASM = useFastASM;
-    m_expandedKey = NULL;
 
     // Fast ASM setup:
     if (m_useASM)
