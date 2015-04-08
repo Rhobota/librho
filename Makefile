@@ -17,7 +17,7 @@ CC_FLAGS_LOCAL := $(CC_FLAGS) \
 
 ifeq ($(shell uname),Linux)
 	# Linux stuff:
-	CC_FLAGS_LOCAL += -rdynamic -Wdouble-promotion
+	CC_FLAGS_LOCAL += -rdynamic -Wdouble-promotion -maes
 else
 ifeq ($(shell uname),Darwin)
 	# OSX stuff:

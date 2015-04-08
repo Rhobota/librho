@@ -19,7 +19,7 @@ __m128i AES_128_ASSIST (__m128i temp1, __m128i temp2)
     return temp1;
 }
 
-void AES_128_Key_Expansion (const unsigned char *userkey, unsigned char *key)
+void AES_128_Key_Expansion (unsigned char *userkey, unsigned char *key)
 {
     __m128i temp1, temp2;
     __m128i *Key_Schedule = (__m128i*)key;
@@ -75,7 +75,7 @@ void KEY_192_ASSIST(__m128i* temp1, __m128i * temp2, __m128i * temp3)
     *temp3 = _mm_xor_si128 (*temp3, *temp2);
 }
 
-void AES_192_Key_Expansion (const unsigned char *userkey, unsigned char *key)
+void AES_192_Key_Expansion (unsigned char *userkey, unsigned char *key)
 {
     __m128i temp1, temp2, temp3;
     __m128i *Key_Schedule = (__m128i*)key;
@@ -144,7 +144,7 @@ void KEY_256_ASSIST_2(__m128i* temp1, __m128i * temp3)
     *temp3 = _mm_xor_si128 (*temp3, temp2);
 }
 
-void AES_256_Key_Expansion (const unsigned char *userkey, unsigned char *key)
+void AES_256_Key_Expansion (unsigned char *userkey, unsigned char *key)
 {
     __m128i temp1, temp2, temp3;
     __m128i *Key_Schedule = (__m128i*)key;
@@ -187,10 +187,10 @@ void AES_256_Key_Expansion (const unsigned char *userkey, unsigned char *key)
     Key_Schedule[14]=temp1;
 }
 
-void AES_ECB_encrypt(const unsigned char *in, // pointer to the PLAINTEXT
+void AES_ECB_encrypt(unsigned char *in, // pointer to the PLAINTEXT
                      unsigned char *out,      // pointer to the CIPHERTEXT buffer
                      size_t length,           // text length in bytes
-                     const unsigned char *key,         // pointer to the expanded key schedule
+                     unsigned char *key,         // pointer to the expanded key schedule
                      size_t number_of_rounds) // number of AES rounds 10,12 or 14
 {
     __m128i tmp;
@@ -212,10 +212,10 @@ void AES_ECB_encrypt(const unsigned char *in, // pointer to the PLAINTEXT
     }
 }
 
-void AES_ECB_decrypt(const unsigned char *in, //pointer to the CIPHERTEXT
+void AES_ECB_decrypt(unsigned char *in, //pointer to the CIPHERTEXT
                      unsigned char *out,      //pointer to the DECRYPTED TEXT buffer
                      size_t length,           //text length in bytes
-                     const unsigned char *key,         //pointer to the expanded key schedule
+                     unsigned char *key,         //pointer to the expanded key schedule
                      size_t number_of_rounds) //number of AES rounds 10,12 or 14
 {
     __m128i tmp;
@@ -237,7 +237,7 @@ void AES_ECB_decrypt(const unsigned char *in, //pointer to the CIPHERTEXT
     }
 }
 
-void AES_CBC_encrypt(const unsigned char *in,
+void AES_CBC_encrypt(unsigned char *in,
                      unsigned char *out,
                      unsigned char ivec[16],
                      size_t length,
@@ -265,7 +265,7 @@ void AES_CBC_encrypt(const unsigned char *in,
     }
 }
 
-void AES_CBC_decrypt(const unsigned char *in,
+void AES_CBC_decrypt(unsigned char *in,
                      unsigned char *out,
                      unsigned char ivec[16],
                      size_t length,
@@ -339,6 +339,11 @@ void iDec128(sAesData *data)
 
 void iEnc192(sAesData *data)
 {
+    AES_ECB_encrypt(data->in_block,
+                    data->out_block,
+                    data->num_blocks*16,
+                    data->expanded_key,
+                    12);
 }
 
 void iDec192(sAesData *data)
@@ -347,6 +352,11 @@ void iDec192(sAesData *data)
 
 void iEnc256(sAesData *data)
 {
+    AES_ECB_encrypt(data->in_block,
+                    data->out_block,
+                    data->num_blocks*16,
+                    data->expanded_key,
+                    14);
 }
 
 void iDec256(sAesData *data)
@@ -369,6 +379,12 @@ void iDec128_CBC(sAesData *data)
 
 void iEnc192_CBC(sAesData *data)
 {
+    AES_CBC_encrypt(data->in_block,
+                    data->out_block,
+                    data->iv,
+                    data->num_blocks*16,
+                    data->expanded_key,
+                    12);
 }
 
 void iDec192_CBC(sAesData *data)
@@ -377,6 +393,12 @@ void iDec192_CBC(sAesData *data)
 
 void iEnc256_CBC(sAesData *data)
 {
+    AES_CBC_encrypt(data->in_block,
+                    data->out_block,
+                    data->iv,
+                    data->num_blocks*16,
+                    data->expanded_key,
+                    14);
 }
 
 void iDec256_CBC(sAesData *data)
