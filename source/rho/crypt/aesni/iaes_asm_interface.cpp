@@ -190,7 +190,7 @@ void AES_256_Key_Expansion (const unsigned char *userkey, unsigned char *key)
 void AES_ECB_encrypt(const unsigned char *in, // pointer to the PLAINTEXT
                      unsigned char *out,      // pointer to the CIPHERTEXT buffer
                      size_t length,           // text length in bytes
-                     const char *key,         // pointer to the expanded key schedule
+                     const unsigned char *key,         // pointer to the expanded key schedule
                      size_t number_of_rounds) // number of AES rounds 10,12 or 14
 {
     __m128i tmp;
@@ -215,7 +215,7 @@ void AES_ECB_encrypt(const unsigned char *in, // pointer to the PLAINTEXT
 void AES_ECB_decrypt(const unsigned char *in, //pointer to the CIPHERTEXT
                      unsigned char *out,      //pointer to the DECRYPTED TEXT buffer
                      size_t length,           //text length in bytes
-                     const char *key,         //pointer to the expanded key schedule
+                     const unsigned char *key,         //pointer to the expanded key schedule
                      size_t number_of_rounds) //number of AES rounds 10,12 or 14
 {
     __m128i tmp;
@@ -326,6 +326,11 @@ void iDecExpandKey256(UCHAR *key, UCHAR *expanded_key)
 
 void iEnc128(sAesData *data)
 {
+    AES_ECB_encrypt(data->in_block,
+                    data->out_block,
+                    data->num_blocks*16,
+                    data->expanded_key,
+                    10);
 }
 
 void iDec128(sAesData *data)
@@ -350,6 +355,12 @@ void iDec256(sAesData *data)
 
 void iEnc128_CBC(sAesData *data)
 {
+    AES_CBC_encrypt(data->in_block,
+                    data->out_block,
+                    data->iv,
+                    data->num_blocks*16,
+                    data->expanded_key,
+                    10);
 }
 
 void iDec128_CBC(sAesData *data)
