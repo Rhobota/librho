@@ -100,6 +100,12 @@ tEncAES::~tEncAES()
 }
 
 
+bool tEncAES::canRunFastASM()
+{
+    return check_for_aes_instructions();
+}
+
+
 void tEncAES::m_init(nOperationModeAES opmode, const u8 key[], nKeyLengthAES keylen,
                      bool useFastASM)
 {

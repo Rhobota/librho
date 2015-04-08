@@ -61,6 +61,11 @@ class tDecAES : public bNonCopyable
          */
         ~tDecAES();
 
+        /**
+         * Tells whether the fast ASM impl will run on this machine.
+         */
+        static bool canRunFastASM();
+
     private:
 
         void m_init(nOperationModeAES opmode, const u8 key[], nKeyLengthAES keylen,

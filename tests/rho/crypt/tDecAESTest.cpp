@@ -13,6 +13,8 @@ using std::vector;
 
 static const u32 kTestIters = 2000;
 
+static bool gCanTestFastASM = true;
+
 
 int hexCharToValue(char hex)
 {
@@ -52,6 +54,7 @@ void test_ecb(const tTest& t, string key,
                               string ct)
 {
     // Fast ASM impl:
+    if (gCanTestFastASM)
     {
         vector<u8> ptbuf = hexStringToVector(pt);
         vector<u8> ctbuf = hexStringToVector(ct);
@@ -93,6 +96,7 @@ void test_cbc(const tTest& t, string key,
                               string ct)
 {
     // Fast ASM impl:
+    if (gCanTestFastASM)
     {
         vector<u8> ptbuf = hexStringToVector(pt);
         vector<u8> ctbuf = hexStringToVector(ct);
@@ -183,6 +187,12 @@ int main()
 
     // Test vectors are from:
     // http://www.inconteam.com/software-development/41-encryption/55-aes-test-vectors
+
+    if (!crypt::tEncAES::canRunFastASM())
+    {
+        std::cout << "Cannot run fast ASM instructions on this machine!" << std::endl;
+        gCanTestFastASM = false;
+    }
 
     tTest("tDecAES 128bit test", test128, kTestIters);
     tTest("tDecAES 192bit test", test192, kTestIters);
