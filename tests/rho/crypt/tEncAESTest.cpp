@@ -188,7 +188,7 @@ int main()
     // Test vectors are from:
     // http://www.inconteam.com/software-development/41-encryption/55-aes-test-vectors
 
-    if (!crypt::tDecAES::canRunFastASM())
+    if (!crypt::tEncAES::canRunFastASM())
     {
         std::cout << "Cannot run fast ASM instructions on this machine!" << std::endl;
         gCanTestFastASM = false;
