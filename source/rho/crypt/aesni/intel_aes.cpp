@@ -55,24 +55,28 @@ bool check_for_aes_instructions()
 {
     unsigned int cpuid_results[4];
 
-    __cpuid(cpuid_results,0);
-
-    if (cpuid_results[0] < 1)
-        return false;
-
-    /*
-     *      MSB         LSB
-     * EBX = 'u' 'n' 'e' 'G'
-     * EDX = 'I' 'e' 'n' 'i'
-     * ECX = 'l' 'e' 't' 'n'
-     */
-
-    if (memcmp((unsigned char *)&cpuid_results[1], "Genu", 4) != 0 ||
-        memcmp((unsigned char *)&cpuid_results[3], "ineI", 4) != 0 ||
-        memcmp((unsigned char *)&cpuid_results[2], "ntel", 4) != 0)
-    {
-        return false;
-    }
+    //
+    // The following is commented out because some AMD processors support the AES-NI
+    // instructions too!
+    //
+//     __cpuid(cpuid_results,0);
+//
+//     if (cpuid_results[0] < 1)
+//         return false;
+//
+//     /*
+//      *      MSB         LSB
+//      * EBX = 'u' 'n' 'e' 'G'
+//      * EDX = 'I' 'e' 'n' 'i'
+//      * ECX = 'l' 'e' 't' 'n'
+//      */
+//
+//     if (memcmp((unsigned char *)&cpuid_results[1], "Genu", 4) != 0 ||
+//         memcmp((unsigned char *)&cpuid_results[3], "ineI", 4) != 0 ||
+//         memcmp((unsigned char *)&cpuid_results[2], "ntel", 4) != 0)
+//     {
+//         return false;
+//     }
 
     __cpuid(cpuid_results,1);
 
