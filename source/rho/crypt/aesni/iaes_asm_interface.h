@@ -42,7 +42,7 @@
 typedef unsigned char UCHAR;
 
 
-//structure to pass aes processing data to asm level functions
+// structure to pass aes processing data to asm level functions
 struct sAesData
 {
     UCHAR   *in_block;
@@ -65,7 +65,7 @@ void iDecExpandKey192(UCHAR *key, UCHAR *expanded_key);
 void iDecExpandKey128(UCHAR *key, UCHAR *expanded_key);
 
 
-//enc/dec asm functions
+// enc/dec asm functions
 void iEnc128(sAesData *data);
 void iDec128(sAesData *data);
 void iEnc256(sAesData *data);

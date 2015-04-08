@@ -59,6 +59,7 @@ bool check_for_aes_instructions()
 
     if (cpuid_results[0] < 1)
         return false;
+
     /*
      *      MSB         LSB
      * EBX = 'u' 'n' 'e' 'G'
@@ -67,9 +68,11 @@ bool check_for_aes_instructions()
      */
 
     if (memcmp((unsigned char *)&cpuid_results[1], "Genu", 4) != 0 ||
-            memcmp((unsigned char *)&cpuid_results[3], "ineI", 4) != 0 ||
-            memcmp((unsigned char *)&cpuid_results[2], "ntel", 4) != 0)
+        memcmp((unsigned char *)&cpuid_results[3], "ineI", 4) != 0 ||
+        memcmp((unsigned char *)&cpuid_results[2], "ntel", 4) != 0)
+    {
         return false;
+    }
 
     __cpuid(cpuid_results,1);
 

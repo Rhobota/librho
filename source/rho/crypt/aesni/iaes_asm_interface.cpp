@@ -4,7 +4,7 @@
 #include "iaes_asm_interface.h"
 #include <wmmintrin.h>
 
-    inline
+inline
 __m128i AES_128_ASSIST (__m128i temp1, __m128i temp2)
 {
     __m128i temp3;
@@ -84,7 +84,7 @@ void AES_128_Key_Inverse(unsigned char* key)
     Key_Schedule[0] = temp10;
 }
 
-    inline
+inline
 void KEY_192_ASSIST(__m128i* temp1, __m128i * temp2, __m128i * temp3)
 {
     __m128i temp4;
@@ -173,7 +173,7 @@ void AES_192_Key_Inverse(unsigned char* key)
     Key_Schedule[0] = temp12;
 }
 
-    inline
+inline
 void KEY_256_ASSIST_1(__m128i* temp1, __m128i * temp2)
 {
     __m128i temp4;
@@ -187,7 +187,7 @@ void KEY_256_ASSIST_1(__m128i* temp1, __m128i * temp2)
     *temp1 = _mm_xor_si128 (*temp1, *temp2);
 }
 
-    inline
+inline
 void KEY_256_ASSIST_2(__m128i* temp1, __m128i * temp3)
 {
     __m128i temp2,temp4;
@@ -280,11 +280,11 @@ void AES_256_Key_Inverse(unsigned char* key)
     Key_Schedule[0] = temp14;
 }
 
-void AES_ECB_encrypt(unsigned char *in, // pointer to the PLAINTEXT
-        unsigned char *out,      // pointer to the CIPHERTEXT buffer
-        size_t length,           // text length in bytes
-        unsigned char *key,         // pointer to the expanded key schedule
-        size_t number_of_rounds) // number of AES rounds 10,12 or 14
+void AES_ECB_encrypt(unsigned char *in,       // pointer to the PLAINTEXT
+                     unsigned char *out,      // pointer to the CIPHERTEXT buffer
+                     size_t length,           // text length in bytes
+                     unsigned char *key,      // pointer to the expanded key schedule
+                     size_t number_of_rounds) // number of AES rounds 10,12 or 14
 {
     __m128i tmp;
     size_t i,j;
@@ -305,11 +305,11 @@ void AES_ECB_encrypt(unsigned char *in, // pointer to the PLAINTEXT
     }
 }
 
-void AES_ECB_decrypt(unsigned char *in, //pointer to the CIPHERTEXT
-        unsigned char *out,      //pointer to the DECRYPTED TEXT buffer
-        size_t length,           //text length in bytes
-        unsigned char *key,         //pointer to the expanded key schedule
-        size_t number_of_rounds) //number of AES rounds 10,12 or 14
+void AES_ECB_decrypt(unsigned char *in,       //pointer to the CIPHERTEXT
+                     unsigned char *out,      //pointer to the DECRYPTED TEXT buffer
+                     size_t length,           //text length in bytes
+                     unsigned char *key,      //pointer to the expanded key schedule
+                     size_t number_of_rounds) //number of AES rounds 10,12 or 14
 {
     __m128i tmp;
     size_t i,j;
@@ -331,11 +331,11 @@ void AES_ECB_decrypt(unsigned char *in, //pointer to the CIPHERTEXT
 }
 
 void AES_CBC_encrypt(unsigned char *in,
-        unsigned char *out,
-        unsigned char ivec[16],
-        size_t length,
-        unsigned char *key,
-        size_t number_of_rounds)
+                     unsigned char *out,
+                     unsigned char ivec[16],
+                     size_t length,
+                     unsigned char *key,
+                     size_t number_of_rounds)
 {
     __m128i feedback,data;
     size_t i,j;
@@ -360,11 +360,11 @@ void AES_CBC_encrypt(unsigned char *in,
 }
 
 void AES_CBC_decrypt(unsigned char *in,
-        unsigned char *out,
-        unsigned char ivec[16],
-        size_t length,
-        unsigned char *key,
-        size_t number_of_rounds)
+                     unsigned char *out,
+                     unsigned char ivec[16],
+                     size_t length,
+                     unsigned char *key,
+                     size_t number_of_rounds)
 {
     __m128i data,feedback,last_in;
     size_t i,j;
