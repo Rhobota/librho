@@ -356,6 +356,7 @@ void AES_CBC_encrypt(unsigned char *in,
         feedback = _mm_aesenclast_si128 (feedback,((__m128i*)key)[j]);
         _mm_storeu_si128 (&((__m128i*)out)[i],feedback);
     }
+    _mm_storeu_si128((__m128i*)ivec, feedback);
 }
 
 void AES_CBC_decrypt(unsigned char *in,
@@ -385,6 +386,7 @@ void AES_CBC_decrypt(unsigned char *in,
         _mm_storeu_si128 (&((__m128i*)out)[i],data);
         feedback=last_in;
     }
+    _mm_storeu_si128((__m128i*)ivec, feedback);
 }
 
 void iEncExpandKey128(UCHAR *key, UCHAR *expanded_key)
