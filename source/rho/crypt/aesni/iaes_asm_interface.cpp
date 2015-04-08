@@ -57,6 +57,33 @@ void AES_128_Key_Expansion (unsigned char *userkey, unsigned char *key)
     Key_Schedule[10] = temp1;
 }
 
+void AES_128_Key_Inverse(unsigned char* key)
+{
+    __m128i *Key_Schedule = (__m128i*)key;
+    __m128i temp0 = Key_Schedule[0];
+    __m128i temp1 = _mm_aesimc_si128(Key_Schedule[1]);
+    __m128i temp2 = _mm_aesimc_si128(Key_Schedule[2]);
+    __m128i temp3 = _mm_aesimc_si128(Key_Schedule[3]);
+    __m128i temp4 = _mm_aesimc_si128(Key_Schedule[4]);
+    __m128i temp5 = _mm_aesimc_si128(Key_Schedule[5]);
+    __m128i temp6 = _mm_aesimc_si128(Key_Schedule[6]);
+    __m128i temp7 = _mm_aesimc_si128(Key_Schedule[7]);
+    __m128i temp8 = _mm_aesimc_si128(Key_Schedule[8]);
+    __m128i temp9 = _mm_aesimc_si128(Key_Schedule[9]);
+    __m128i temp10 = Key_Schedule[10];
+    Key_Schedule[10] = temp0;
+    Key_Schedule[9] = temp1;
+    Key_Schedule[8] = temp2;
+    Key_Schedule[7] = temp3;
+    Key_Schedule[6] = temp4;
+    Key_Schedule[5] = temp5;
+    Key_Schedule[4] = temp6;
+    Key_Schedule[3] = temp7;
+    Key_Schedule[2] = temp8;
+    Key_Schedule[1] = temp9;
+    Key_Schedule[0] = temp10;
+}
+
 inline
 void KEY_192_ASSIST(__m128i* temp1, __m128i * temp2, __m128i * temp3)
 {
@@ -113,6 +140,37 @@ void AES_192_Key_Expansion (unsigned char *userkey, unsigned char *key)
     temp2=_mm_aeskeygenassist_si128 (temp3,0x80);
     KEY_192_ASSIST(&temp1, &temp2, &temp3);
     Key_Schedule[12]=temp1;
+}
+
+void AES_192_Key_Inverse(unsigned char* key)
+{
+    __m128i *Key_Schedule = (__m128i*)key;
+    __m128i temp0 = Key_Schedule[0];
+    __m128i temp1 = _mm_aesimc_si128(Key_Schedule[1]);
+    __m128i temp2 = _mm_aesimc_si128(Key_Schedule[2]);
+    __m128i temp3 = _mm_aesimc_si128(Key_Schedule[3]);
+    __m128i temp4 = _mm_aesimc_si128(Key_Schedule[4]);
+    __m128i temp5 = _mm_aesimc_si128(Key_Schedule[5]);
+    __m128i temp6 = _mm_aesimc_si128(Key_Schedule[6]);
+    __m128i temp7 = _mm_aesimc_si128(Key_Schedule[7]);
+    __m128i temp8 = _mm_aesimc_si128(Key_Schedule[8]);
+    __m128i temp9 = _mm_aesimc_si128(Key_Schedule[9]);
+    __m128i temp10 = _mm_aesimc_si128(Key_Schedule[10]);
+    __m128i temp11 = _mm_aesimc_si128(Key_Schedule[11]);
+    __m128i temp12 = Key_Schedule[12];
+    Key_Schedule[12] = temp0;
+    Key_Schedule[11] = temp1;
+    Key_Schedule[10] = temp2;
+    Key_Schedule[9] = temp3;
+    Key_Schedule[8] = temp4;
+    Key_Schedule[7] = temp5;
+    Key_Schedule[6] = temp6;
+    Key_Schedule[5] = temp7;
+    Key_Schedule[4] = temp8;
+    Key_Schedule[3] = temp9;
+    Key_Schedule[2] = temp10;
+    Key_Schedule[1] = temp11;
+    Key_Schedule[0] = temp12;
 }
 
 inline
@@ -185,6 +243,41 @@ void AES_256_Key_Expansion (unsigned char *userkey, unsigned char *key)
     temp2 = _mm_aeskeygenassist_si128(temp3, 0x40);
     KEY_256_ASSIST_1(&temp1, &temp2);
     Key_Schedule[14]=temp1;
+}
+
+void AES_256_Key_Inverse(unsigned char* key)
+{
+    __m128i *Key_Schedule = (__m128i*)key;
+    __m128i temp0 = Key_Schedule[0];
+    __m128i temp1 = _mm_aesimc_si128(Key_Schedule[1]);
+    __m128i temp2 = _mm_aesimc_si128(Key_Schedule[2]);
+    __m128i temp3 = _mm_aesimc_si128(Key_Schedule[3]);
+    __m128i temp4 = _mm_aesimc_si128(Key_Schedule[4]);
+    __m128i temp5 = _mm_aesimc_si128(Key_Schedule[5]);
+    __m128i temp6 = _mm_aesimc_si128(Key_Schedule[6]);
+    __m128i temp7 = _mm_aesimc_si128(Key_Schedule[7]);
+    __m128i temp8 = _mm_aesimc_si128(Key_Schedule[8]);
+    __m128i temp9 = _mm_aesimc_si128(Key_Schedule[9]);
+    __m128i temp10 = _mm_aesimc_si128(Key_Schedule[10]);
+    __m128i temp11 = _mm_aesimc_si128(Key_Schedule[11]);
+    __m128i temp12 = _mm_aesimc_si128(Key_Schedule[12]);
+    __m128i temp13 = _mm_aesimc_si128(Key_Schedule[13]);
+    __m128i temp14 = Key_Schedule[14];
+    Key_Schedule[14] = temp0;
+    Key_Schedule[13] = temp1;
+    Key_Schedule[12] = temp2;
+    Key_Schedule[11] = temp3;
+    Key_Schedule[10] = temp4;
+    Key_Schedule[9] = temp5;
+    Key_Schedule[8] = temp6;
+    Key_Schedule[7] = temp7;
+    Key_Schedule[6] = temp8;
+    Key_Schedule[5] = temp9;
+    Key_Schedule[4] = temp10;
+    Key_Schedule[3] = temp11;
+    Key_Schedule[2] = temp12;
+    Key_Schedule[1] = temp13;
+    Key_Schedule[0] = temp14;
 }
 
 void AES_ECB_encrypt(unsigned char *in, // pointer to the PLAINTEXT
@@ -312,16 +405,19 @@ void iEncExpandKey256(UCHAR *key, UCHAR *expanded_key)
 void iDecExpandKey128(UCHAR *key, UCHAR *expanded_key)
 {
     AES_128_Key_Expansion(key, expanded_key);
+    AES_128_Key_Inverse(expanded_key);
 }
 
 void iDecExpandKey192(UCHAR *key, UCHAR *expanded_key)
 {
     AES_192_Key_Expansion(key, expanded_key);
+    AES_192_Key_Inverse(expanded_key);
 }
 
 void iDecExpandKey256(UCHAR *key, UCHAR *expanded_key)
 {
     AES_256_Key_Expansion(key, expanded_key);
+    AES_256_Key_Inverse(expanded_key);
 }
 
 void iEnc128(sAesData *data)
@@ -335,6 +431,11 @@ void iEnc128(sAesData *data)
 
 void iDec128(sAesData *data)
 {
+    AES_ECB_decrypt(data->in_block,
+                    data->out_block,
+                    data->num_blocks*16,
+                    data->expanded_key,
+                    10);
 }
 
 void iEnc192(sAesData *data)
@@ -348,6 +449,11 @@ void iEnc192(sAesData *data)
 
 void iDec192(sAesData *data)
 {
+    AES_ECB_decrypt(data->in_block,
+                    data->out_block,
+                    data->num_blocks*16,
+                    data->expanded_key,
+                    12);
 }
 
 void iEnc256(sAesData *data)
@@ -361,6 +467,11 @@ void iEnc256(sAesData *data)
 
 void iDec256(sAesData *data)
 {
+    AES_ECB_decrypt(data->in_block,
+                    data->out_block,
+                    data->num_blocks*16,
+                    data->expanded_key,
+                    14);
 }
 
 void iEnc128_CBC(sAesData *data)
@@ -375,6 +486,12 @@ void iEnc128_CBC(sAesData *data)
 
 void iDec128_CBC(sAesData *data)
 {
+    AES_CBC_decrypt(data->in_block,
+                    data->out_block,
+                    data->iv,
+                    data->num_blocks*16,
+                    data->expanded_key,
+                    10);
 }
 
 void iEnc192_CBC(sAesData *data)
@@ -389,6 +506,12 @@ void iEnc192_CBC(sAesData *data)
 
 void iDec192_CBC(sAesData *data)
 {
+    AES_CBC_decrypt(data->in_block,
+                    data->out_block,
+                    data->iv,
+                    data->num_blocks*16,
+                    data->expanded_key,
+                    12);
 }
 
 void iEnc256_CBC(sAesData *data)
@@ -403,6 +526,12 @@ void iEnc256_CBC(sAesData *data)
 
 void iDec256_CBC(sAesData *data)
 {
+    AES_CBC_decrypt(data->in_block,
+                    data->out_block,
+                    data->iv,
+                    data->num_blocks*16,
+                    data->expanded_key,
+                    14);
 }
 
 #pragma GCC diagnostic pop
