@@ -13,27 +13,7 @@ namespace crypt
 {
 
 
-static
-u8* s_aligned_malloc(size_t size, size_t alignment)
-{
-    // Inspired by: http://cottonvibes.blogspot.com/2011/01/dynamically-allocate-aligned-memory.html
-    u8* r = (u8*) malloc(size + (--alignment) + sizeof(u8*));
-    if (r == NULL) return NULL;
-    u8* t = r + sizeof(u8*);
-    u8* o = (u8*)( ( ((size_t)(t + alignment)) | alignment ) ^ alignment );
-    ((u8**)(o))[-1] = r;
-    return o;
-}
-
-
-static
-void s_aligned_free(u8* buf)
-{
-    if (buf)
-    {
-        free(((u8**)(buf))[-1]);
-    }
-}
+#include "alignedmem.ipp"
 
 
 tEncAES::tEncAES(nOperationModeAES opmode, const u8 key[], nKeyLengthAES keylen)
