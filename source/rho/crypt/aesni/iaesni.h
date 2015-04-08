@@ -36,19 +36,12 @@
 #define _IAESNI_H__
 
 
-#if (__cplusplus)
-extern "C" {
-#endif
+#include <cstddef>
 
 
 // Test if the processor actually supports the functions below.
 // Executing one the functions below without processor support will cause UD fault.
 bool check_for_aes_instructions(void);
-
-
-#if (__cplusplus)
-}
-#endif
 
 
 #endif
