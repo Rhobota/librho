@@ -13,15 +13,16 @@ CC_FLAGS_LOCAL := $(CC_FLAGS) \
 	-Wswitch-default -Wcast-qual -Wcast-align -Wconversion \
 	-Wno-unused-parameter -Wno-long-long -Wno-sign-conversion \
 	-D_FILE_OFFSET_BITS=64 \
+	-maes \
 	-I $(INCLUDE_DIR)  # consider: -Wold-style-cast -Wshadow
 
 ifeq ($(shell uname),Linux)
 	# Linux stuff:
-	CC_FLAGS_LOCAL += -rdynamic -Wdouble-promotion -maes
+	CC_FLAGS_LOCAL += -rdynamic -Wdouble-promotion
 else
 ifeq ($(shell uname),Darwin)
 	# OSX stuff:
-	CC_FLAGS_LOCAL += -mmacosx-version-min=10.6 -I /usr/local/include -maes
+	CC_FLAGS_LOCAL += -mmacosx-version-min=10.6 -I /usr/local/include
 	PRE_STEP  := osx_pre_step
 	POST_STEP := osx_post_step
 else
