@@ -4,6 +4,7 @@
 #include "aesni/iaes_asm_interface.h"
 #include "rijndael-alg-fst.h"
 
+#include <malloc.h>
 #include <string.h>
 
 

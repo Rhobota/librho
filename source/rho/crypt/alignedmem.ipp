@@ -7,11 +7,16 @@ u8* s_aligned_malloc(size_t size, size_t alignment)
     void* buf = NULL;
     int ret = posix_memalign(&buf, alignment, size);
     if (ret != 0)
-        throw eRuntimeError("Cannot allocated aligned memory!");
+        throw eRuntimeError("Cannot allocate aligned memory!");
     return (u8*)buf;
 
     #elif __MINGW32__
-        #error Not implemented yet -- should use _aligned_malloc() I think.
+
+    void* buf = _aligned_malloc(size, alignment);
+    if (buf == NULL)
+        throw eRuntimeError("Cannot allocate aligned memory!");
+    return (u8*)buf;
+
     #else
         #error Unsupported platform
     #endif
@@ -26,7 +31,9 @@ void s_aligned_free(u8* buf)
     free(buf);
 
     #elif __MINGW32__
-        #error Not implemented yet
+
+    _aligned_free(buf);
+
     #else
         #error Unsupported platform
     #endif
