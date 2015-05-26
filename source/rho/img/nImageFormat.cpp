@@ -87,9 +87,6 @@ i32 yuyv_to_rgb24(u8* yuyv, i32 yuyvSize,
     // yuyv images use four bytes to describe two pixels.
     // rgb images use three bytes to describe one pixel.
 
-    // Alternative reference, not actually used here:
-    // http://www.fourcc.org/fccyvrgb.php
-
     if (yuyvSize % 4)
     {
         throw eColorspaceConversionError(

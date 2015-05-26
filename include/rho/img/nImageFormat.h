@@ -19,7 +19,7 @@ enum nImageFormat
     kRGB24          = 1,      // RGB,  24 bits == 1 pixel
     kRGBA           = 2,      // RGBA, 32 bits == 1 pixel
     kBGRA           = 3,      // BGRA, 32 bits == 1 pixel
-    kYUYV           = 4,      // YUYV, 32 bits == 2 pixels  (aka, YUY2, see: http://www.fourcc.org/yuv.php#YUY2)
+    kYUYV           = 4,      // YUYV, 32 bits == 2 pixels  (aka, YUY2, see: http://www.fourcc.org/yuv.php#YUY2 and http://www.fourcc.org/fccyvrgb.php)
     kGrey           = 5,      // Grey, 8 bits  == 1 pixel
 
     kMaxImageFormat = 6,
