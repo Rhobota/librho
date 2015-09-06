@@ -285,7 +285,9 @@ class tImageCap : public iImageCap
             m_delegate = nil;
 
             {
-                m_outQueue.push(NULL);
+                if (m_outQueue.size() == 0)
+                    m_outQueue.push(NULL);
+
                 destructMutex.acquire();
 
                 while (m_inQueue.size())
