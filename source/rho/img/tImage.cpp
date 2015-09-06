@@ -547,6 +547,70 @@ void tImage::rotate(double angleDegrees, tImage* dest) const
     }
 }
 
+void tImage::rotate90CCW(int numRotations, tImage* dest) const
+{
+    if (numRotations < 0 || numRotations > 3)
+        throw eInvalidArgument("rotate90CCW(): numRotations must be in [0,3]");
+
+    if (dest->bufSize() < bufUsed())
+        dest->setBufSize(bufUsed());
+    dest->setBufUsed(bufUsed());
+    dest->setFormat(format());
+
+    switch (numRotations)
+    {
+        case 0:  // no rotation
+        {
+            dest->setWidth(width());
+            dest->setHeight(height());
+            memcpy(dest->buf(), buf(), bufUsed());
+            break;
+        }
+
+        case 1:  // 90 degrees CCW
+        {
+            dest->setWidth(height());
+            dest->setHeight(width());
+            memcpy(dest->buf(), buf(), bufUsed());
+            break;
+        }
+
+        case 2:  // 180 degrees CCW
+        {
+            dest->setWidth(width());
+            dest->setHeight(height());
+            u32 ww = width();
+            u32 hh = height();
+            u32 bpp = getBPP(format());
+            const u8* srcBuf = buf();
+            u8* destBuf = dest->buf() + dest->bufUsed();
+            for (u32 h = 0; h < hh; h++)
+            {
+                for (u32 w = 0; w < ww; w++)
+                {
+                    destBuf -= bpp;
+                    for (u32 b = 0; b < bpp; b++)
+                    {
+                        destBuf[b] = *srcBuf++;
+                    }
+                }
+            }
+            break;
+        }
+
+        case 3:  // 270 degrees CCW
+        {
+            dest->setWidth(height());
+            dest->setHeight(width());
+            memcpy(dest->buf(), buf(), bufUsed());
+            break;
+        }
+
+        default:
+            throw eImpossiblePath();
+    }
+}
+
 void tImage::convertToFormat(nImageFormat format, tImage* dest) const
 {
     if (this == dest)
