@@ -1,0 +1,78 @@
+
+-----------------------
+---- libvpx.tar.gz ----
+-----------------------
+
+This code was obtained in Jan 2015 from the git repo at:
+
+     https://chromium.googlesource.com/webm/libvpx
+
+The official website for libvpx (and webm) is at:
+
+     http://www.webmproject.org/
+
+I have saved a snapshot of the git repo as I found it in
+Jan 2015 at the following location on my computer (because
+it might be useful to look at the git changelog sometime):
+
+     ~/cab/2015/libvpx_snapshot
+
+This library is generously distributed by Google for free!
+They have patent(s) on it too, but the license is also free!
+See the relevant files inside libvpx.tar.gz for details.
+Thanks Google!
+
+
+----------------------------
+---- libvpx-test.tar.gz ----
+----------------------------
+
+This is a hacked-up version of libvpx.tar.gz that I made just
+to play around with.
+
+
+---------------------------
+---- yasm-1.3.0.tar.gz ----
+---------------------------
+
+The libvpx library depends on this library (yasm).
+
+
+----------------------------
+---- Compiling on Linux ----
+----------------------------
+
+Just do the normal `./configure && make && sudo make install` commands.
+
+
+--------------------------
+---- Compiling on OSX ----
+--------------------------
+
+The configure script doesn't detect OSX for some reason, so it will
+default to the 'generic-gnu' target. You should specify the right target
+by running `./configure --target=x86_64-darwin13-gcc` ...
+Doing so enables some optimizations.
+
+
+--------------------------
+---- Compiling on iOS ----
+--------------------------
+
+See the 'ios-build' repository.
+
+
+------------------------------
+---- Compiling on Windows ----
+------------------------------
+
+I was able to compile both yasm and libvpx on Windows using MSYS (a bash
+emulator sort-of thing that comes with MinGW). I didn't have such success
+using Cygwin, although it probably could work. Using MSYS, I could do the
+normal `./configure && make && make install` on both yasm and libvpx. The
+install part put the headers and the .a files into MYSYS's virtual file
+system thing. I was able to copy them out of there and into whatever
+other include and lib directories I needed them to be in -- eg. the Cygwin
+include and lib dirs for Cygwin's MinGW port, which is what I use to
+compile everything else on Windows.
+
