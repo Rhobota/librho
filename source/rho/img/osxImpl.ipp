@@ -294,6 +294,7 @@ class tImageCap : public iImageCap
             m_delegate = nil;
 
             {
+                m_outQueue.push(NULL);
                 destructMutex.acquire();
 
                 while (m_inQueue.size())
@@ -346,8 +347,15 @@ class tImageCap : public iImageCap
             if (!destructed)
             {
                 u8* b = m_outQueue.pop();
-                memcpy(b, buf, bufSize);
-                m_inQueue.push(b);
+                if (b == NULL)
+                {
+                    destructed = true;
+                }
+                else
+                {
+                    memcpy(b, buf, bufSize);
+                    m_inQueue.push(b);
+                }
             }
             destructMutex.release();
         }
