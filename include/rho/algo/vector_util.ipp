@@ -52,7 +52,7 @@ void shuffle(std::vector<A>& v, iLCG& lcg)
     {
         u64 rr = lcg.next();
         u32 r = (u32)(rr % (i+1));
-        swap(v[i], v[r]);
+        std::swap(v[i], v[r]);
     }
 }
 
@@ -68,8 +68,8 @@ void shuffle(std::vector<A>& a, std::vector<B>& b, iLCG& lcg)
     {
         u64 rr = lcg.next();
         u32 r = (u32)(rr % (i+1));
-        swap(a[i], a[r]);
-        swap(b[i], b[r]);
+        std::swap(a[i], a[r]);
+        std::swap(b[i], b[r]);
     }
 }
 
