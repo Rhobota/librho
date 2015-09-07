@@ -571,7 +571,22 @@ void tImage::rotate90CCW(int numRotations, tImage* dest) const
         {
             dest->setWidth(height());
             dest->setHeight(width());
-            memcpy(dest->buf(), buf(), bufUsed());
+            u32 ww = width();
+            u32 hh = height();
+            u32 bpp = getBPP(format());
+            const u8* srcBuf = buf();
+            u8* destBuf = dest->buf();
+            for (u32 h = 0; h < hh; h++)
+            {
+                for (u32 w = 0; w < ww; w++)
+                {
+                    u8* destBufHere = destBuf + ((ww-w-1) * hh + h) * bpp;
+                    for (u32 b = 0; b < bpp; b++)
+                    {
+                        destBufHere[b] = *srcBuf++;
+                    }
+                }
+            }
             break;
         }
 
@@ -602,7 +617,22 @@ void tImage::rotate90CCW(int numRotations, tImage* dest) const
         {
             dest->setWidth(height());
             dest->setHeight(width());
-            memcpy(dest->buf(), buf(), bufUsed());
+            u32 ww = width();
+            u32 hh = height();
+            u32 bpp = getBPP(format());
+            const u8* srcBuf = buf();
+            u8* destBuf = dest->buf();
+            for (u32 h = 0; h < hh; h++)
+            {
+                for (u32 w = 0; w < ww; w++)
+                {
+                    u8* destBufHere = destBuf + (w * hh + (hh-h-1)) * bpp;
+                    for (u32 b = 0; b < bpp; b++)
+                    {
+                        destBufHere[b] = *srcBuf++;
+                    }
+                }
+            }
             break;
         }
 
