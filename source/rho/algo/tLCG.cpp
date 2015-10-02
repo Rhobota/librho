@@ -55,6 +55,13 @@ u64 tLCG::randMax()
     return (0x7FFFFFFF >> kShiftBitsLCG);
 }
 
+void tLCG::reset(u32 seed)
+{
+    m_x = seed;
+    m_curr = 0;
+    m_currLeft = 0;
+}
+
 
 tKnuthLCG::tKnuthLCG(u64 seed)
     : m_x(seed), m_curr(0), m_currLeft(0)
@@ -98,6 +105,13 @@ u64 tKnuthLCG::next()
 u64 tKnuthLCG::randMax()
 {
     return (0xFFFFFFFFFFFFFFFF >> kShiftBitsKnuthLCG);
+}
+
+void tKnuthLCG::reset(u64 seed)
+{
+    m_x = seed;
+    m_curr = 0;
+    m_currLeft = 0;
 }
 
 
