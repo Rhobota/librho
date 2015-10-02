@@ -41,6 +41,8 @@ class tLCG : public iReadable, public iLCG
         u64 next();
         u64 randMax();
 
+        void reset(u32 seed);
+
     private:
 
         u32 m_x;
@@ -63,6 +65,8 @@ class tKnuthLCG : public iReadable, public iLCG
 
         u64 next();
         u64 randMax();
+
+        void reset(u64 seed);
 
     private:
 
