@@ -66,15 +66,28 @@ tSocket::~tSocket()
 }
 
 
-void tSocket::send(u8* buf, i32 bufSize, const tAddr& dest)
+void tSocket::send(const u8* buf, i32 bufSize, tAddr& dest, u16 port)
 {
-    // TODO
+    if (bufSize < 0)
+        throw eInvalidArgument("bufSize must not be negative");
+    dest.setUpperProtoPort(port);
+    int flags = 0;
+    ssize_t ret = ::sendto(m_fd, buf, (size_t)bufSize, flags,
+                           (struct sockaddr*)(dest.m_sockaddr),
+                           dest.m_sockaddrlen);
+    if (ret == -1)
+    {
+        throw eRuntimeError(
+                std::string("Cannot sendto udp socket. Error: ") +
+                strerror(errno));
+    }
 }
 
 
-i32 tSocket::receive(u8* buf, i32 maxSize, tAddr& src)
+i32 tSocket::receive(u8* buf, i32 maxSize, tAddr& src, u16& port)
 {
     // TODO
+    return 0;
 }
 
 
