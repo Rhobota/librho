@@ -2,6 +2,8 @@
 #include <rho/ip/udp/tSocket.h>
 #include <rho/ip/ebIP.h>
 
+#include <sstream>
+
 
 namespace rho
 {
@@ -32,7 +34,7 @@ tSocket::tSocket()
 tSocket::tSocket(u16 port)
     : m_fd(kInvalidSocket)
 {
-    tAddrGroup addrGroup(kWildcardBind);
+    tAddrGroup addrGroup(tAddrGroup::kWildcardBind);
     if (addrGroup.size() != 1)
         throw eLogicError("A udp socket can only bind to one address.");
 
