@@ -51,22 +51,23 @@ class tSocket : public bNonCopyable
         ~tSocket();
 
         /**
-         * Sends a UDP datagram to 'dest'.
+         * Sends a UDP datagram to 'dest' on 'port'.
          * Note: Don't try to send a huge buffer inside a single datagram! That's not safe
          * and the huge buffer will likely be dropped by an intermediary router, especially
          * if you're sending across the Internet at large. This reference recommends sending
          * at most 512 payload bytes inside a single datagram:
          *    http://stackoverflow.com/questions/1098897/what-is-the-largest-safe-udp-packet-size-on-the-internet
          */
-        void send(u8* buf, i32 bufSize, const tAddr& dest);
+        void send(const u8* buf, i32 bufSize, tAddr& dest, u16 port);
 
         /**
          * Receives a UDP datagram from the bound socket.
          * Use 'maxSize' to tell this method how much space you've allocated in the 'buf' buffer.
          * This method will truncate the datagram if it cannot fit inside 'buf'. The size of the
-         * datagram is returned. The source of the datagram is returned via the 'src' parameter.
+         * true datagram is returned. The source of the datagram is returned via the 'src' and 'port'
+         * output parameters.
          */
-        i32  receive(u8* buf, i32 maxSize, tAddr& src);
+        i32  receive(u8* buf, i32 maxSize, tAddr& src, u16& port);
 
     private:
 
