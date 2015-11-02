@@ -4,6 +4,7 @@
 
 #include <rho/ppcheck.h>
 #include <rho/ip/tcp/_pre.h>
+#include <rho/ip/udp/_pre.h>
 #include <rho/ip/ebIP.h>
 #include <rho/types.h>
 
@@ -57,6 +58,7 @@ class tAddr
         friend class tAddrGroup;
         friend class tcp::tSocket;
         friend class tcp::tServer;
+        friend class udp::tSocket;
 };
 
 
