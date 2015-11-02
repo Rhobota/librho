@@ -46,9 +46,15 @@ class tSocket : public bNonCopyable
         tSocket(const tAddr& addr, u16 port);
 
         /**
-         * Closes the socket and cleans up stuff.
+         * Closes the socket and cleans up stuff (e.g. leaves the multicast group if applicable).
          */
         ~tSocket();
+
+    private:
+
+        void m_openSocket();
+
+        void m_finalize();
 
     private:
 
