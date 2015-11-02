@@ -26,8 +26,6 @@ tSocket::tSocket()
     : m_fd(kInvalidSocket)
 {
     m_openSocket();
-
-    // TODO
 }
 
 
@@ -65,6 +63,18 @@ tSocket::tSocket(const tAddr& addr, u16 port)
 tSocket::~tSocket()
 {
     m_finalize();
+}
+
+
+void tSocket::send(u8* buf, i32 bufSize, const tAddr& dest)
+{
+    // TODO
+}
+
+
+i32 tSocket::receive(u8* buf, i32 maxSize, tAddr& src)
+{
+    // TODO
 }
 
 
