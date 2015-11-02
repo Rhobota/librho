@@ -64,10 +64,10 @@ class tSocket : public bNonCopyable
          * Receives a UDP datagram from the bound socket.
          * Use 'maxSize' to tell this method how much space you've allocated in the 'buf' buffer.
          * This method will truncate the datagram if it cannot fit inside 'buf'. The size of the
-         * true datagram is returned. The source of the datagram is returned via the 'src' and 'port'
-         * output parameters.
+         * true datagram is returned via the 'bufSize' output parameter. The source address of the
+         * datagram is returned, and the source port is returned via the 'port' output parameter.
          */
-        i32  receive(u8* buf, i32 maxSize, tAddr& src, u16& port);
+        tAddr receive(u8* buf, i32 maxSize, i32& bufSize, u16& port);
 
     private:
 

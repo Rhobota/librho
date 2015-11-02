@@ -68,8 +68,8 @@ tSocket::~tSocket()
 
 void tSocket::send(const u8* buf, i32 bufSize, tAddr& dest, u16 port)
 {
-    if (bufSize < 0)
-        throw eInvalidArgument("bufSize must not be negative");
+    if (bufSize <= 0)
+        throw eInvalidArgument("bufSize must be positive");
     dest.setUpperProtoPort(port);
     int flags = 0;
     ssize_t ret = ::sendto(m_fd, buf, (size_t)bufSize, flags,
@@ -84,10 +84,38 @@ void tSocket::send(const u8* buf, i32 bufSize, tAddr& dest, u16 port)
 }
 
 
-i32 tSocket::receive(u8* buf, i32 maxSize, tAddr& src, u16& port)
+tAddr tSocket::receive(u8* buf, i32 maxSize, i32& bufSize, u16& port)
 {
-    // TODO
-    return 0;
+    if (maxSize <= 0)
+        throw eInvalidArgument("maxSize must be positive");
+
+    struct sockaddr_in6 sockAddr;
+    socklen_t sockAddrLen = sizeof(sockAddr);
+    socklen_t returnedLen = sockAddrLen;
+
+    int flags = MSG_TRUNC;
+
+    ssize_t ret = ::recvfrom(m_fd, buf, (size_t)maxSize, flags,
+                             (struct sockaddr*)&sockAddr,
+                             &returnedLen);
+
+    if (ret == -1)
+    {
+        throw eRuntimeError(
+                std::string("Cannot recvfrom udp socket. Error: ") +
+                strerror(errno));
+    }
+
+    if (returnedLen > sockAddrLen)
+    {
+        throw eLogicError("Something is crazy wrong (2).");
+    }
+
+    bufSize = (i32) ret;
+
+    tAddr addr((struct sockaddr*)&sockAddr, (int)returnedLen);
+    port = addr.getUpperProtoPort();
+    return addr;
 }
 
 
