@@ -34,13 +34,13 @@ class tSocket : public bNonCopyable
         tSocket();
 
         /**
-         * Creates a UDP socket for receiving datagrams to this port.
+         * Creates a UDP socket for receiving datagrams to this port. The socket binds to this port.
          * Next, use the receive() method to receive a UDP datagram on this port.
          */
         tSocket(u16 port);
 
         /**
-         * Creates a UDP socket that joins this multicast group and receives datagrams to this port.
+         * Creates a UDP socket that joins this multicast group and receives datagrams to this port. The socket binds to this port.
          * Next, use the receive() method to receive a UDP datagram on this port to this multicast group.
          */
         tSocket(const tAddr& addr, u16 port);
@@ -49,6 +49,24 @@ class tSocket : public bNonCopyable
          * Closes the socket and cleans up stuff (e.g. leaves the multicast group if applicable).
          */
         ~tSocket();
+
+        /**
+         * Sends a UDP datagram to 'dest'.
+         * Note: Don't try to send a huge buffer inside a single datagram! That's not safe
+         * and the huge buffer will likely be dropped by an intermediary router, especially
+         * if you're sending across the Internet at large. This reference recommends sending
+         * at most 512 payload bytes inside a single datagram:
+         *    http://stackoverflow.com/questions/1098897/what-is-the-largest-safe-udp-packet-size-on-the-internet
+         */
+        void send(u8* buf, i32 bufSize, const tAddr& dest);
+
+        /**
+         * Receives a UDP datagram from the bound socket.
+         * Use 'maxSize' to tell this method how much space you've allocated in the 'buf' buffer.
+         * This method will truncate the datagram if it cannot fit inside 'buf'. The size of the
+         * datagram is returned. The source of the datagram is returned via the 'src' parameter.
+         */
+        i32  receive(u8* buf, i32 maxSize, tAddr& src);
 
     private:
 
