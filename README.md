@@ -121,8 +121,7 @@ Other
 
 Here are a few things I'd like the library to have soon:
 
-    - udp sockets
-    - non-blocking tcp sockets
+    - non-blocking tcp & udp sockets
     - graph library
 
 Things left to do are marked with a comment that contains 'libtodo' or 'LIBTODO'.
