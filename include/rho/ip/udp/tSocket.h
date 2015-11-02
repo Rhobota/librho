@@ -52,6 +52,7 @@ class tSocket : public bNonCopyable
 
     private:
 
+        int   m_fd;       // posix file descriptor
 };
 
 
