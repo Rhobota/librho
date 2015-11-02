@@ -32,9 +32,22 @@ tSocket::tSocket()
 tSocket::tSocket(u16 port)
     : m_fd(kInvalidSocket)
 {
+    tAddrGroup addrGroup(kWildcardBind);
+    if (addrGroup.size() != 1)
+        throw eLogicError("A udp socket can only bind to one address.");
+
+    tAddr addr = addrGroup[0];
+    addr.setUpperProtoPort(port);
+
     m_openSocket();
 
-    // TODO
+    if (::bind(m_fd, (struct sockaddr*)(addr.m_sockaddr), addr.m_sockaddrlen) != 0)
+    {
+        m_finalize();
+        std::ostringstream o;
+        o << "Cannot bind udp socket to port (" << port << ").";
+        throw eSocketBindError(o.str());
+    }
 }
 
 
@@ -58,11 +71,9 @@ void tSocket::m_openSocket()
     m_finalize();
 
     #if __linux__
-    m_fd = (addr.getVersion() == kIPv4) ? ::socket(AF_INET, SOCK_DGRAM|SOCK_CLOEXEC, IPPROTO_UDP)
-                                        : ::socket(AF_INET6, SOCK_DGRAM|SOCK_CLOEXEC, IPPROTO_UDP);
+    m_fd = ::socket(AF_INET6, SOCK_DGRAM|SOCK_CLOEXEC, IPPROTO_UDP);
     #elif __APPLE__ || __CYGWIN__ || __MINGW32__
-    m_fd = (addr.getVersion() == kIPv4) ? ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
-                                        : ::socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+    m_fd = ::socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
     #else
     #error What platform are you on!?
     #endif
