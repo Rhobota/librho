@@ -23,23 +23,33 @@ static const int kInvalidSocket = INVALID_SOCKET;
 tSocket::tSocket()
     : m_fd(kInvalidSocket)
 {
+    m_openSocket();
+
+    // TODO
 }
 
 
 tSocket::tSocket(u16 port)
     : m_fd(kInvalidSocket)
 {
+    m_openSocket();
+
+    // TODO
 }
 
 
 tSocket::tSocket(const tAddr& addr, u16 port)
     : m_fd(kInvalidSocket)
 {
+    m_openSocket();
+
+    // TODO
 }
 
 
 tSocket::~tSocket()
 {
+    m_finalize();
 }
 
 
