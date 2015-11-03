@@ -74,6 +74,21 @@ tSocket::tSocket(tAddr addr, u16 port)
             throw eRuntimeError("Cannot join ipv6 multicast group!");
         }
     }
+
+    int on  = 1;
+    #if __linux__ || __APPLE__ || __CYGWIN__
+    if (::setsockopt(m_fd, SOL_SOCKET, SO_REUSEADDR, (char*)&on, sizeof(on)) != 0)
+    #elif __MINGW32__
+    if (::setsockopt(m_fd, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (char*)&on, sizeof(on)) != 0)
+    #else
+    #error What platform are you on!?
+    #endif
+    {
+        m_finalize();
+        throw eSocketCreationError("Cannot enable reuse-addr on udp multicast socket.");
+    }
+
+    m_bind(port);
 }
 
 
