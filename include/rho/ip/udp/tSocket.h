@@ -43,7 +43,7 @@ class tSocket : public bNonCopyable
          * Creates a UDP socket that joins this multicast group and receives datagrams to this port. The socket binds to this port.
          * Next, use the receive() method to receive a UDP datagram on this port to this multicast group.
          */
-        tSocket(const tAddr& addr, u16 port);
+        tSocket(tAddr addr, u16 port);
 
         /**
          * Closes the socket and cleans up stuff (e.g. leaves the multicast group if applicable).
@@ -68,6 +68,18 @@ class tSocket : public bNonCopyable
          * datagram is returned, and the source port is returned via the 'port' output parameter.
          */
         tAddr receive(u8* buf, i32 maxSize, i32& bufSize, u16& port);
+
+    public:
+
+        ///////////////////////////////////////////////////////////////////////
+        // Config interface. Often all optional.
+        ///////////////////////////////////////////////////////////////////////
+
+        /**
+         * Sets the hop limit of outgoing multicast datagrams. Valid values are
+         * in [0,255].
+         */
+        void setMulticastSendHops(int allowedHops);
 
     private:
 
