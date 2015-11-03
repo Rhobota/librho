@@ -32,22 +32,8 @@ tSocket::tSocket()
 tSocket::tSocket(u16 port)
     : m_fd(kInvalidSocket)
 {
-    tAddrGroup addrGroup(tAddrGroup::kWildcardBind);
-    if (addrGroup.size() != 1)
-        throw eLogicError("A udp socket can only bind to one address.");
-
-    tAddr addr = addrGroup[0];
-    addr.setUpperProtoPort(port);
-
     m_openSocket();
-
-    if (::bind(m_fd, (struct sockaddr*)(addr.m_sockaddr), addr.m_sockaddrlen) != 0)
-    {
-        m_finalize();
-        std::ostringstream o;
-        o << "Cannot bind udp socket to port (" << port << ").";
-        throw eSocketBindError(o.str());
-    }
+    m_bind(port);
 }
 
 
@@ -55,8 +41,6 @@ tSocket::tSocket(tAddr addr, u16 port)
     : m_fd(kInvalidSocket)
 {
     m_openSocket();
-
-    addr.setUpperProtoPort(port);
 
     if (addr.getVersion() == kIPv4)
     {
@@ -75,7 +59,7 @@ tSocket::tSocket(tAddr addr, u16 port)
         }
     }
 
-    else
+    else  // kIPv6
     {
         struct sockaddr_in6* ip6sockAddr = (struct sockaddr_in6*) addr.m_sockaddr;
 
@@ -210,6 +194,28 @@ void tSocket::m_finalize()
         #error What platform are you on!?
         #endif
         m_fd = kInvalidSocket;
+    }
+}
+
+
+void tSocket::m_bind(u16 port)
+{
+    tAddrGroup addrGroup(tAddrGroup::kWildcardBind);
+    if (addrGroup.size() != 1)
+    {
+        m_finalize();
+        throw eLogicError("A udp socket must bind to exactly one address.");
+    }
+
+    tAddr addr = addrGroup[0];
+    addr.setUpperProtoPort(port);
+
+    if (::bind(m_fd, (struct sockaddr*)(addr.m_sockaddr), addr.m_sockaddrlen) != 0)
+    {
+        m_finalize();
+        std::ostringstream o;
+        o << "Cannot bind udp socket to port (" << port << ").";
+        throw eSocketBindError(o.str());
     }
 }
 
