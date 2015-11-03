@@ -58,7 +58,7 @@ class tSocket : public bNonCopyable
          * at most 512 payload bytes inside a single datagram:
          *    http://stackoverflow.com/questions/1098897/what-is-the-largest-safe-udp-packet-size-on-the-internet
          */
-        void send(const u8* buf, i32 bufSize, tAddr& dest, u16 port);
+        void send(const u8* buf, i32 bufSize, tAddr dest, u16 port);
 
         /**
          * Receives a UDP datagram from the bound socket.

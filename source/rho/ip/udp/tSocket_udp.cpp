@@ -66,7 +66,7 @@ tSocket::~tSocket()
 }
 
 
-void tSocket::send(const u8* buf, i32 bufSize, tAddr& dest, u16 port)
+void tSocket::send(const u8* buf, i32 bufSize, tAddr dest, u16 port)
 {
     if (bufSize <= 0)
         throw eInvalidArgument("bufSize must be positive");
