@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
 {
     rho::ip::tAddrGroup multicastAddrGroup("FF02::6713:1234");  // <-- an arbitrary ipv6 link-local multicast address
     rho::ip::tAddr multicastAddr = multicastAddrGroup[0];
-    u16 bindPort = 12345;  // <-- an arbitrary port
+    u16 bindPort = 12347;  // <-- an arbitrary port
 
     rho::ip::udp::tSocket udpSocket(multicastAddr, bindPort);
 
