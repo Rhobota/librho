@@ -87,6 +87,8 @@ class tSocket : public bNonCopyable
 
         void m_finalize();
 
+        void m_bind(u16 port);
+
     private:
 
         int   m_fd;       // posix file descriptor
