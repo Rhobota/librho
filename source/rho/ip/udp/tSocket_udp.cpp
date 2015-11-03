@@ -51,12 +51,45 @@ tSocket::tSocket(u16 port)
 }
 
 
-tSocket::tSocket(const tAddr& addr, u16 port)
+tSocket::tSocket(tAddr addr, u16 port)
     : m_fd(kInvalidSocket)
 {
     m_openSocket();
 
-    // TODO
+    addr.setUpperProtoPort(port);
+
+    if (addr.getVersion() == kIPv4)
+    {
+        struct sockaddr_in* ip4sockAddr = (struct sockaddr_in*) addr.m_sockaddr;
+
+        struct ip_mreqn joinRequest;
+        memset(&joinRequest, 0, sizeof(joinRequest));
+        joinRequest.imr_multiaddr = ip4sockAddr->sin_addr;
+        joinRequest.imr_address.s_addr = INADDR_ANY;
+        joinRequest.imr_ifindex = 0;
+
+        if (::setsockopt(m_fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &joinRequest, sizeof(joinRequest)) != 0)
+        {
+            m_finalize();
+            throw eRuntimeError("Cannot join ipv4 multicast group!");
+        }
+    }
+
+    else
+    {
+        struct sockaddr_in6* ip6sockAddr = (struct sockaddr_in6*) addr.m_sockaddr;
+
+        struct ipv6_mreq joinRequest;
+        memset(&joinRequest, 0, sizeof(joinRequest));
+        joinRequest.ipv6mr_multiaddr = ip6sockAddr->sin6_addr;
+        joinRequest.ipv6mr_interface = 0;
+
+        if (::setsockopt(m_fd, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &joinRequest, sizeof(joinRequest)) != 0)
+        {
+            m_finalize();
+            throw eRuntimeError("Cannot join ipv6 multicast group!");
+        }
+    }
 }
 
 
@@ -116,6 +149,15 @@ tAddr tSocket::receive(u8* buf, i32 maxSize, i32& bufSize, u16& port)
     tAddr addr((struct sockaddr*)&sockAddr, (int)returnedLen);
     port = addr.getUpperProtoPort();
     return addr;
+}
+
+
+void tSocket::setMulticastSendHops(int allowedHops)
+{
+    if (::setsockopt(m_fd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &allowedHops, sizeof(int)) != 0)
+    {
+        throw eRuntimeError("Cannot setsockopt() with IPV6_MULTICAST_HOPS on this socket.");
+    }
 }
 
 
