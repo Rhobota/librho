@@ -154,7 +154,11 @@ int main()
 
     tTest("send/receive external test", sendReceiveExternalText);
     tTest("self loop unicast test", selfLoopUnicastTest, 1000);
+#ifdef __linux__
     tTest("self loop multicast test", selfLoopMulticastTest, 1000);
+#else
+    cout << "skipping 'self loop multicast test' on non-linux os" << endl;
+#endif
     tTest("timeout test", timeoutTest);
 
     return 0;
