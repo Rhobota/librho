@@ -70,8 +70,9 @@ tSocket::tSocket(tAddr addr, u16 port)
 
         if (::setsockopt(m_fd, IPPROTO_IPV6, IPV6_JOIN_GROUP, &joinRequest, sizeof(joinRequest)) != 0)
         {
+            int err = errno;
             m_finalize();
-            throw eRuntimeError("Cannot join ipv6 multicast group!");
+            throw eRuntimeError(std::string("Cannot join ipv6 multicast group! Error: ") + strerror(err));
         }
     }
 

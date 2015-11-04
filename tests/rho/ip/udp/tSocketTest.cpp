@@ -45,14 +45,61 @@ void sendReceiveExternalText(const tTest& t)
     }
 }
 
+string randString()
+{
+    int len = (rand() % 500) + 1;
+    string str;
+    for (int i = 0; i < len; i++)
+        str += 'a' + (rand() % 26);
+    return str;
+}
+
 void selfLoopUnicastTest(const tTest& t)
 {
-    // TODO
+    ip::udp::tSocket sender;
+    ip::udp::tSocket receiver(12345);
+
+    int count = (rand() % 10) + 1;
+    for (int i = 0; i < count; i++)
+    {
+        string message = randString();
+        sender.send((u8*)message.c_str(), message.length(), "::1", 12345);
+
+        const i32 BUFSIZE = 1024;
+        u8 buf[BUFSIZE];
+        i32 bufSize;
+        u16 port;
+        ip::tAddr addr = receiver.receive(buf, BUFSIZE, bufSize, port);
+
+        string receivedMessage((char*)buf, std::min(BUFSIZE, bufSize));
+        t.assert(message == receivedMessage);
+    }
 }
 
 void selfLoopMulticastTest(const tTest& t)
 {
-    // TODO
+    std::string multicastAddress = "FF02::9876:1234";
+    ip::tAddrGroup addrGroup(multicastAddress);
+    ip::tAddr addr = addrGroup[0];
+
+    ip::udp::tSocket sender;
+    ip::udp::tSocket receiver(addr, 12345);  // <-- This adds the socket to the multicast group, so it can get packets sent to that group.
+
+    int count = (rand() % 10) + 1;
+    for (int i = 0; i < count; i++)
+    {
+        string message = randString();
+        sender.send((u8*)message.c_str(), message.length(), addr, 12345);  // <-- This sends a packet to the multicast group, so that packet will be received by all members of that group.
+
+        const i32 BUFSIZE = 1024;
+        u8 buf[BUFSIZE];
+        i32 bufSize;
+        u16 port;
+        ip::tAddr addr = receiver.receive(buf, BUFSIZE, bufSize, port);
+
+        string receivedMessage((char*)buf, std::min(BUFSIZE, bufSize));
+        t.assert(message == receivedMessage);
+    }
 }
 
 void timeoutTest(const tTest& t, u32 correctTimeoutMS, u32 allowance)
@@ -103,9 +150,11 @@ int main()
 {
     tCrashReporter::init();
 
+    srand(time(0));
+
     tTest("send/receive external test", sendReceiveExternalText);
-    tTest("self loop unicast test", selfLoopUnicastTest);
-    tTest("self loop multicast test", selfLoopMulticastTest);
+    tTest("self loop unicast test", selfLoopUnicastTest, 1000);
+    tTest("self loop multicast test", selfLoopMulticastTest, 1000);
     tTest("timeout test", timeoutTest);
 
     return 0;
