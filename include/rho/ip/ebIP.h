@@ -77,6 +77,19 @@ class eHostUnreachableError : public ebIP
 };
 
 
+class eReceiveTimeoutError : public ebIP
+{
+    public:
+
+        eReceiveTimeoutError(std::string reason)
+            : ebIP(reason)
+        {
+        }
+
+        ~eReceiveTimeoutError() throw() { }
+};
+
+
 }    // namespace ip
 }    // namespace rho
 

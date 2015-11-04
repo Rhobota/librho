@@ -68,7 +68,7 @@ tSocket::tSocket(tAddr addr, u16 port)
         joinRequest.ipv6mr_multiaddr = ip6sockAddr->sin6_addr;
         joinRequest.ipv6mr_interface = 0;
 
-        if (::setsockopt(m_fd, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &joinRequest, sizeof(joinRequest)) != 0)
+        if (::setsockopt(m_fd, IPPROTO_IPV6, IPV6_JOIN_GROUP, &joinRequest, sizeof(joinRequest)) != 0)
         {
             m_finalize();
             throw eRuntimeError("Cannot join ipv6 multicast group!");
@@ -100,6 +100,12 @@ tSocket::~tSocket()
 
 void tSocket::send(const u8* buf, i32 bufSize, tAddr dest, u16 port)
 {
+    if (dest.getVersion() == kIPv4)
+    {
+        tAddrGroup addrGroup(std::string("::ffff:") + dest.toString());
+        dest = addrGroup[0];
+    }
+
     if (bufSize <= 0)
         throw eInvalidArgument("bufSize must be positive");
     dest.setUpperProtoPort(port);
@@ -113,6 +119,15 @@ void tSocket::send(const u8* buf, i32 bufSize, tAddr dest, u16 port)
                 std::string("Cannot sendto udp socket. Error: ") +
                 strerror(errno));
     }
+}
+
+
+void tSocket::send(const u8* buf, i32 bufSize, std::string dest, u16 port)
+{
+    tAddrGroup addrGroup(dest);
+    if (addrGroup.size() == 0)
+        throw eRuntimeError(std::string("Cannot resolve IP address of host: ") + dest);
+    send(buf, bufSize, addrGroup[0], port);
 }
 
 
@@ -148,6 +163,30 @@ tAddr tSocket::receive(u8* buf, i32 maxSize, i32& bufSize, u16& port)
     tAddr addr((struct sockaddr*)&sockAddr, (int)returnedLen);
     port = addr.getUpperProtoPort();
     return addr;
+}
+
+
+tAddr tSocket::receive(u8* buf, i32 maxSize, i32& bufSize, u16& port, u32 timeoutMS)
+{
+    // Block until the socket is readable.
+    fd_set myfdset;
+    FD_ZERO(&myfdset);
+    #if __linux__ || __APPLE__ || __CYGWIN__
+    FD_SET(m_fd, &myfdset);
+    #elif __MINGW32__
+    FD_SET((SOCKET)m_fd, &myfdset);
+    #else
+    #error What platform are you on!?
+    #endif
+    struct timeval tv;
+    tv.tv_sec = (timeoutMS / 1000);
+    tv.tv_usec = ((timeoutMS % 1000) * 1000);
+    int selectStatus = ::select(m_fd+1, &myfdset, NULL, NULL, &tv);
+    if (selectStatus != 1)
+        throw eReceiveTimeoutError("UDP receive timeout!");
+
+    // The socket is readable... it seems... so let's read from it.
+    return receive(buf, maxSize, bufSize, port);
 }
 
 
@@ -194,6 +233,18 @@ void tSocket::m_openSocket()
         throw eSocketCreationError("Cannot set close-on-exec on the new socket.");
     }
     #endif
+
+    int off = 0;
+    if (::setsockopt(m_fd, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&off, sizeof(off))
+            != 0)
+    {
+        #if __linux__ || __APPLE__
+        m_finalize();
+        throw eSocketCreationError("Cannot turn off ipv6-only on UDP socket.");
+        #else
+        std::cerr << "Cannot turn off ipv6-only on UDP socket." << std::endl;
+        #endif
+    }
 }
 
 
