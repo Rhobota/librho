@@ -58,7 +58,8 @@ class tSocket : public bNonCopyable
          * at most 512 payload bytes inside a single datagram:
          *    http://stackoverflow.com/questions/1098897/what-is-the-largest-safe-udp-packet-size-on-the-internet
          */
-        void send(const u8* buf, i32 bufSize, tAddr dest, u16 port);
+        void send(const u8* buf, i32 bufSize, tAddr       dest, u16 port);
+        void send(const u8* buf, i32 bufSize, std::string dest, u16 port);
 
         /**
          * Receives a UDP datagram from the bound socket.
@@ -68,6 +69,7 @@ class tSocket : public bNonCopyable
          * datagram is returned, and the source port is returned via the 'port' output parameter.
          */
         tAddr receive(u8* buf, i32 maxSize, i32& bufSize, u16& port);
+        tAddr receive(u8* buf, i32 maxSize, i32& bufSize, u16& port, u32 timeoutMS);
 
     public:
 
