@@ -3,6 +3,7 @@
 #include <rho/ip/ebIP.h>
 
 #include <sstream>
+#include <iostream>
 
 
 namespace rho
@@ -44,19 +45,21 @@ tSocket::tSocket(tAddr addr, u16 port)
 
     if (addr.getVersion() == kIPv4)
     {
-        struct sockaddr_in* ip4sockAddr = (struct sockaddr_in*) addr.m_sockaddr;
+        throw eRuntimeError("Cannot join IPv4 multicast group. Not supported!");
 
-        struct ip_mreqn joinRequest;
-        memset(&joinRequest, 0, sizeof(joinRequest));
-        joinRequest.imr_multiaddr = ip4sockAddr->sin_addr;
-        joinRequest.imr_address.s_addr = INADDR_ANY;
-        joinRequest.imr_ifindex = 0;
+//      struct sockaddr_in* ip4sockAddr = (struct sockaddr_in*) addr.m_sockaddr;
 
-        if (::setsockopt(m_fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &joinRequest, sizeof(joinRequest)) != 0)
-        {
-            m_finalize();
-            throw eRuntimeError("Cannot join ipv4 multicast group!");
-        }
+//      struct ip_mreqn joinRequest;
+//      memset(&joinRequest, 0, sizeof(joinRequest));
+//      joinRequest.imr_multiaddr = ip4sockAddr->sin_addr;
+//      joinRequest.imr_address.s_addr = INADDR_ANY;
+//      joinRequest.imr_ifindex = 0;
+
+//      if (::setsockopt(m_fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &joinRequest, sizeof(joinRequest)) != 0)
+//      {
+//          m_finalize();
+//          throw eRuntimeError("Cannot join ipv4 multicast group!");
+//      }
     }
 
     else  // kIPv6
@@ -68,7 +71,13 @@ tSocket::tSocket(tAddr addr, u16 port)
         joinRequest.ipv6mr_multiaddr = ip6sockAddr->sin6_addr;
         joinRequest.ipv6mr_interface = 0;
 
+        #if __linux__ || __APPLE__ || __CYGWIN__
         if (::setsockopt(m_fd, IPPROTO_IPV6, IPV6_JOIN_GROUP, &joinRequest, sizeof(joinRequest)) != 0)
+        #elif __MINGW32__
+        if (::setsockopt(m_fd, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char*)(&joinRequest), sizeof(joinRequest)) != 0)
+        #else
+        #error What platform are you on!?
+        #endif
         {
             int err = errno;
             m_finalize();
@@ -111,7 +120,7 @@ void tSocket::send(const u8* buf, i32 bufSize, tAddr dest, u16 port)
         throw eInvalidArgument("bufSize must be positive");
     dest.setUpperProtoPort(port);
     int flags = 0;
-    ssize_t ret = ::sendto(m_fd, buf, (size_t)bufSize, flags,
+    ssize_t ret = ::sendto(m_fd, (const char*)buf, (size_t)bufSize, flags,
                            (struct sockaddr*)(dest.m_sockaddr),
                            dest.m_sockaddrlen);
     if (ret == -1)
@@ -141,9 +150,15 @@ tAddr tSocket::receive(u8* buf, i32 maxSize, i32& bufSize, u16& port)
     socklen_t sockAddrLen = sizeof(sockAddr);
     socklen_t returnedLen = sockAddrLen;
 
+    #if __linux__ || __APPLE__ || __CYGWIN__
     int flags = MSG_TRUNC;
+    #elif __MINGW32__
+    int flags = 0;
+    #else
+    #error What platform are you on!?
+    #endif
 
-    ssize_t ret = ::recvfrom(m_fd, buf, (size_t)maxSize, flags,
+    ssize_t ret = ::recvfrom(m_fd, (char*)buf, (size_t)maxSize, flags,
                              (struct sockaddr*)&sockAddr,
                              &returnedLen);
 
@@ -193,7 +208,13 @@ tAddr tSocket::receive(u8* buf, i32 maxSize, i32& bufSize, u16& port, u32 timeou
 
 void tSocket::setMulticastSendHops(int allowedHops)
 {
+    #if __linux__ || __APPLE__ || __CYGWIN__
     if (::setsockopt(m_fd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &allowedHops, sizeof(int)) != 0)
+    #elif __MINGW32__
+    if (::setsockopt(m_fd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, (char*)(&allowedHops), sizeof(int)) != 0)
+    #else
+    #error What platform are you on!?
+    #endif
     {
         throw eRuntimeError("Cannot setsockopt() with IPV6_MULTICAST_HOPS on this socket.");
     }
