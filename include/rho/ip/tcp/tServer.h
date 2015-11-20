@@ -66,6 +66,8 @@ class tServer : public bNonCopyable
         void m_init(const tAddrGroup& addrGroup, u16 bindPort);
         void m_finalize();
 
+        void m_initClientConnection(int fd, socklen_t sockAddrLen, socklen_t returnedLen);
+
     private:
 
         int   m_fd;    // posix file descriptor

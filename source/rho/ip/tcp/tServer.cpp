@@ -160,6 +160,19 @@ refc<tSocket> tServer::accept()
     #error What platform are you on!?
     #endif
 
+    m_initClientConnection(fd, sockAddrLen, returnedLen);
+    tAddr addr((struct sockaddr*)&sockAddr, (int)returnedLen);
+    return refc<tSocket>(new tSocket(fd, addr));
+}
+
+refc<tSocket> tServer::accept(u32 timeoutMS)
+{
+    // TODO
+    return refc<tSocket>(NULL);
+}
+
+void tServer::m_initClientConnection(int fd, socklen_t sockAddrLen, socklen_t returnedLen)
+{
     if (fd == kInvalidSocket)
     {
         std::ostringstream o;
@@ -175,6 +188,7 @@ refc<tSocket> tServer::accept()
     if (!SetHandleInformation((HANDLE)fd, HANDLE_FLAG_INHERIT, 0))
     #endif
     {
+        int err = errno;
         #if __linux__ || __APPLE__ || __CYGWIN__
         ::close(fd);
         #elif __MINGW32__
@@ -185,7 +199,7 @@ refc<tSocket> tServer::accept()
         fd = kInvalidSocket;
         std::ostringstream o;
         o << "Cannot set close-on-exec on the new accept()ed connection, error: "
-          << strerror(errno);
+          << strerror(err);
         throw eSocketCreationError(o.str());
     }
     #endif
@@ -202,15 +216,6 @@ refc<tSocket> tServer::accept()
         fd = kInvalidSocket;
         throw eLogicError("Something is crazy wrong.");
     }
-
-    tAddr addr((struct sockaddr*)&sockAddr, (int)returnedLen);
-
-    return refc<tSocket>(new tSocket(fd, addr));
-}
-
-refc<tSocket> tServer::accept(u32 timeoutMS)
-{
-    // TODO
 }
 
 
