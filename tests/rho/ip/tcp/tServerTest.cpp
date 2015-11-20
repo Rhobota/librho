@@ -1,6 +1,7 @@
 #include <rho/ip/tcp/tServer.h>
 #include <rho/tCrashReporter.h>
 #include <rho/tTest.h>
+#include <rho/sync/tTimer.h>
 
 #include <iostream>
 #include <string>
@@ -47,12 +48,44 @@ void exceptionTest(const tTest& t)
     t.assert(boundOnce);
 }
 
+void timeoutTest(const tTest& t, u32 correctTimeoutMS, u32 allowance)
+{
+    ip::tcp::tServer server(12345);
+
+    u64 starttime = sync::tTimer::usecTime();
+
+    refc<ip::tcp::tSocket> socket = server.accept(correctTimeoutMS);
+    t.assert(socket == NULL);
+
+    u64 endtime = sync::tTimer::usecTime();
+    u64 elapsed = endtime - starttime;
+    u64 elapsedMS = elapsed / 1000;
+
+    if (elapsedMS > correctTimeoutMS+allowance || elapsedMS < correctTimeoutMS-allowance)
+    {
+        std::cerr << "elapsedMS: " << elapsedMS << std::endl;
+        std::cerr << "expectedMS: " << correctTimeoutMS << std::endl;
+        t.fail();
+    }
+}
+
+void timeoutTest(const tTest& t)
+{
+    timeoutTest(t,   50, 40);
+    timeoutTest(t,  100, 50);
+    timeoutTest(t,  200, 100);
+    timeoutTest(t,  500, 100);
+    //timeoutTest(t, 1000, 50);
+    //timeoutTest(t, 2000, 50);
+}
+
 int main()
 {
     tCrashReporter::init();
 
     tTest("localhost bind test", localhostBindTest);
     tTest("exception test", exceptionTest);
+    tTest("timeout test", timeoutTest);
 
     return 0;
 }
