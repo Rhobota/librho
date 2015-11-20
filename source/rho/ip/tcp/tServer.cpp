@@ -160,39 +160,6 @@ refc<tSocket> tServer::accept()
     #error What platform are you on!?
     #endif
 
-    m_initClientConnection(fd, sockAddrLen, returnedLen);
-    tAddr addr((struct sockaddr*)&sockAddr, (int)returnedLen);
-    return refc<tSocket>(new tSocket(fd, addr));
-}
-
-refc<tSocket> tServer::accept(u32 timeoutMS)
-{
-    fd_set myfdset;
-    FD_ZERO(&myfdset);
-    #if __linux__ || __APPLE__ || __CYGWIN__
-    FD_SET(m_fd, &myfdset);
-    #elif __MINGW32__
-    FD_SET((SOCKET)m_fd, &myfdset);
-    #else
-    #error What platform are you on!?
-    #endif
-    struct timeval tv;
-    tv.tv_sec = (timeoutMS / 1000);
-    tv.tv_usec = ((timeoutMS % 1000) * 1000);
-    int selectStatus = ::select(m_fd+1, &myfdset, NULL, NULL, &tv);
-
-    // This is the timeout case:
-    if (selectStatus != 1)
-        return refc<tSocket>(NULL);
-
-    // This is the case when we found that the socket is readable!
-    // This means we should be able to call accept() and have it return
-    // immediately.
-    return this->accept();
-}
-
-void tServer::m_initClientConnection(int fd, socklen_t sockAddrLen, socklen_t returnedLen)
-{
     if (fd == kInvalidSocket)
     {
         std::ostringstream o;
@@ -236,6 +203,36 @@ void tServer::m_initClientConnection(int fd, socklen_t sockAddrLen, socklen_t re
         fd = kInvalidSocket;
         throw eLogicError("Something is crazy wrong.");
     }
+
+    tAddr addr((struct sockaddr*)&sockAddr, (int)returnedLen);
+
+    return refc<tSocket>(new tSocket(fd, addr));
+}
+
+refc<tSocket> tServer::accept(u32 timeoutMS)
+{
+    fd_set myfdset;
+    FD_ZERO(&myfdset);
+    #if __linux__ || __APPLE__ || __CYGWIN__
+    FD_SET(m_fd, &myfdset);
+    #elif __MINGW32__
+    FD_SET((SOCKET)m_fd, &myfdset);
+    #else
+    #error What platform are you on!?
+    #endif
+    struct timeval tv;
+    tv.tv_sec = (timeoutMS / 1000);
+    tv.tv_usec = ((timeoutMS % 1000) * 1000);
+    int selectStatus = ::select(m_fd+1, &myfdset, NULL, NULL, &tv);
+
+    // This is the timeout case:
+    if (selectStatus != 1)
+        return refc<tSocket>(NULL);
+
+    // This is the case when we found that the socket is readable!
+    // This means we should be able to call accept() and have it return
+    // immediately.
+    return this->accept();
 }
 
 
