@@ -48,9 +48,16 @@ class tServer : public bNonCopyable
         u16   getBindPort() const;
 
         /**
-         * Blocks, waiting for a connection. When one arrives it is returned.
+         * Blocks waiting for a connection. When one arrives it is returned.
+         * This method can block indefinitely if no connection ever arrives.
          */
         refc<tSocket> accept();
+
+        /**
+         * Same as accept() above, except only blocks for a maximum of 'timeoutMS'
+         * milliseconds. A timeout occurring is not an error--null is returned.
+         */
+        refc<tSocket> accept(u32 timeoutMS);
 
         ~tServer();
 

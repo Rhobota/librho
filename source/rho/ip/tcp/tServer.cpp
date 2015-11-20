@@ -208,6 +208,11 @@ refc<tSocket> tServer::accept()
     return refc<tSocket>(new tSocket(fd, addr));
 }
 
+refc<tSocket> tServer::accept(u32 timeoutMS)
+{
+    // TODO
+}
+
 
 }   // namespace tcp
 }   // namespace ip
