@@ -651,11 +651,42 @@ i32 grey_to_bgra(u8* source, i32 sourceSize,
 }
 
 static
-i32 grey_to_yuyv(u8* source, i32 sourceSize,
-                  u8* dest, i32 destSize)
+i32 grey_to_yuyv(u8* grey, i32 greySize,
+                  u8* yuyv, i32 yuyvSize)
 {
-    throw eNotImplemented("This function will be lazy-implemented.");
-    return 0;
+    i32 numPixels = greySize;
+
+    if (numPixels % 2)
+    {
+        throw eColorspaceConversionError(
+                "A yuyv image must have a multiple of two number of pixels.");
+    }
+
+    if (yuyvSize < numPixels * 2)
+    {
+        throw eBufferOverflow(
+                "The supplied yuyv buffer cannot hold the image described by "
+                "the supplied grey buffer.");
+    }
+
+    for (i32 i = 0; i < greySize; i += 2)
+    {
+        u8 r0 = grey[i+0];
+        u8 g0 = r0;
+        u8 b0 = r0;
+        u8 r1 = grey[i+1];
+        u8 g1 = r1;
+        u8 b1 = r1;
+
+        *yuyv++ = clip(0.299 * (r0 - 128) + 0.587 * (g0 - 128) + 0.114 * (b0 - 128) + 128);
+        *yuyv++ = clip(((- 0.147 * (r0 - 128) - 0.289 * (g0 - 128) + 0.436 * (b0 - 128) + 128) +
+                       (- 0.147 * (r1 - 128) - 0.289 * (g1 - 128) + 0.436 * (b1 - 128) + 128))/2);
+        *yuyv++ = clip(0.299 * (r1 - 128) + 0.587 * (g1 - 128) + 0.114 * (b1 - 128) + 128);
+        *yuyv++ = clip(((0.615 * (r0 - 128) - 0.515 * (g0 - 128) - 0.100 * (b0 - 128) + 128) +
+                       (0.615 * (r1 - 128) - 0.515 * (g1 - 128) - 0.100 * (b1 - 128) + 128))/2);
+    }
+
+    return numPixels * 2;
 }
 
 
