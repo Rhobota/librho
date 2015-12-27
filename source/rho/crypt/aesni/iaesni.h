@@ -39,6 +39,14 @@
 #include <cstddef>
 
 
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)
+    #define IS_x86_FAM 1
+#else
+    #define IS_x86_FAM 0
+    #pragma message ( "NOT x86 FAMILY PROCESSOR -- WILL DISABLE AES-NI INSTRUCTION SET USAGE" )
+#endif
+
+
 // Test if the processor actually supports the AES instructions.
 // Executing one the AES instructions without processor support will cause UD fault.
 bool check_for_aes_instructions();

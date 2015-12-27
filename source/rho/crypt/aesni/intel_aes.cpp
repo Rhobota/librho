@@ -39,12 +39,14 @@
 #define AES_INSTRCTIONS_CPUID_BIT (1<<25)
 
 
+#if IS_x86_FAM
 static
 void __cpuid(unsigned int where[4], unsigned int leaf)
 {
     asm volatile("cpuid":"=a"(*where),"=b"(*(where+1)), "=c"(*(where+2)),"=d"(*(where+3)):"a"(leaf));
     return;
 }
+#endif
 
 
 /*
@@ -53,6 +55,7 @@ void __cpuid(unsigned int where[4], unsigned int leaf)
  */
 bool check_for_aes_instructions()
 {
+#if IS_x86_FAM
     unsigned int cpuid_results[4];
 
     //
@@ -82,6 +85,7 @@ bool check_for_aes_instructions()
 
     if (cpuid_results[2] & AES_INSTRCTIONS_CPUID_BIT)
         return true;
+#endif
 
     return false;
 }
