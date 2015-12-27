@@ -1,7 +1,10 @@
+#include "iaes_asm_interface.h"
+
+#if IS_x86_FAM
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
 
-#include "iaes_asm_interface.h"
 #include <wmmintrin.h>
 
 inline
@@ -549,3 +552,31 @@ void iDec256_CBC(sAesData *data)
 }
 
 #pragma GCC diagnostic pop
+
+#else
+
+#include <rho/eRho.h>
+
+void iEncExpandKey256(UCHAR *key, UCHAR *expanded_key) { throw rho::eImpossiblePath(); }
+void iEncExpandKey192(UCHAR *key, UCHAR *expanded_key) { throw rho::eImpossiblePath(); }
+void iEncExpandKey128(UCHAR *key, UCHAR *expanded_key) { throw rho::eImpossiblePath(); }
+
+void iDecExpandKey256(UCHAR *key, UCHAR *expanded_key) { throw rho::eImpossiblePath(); }
+void iDecExpandKey192(UCHAR *key, UCHAR *expanded_key) { throw rho::eImpossiblePath(); }
+void iDecExpandKey128(UCHAR *key, UCHAR *expanded_key) { throw rho::eImpossiblePath(); }
+
+void iEnc128(sAesData *data) { throw rho::eImpossiblePath(); }
+void iDec128(sAesData *data) { throw rho::eImpossiblePath(); }
+void iEnc256(sAesData *data) { throw rho::eImpossiblePath(); }
+void iDec256(sAesData *data) { throw rho::eImpossiblePath(); }
+void iEnc192(sAesData *data) { throw rho::eImpossiblePath(); }
+void iDec192(sAesData *data) { throw rho::eImpossiblePath(); }
+
+void iEnc128_CBC(sAesData *data) { throw rho::eImpossiblePath(); }
+void iDec128_CBC(sAesData *data) { throw rho::eImpossiblePath(); }
+void iEnc256_CBC(sAesData *data) { throw rho::eImpossiblePath(); }
+void iDec256_CBC(sAesData *data) { throw rho::eImpossiblePath(); }
+void iEnc192_CBC(sAesData *data) { throw rho::eImpossiblePath(); }
+void iDec192_CBC(sAesData *data) { throw rho::eImpossiblePath(); }
+
+#endif
