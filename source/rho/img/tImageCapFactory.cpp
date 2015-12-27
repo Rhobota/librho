@@ -159,7 +159,7 @@ refc<iImageCap> tImageCapFactory::getImageCap(
         allPossibleParams.push_back((*enumerator)[i]);
 
     if (enumerator->size() == 0)
-        throw eRuntimeError("No params are possible, so this is hopeless.");
+        throw eRuntimeError("no camera detected");
 
     tImageCapParams firstOption = (*enumerator)[0];
 
