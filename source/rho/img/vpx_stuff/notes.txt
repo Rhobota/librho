@@ -1,10 +1,12 @@
 
------------------------
----- libvpx.tar.gz ----
------------------------
+------------------------------
+---- libvpx-1.5.0.tar.bz2 ----
+------------------------------
 
-This code was obtained in Jan 2015 from the git repo at:
+This code was obtained in Dec 2015 from the git repo at:
 
+     http://www.webmproject.org/code/
+                -- THEN --
      https://chromium.googlesource.com/webm/libvpx
 
 The official website for libvpx (and webm) is at:
@@ -12,23 +14,15 @@ The official website for libvpx (and webm) is at:
      http://www.webmproject.org/
 
 I have saved a snapshot of the git repo as I found it in
-Jan 2015 at the following location on my computer (because
+Dec 2015 at the following location on my computer (because
 it might be useful to look at the git changelog sometime):
 
      ~/cab/2015/libvpx_snapshot
 
 This library is generously distributed by Google for free!
 They have patent(s) on it too, but the license is also free!
-See the relevant files inside libvpx.tar.gz for details.
+See the relevant files inside the archive for details.
 Thanks Google!
-
-
-----------------------------
----- libvpx-test.tar.gz ----
-----------------------------
-
-This is a hacked-up version of libvpx.tar.gz that I made just
-to play around with.
 
 
 ---------------------------
