@@ -246,6 +246,8 @@ void tVpxImageEncoder::signalEndOfStream()
         }
     }
 
+    rho::pack(m_writable, (i32)0);  // <-- signals end of stream
+
     s_flush(m_writable);
 }
 
@@ -547,6 +549,13 @@ void tVpxImageAsyncReadable::endStream()
 
 void tVpxImageAsyncReadable::m_handleFrame()
 {
+    // Detect the end of stream signal.
+    if (m_compressedBufUsed == 0)
+    {
+        endStream();
+        return;
+    }
+
     // Decode the data we have.
     vpx_codec_ctx_t* codec = (vpx_codec_ctx_t*)(m_codec);
     vpx_codec_err_t res = vpx_codec_decode(codec, m_compressedBuf, m_compressedBufUsed, NULL, 0);
