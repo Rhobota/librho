@@ -396,6 +396,12 @@ void tVpxImageAsyncReadable::takeInput(const u8* buffer, i32 length)
                     m_bufPos = 0;
                     m_stage = kStageFrameData;
                     m_compressedBufUsed = s_toU32(m_buf);
+                    if (m_compressedBufUsed == 0)
+                    {
+                        // This is the end of stream signal!
+                        endStream();
+                        return;
+                    }
                     if (m_compressedBufSize < m_compressedBufUsed)
                     {
                         delete [] m_compressedBuf;
@@ -549,13 +555,6 @@ void tVpxImageAsyncReadable::endStream()
 
 void tVpxImageAsyncReadable::m_handleFrame()
 {
-    // Detect the end of stream signal.
-    if (m_compressedBufUsed == 0)
-    {
-        endStream();
-        return;
-    }
-
     // Decode the data we have.
     vpx_codec_ctx_t* codec = (vpx_codec_ctx_t*)(m_codec);
     vpx_codec_err_t res = vpx_codec_decode(codec, m_compressedBuf, m_compressedBufUsed, NULL, 0);
