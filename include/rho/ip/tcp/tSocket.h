@@ -147,7 +147,6 @@ class tSocket :
         tAddr m_addr;
         bool  m_readEOF;
         bool  m_writeEOF;
-        bool  m_nodelay;
         sync::tMutex m_closeMux;
 };
 
