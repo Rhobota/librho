@@ -408,12 +408,6 @@ i32 tSocket::writeAll(const u8* buffer, i32 length)
     return amountWritten;
 }
 
-bool tSocket::flush()
-{
-    // TODO
-    return true;
-}
-
 void tSocket::close()
 {
     closeRead();

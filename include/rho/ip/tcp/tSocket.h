@@ -25,8 +25,7 @@ namespace tcp
 
 class tSocket :
     public bNonCopyable, public iClosable,
-    public iReadable, public iWritable,
-    public iFlushable
+    public iReadable, public iWritable
 {
     public:
 
@@ -103,13 +102,6 @@ class tSocket :
          */
         i32 write(const u8* buffer, i32 length);
         i32 writeAll(const u8* buffer, i32 length);
-
-        /**
-         * Flushes the socket write stream.
-         * This is not a guaranteed flush, but we'll
-         * do the best we can...
-         */
-        bool flush();
 
         /**
          * Shuts down the socket's input and output streams.
