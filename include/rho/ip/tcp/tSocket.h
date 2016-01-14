@@ -131,6 +131,9 @@ class tSocket :
         void m_init(const tAddrGroup& addrGroup, u16 port, u32 timeoutMS);
         void m_finalize();
 
+        i32 m_read(u8* buffer, i32 length);
+        i32 m_write(const u8* buffer, i32 length);
+
         friend class tServer;
 
     private:
