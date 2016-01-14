@@ -293,7 +293,7 @@ PUGI__NS_BEGIN
 				bucket = (bucket + probe + 1) & hashmod;
 			}
 
-			assert(!"Hash table is full");
+			assert("Hash table is full" == NULL);
 			return 0;
 		}
 
@@ -323,7 +323,7 @@ PUGI__NS_BEGIN
 				bucket = (bucket + probe + 1) & hashmod;
 			}
 
-			assert(!"Hash table is full");
+			assert("Hash table is full" == NULL);
 			return 0;
 		}
 
@@ -2075,7 +2075,7 @@ PUGI__NS_BEGIN
 		if (encoding == encoding_latin1)
 			return convert_buffer_generic(out_buffer, out_length, contents, size, latin1_decoder());
 
-		assert(!"Invalid encoding");
+		assert("Invalid encoding" == NULL);
 		return false;
 	}
 #else
@@ -2180,7 +2180,7 @@ PUGI__NS_BEGIN
 		if (encoding == encoding_latin1)
 			return convert_buffer_latin1(out_buffer, out_length, contents, size, is_mutable);
 
-		assert(!"Invalid encoding");
+		assert("Invalid encoding" == NULL);
 		return false;
 	}
 #endif
@@ -3549,7 +3549,7 @@ PUGI__NS_BEGIN
 		if (encoding == encoding_latin1)
 			return convert_buffer_output_generic(r_u8, data, length, wchar_decoder(), latin1_writer());
 
-		assert(!"Invalid encoding");
+		assert("Invalid encoding" == NULL);
 		return 0;
 	}
 #else
@@ -3588,7 +3588,7 @@ PUGI__NS_BEGIN
 		if (encoding == encoding_latin1)
 			return convert_buffer_output_generic(r_u8, data, length, utf8_decoder(), latin1_writer());
 
-		assert(!"Invalid encoding");
+		assert("Invalid encoding" == NULL);
 		return 0;
 	}
 #endif
@@ -4078,7 +4078,7 @@ PUGI__NS_BEGIN
 				break;
 
 			default:
-				assert(!"Invalid node type");
+				assert("Invalid node type" == NULL);
 		}
 	}
 
@@ -8414,7 +8414,7 @@ PUGI__NS_BEGIN
 			break;
 
 		default:
-			assert(!"Invalid variable type");
+			assert("Invalid variable type" == NULL);
 		}
 	}
 
@@ -8435,7 +8435,7 @@ PUGI__NS_BEGIN
 			return lhs->set(static_cast<const xpath_variable_boolean*>(rhs)->value);
 
 		default:
-			assert(!"Invalid variable type");
+			assert("Invalid variable type" == NULL);
 			return false;
 		}
 	}
@@ -8522,7 +8522,7 @@ PUGI__NS_BEGIN
 			return *min_element(begin, end, document_order_comparator());
 
 		default:
-			assert(!"Invalid node set type");
+			assert("Invalid node set type" == NULL);
 			return xpath_node();
 		}
 	}
@@ -9252,7 +9252,7 @@ PUGI__NS_BEGIN
 				}
 			}
 
-			assert(!"Wrong types");
+			assert("Wrong types" == NULL);
 			return false;
 		}
 
@@ -9327,7 +9327,7 @@ PUGI__NS_BEGIN
 			}
 			else
 			{
-				assert(!"Wrong types");
+				assert("Wrong types" == NULL);
 				return false;
 			}
 		}
@@ -9545,7 +9545,7 @@ PUGI__NS_BEGIN
 				break;
 
 			default:
-				assert(!"Unknown axis");
+				assert("Unknown axis" == NULL);
 			}
 
 			return false;
@@ -9740,7 +9740,7 @@ PUGI__NS_BEGIN
 			}
 
 			default:
-				assert(!"Unimplemented axis");
+				assert("Unimplemented axis" == NULL);
 			}
 		}
 
@@ -9821,7 +9821,7 @@ PUGI__NS_BEGIN
 			}
 
 			default:
-				assert(!"Unimplemented axis");
+				assert("Unimplemented axis" == NULL);
 			}
 		}
 
@@ -10063,7 +10063,7 @@ PUGI__NS_BEGIN
 				}
 
 				default:
-					assert(!"Wrong expression for return type boolean");
+					assert("Wrong expression for return type boolean" == NULL);
 					return false;
 				}
 			}
@@ -10199,7 +10199,7 @@ PUGI__NS_BEGIN
 				}
 
 				default:
-					assert(!"Wrong expression for return type number");
+					assert("Wrong expression for return type number" == NULL);
 					return 0;
 				}
 
@@ -10482,7 +10482,7 @@ PUGI__NS_BEGIN
 				}
 
 				default:
-					assert(!"Wrong expression for return type string");
+					assert("Wrong expression for return type string" == NULL);
 					return xpath_string();
 				}
 			}
@@ -10573,7 +10573,7 @@ PUGI__NS_BEGIN
 					return step_do(c, stack, eval, axis_to_type<axis_self>());
 
 				default:
-					assert(!"Unknown axis");
+					assert("Unknown axis" == NULL);
 					return xpath_node_set_raw();
 				}
 			}
@@ -10612,7 +10612,7 @@ PUGI__NS_BEGIN
 			}
 
 			default:
-				assert(!"Wrong expression for return type node set");
+				assert("Wrong expression for return type node set" == NULL);
 				return xpath_node_set_raw();
 			}
 		}
@@ -11899,7 +11899,7 @@ namespace pugi
 			return static_cast<const impl::xpath_variable_boolean*>(this)->name;
 
 		default:
-			assert(!"Invalid variable type");
+			assert("Invalid variable type" == NULL);
 			return 0;
 		}
 	}

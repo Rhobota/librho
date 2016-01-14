@@ -11,7 +11,6 @@ CC := $(TARGET)g++
 AR := $(TARGET)ar
 C_FLAGS_LOCAL := $(CC_FLAGS) \
 	-g -O2 -fvisibility=hidden -Wall -Wextra -Werror -pedantic \
-	-Wcast-align \
 	-Wno-unused-parameter -Wno-long-long -Wno-sign-conversion \
 	-D_FILE_OFFSET_BITS=64 \
 	-maes \
