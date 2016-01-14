@@ -26,12 +26,16 @@ tSocket::tSocket(const tAddr& addr, u16 port, u32 timeoutMS)
     : m_fd(kInvalidSocket), m_readEOF(false), m_writeEOF(false)
 {
     m_init(addr, port, timeoutMS);
+
+    setNagles(false);
 }
 
 tSocket::tSocket(const tAddrGroup& addrGroup, u16 port, u32 timeoutMS)
     : m_fd(kInvalidSocket), m_readEOF(false), m_writeEOF(false)
 {
     m_init(addrGroup, port, timeoutMS);
+
+    setNagles(false);
 }
 
 tSocket::tSocket(std::string hostStr, u16 port, u32 timeoutMS)
@@ -39,11 +43,14 @@ tSocket::tSocket(std::string hostStr, u16 port, u32 timeoutMS)
 {
     tAddrGroup addrGroup(hostStr);
     m_init(addrGroup, port, timeoutMS);
+
+    setNagles(false);
 }
 
 tSocket::tSocket(int fd, const tAddr& addr)
     : m_fd(fd), m_addr(addr), m_readEOF(false), m_writeEOF(false)
 {
+    setNagles(false);
 }
 
 void tSocket::m_init(const tAddr& addr, u16 port, u32 timeoutMS)

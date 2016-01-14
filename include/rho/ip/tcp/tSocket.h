@@ -80,7 +80,7 @@ class tSocket :
         u16 getLocalPort() const;
 
         /**
-         * Enables/disables Nagle's algorithm. (It is enabled by default.)
+         * Enables/disables Nagle's algorithm. (It is disabled by default.)
          */
         void setNagles(bool on);
 
