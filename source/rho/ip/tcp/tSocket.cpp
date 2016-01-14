@@ -324,6 +324,11 @@ void tSocket::setTimeout(u16 seconds)
 
 i32 tSocket::read(u8* buffer, i32 length)
 {
+    return m_read(buffer, length);
+}
+
+i32 tSocket::m_read(u8* buffer, i32 length)
+{
     if (length <= 0)
         throw eInvalidArgument("Stream read/write length must be >0");
 
@@ -366,6 +371,11 @@ i32 tSocket::readAll(u8* buffer, i32 length)
 }
 
 i32 tSocket::write(const u8* buffer, i32 length)
+{
+    return m_write(buffer, length);
+}
+
+i32 tSocket::m_write(const u8* buffer, i32 length)
 {
     if (length <= 0)
         throw eInvalidArgument("Stream read/write length must be >0");
