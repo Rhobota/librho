@@ -336,21 +336,29 @@ void tSocket::setTimeout(u16 seconds)
 
 i32 tSocket::read(u8* buffer, i32 length)
 {
+    if (m_readEOF)
+        return -1;
     return m_bufferedReadable.read(buffer, length);
 }
 
 i32 tSocket::readAll(u8* buffer, i32 length)
 {
+    if (m_readEOF)
+        return -1;
     return m_bufferedReadable.readAll(buffer, length);
 }
 
 i32 tSocket::write(const u8* buffer, i32 length)
 {
+    if (m_writeEOF)
+        return 0;
     return m_bufferedWritable.write(buffer, length);
 }
 
 i32 tSocket::writeAll(const u8* buffer, i32 length)
 {
+    if (m_writeEOF)
+        return 0;
     return m_bufferedWritable.writeAll(buffer, length);
 }
 
@@ -361,6 +369,7 @@ bool tSocket::flush()
 
 void tSocket::close()
 {
+    flush();
     closeRead();
     closeWrite();
 }
