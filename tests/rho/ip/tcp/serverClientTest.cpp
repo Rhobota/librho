@@ -74,6 +74,7 @@ class tServerRunnable : public sync::iRunnable
             {
                 snd = s_genMessage(lcg);
                 socket->writeAll(&snd[0], (i32)snd.size());
+                m_t.assert(socket->flush());
 
                 correct = s_genMessage(lcg);
                 rcv.resize(correct.size());
@@ -85,6 +86,7 @@ class tServerRunnable : public sync::iRunnable
             {
                 snd = s_genMessage(lcg);
                 socket->writeAll(&snd[0], (i32)snd.size());
+                m_t.assert(socket->flush());
             }
         }
 
@@ -132,6 +134,7 @@ class tClientRunnable : public sync::iRunnable
             {
                 snd = s_genMessage(lcg);
                 socket->writeAll(&snd[0], (i32)snd.size());
+                m_t.assert(socket->flush());
 
                 correct = s_genMessage(lcg);
                 rcv.resize(correct.size());
@@ -143,6 +146,7 @@ class tClientRunnable : public sync::iRunnable
             {
                 snd = s_genMessage(lcg);
                 socket->writeAll(&snd[0], (i32)snd.size());
+                m_t.assert(socket->flush());
             }
         }
 
