@@ -27,6 +27,7 @@ int main()
 
         std::string text = "Hello!\n";
         sock->write((const u8*)text.c_str(), text.length());
+        sock->flush();
     }
     catch (ip::ebIP& e)
     {
