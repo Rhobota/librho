@@ -25,7 +25,8 @@ namespace tcp
 
 class tSocket :
     public bNonCopyable, public iClosable,
-    public iReadable, public iWritable
+    public iReadable, public iWritable,
+    public iFlushable
 {
     public:
 
@@ -104,6 +105,11 @@ class tSocket :
         i32 writeAll(const u8* buffer, i32 length);
 
         /**
+         * See iFlushable interface.
+         */
+        bool flush();
+
+        /**
          * Shuts down the socket's input and output streams.
          */
         void close();
@@ -143,6 +149,30 @@ class tSocket :
         bool  m_readEOF;
         bool  m_writeEOF;
         sync::tMutex m_closeMux;
+
+        class tInternalReaderWriter : public iReadable, public iWritable
+        {
+            public:
+
+                tInternalReaderWriter(tSocket* socket)
+                    : m_socket(socket) { }
+
+                i32 read(u8* buffer, i32 length);
+                i32 readAll(u8* buffer, i32 length);
+
+                i32 write(const u8* buffer, i32 length);
+                i32 writeAll(const u8* buffer, i32 length);
+
+            private:
+
+                tSocket* m_socket;
+        };
+        friend class tInternalReaderWriter;
+
+        tInternalReaderWriter m_internalReaderWriter;
+
+        tBufferedReadable m_bufferedReadable;
+        tBufferedWritable m_bufferedWritable;
 };
 
 
