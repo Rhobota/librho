@@ -23,7 +23,10 @@ static const int kInvalidSocket = INVALID_SOCKET;
 
 
 tSocket::tSocket(const tAddr& addr, u16 port, u32 timeoutMS)
-    : m_fd(kInvalidSocket), m_readEOF(false), m_writeEOF(false)
+    : m_fd(kInvalidSocket), m_readEOF(false), m_writeEOF(false),
+      m_internalReaderWriter(this),
+      m_bufferedReadable(&m_internalReaderWriter),
+      m_bufferedWritable(&m_internalReaderWriter)
 {
     m_init(addr, port, timeoutMS);
 
@@ -31,7 +34,10 @@ tSocket::tSocket(const tAddr& addr, u16 port, u32 timeoutMS)
 }
 
 tSocket::tSocket(const tAddrGroup& addrGroup, u16 port, u32 timeoutMS)
-    : m_fd(kInvalidSocket), m_readEOF(false), m_writeEOF(false)
+    : m_fd(kInvalidSocket), m_readEOF(false), m_writeEOF(false),
+      m_internalReaderWriter(this),
+      m_bufferedReadable(&m_internalReaderWriter),
+      m_bufferedWritable(&m_internalReaderWriter)
 {
     m_init(addrGroup, port, timeoutMS);
 
@@ -39,7 +45,10 @@ tSocket::tSocket(const tAddrGroup& addrGroup, u16 port, u32 timeoutMS)
 }
 
 tSocket::tSocket(std::string hostStr, u16 port, u32 timeoutMS)
-    : m_fd(kInvalidSocket), m_readEOF(false), m_writeEOF(false)
+    : m_fd(kInvalidSocket), m_readEOF(false), m_writeEOF(false),
+      m_internalReaderWriter(this),
+      m_bufferedReadable(&m_internalReaderWriter),
+      m_bufferedWritable(&m_internalReaderWriter)
 {
     tAddrGroup addrGroup(hostStr);
     m_init(addrGroup, port, timeoutMS);
@@ -48,7 +57,10 @@ tSocket::tSocket(std::string hostStr, u16 port, u32 timeoutMS)
 }
 
 tSocket::tSocket(int fd, const tAddr& addr)
-    : m_fd(fd), m_addr(addr), m_readEOF(false), m_writeEOF(false)
+    : m_fd(fd), m_addr(addr), m_readEOF(false), m_writeEOF(false),
+      m_internalReaderWriter(this),
+      m_bufferedReadable(&m_internalReaderWriter),
+      m_bufferedWritable(&m_internalReaderWriter)
 {
     setNagles(false);
 }
@@ -324,98 +336,27 @@ void tSocket::setTimeout(u16 seconds)
 
 i32 tSocket::read(u8* buffer, i32 length)
 {
-    return m_read(buffer, length);
-}
-
-i32 tSocket::m_read(u8* buffer, i32 length)
-{
-    if (length <= 0)
-        throw eInvalidArgument("Stream read/write length must be >0");
-
-    if (m_readEOF)
-        return -1;
-
-    #if __linux__ || __APPLE__ || __CYGWIN__
-    i32 val = (i32) ::read(m_fd, buffer, length);
-    #elif __MINGW32__
-    i32 val = (i32) ::recv(m_fd, (char*)buffer, length, 0);
-    #else
-    #error What platform are you on!?
-    #endif
-
-    if (val <= 0)
-    {
-        closeRead();
-        return 0;
-    }
-    else
-    {
-        return val;
-    }
+    return m_bufferedReadable.read(buffer, length);
 }
 
 i32 tSocket::readAll(u8* buffer, i32 length)
 {
-    if (length <= 0)
-        throw eInvalidArgument("Stream read/write length must be >0");
-
-    i32 amountRead = 0;
-    while (amountRead < length)
-    {
-        i32 n = read(buffer+amountRead, length-amountRead);
-        if (n <= 0)
-            return (amountRead>0) ? amountRead : n;
-        amountRead += n;
-    }
-    return amountRead;
+    return m_bufferedReadable.readAll(buffer, length);
 }
 
 i32 tSocket::write(const u8* buffer, i32 length)
 {
-    return m_write(buffer, length);
-}
-
-i32 tSocket::m_write(const u8* buffer, i32 length)
-{
-    if (length <= 0)
-        throw eInvalidArgument("Stream read/write length must be >0");
-
-    if (m_writeEOF)
-        return 0;
-
-    #if __linux__ || __APPLE__ || __CYGWIN__
-    i32 val = (i32) ::write(m_fd, buffer, length);
-    #elif __MINGW32__
-    i32 val = (i32) ::send(m_fd, (const char*)buffer, length, 0);
-    #else
-    #error What platform are you on!?
-    #endif
-
-    if (val <= 0)
-    {
-        closeWrite();
-        return 0;
-    }
-    else
-    {
-        return val;
-    }
+    return m_bufferedWritable.write(buffer, length);
 }
 
 i32 tSocket::writeAll(const u8* buffer, i32 length)
 {
-    if (length <= 0)
-        throw eInvalidArgument("Stream read/write length must be >0");
+    return m_bufferedWritable.writeAll(buffer, length);
+}
 
-    i32 amountWritten = 0;
-    while (amountWritten < length)
-    {
-        i32 n = write(buffer+amountWritten, length-amountWritten);
-        if (n <= 0)
-            return (amountWritten>0) ? amountWritten : n;
-        amountWritten += n;
-    }
-    return amountWritten;
+bool tSocket::flush()
+{
+    return m_bufferedWritable.flush();
 }
 
 void tSocket::close()
@@ -461,6 +402,103 @@ void tSocket::closeWrite()
     {
         //throw eRuntimeError(strerror(errno));
     }
+}
+
+i32 tSocket::m_read(u8* buffer, i32 length)
+{
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
+    if (m_readEOF)
+        return -1;
+
+    #if __linux__ || __APPLE__ || __CYGWIN__
+    i32 val = (i32) ::read(m_fd, buffer, length);
+    #elif __MINGW32__
+    i32 val = (i32) ::recv(m_fd, (char*)buffer, length, 0);
+    #else
+    #error What platform are you on!?
+    #endif
+
+    if (val <= 0)
+    {
+        closeRead();
+        return 0;
+    }
+    else
+    {
+        return val;
+    }
+}
+
+i32 tSocket::m_write(const u8* buffer, i32 length)
+{
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
+    if (m_writeEOF)
+        return 0;
+
+    #if __linux__ || __APPLE__ || __CYGWIN__
+    i32 val = (i32) ::write(m_fd, buffer, length);
+    #elif __MINGW32__
+    i32 val = (i32) ::send(m_fd, (const char*)buffer, length, 0);
+    #else
+    #error What platform are you on!?
+    #endif
+
+    if (val <= 0)
+    {
+        closeWrite();
+        return 0;
+    }
+    else
+    {
+        return val;
+    }
+}
+
+
+i32 tSocket::tInternalReaderWriter::read(u8* buffer, i32 length)
+{
+    return m_socket->m_read(buffer, length);
+}
+
+i32 tSocket::tInternalReaderWriter::readAll(u8* buffer, i32 length)
+{
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
+    i32 amountRead = 0;
+    while (amountRead < length)
+    {
+        i32 n = read(buffer+amountRead, length-amountRead);
+        if (n <= 0)
+            return (amountRead>0) ? amountRead : n;
+        amountRead += n;
+    }
+    return amountRead;
+}
+
+i32 tSocket::tInternalReaderWriter::write(const u8* buffer, i32 length)
+{
+    return m_socket->m_write(buffer, length);
+}
+
+i32 tSocket::tInternalReaderWriter::writeAll(const u8* buffer, i32 length)
+{
+    if (length <= 0)
+        throw eInvalidArgument("Stream read/write length must be >0");
+
+    i32 amountWritten = 0;
+    while (amountWritten < length)
+    {
+        i32 n = write(buffer+amountWritten, length-amountWritten);
+        if (n <= 0)
+            return (amountWritten>0) ? amountWritten : n;
+        amountWritten += n;
+    }
+    return amountWritten;
 }
 
 
