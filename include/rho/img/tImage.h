@@ -51,6 +51,8 @@ class tImage : public bNonCopyable, public iPackable
         void verticalFlip();
         void horizontalFlip();
 
+        void invert();
+
         void crop  (geo::tRect rect,       tImage* dest)  const;
         void scale (u32 width, u32 height, tImage* dest)  const;
         void rotate(double angleDegrees,   tImage* dest)  const;

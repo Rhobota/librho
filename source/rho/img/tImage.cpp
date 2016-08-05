@@ -283,6 +283,26 @@ void s_horizontalFlip(tImage* image)
 }
 
 static
+void s_invert(tImage* image)
+{
+    u8* buf     = image->buf();
+    u32 bufUsed = image->bufUsed();
+    u32 width   = image->width();
+    u32 height  = image->height();
+
+    if (width == 0 || height == 0)
+        return;
+
+    if (bufUsed % (width * height))
+        throw eLogicError("Something is wack with the given image.");
+
+    for (u32 i = 0; i < bufUsed; i++)
+    {
+        buf[i] = 255 - buf[i];
+    }
+}
+
+static
 void s_crop(const tImage* image, geo::tRect rect, tImage* dest)
 {
     if (image == dest)
@@ -441,6 +461,11 @@ void tImage::verticalFlip()
 void tImage::horizontalFlip()
 {
     s_horizontalFlip(this);
+}
+
+void tImage::invert()
+{
+    s_invert(this);
 }
 
 void tImage::crop(geo::tRect rect, tImage* dest)  const
