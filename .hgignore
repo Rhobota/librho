@@ -1,6 +1,0 @@
-# The default pattern syntax is Python/Perl-style regular expressions.
-
-\.log$
-\.DS_Store$
-\.out$
-\.out\.dSYM$
