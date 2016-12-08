@@ -298,7 +298,7 @@ void s_invert(tImage* image)
 
     for (u32 i = 0; i < bufUsed; i++)
     {
-        buf[i] = 255 - buf[i];
+        buf[i] = (u8)(255 - buf[i]);
     }
 }
 
