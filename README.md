@@ -116,6 +116,14 @@ you could end up leaking file descriptors. Using tFileReadable, tFileWritable,
 ip::tcp::tSocket, and ip::tcp::tServer are all safe, however.
 
 
+Dependencies
+------------
+
+This library is very self-contained. Many of the "dependencies" are built into the library and get compiled _with_ the library. The only dependencies which must be built separately and installed on the system are:
+
+1. libvpx from the [WebM project](http://www.webmproject.org/code/)
+
+
 Other
 -----
 
@@ -130,4 +138,4 @@ Things left to do are marked with a comment that contains 'libtodo' or 'LIBTODO'
 Contributing
 ------------
 
-This library is built with portability in mind. For that reason, it doesn't have any external dependencies and it only contains highly portable C++ code (i.e. code that is agnostic to platform and CPU architecture). We welcome pull requests, but we only accept changelists that contain portable code with no external dependencies. :)
+This library is built with portability in mind (e.g. code that is agnostic to platform and CPU architecture). We welcome pull requests, but we only accept changelists that contain portable C(++) code. :)
