@@ -48,13 +48,6 @@ default to the 'generic-gnu' target. If so, you should specify the right
 target by running `./configure --target=x86_64-darwin13-gcc` ...
 Doing so enables some optimizations.
 
-You should also specify darwin13 anyway! That's because much of the other
-code in librho etc compiles for darwin13 so the linker needs them to all
-look the same.
-
-Also, you might have to specify the OSX min version, like this:
-    > ./configure --target=x86_64-darwin13-gcc --extra-cflags='-mmacosx-version-min=10.6' --extra-cxxflags='-mmacosx-version-min=10.6'
-
 
 --------------------------
 ---- Compiling on iOS ----

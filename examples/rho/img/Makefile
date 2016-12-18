@@ -10,8 +10,7 @@ ifeq ($(shell uname),Darwin)
 		-framework Foundation \
 		-framework AVFoundation \
 		-framework CoreVideo \
-		-framework CoreMedia \
-		-mmacosx-version-min=10.6
+		-framework CoreMedia
 else
 	LIB_FLAGS = \
 		-lglut \
