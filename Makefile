@@ -29,7 +29,7 @@ ifeq ($(shell uname),Linux)
 else
 ifeq ($(shell uname),Darwin)
 	# OSX stuff:
-	CC_FLAGS_LOCAL += -mmacosx-version-min=10.6 -I /usr/local/include
+	CC_FLAGS_LOCAL += -I /usr/local/include
 	PRE_STEP  := osx_pre_step
 	POST_STEP := osx_post_step
 else

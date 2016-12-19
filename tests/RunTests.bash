@@ -11,7 +11,7 @@ CC_FLAGS_LOCAL="$CC_FLAGS \
     -Wno-unused-parameter -Wno-long-long -Werror -pedantic \
     -D_FILE_OFFSET_BITS=64 \
     $INCLUDE_FLAGS"
-CC_LIB_FLAGS="$LIB_PATH -lpthread $CC_LIB_FLAGS"
+CC_LIB_FLAGS="$LIB_PATH -pthread $CC_LIB_FLAGS"
 
 if [ $(uname) == "Linux" ]
 then
@@ -19,7 +19,6 @@ then
     CC_LIB_FLAGS+=" "
 elif [ $(uname) == "Darwin" ]
 then
-    CC_FLAGS_LOCAL+=" -rdynamic -mmacosx-version-min=10.6"
     CC_LIB_FLAGS+=" -framework Foundation -framework AVFoundation"
     CC_LIB_FLAGS+=" -framework CoreVideo -framework CoreMedia"
     CC_LIB_FLAGS+=" -framework OpenGL -framework IOKit"

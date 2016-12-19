@@ -43,9 +43,9 @@ Just do the normal `./configure && make && sudo make install` commands.
 ---- Compiling on OSX ----
 --------------------------
 
-The configure script doesn't detect OSX for some reason, so it will
-default to the 'generic-gnu' target. You should specify the right target
-by running `./configure --target=x86_64-darwin13-gcc` ...
+The configure script might not detect OSX for some reason, so it will
+default to the 'generic-gnu' target. If so, you should specify the right
+target by running `./configure --target=x86_64-darwin13-gcc` ...
 Doing so enables some optimizations.
 
 
