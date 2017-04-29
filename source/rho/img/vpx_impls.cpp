@@ -86,6 +86,9 @@ tVpxImageEncoder::tVpxImageEncoder(iWritable* writable,
     codec_config.rc_end_usage = VPX_CBR;    // VPX_VBR or VPX_CBR
     codec_config.g_error_resilient = 0;
     codec_config.g_lag_in_frames = 0;    // <-- without this the frame may not pop out on each call to vpx_codec_encode().
+    //std::cout << "rc_buf_sz = " << codec_config.rc_buf_sz << std::endl;
+    //std::cout << "rc_buf_initial_sz = " << codec_config.rc_buf_initial_sz << std::endl;
+    //std::cout << "rc_buf_optimal_sz = " << codec_config.rc_buf_optimal_sz << std::endl;
 
     // Init the codec.
     vpx_codec_ctx_t* codec = new vpx_codec_ctx_t;
