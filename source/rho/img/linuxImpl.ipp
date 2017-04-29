@@ -17,6 +17,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <utility>
 
 
 namespace rho
@@ -156,6 +157,8 @@ void enumFrameintervals(int fd, unsigned int pixelformat, unsigned int width, un
     posinterval.height = height;
     posinterval.type = V4L2_FRMIVAL_TYPE_DISCRETE;
 
+    int inserted = 0;
+
     for (; xioctl(fd, (int)VIDIOC_ENUM_FRAMEINTERVALS, &posinterval) == 0;
             ++posinterval.index)
     {
@@ -163,6 +166,22 @@ void enumFrameintervals(int fd, unsigned int pixelformat, unsigned int width, un
         {
             currParams.frameIntervalNumerator   = posinterval.discrete.numerator;
             currParams.frameIntervalDenominator = posinterval.discrete.denominator;
+            params.push_back(currParams);
+            inserted++;
+        }
+    }
+
+    if (inserted == 0)
+    {
+        std::vector<int> denoms;
+        denoms.push_back(5);
+        denoms.push_back(15);
+        denoms.push_back(30);
+        denoms.push_back(60);
+        for (size_t i = 0; i < denoms.size(); i++)
+        {
+            currParams.frameIntervalNumerator   = 1;
+            currParams.frameIntervalDenominator = denoms[i];
             params.push_back(currParams);
         }
     }
@@ -179,6 +198,8 @@ void enumFramesizes(int fd, unsigned int pixelformat,
     possize.pixel_format = pixelformat;
     possize.type = V4L2_FRMSIZE_TYPE_DISCRETE;
 
+    int inserted = 0;
+
     for (; xioctl(fd, (int)VIDIOC_ENUM_FRAMESIZES, &possize) == 0;
             ++possize.index)
     {
@@ -186,6 +207,25 @@ void enumFramesizes(int fd, unsigned int pixelformat,
         {
             currParams.imageWidth  = possize.discrete.width;
             currParams.imageHeight = possize.discrete.height;
+            enumFrameintervals(fd, pixelformat,
+                    possize.discrete.width, possize.discrete.height,
+                    params, currParams);
+            inserted++;
+        }
+    }
+
+    if (inserted == 0)
+    {
+        std::vector< std::pair<int, int> > sizes;
+        sizes.push_back(std::make_pair(160, 120));
+        sizes.push_back(std::make_pair(320, 240));
+        sizes.push_back(std::make_pair(640, 480));
+        sizes.push_back(std::make_pair(1296, 730));
+        sizes.push_back(std::make_pair(1296, 972));
+        for (size_t i = 0; i < sizes.size(); i++)
+        {
+            currParams.imageWidth  = sizes[i].first;
+            currParams.imageHeight = sizes[i].second;
             enumFrameintervals(fd, pixelformat,
                     possize.discrete.width, possize.discrete.height,
                     params, currParams);
@@ -252,6 +292,7 @@ void enumDevices(tParamsVector& params)
         }
         catch (ebImg& e)
         {
+            std::cerr << o.str() << " " << e.reason() << std::endl;
         }
     }
 }
